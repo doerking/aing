@@ -1,0 +1,18 @@
+{
+  "name": "aing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "aing · Knowledge Metabolism Engine — let your knowledge base grow itself",
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "sharp": "^0.35.4",
+    "sql.js": "^1.13.0"
+  },
+  "scripts": {
+    "verify": "node verify-deploy.js",
+    "setup:db": "node src/setup-db.js",
+    "metabolism": "node src/run-metabolism.js --smart",
+    "reindex:semantic": "node src/index-vectors.js --semantic --reindex",
+    "setup:vectors": "powershell -ExecutionPolicy Bypass -File setup-vectors.ps1"
+  }
+}

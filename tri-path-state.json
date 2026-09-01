@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "id": "task-1787839372791",
+      "task": {
+        "description": "回归测试任务"
+      },
+      "paths": {
+        "explore": {
+          "candidates": [
+            "候选 A",
+            "候选 B",
+            "候选 C"
+          ],
+          "diversity": 0.8,
+          "quality": 0.6
+        },
+        "verify": {
+          "validated": [
+            "候选 B"
+          ],
+          "confidence": 0.9,
+          "crossCheck": "passed"
+        },
+        "optimize": {
+          "result": "候选 B (优化版)",
+          "improvement": 0.15,
+          "finalScore": 0.85
+        }
+      },
+      "裁决": {
+        "success": true,
+        "agreeCount": 3,
+        "passed": {
+          "explore": true,
+          "verify": true,
+          "optimize": true
+        },
+        "scores": [
+          0.8,
+          0.9,
+          0.85
+        ],
+        "average": 0.8500000000000001,
+        "minScore": 0.8,
+        "method": "cross_validation"
+      },
+      "duration": 8,
+      "timestamp": "2026-08-27T14:02:52.800Z"
+    }
+  ],
+  "stats": {
+    "total": 1,
+    "success": 1,
+    "failed": 0
+  }
+}

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# 运行时数据（用户知识资产，不随仓库分发）
+*.db
+*.db.tmp
+knowledge.db
+raw/
+wiki/
+logs/
+snapshots/
+data/
+mustard-seeds/
+metabolism-state.json
+
+# 本地配置（用 growth.config.example.ts 作为模板）
+src/growth.config.js
+
+# 环境与密钥
+.env
+.env.local
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
