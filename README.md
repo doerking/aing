@@ -3,6 +3,10 @@
 > Architecture for Intelligent Networked Growth
 >
 > 让知识库自己活着 —— 超越 RAG，超越 LLM Wiki，进入主动代谢时代。
+>
+> *aing is the engine: mature first, then mount into any chassis — the engine stays, the chassis is swappable.*
+>
+> aing 是引擎：先把自己磨成熟，机甲成熟哪家，就装进哪家——引擎不变，底盘随意。
 
 **Let your knowledge base grow itself — beyond RAG, beyond LLM Wiki, into active metabolism.**
 
@@ -290,6 +294,31 @@ node src/setup-db.js --backup     # 手动备份
 
 > 想知道 aing 的愿景如何实现、部署后如何跑代谢、训练与真执行器怎么接入？读这一篇：
 > **[愿景与运行手册 · Vision & Operations Playbook](./raw/vision-and-operations.md)**（中英双语 · bilingual）
+
+## 🧬 Architecture Lineage / 架构谱系与验证锚点
+
+> Every anchor below is clickable and independently verifiable. 本表每一格都可点击核查，欢迎逐格翻验。
+
+```mermaid
+flowchart LR
+    A["🧠 思想层\nGWT → Jacobian Lens\nBaars/Dehaene · Anthropic 2026-07"] --> B["🏋️ 训练层\nSkillOpt ReflACT · AlphaEvolve 血统\narXiv:2605.23904"]
+    B --> C["🗄️ 记忆层\nForms–Functions–Dynamics\narXiv:2512.13564"]
+    C --> D["🧬 结构层\n左右脑单交叉 × 双时态\n主 agent 自收敛"]
+    D --> E["🔌 生态层\nSkillOpt 源码签名核对\n零 wrapper · 冒烟全绿"]
+    E --> F["🚀 aing\n引擎就绪\n机甲按需挂载"]
+    click A href "https://www.transformer-circuits.pub/" _blank
+    click B href "https://arxiv.org/abs/2605.23904" _blank
+    click C href "https://arxiv.org/abs/2512.13564" _blank
+    click E href "https://microsoft.github.io/SkillOpt/" _blank
+```
+
+| 层 | 锚点 | 出处 | 状态 |
+|---|---|---|---|
+| 🧠 思想层 | GWT → Jacobian Lens (2026-07) | [Baars/Dehaene](https://www.transformer-circuits.pub/) · Anthropic 实证 | 已对齐 |
+| 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 血统 | [MSR SkillOpt (arXiv:2605.23904)](https://arxiv.org/abs/2605.23904) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
+| 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
+| 🧬 结构层 | 左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
+| 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
 
 ## 🙏 Acknowledgments / 致谢
 
