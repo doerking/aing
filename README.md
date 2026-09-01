@@ -297,16 +297,9 @@ node src/setup-db.js --backup     # 手动备份
 
 ## 🧬 Architecture Lineage / 架构谱系与验证锚点
 
-> Every anchor below is clickable and independently verifiable. 本表每一格都可点击核查，欢迎逐格翻验。
+> Every anchor in the table below is clickable and independently verifiable. 表内每一格都可点击核查，欢迎逐格翻验。
 
-```mermaid
-flowchart LR
-    A["🧠 思想层<br/>GWT → Jacobian Lens<br/>Baars/Dehaene · Anthropic 2026-07"] --> B["🏋️ 训练层<br/>SkillOpt ReflACT · AlphaEvolve 血统<br/>arXiv:2605.23904"]
-    B --> C["🗄️ 记忆层<br/>Forms–Functions–Dynamics<br/>arXiv:2512.13564"]
-    C --> D["🧬 结构层<br/>左右脑单交叉 × 双时态<br/>主 agent 自收敛"]
-    D --> E["🔌 生态层<br/>SkillOpt 源码签名核对<br/>零 wrapper · 冒烟全绿"]
-    E --> F["🚀 aing<br/>引擎就绪<br/>机甲按需挂载"]
-```
+![Architecture Lineage](docs/lineage.svg)
 
 | 层 | 锚点 | 出处 | 状态 |
 |---|---|---|---|
