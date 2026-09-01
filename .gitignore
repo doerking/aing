@@ -25,3 +25,4 @@ src/growth.config.js
 .DS_Store
 Thumbs.db
 desktop.ini
+models/
