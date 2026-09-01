@@ -1,0 +1,16 @@
+{
+  "name": "aing",
+  "version": "1.0.0",
+  "description": "Architecture for Intelligent Networked Growth — Dual-Brain Knowledge Metabolism Engine",
+  "main": "self-growth.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "dependencies": {
+    "ml-distance": "^4.1.0",
+    "ml-tree": "^1.0.0",
+    "sql.js": "^1.14.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-08-27T17:45:51.858Z",
+  "seed": 20260828,
+  "fast": false,
+  "taskCount": 30,
+  "trainSize": 20,
+  "evalSize": 10,
+  "candidateCount": 40,
+  "baseline": {
+    "accEval": 0.7,
+    "coverage": 0.8,
+    "consistency": 0.8,
+    "overall": 0.7400000000000001
+  },
+  "best": {
+    "name": "candidate-15",
+    "beliefs": [
+      "F01",
+      "F02",
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F08",
+      "F09",
+      "F10"
+    ],
+    "accEval": 1,
+    "coverage": 1,
+    "consistency": 1,
+    "overall": 1.0890600073384122
+  },
+  "gatePass": true,
+  "margin": 0.02,
+  "rejected": 16,
+  "monteCarlo": [
+    {
+      "margin": 0,
+      "passRates": [
+        "100%",
+        "100%",
+        "100%",
+        "100%",
+        "90%"
+      ]
+    },
+    {
+      "margin": 0.02,
+      "passRates": [
+        "100%",
+        "100%",
+        "100%",
+        "99%",
+        "88%"
+      ]
+    },
+    {
+      "margin": 0.05,
+      "passRates": [
+        "100%",
+        "100%",
+        "100%",
+        "99%",
+        "88%"
+      ]
+    },
+    {
+      "margin": 0.1,
+      "passRates": [
+        "100%",
+        "100%",
+        "100%",
+        "93%",
+        "79%"
+      ]
+    }
+  ]
+}
