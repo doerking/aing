@@ -310,7 +310,7 @@ aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
 
 - **[sql.js](https://github.com/sql-js/sql.js)** 与 **Node.js**（内置 `node:sqlite`）— 双脑数据层的零原生编译底座。
 - **[@xenova/transformers](https://github.com/xenova/transformers.js)** 与 **[all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2)** — 纯本地、零外呼的语义向量能力（384 维混合检索）。
-- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org)**（NUS、人大等）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
+- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564v1)**（Hu et al., 2025，arXiv:2512.13564，NUS、人大、复旦、北大等 12 家机构；官方配套论文列表与资源索引：[Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List)）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
 
 ### 运行后端 / Runtime Backend
 
