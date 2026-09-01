@@ -302,7 +302,7 @@ aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
 
 ### 进化环 / Evolution Loop · Training & Implementation
 
-- **[Microsoft SkillOpt](https://github.com/microsoft/SkillOpt)** — “技能文档即可训练参数”的思想与六阶段训练循环（Rollout→Reflect→Aggregate→Select→Update→Gate）。aing 的进化环（`training/adapter.py`）基于其 EnvAdapter 接口构建；其 SkillOpt-Sleep（夜间回放失败任务写入技能文档）与 aing 的代谢回炉互为同构印证。
+- **[Microsoft SkillOpt](https://github.com/microsoft/SkillOpt)**（arXiv:2605.23904，MSR 与上海交大等）— “技能文档即可训练参数”的思想与六阶段训练循环（ReflACT：Rollout→Reflect→Aggregate→Select→Update→Validate）。aing 的进化环（`training/adapter.py`）基于其 EnvAdapter 接口构建；其 SkillOpt-Sleep（夜间回放失败任务写入技能文档）与 aing 的代谢回炉互为同构印证。
 - **[DeepMind AlphaEvolve 及开源生态](https://github.com/topics/alpha-evolve)**（OpenEvolve / CodeEvolve / GigaEvo）— LLM×进化算法的程序空间优化，双向血统追踪让每个后代可溯源，与 aing 回炉微粒沿 `recycled_from` 血统链可溯源的 KPI 殊途同归。
 - **OPT 实现历程** — aing 的训练副本与实现现场。影子目录隔离、EnvAdapter 按源码签名逐条核对、32 条取自部署包真实口径的矛盾任务包、KESPI 斜率天然挂钩训练奖励，三项核心组件一次冒烟即“已就位”。aing 不需要为被训练而改造自己：它活着的方式就是被训练的方式。
 
