@@ -301,15 +301,11 @@ node src/setup-db.js --backup     # 手动备份
 
 ```mermaid
 flowchart LR
-    A["🧠 思想层\nGWT → Jacobian Lens\nBaars/Dehaene · Anthropic 2026-07"] --> B["🏋️ 训练层\nSkillOpt ReflACT · AlphaEvolve 血统\narXiv:2605.23904"]
-    B --> C["🗄️ 记忆层\nForms–Functions–Dynamics\narXiv:2512.13564"]
-    C --> D["🧬 结构层\n左右脑单交叉 × 双时态\n主 agent 自收敛"]
-    D --> E["🔌 生态层\nSkillOpt 源码签名核对\n零 wrapper · 冒烟全绿"]
-    E --> F["🚀 aing\n引擎就绪\n机甲按需挂载"]
-    click A href "https://www.transformer-circuits.pub/" _blank
-    click B href "https://arxiv.org/abs/2605.23904" _blank
-    click C href "https://arxiv.org/abs/2512.13564" _blank
-    click E href "https://microsoft.github.io/SkillOpt/" _blank
+    A["🧠 思想层<br/>GWT → Jacobian Lens<br/>Baars/Dehaene · Anthropic 2026-07"] --> B["🏋️ 训练层<br/>SkillOpt ReflACT · AlphaEvolve 血统<br/>arXiv:2605.23904"]
+    B --> C["🗄️ 记忆层<br/>Forms–Functions–Dynamics<br/>arXiv:2512.13564"]
+    C --> D["🧬 结构层<br/>左右脑单交叉 × 双时态<br/>主 agent 自收敛"]
+    D --> E["🔌 生态层<br/>SkillOpt 源码签名核对<br/>零 wrapper · 冒烟全绿"]
+    E --> F["🚀 aing<br/>引擎就绪<br/>机甲按需挂载"]
 ```
 
 | 层 | 锚点 | 出处 | 状态 |
