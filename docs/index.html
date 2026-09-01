@@ -7,59 +7,228 @@
 <meta name="description" content="aing: Dual-Brain Knowledge Metabolism Engine. 双脑知识代谢引擎，让知识库自己活着。">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:#0a0a0f; color:#e0e0f0; line-height:1.6; }
-  .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; }
-  .hero h1 { font-size:clamp(3rem,8vw,5rem); font-weight:800; background:linear-gradient(135deg,#7c5cfc,#5cfc9a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; letter-spacing:-2px; }
-  .hero-sub { font-size:1.2rem; color:#8888aa; margin-bottom:1rem; }
-  .hero-desc { color:#5c5c7a; max-width:600px; margin:1.5rem auto 2rem; font-size:1rem; }
-  .links { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
-  .links a { padding:0.8rem 2rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:1rem; transition:all 0.3s; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:#0a0a0f; color:#e0e0f0; line-height:1.6; overflow-x:hidden; }
+  ::selection { background:#7c5cfc; color:#fff; }
+
+  .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 30% 50%, rgba(124,92,252,0.08) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(92,252,154,0.06) 0%, transparent 50%); animation:float 20s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform:translate(0,0) rotate(0deg); } 33% { transform:translate(2%,-2%) rotate(1deg); } 66% { transform:translate(-2%,2%) rotate(-1deg); } }
+  .hero-content { position:relative; z-index:1; max-width:800px; }
+  .hero-badge { display:inline-block; padding:0.4rem 1.2rem; border-radius:100px; background:#1a1a28; border:1px solid #2a2a3e; font-size:0.85rem; color:#8888aa; margin-bottom:2rem; }
+  .hero h1 { font-size:clamp(3rem,8vw,6rem); font-weight:800; background:linear-gradient(135deg,#7c5cfc,#5cfc9a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:1rem; letter-spacing:-2px; }
+  .hero-sub { font-size:clamp(1.1rem,2.5vw,1.5rem); color:#8888aa; margin-bottom:0.5rem; font-weight:300; }
+  .hero-desc { font-size:1.1rem; color:#5c5c7a; max-width:600px; margin:1.5rem auto 2.5rem; line-height:1.8; }
+  .hero-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  .btn { padding:0.8rem 2rem; border-radius:8px; font-size:1rem; font-weight:600; text-decoration:none; transition:all 0.3s; display:inline-flex; align-items:center; gap:0.5rem; }
   .btn-primary { background:linear-gradient(135deg,#7c5cfc,#5cfc9a); color:#fff; }
   .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(124,92,252,0.3); }
   .btn-secondary { background:#1a1a28; color:#e0e0f0; border:1px solid #2a2a3e; }
   .btn-secondary:hover { border-color:#7c5cfc; transform:translateY(-2px); }
-  .footer { text-align:center; padding:2rem; color:#3a3a5a; font-size:0.85rem; border-top:1px solid #1a1a28; }
-  .arch { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; max-width:800px; margin:2rem auto; padding:0 1rem; }
-  .arch-card { background:#12121a; border:1px solid #2a2a3e; border-radius:8px; padding:1rem; text-align:center; }
-  .arch-card h3 { font-size:0.9rem; margin-bottom:0.5rem; }
-  .arch-card p { color:#8888aa; font-size:0.8rem; }
-  .stats { display:flex; justify-content:center; gap:2rem; padding:1.5rem; flex-wrap:wrap; }
-  .stat { text-align:center; }
-  .stat-num { font-size:1.8rem; font-weight:700; background:linear-gradient(135deg,#7c5cfc,#5cfc9a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-  .stat-lbl { font-size:0.75rem; color:#5c5c7a; text-transform:uppercase; letter-spacing:1px; }
+
+  .stats-bar { display:flex; justify-content:center; gap:3rem; padding:2rem; background:#12121a; border-top:1px solid #2a2a3e; border-bottom:1px solid #2a2a3e; flex-wrap:wrap; }
+  .stat-item { text-align:center; }
+  .stat-number { font-size:2rem; font-weight:800; font-family:monospace; background:linear-gradient(135deg,#7c5cfc,#5cfc9a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .stat-label { font-size:0.8rem; color:#5c5c7a; margin-top:0.2rem; text-transform:uppercase; letter-spacing:1px; }
+
+  .section { max-width:1000px; margin:0 auto; padding:5rem 2rem; }
+  .section-header { text-align:center; margin-bottom:3rem; }
+  .section-header h2 { font-size:2rem; font-weight:700; margin-bottom:0.5rem; }
+  .section-header p { color:#5c5c7a; }
+
+  .arch-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0; }
+  @media (max-width:700px) { .arch-grid { grid-template-columns:1fr; } }
+  .arch-card { background:#12121a; border:1px solid #2a2a3e; border-radius:12px; padding:2rem; transition:all 0.3s; }
+  .arch-card:hover { border-color:#7c5cfc; transform:translateY(-2px); }
+  .arch-card.blue { border-top:3px solid #7c5cfc; }
+  .arch-card.green { border-top:3px solid #5cfc9a; }
+  .arch-card.pink { border-top:3px solid #fc5c7c; }
+  .arch-card h3 { font-size:1.2rem; margin-bottom:1rem; }
+  .arch-card ul { list-style:none; }
+  .arch-card li { padding:0.5rem 0; color:#5c5c7a; font-size:0.95rem; display:flex; align-items:center; gap:0.5rem; }
+  .arch-card li::before { content:'→'; color:#7c5cfc; }
+
+  .comparison { width:100%; border-collapse:collapse; margin:2rem 0; font-size:0.95rem; }
+  .comparison th { background:#12121a; padding:1rem; text-align:left; border-bottom:2px solid #2a2a3e; font-weight:600; }
+  .comparison td { padding:1rem; border-bottom:1px solid #2a2a3e; color:#5c5c7a; }
+  .comparison tr:hover td { background:#12121a; }
+  .comparison .highlight { color:#5cfc9a; font-weight:600; }
+
+  .flow { display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:2rem 0; }
+  .flow-step { background:#12121a; border:1px solid #2a2a3e; border-radius:8px; padding:0.8rem 1.5rem; font-size:0.9rem; display:flex; align-items:center; gap:0.5rem; transition:all 0.3s; }
+  .flow-step:hover { border-color:#7c5cfc; }
+  .flow-arrow { color:#7c5cfc; font-size:1.2rem; }
+
+  .code-block { background:#12121a; border:1px solid #2a2a3e; border-radius:8px; padding:1.5rem; font-family:monospace; font-size:0.85rem; line-height:1.8; overflow-x:auto; margin:1.5rem 0; color:#5c5c7a; }
+  .code-block .cmd { color:#5cfc9a; }
+  .code-block .comment { color:#444; }
+
+  footer { text-align:center; padding:3rem 2rem; color:#3a3a5a; font-size:0.9rem; border-top:1px solid #1a1a28; }
+  footer a { color:#7c5cfc; text-decoration:none; }
 </style>
 </head>
 <body>
-<div class="hero">
-  <div class="hero-badge" style="display:inline-block;padding:0.3rem 1rem;border-radius:100px;background:#1a1a28;border:1px solid #2a2a3e;font-size:0.8rem;color:#8888aa;margin-bottom:1.5rem;">🧠 Beyond RAG · Beyond LLM Wiki</div>
-  <h1>aing</h1>
-  <p class="hero-sub">Architecture for Intelligent Networked Growth</p>
-  <p class="hero-desc">
-    <strong>双脑知识代谢引擎</strong><br>
-    秩序脑 × 生长脑 × 决策层 × 反馈层<br>
-    让知识库自己活着 —— 超越 RAG，超越 LLM Wiki，进入主动代谢时代。
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🧠 Beyond RAG · Beyond LLM Wiki</div>
+    <h1>aing</h1>
+    <p class="hero-sub">Architecture for Intelligent Networked Growth</p>
+    <p class="hero-desc">
+      <strong>Dual-Brain Knowledge Metabolism Engine</strong><br>
+      让知识库自己活着 —— 进入主动代谢时代
+    </p>
+    <div class="hero-cta">
+      <a href="https://github.com/doerking/aing" class="btn btn-primary">📦 GitHub</a>
+      <a href="https://github.com/doerking/aing/wiki" class="btn btn-secondary">📖 Wiki</a>
+      <a href="https://github.com/doerking/aing/blob/main/README.md" class="btn btn-secondary">📄 README</a>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-number">42</div><div class="stat-label">Scripts</div></div>
+  <div class="stat-item"><div class="stat-number">5</div><div class="stat-label">Layers</div></div>
+  <div class="stat-item"><div class="stat-number">0</div><div class="stat-label">Dependencies</div></div>
+  <div class="stat-item"><div class="stat-number">MIT</div><div class="stat-label">License</div></div>
+</div>
+
+<section class="section">
+  <div class="section-header">
+    <h2>🧬 Architecture</h2>
+    <p>Dual-Brain Knowledge Metabolism Engine</p>
+  </div>
+  <div class="arch-grid">
+    <div class="arch-card blue">
+      <h3>🧠 Order Brain · 秩序脑</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Stable storage &amp; governance</p>
+      <ul>
+        <li>MD File Tree + Git versioning</li>
+        <li>Entity/Link Graph (SQLite)</li>
+        <li>Type Classification</li>
+        <li>raw/ → wiki/ compilation</li>
+      </ul>
+    </div>
+    <div class="arch-card green">
+      <h3>🌱 Growth Brain · 生长脑</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Active metabolism &amp; evolution</p>
+      <ul>
+        <li>Sprouting Engine</li>
+        <li>Pollination Engine</li>
+        <li>Mustard Seed Compressor</li>
+        <li>KESPI 8D Health Check</li>
+        <li>Expiry Decay</li>
+      </ul>
+    </div>
+    <div class="arch-card pink">
+      <h3>🌿 Consciousness · 意识神经</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Sensory → Guide → Consciousness</p>
+      <ul>
+        <li>File Watcher / Timer</li>
+        <li>Attention Guide Chain</li>
+        <li>Knowledge Briefing</li>
+      </ul>
+    </div>
+    <div class="arch-card blue">
+      <h3>🧠 Decision · 决策层</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Frontal-lobe decision making</p>
+      <ul>
+        <li>Growth Director (9 actions)</li>
+        <li>Guide Chain Swarm</li>
+        <li>Gap Detector (5D scan)</li>
+      </ul>
+    </div>
+    <div class="arch-card green">
+      <h3>🔄 Feedback · 反馈层</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Closed-loop self-optimization</p>
+      <ul>
+        <li>Before/After KESPI comparison</li>
+        <li>Auto parameter tuning</li>
+        <li>Strategy adjustment</li>
+      </ul>
+    </div>
+    <div class="arch-card pink">
+      <h3>⚡ Infrastructure</h3>
+      <p style="color:#5c5c7a;margin-bottom:1rem;font-size:0.9rem;">Shared base layer</p>
+      <ul>
+        <li>SQLite (Graph + FTS5)</li>
+        <li>Node Single Process</li>
+        <li>Zero Dependencies</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h2>🔄 Metabolism Cycle</h2>
+    <p>Knowledge doesn't just sit — it grows, renews, and evolves</p>
+  </div>
+  <div class="flow">
+    <span class="flow-step">📝 compile</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🌱 sprout</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🌸 pollinate</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🌰 compress</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🏥 KESPI</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🕰️ decay</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">🧫 regenerate</span>
+  </div>
+  <div class="code-block" style="margin-top:2rem;">
+    <span class="comment"># One command to run the full metabolism cycle</span><br>
+    <span class="cmd">node src/run-metabolism.js --smart</span><br><br>
+    <span class="comment"># 9 steps · 4.97s · Zero API calls</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h2>⚔️ aing vs LLM Wiki</h2>
+    <p>From compilation to metabolism — the paradigm shift</p>
+  </div>
+  <table class="comparison">
+    <thead>
+      <tr><th>Dimension</th><th>Karpathy LLM Wiki</th><th>aing</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Paradigm</td><td>Compilation</td><td class="highlight">Metabolism</td></tr>
+      <tr><td>Growth</td><td>Linear: ingest→compile→query</td><td class="highlight">Non-linear: self-evolving</td></tr>
+      <tr><td>Automation</td><td>Manual trigger</td><td class="highlight">Time-triggered, automated</td></tr>
+      <tr><td>Health check</td><td>None</td><td class="highlight">KESPI 8-dimension</td></tr>
+      <tr><td>Decay</td><td>None</td><td class="highlight">Time-based auto pruning</td></tr>
+      <tr><td>Dependencies</td><td>LLM API required</td><td class="highlight">Zero, pure Node.js</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h2>⚡ Quick Start</h2>
+  </div>
+  <div class="code-block">
+    <span class="comment"># Zero dependencies. Just Node.js.</span><br><br>
+    <span class="cmd">git clone</span> https://github.com/doerking/aing.git<br>
+    <span class="cmd">cd</span> aing<br>
+    <span class="cmd">npm install</span><br><br>
+    <span class="cmd">node src/run-metabolism.js</span><br>
+    <span class="cmd">node src/run-metabolism.js --smart</span><br>
+    <span class="cmd">node src/show-kespi.js</span>
+  </div>
+</section>
+
+<footer>
+  <p>🧠 <strong>aing</strong> — Architecture for Intelligent Networked Growth</p>
+  <p style="margin-top:0.5rem;">
+    <a href="https://github.com/doerking/aing">GitHub</a> ·
+    <a href="https://github.com/doerking/aing/wiki">Wiki</a> ·
+    <a href="https://github.com/doerking/aing/blob/main/README.md">README</a>
   </p>
-  <div class="links">
-    <a href="https://github.com/doerking/aing" class="btn-primary">📦 GitHub</a>
-    <a href="https://github.com/doerking/aing/wiki" class="btn-secondary">📖 Wiki</a>
-    <a href="https://github.com/doerking/aing/blob/main/README.md" class="btn-secondary">📄 README</a>
-  </div>
-  <div class="stats">
-    <div class="stat"><div class="stat-num">42</div><div class="stat-lbl">Scripts</div></div>
-    <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Layers</div></div>
-    <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Dependencies</div></div>
-    <div class="stat"><div class="stat-num">MIT</div><div class="stat-lbl">License</div></div>
-  </div>
-  <div class="arch">
-    <div class="arch-card"><h3>🧠 秩序脑</h3><p>compile · graph · git</p></div>
-    <div class="arch-card"><h3>🌱 生长脑</h3><p>sprout · pollinate · KESPI · decay</p></div>
-    <div class="arch-card"><h3>🌿 意识神经</h3><p>sensory → guide → consciousness</p></div>
-    <div class="arch-card"><h3>🧠 决策层</h3><p>growth-director · guide-chain · gap-detector</p></div>
-    <div class="arch-card"><h3>🔄 反馈层</h3><p>feedback-loop · auto-tune</p></div>
-  </div>
-</div>
-<div class="footer">
-  <p>Knowledge that grows itself. / 知识自生。<br>MIT License · github.com/doerking/aing</p>
-</div>
+  <p style="margin-top:1rem;color:#333;font-size:0.8rem;">Knowledge that grows itself. / 知识自生。</p>
+</footer>
+
 </body>
 </html>
