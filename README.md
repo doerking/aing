@@ -211,7 +211,7 @@ node src/setup-db.js --backup     # 手动备份
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
-| `run-metabolism.js` | **全流程**（9 步）+ 智能模式 | raw/* → 完整代谢 |
+| `run-metabolism.js` | **全流程**（10 步）+ 智能模式 | raw/* → 完整代谢 |
 | `compile.js` | 秩序脑编译 | raw/*.md → wiki/entities/*.md |
 | `import-from-wiki.js` | 导入数据库 | wiki/ → SQLite |
 | `auto-link.js` | 自动发现链接 | 实体标签/关键词 → links 表 |
