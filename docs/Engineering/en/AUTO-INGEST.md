@@ -58,13 +58,14 @@ knowledge-base/
 
 ```bash
 # Single message ingest
-node scripts/auto-ingest.js <session-id> "message content"
+node src/auto-ingest.js <session-id> "message content"
 
 # Compile all
-node scripts/compile.js --base-dir knowledge-base
+node src/compile.js --base-dir knowledge-base
 
 # Full metabolism
-node scripts/run-metabolism.js --base-dir knowledge-base --force
+# Full metabolism (package-root based; --base-dir is not supported here)
+node src/run-metabolism.js --force
 ```
 
 ## Core Class

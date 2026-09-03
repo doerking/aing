@@ -27,7 +27,7 @@ aing reads and writes Markdown files directly from the filesystem. Any tool that
 
 | Shell | How to integrate |
 |---|---|
-| **Plain text editor** | Write `.md` files in `raw/`, run `node scripts/compile.js` |
+| **Plain text editor** | Write `.md` files in `raw/`, run `node src/compile.js` |
 | **Tolaria** | Point Tolaria at the same directory; aing reads the MD files |
 | **Obsidian** | Point Obsidian vault at the same directory; aing reads the MD files |
 | **VS Code** | Edit `.md` files directly; aing reads them |

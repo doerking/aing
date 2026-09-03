@@ -155,6 +155,11 @@
 - gap：五维扫描（原创性/一致性等）；guide-chain：基于 wiki/links/index.md 找意外关联邻居（_getNeighbors 要求单行 ≥2 个 wiki-link）；self-growth：自主生长循环。
 - **guide-chain 铁律（bug#11 教训，2026-09-03）**：routeSignals 内算出的 attentionScore 必须显式传入 _generateRecommendation（曾传原始 data 致优先级永远 low，高优先级唤醒机制从未生效）。凡「算出的字段 A 传给下游函数」的场景，传的必须是 A 本身，不是恰好包含别的字段的宿主对象。
 
+### init-knowledge-base.js — 知识库脚手架
+- **能力**：为新知识库生成目录骨架（raw/wiki/logs/pruned/src 等）+ README/AGENTS 模板 + 错误码与质量门禁参考；`--git` 可顺带初始化仓库。
+- **路径铁律（2026-09-03，推送方发现）**：引擎脚本全在 `src/`，本脚本生成的一切指引必须指向 `src/compile.js`、`src/run-metabolism.js`；历史上曾生成 `scripts/` 目录并引导用户跑不存在的 `scripts/compile.js`（MODULE_NOT_FOUND）。教训：脚手架里的示例命令必须与包真实布局逐字对齐。
+- **连带修复**：docs/Engineering AUTO-INGEST 与 TOLARIA-INTEGRATION（双语共 8 处）同病同修；其中 run-metabolism 不支持 `--base-dir`（只认 --force/--resume/--smart/--feedback/--step=），文档假 flag 一并清除；compile.js 的 --base-dir 为真实能力，保留。
+
 ### recycle-seeds.js — 芥子回炉（进化回路）
 - **能力**：evolution-loop.md 蓝图的代码实现——芥子库达到条件后回炉再生长，形成「决策→反馈→剪枝→回炉→血统」进化闭环。
 - **高发问题**：主包组件在库但未接入代谢管线（第 11 步在 OPT 侧验证中，M3 窗口 09-05 结束后评估移植），未全绿前不得在 README/汇报中声明为可用能力（绿灯解锁制）。
@@ -186,8 +191,10 @@
 - **输入防护**：实体 ID 白名单字符校验（阻断路径穿越）；请求体 1MB 上限。
 - **高发问题**：宿主进程必须自备会话批冲洗定时器（10s 轮询 checkAndIngest），否则消息滞留内存永不出库。
 
-### query.js — 查询 CLI
-- **能力**：`node src/query.js "关键词" [--limit N] [--names]`——语义/关键词混合检索（模型缺失自动回退 hash）+ 名称/ID 模糊匹配 + 最新 KESPI 附分。
+### query.js — 查询 CLI（精排版，2026-09-03）
+- **能力**：`node src/query.js "关键词" [--limit N] [--names] [--slow]`——三路加权融合排序（语义 + 关键词覆盖 + 名称/ID 匹配，权重在 growth.config.js `query.fusionWeights`）+ 双路径慢回忆（候选均相似度 < `slowRecallThreshold` 或 `--slow` 时，复用 neural-guide-chain 邻居遍历二跳扩展，入池分 = 0.3×种子相似度）+ 伪精排（KESPI/新鲜度融合，替代重型 reranker）。
+- **教训（影子期自捕）**：检索池只收真命中（语义/关键词/名称三路 >0），不得全库倾倒——否则慢回忆邻居永远"已在池中"，扩展恒为空。
+- **待接**：origin-trust 低信任降权排序点已在代码留 TODO，等 origin_trust 列落地（见 E:\SQA\DESIGN-ORIGIN-TRUST-2026-09-03.md）。
 
 ---
 

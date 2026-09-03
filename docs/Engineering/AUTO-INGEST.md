@@ -58,13 +58,13 @@ knowledge-base/
 
 ```bash
 # 单条入库
-node scripts/auto-ingest.js <session-id> "消息内容"
+node src/auto-ingest.js <session-id> "消息内容"
 
 # 编译全部
-node scripts/compile.js --base-dir knowledge-base
+node src/compile.js --base-dir knowledge-base
 
-# 完整代谢
-node scripts/run-metabolism.js --base-dir knowledge-base --force
+# 完整代谢（以包根为基准，run-metabolism 不支持 --base-dir）
+node src/run-metabolism.js --force
 ```
 
 ## 核心类

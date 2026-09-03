@@ -31,7 +31,7 @@ const CONFIG = {
     'logs/kespi-reports',
     'logs/sprouting-reports',
     'logs/pollination-reports',
-    'scripts',
+    'src',
     'references',
     'guides'
   ],
@@ -58,7 +58,7 @@ knowledge-base/
 ├── mustard-seeds/          # 芥子库
 ├── pruned/                 # 剪枝归档
 ├── logs/                   # 代谢日志
-├── scripts/                # 代谢引擎
+├── src/                    # 代谢引擎（compile.js、run-metabolism.js 等）
 ├── references/             # 参考文档
 └── guides/                 # 使用指南
 \`\`\`
@@ -79,10 +79,10 @@ status: active
 " > raw/articles/test.md
 
 # 运行编译
-node scripts/compile.js
+node src/compile.js
 
 # 运行代谢
-node scripts/run-metabolism.js
+node src/run-metabolism.js
 \`\`\`
 `,
     'AGENTS.md': `# AGENTS.md — Agent 配置
@@ -241,8 +241,8 @@ function main() {
   console.log('🎉 知识库初始化完成！');
   console.log('\n📋 下一步:');
   console.log('   1. 放入原始资料到 raw/ 目录');
-  console.log('   2. 运行编译: node scripts/compile.js');
-  console.log('   3. 运行代谢: node scripts/run-metabolism.js');
+  console.log('   2. 运行编译: node src/compile.js');
+  console.log('   3. 运行代谢: node src/run-metabolism.js');
 }
 
 main();
