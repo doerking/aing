@@ -25,19 +25,41 @@
 | Shell-agnostic | Front-end / storage / runtime | ✅ |
 | Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented |
 | Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented |
-| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented (mock data) |
+| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented (real scoring) |
 
 **Feed it a bowl of plain MD + any LLM + any collaborator, and it grows a complete metabolism.**
+
+## 🗣️ Two Sentences / 两句话说清
+
+**给普通用户 / For you:**
+
+> 你只管写和说——链接它来连、分数它来打、过期它来剪。笔记会烂尾，aing 不会，因为它自己养自己。
+>
+> *You just write and talk. aing links, scores, prunes and feeds what you saved — notes rot; aing raises itself.*
+
+**给 Agent / For your agent:**
+
+> 你负责想，aing 负责记：召回你的不是散落片段，而是带关系、带评分、带血统的知识图谱——这次会话的结论，下次会话还有依据。
+>
+> *You think; aing remembers. It recalls a knowledge graph with relations, scores and lineage — not loose fragments. This session's conclusions are next session's evidence.*
+
+**诚实的边界 / The honest edge:**
+
+> aing 不替你思考，也不替你上网找新知识——它只做一件事：让你和你的 agent 已经知道的一切，活得比你的记性和它的上下文窗口都长。
+>
+> *aing neither thinks for you nor fetches for you. It does one thing: makes everything you already know outlive both your memory and its context window.*
 
 ## 🫀 Two-Brain Bodies (Optional) / 两脑实体软件（可选）
 
 > The release is the **plain-Markdown edition** — MD + Git + Node alone run the full metabolism loop. No extra software required.
+> 底层渊源：aing 两脑的底层架构正是 **LLM Wiki + Tolaria** 这两款数据库软件——因当时原版装不上，作者以纯 Markdown + Node 把这一底层重写成了 MD 版（即本发布包）。
+> Origin note: aing's two-brain substrate re-implements two database tools — **LLM Wiki + Tolaria** — in plain Markdown, because the originals could not be installed at the time.
 > 有条件的用户，可以把两脑各自的实体软件挂上，让秩序脑与生长脑各得其所：
 
 | Brain | Entity Software / 实体软件 | What it adds / 补上什么 |
 |---|---|---|
-| Order Brain / 秩序脑 | [Karpathy's LLM Wiki](https://karpathy.ai)（编译范式软件） | 摄入 → 编译 → 查询的成熟编译前端 |
-| Growth Brain / 生长脑 | Tolaria（笔记外壳） | 人读视图、双向链接浏览、每日笔记 |
+| Order Brain / 秩序脑 | LLM Wiki 范式的社区实现（数据库软件；概念源自 Karpathy 2026 年同名构想） | 摄入 → 编译 → 查询的成熟编译前端 |
+| Growth Brain / 生长脑 | Tolaria（数据库软件） | 人读视图、双向链接浏览、每日笔记 |
 
 > 两者均为可选外壳：aing 不绑定任何一款 —— 卸掉任何一个，代谢照跑。
 > Both are optional shells: aing binds to neither — unplug either one and the metabolism keeps running.
@@ -48,11 +70,11 @@
 
 ## One Line / 一句话
 
-aing is not a fork or modification of [Karpathy's LLM Wiki](https://karpathy.ai) — it is an **upgrade from the "compilation paradigm" to the "metabolism paradigm."**
+aing is not a fork or modification of the LLM Wiki paradigm (Karpathy's 2026 concept and its community implementations, database-style tools) — it is an **upgrade from the "compilation paradigm" to the "metabolism paradigm."**
 
-aing 不是对 LLM Wiki 模式的修改或分支，而是从"编译范式"到"代谢范式"的升级。
+aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实现，数据库类工具）的修改或分支，而是从"编译范式"到"代谢范式"的升级。
 
-| | Karpathy LLM Wiki | aing |
+| | LLM Wiki（编译范式） | aing |
 |---|---|---|
 | Paradigm | Compilation / 编译 | **Metabolism / 代谢** |
 | Growth | Linear: ingest→compile→query | Non-linear: sprout·pollinate·metabolize·regenerate |
@@ -102,8 +124,8 @@ cd aing
 npm install
 
 # 3. Configure
-cp growth.config.example.ts growth.config.js
-# edit growth.config.js → adjust KESPI thresholds and jiezi settings
+cp growth.config.example.js src/growth.config.js
+# edit src/growth.config.js → adjust KESPI thresholds and jiezi settings
 
 # 4. Initialize database (pre-built knowledge.db included, or regenerate)
 node src/setup-db.js                 # verify / create if missing
@@ -157,7 +179,30 @@ node src/index-vectors.js --semantic --reindex
 
 - 模型（all-MiniLM-L6-v2 量化版，约 22MB）落在 `models\` 目录，装完**纯离线**，零外呼。
 - 国内网络**直连 huggingface.co 会超时**——脚本已默认走 hf-mirror 镜像，这是最常见的部署卡点，已替你排掉。
-- 回退：删掉 `models\` 目录即回到纯哈希模式，两套向量在库里按维度自动区分、互不干扰。
+- 回退：删掉 `models\` 目录即自动回退纯哈希模式（或加 `--hash` 强制），两套向量在库里按维度自动区分、互不干扰。
+
+---
+
+## Resident Services & API (Optional) / 常驻服务与 API（可选）
+
+```bash
+# 常驻调度 / resident scheduler: metabolism every 30 min by default; new raw/ docs auto-trigger (polling, not fs.watch)
+npm run scheduler            # env AING_SCHEDULER_INTERVAL_MS to tune interval / 环境变量可调间隔
+
+# HTTP API (port 3789 by default)
+npm run server               # without AING_API_KEY: listens on 127.0.0.1 (local-trust mode) / 未设密钥仅监听本机
+AING_API_KEY=my-key npm run server   # with key: 0.0.0.0 + Bearer auth on all but /health / 设密钥后全端点认证
+
+# 查询 CLI / query CLI
+node src/query.js "三路突击" --limit 5
+
+# 端点一览 / endpoints
+# GET  /health                       health check (public) / 健康检查（公开）
+# GET  /api/entities                 entity list / 实体列表
+# GET  /api/entity/<id>              entity detail + latest KESPI / 实体详情+最新 KESPI
+# GET  /api/query?q=<词>&limit=<N>   semantic/keyword search / 语义与关键词检索
+# POST /api/ingest                   session ingest (optional X-Tenant-ID) / 会话入库，可带租户头隔离
+```
 
 ---
 
@@ -165,11 +210,12 @@ node src/index-vectors.js --semantic --reindex
 
 aing 使用 **sql.js**（SQLite WASM 纯 JS 版）作为结构化存储层，数据库文件位于 `knowledge.db`。
 
-### 预置数据库
+### Preloaded Database / 预置数据库
 
 包内附带一个预初始化的空数据库 `knowledge.db`（表结构已建好，无数据），解压即用。
+*A pre-initialized empty database ships with the package (schema ready, no data).*
 
-### 数据库管理
+### Database Management / 数据库管理
 
 ```bash
 node src/setup-db.js              # 验证完整性 / 不存在则创建
@@ -178,7 +224,7 @@ node src/setup-db.js --verify     # 仅验证完整性
 node src/setup-db.js --backup     # 手动备份
 ```
 
-### 表结构
+### Schema / 表结构
 
 | 表名 | 用途 |
 |------|------|
@@ -190,13 +236,13 @@ node src/setup-db.js --backup     # 手动备份
 | `error_log` | 错误日志（self-growth 错误处理） |
 | `kespi_history` | KESPI 评分历史（8 维分数 JSON） |
 
-### 备份与恢复
+### Backup & Restore / 备份与恢复
 
 - 每次 `--reset` 自动备份到 `backups/knowledge-{timestamp}.db`
 - 手动备份: `node src/setup-db.js --backup`
 - 恢复: 将备份文件复制回 `knowledge.db`
 
-### 注意事项
+### Notes / 注意事项
 
 - 数据库为**单文件**（`knowledge.db`），可直接复制/移动
 - 使用 sql.js（WASM），**无需编译** native 模块
@@ -207,22 +253,23 @@ node src/setup-db.js --backup     # 手动备份
 
 ## Scripts / 脚本一览
 
-### 核心流水线
+### Core Pipeline / 核心流水线
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
+| `init-knowledge-base.js` | 知识库初始化（首装一步） | 空 → 初始目录与库 |
 | `run-metabolism.js` | **全流程**（10 步）+ 智能模式 | raw/* → 完整代谢 |
 | `compile.js` | 秩序脑编译 | raw/*.md → wiki/entities/*.md |
 | `import-from-wiki.js` | 导入数据库 | wiki/ → SQLite |
 | `auto-link.js` | 自动发现链接 | 实体标签/关键词 → links 表 |
-| `index-vectors.js` | 向量索引（默认 64-dim 哈希，`--semantic` 升级 384 维语义） | 实体内容 → embedding |
+| `index-vectors.js` | 向量索引（默认 384 维语义，模型缺失自动回退 64 维哈希；`--hash` 强制哈希） | 实体内容 → embedding |
 | `sprout.js` | 发芽引擎 | 实体 → 新链接建议 |
 | `pollinate.js` | 授粉引擎 | 跨域知识融合 |
 | `compress.js` | 芥子压缩 | 低频 → 芥子库 |
 | `kespi-check.js` | KESPI 八维评估 | 实体 → 8 维分数 |
 | `prune.js` | 剪枝清理 | 过期知识归档 |
 
-### 决策层（新增）
+### Decision Layer / 决策层
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
@@ -230,8 +277,10 @@ node src/setup-db.js --backup     # 手动备份
 | `guide-chain-swarm.js` | 导链蜂群（多Agent决策） | 紧急度 → 多Agent投票 |
 | `gap-detector.js` | 缺口检测器（5维扫描） | 数据库 → 缺口报告 |
 | `feedback-loop.js` | 闭环反馈（效果感知+调优） | 前后快照 → 调优建议 |
+| `self-growth.js` | 自成长循环（感知→缺口→动作） | 库状态 → 生长动作 |
+| `recycle-seeds.js` | 芥子回炉（进化回路蓝图实现） | 芥子库 → 回炉队列 |
 
-### 辅助工具
+### Utilities / 辅助工具
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
@@ -239,7 +288,18 @@ node src/setup-db.js --backup     # 手动备份
 | `recalc-kespi.js` | 批量重算 KESPI | 修复后历史数据修正 |
 | `setup-db.js` | 数据库管理 | 创建/重置/验证/备份 |
 
-### 意识神经
+### Repair & Maintenance / 修复与维护
+
+| 脚本 | 用途 | 何时用 |
+|------|------|--------|
+| `fix-kespi.js` | KESPI 质量修复（智能增强版） | 历史数据分数失真时 |
+| `fix-tags.js` | 批量修复实体标签 | 标签缺失/格式错乱时 |
+| `kespi-enhance.js` | KESPI 质量增强 | 想提升低分实体的维度短板 |
+| `generate-analysis-report.js` | 生成自成长分析文档 | 定期体检 / 交接留档 |
+| `metabolism-log.js` | 代谢运行日志落库（训练反馈信号） | 训练/回炉分析需要历史时 |
+| `sql-migrate.js` | SQLite 迁移脚本（sql.js 版） | 表结构升级时 |
+
+### Consciousness Neural / 意识神经
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
@@ -248,6 +308,17 @@ node src/setup-db.js --backup     # 手动备份
 | `metacognition-layer.js` | 元认知 | 自检→评估→调参 |
 | `consciousness-layer.js` | 意识层 | 状态监控/告警 |
 | `neural-guide-chain.js` | 神经导链 | 信号路由 |
+| `sensory-ends.js` | 感知末梢（目录感知层） | raw/、wiki/ → 信号 |
+
+### Resident Services & Retrieval / 常驻服务与检索
+
+| 脚本 | 用途 | 输入 → 输出 |
+|------|------|------------|
+| `scheduler.js` | 常驻调度器（定时代谢 + raw/ 轮询触发 + `--once`） | 时间/文件变化 → 代谢链 |
+| `api-server.js` | HTTP API 服务（零依赖，Bearer 认证，租户隔离） | HTTP 请求 → JSON |
+| `query.js` | 查询 CLI（语义/关键词 + KESPI 附分） | 关键词 → 命中实体 |
+| `shared-spine.js` | 编译门禁（真实 KESPI 评分版） | raw 档 + 库实体 → 接受/拒收/待入库 |
+| `auto-ingest.js` | 会话自动入库（链路起点，含指纹去重） | 消息 → raw 档 → 代谢链 |
 
 ---
 
@@ -270,6 +341,8 @@ node src/setup-db.js --backup     # 手动备份
 - [Two-Brain Bodies Setup / 两脑实体实装建议](./docs/Engineering/TWO-BRAIN-BODIES.md)
 - [Conflict Resolution / 冲突仲裁](./docs/Engineering/CONFLICT-RESOLUTION.md)
 - [ADR-001](./docs/Engineering/ADR-001-compilation-to-metabolism.md)
+- [绿灯清单 GREEN-LIST / 能力真源](./docs/GREEN-LIST.md)
+- [部署体检与排障 DEPLOY-CHECK](./docs/DEPLOY-CHECK-2026-09-02.md)
 - [ADR-002](./docs/Engineering/ADR-002-single-sqlite.md)
 - [Verified Modules / 已验证模块](./docs/Engineering/VERIFIED-MODULES.md)
 - [Consciousness Neural / 意识神经架构](./docs/Engineering/CONSCIOUSNESS-NEURAL-ARCHITECTURE.md)
@@ -285,10 +358,10 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 1 — Growth Brain v1 (sprouting, pollination, mustard seed, pruning)
 - [x] Phase 2 — KESPI self-check (8-dim weighted scoring, 3-color light, DB-backed via kespi_history)
 - [x] Phase 2.5 — Consciousness Neural Architecture (sensory + guide chain + consciousness)
-- [x] Phase 2.6 — Metacognition Layer (self-check + evaluate + adjust)
-- [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize + circuit breaker)
-- [ ] Phase 3 — Full metabolism automation (scheduler, hot-reload)
-- [ ] Phase 4 — Productionization (API server, multi-tenant)
+- [ ] Phase 2.6 — Metacognition Layer (in repo, not wired into the pipeline; heuristic self-check only — wiring under evaluation / 组件在库、未接管线)
+- [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
+- [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode; no hot-reload / 定时代谢+raw 轮询触发，热重载未纳入)
+- [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
 
 ## Vision & Operations / 愿景与运行
 
