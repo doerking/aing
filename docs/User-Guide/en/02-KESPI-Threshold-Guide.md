@@ -84,7 +84,7 @@ So 0.75 = "qualified to re-enter the active library." Raise to 0.85 and revival 
 
 ## Where to Change Them
 
-Open `scripts/growth.config.js` and edit these three fields:
+Open `src/growth.config.js` and edit these three fields:
 
 ```javascript
 const config = {

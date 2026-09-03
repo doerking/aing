@@ -86,13 +86,18 @@ class NeuralGuideChain {
     
     // 排序并返回路由建议
     const routes = Array.from(attentionMap.entries())
-      .map(([target, data]) => ({
-        target,
-        attentionScore: data.total / data.count,
-        signalCount: data.count,
-        latestAt: new Date(data.latestTimestamp).toISOString(),
-        recommendation: this._generateRecommendation(target, data),
-      }))
+      .map(([target, data]) => {
+        const attentionScore = data.total / data.count;
+        return {
+          target,
+          attentionScore,
+          signalCount: data.count,
+          latestAt: new Date(data.latestTimestamp).toISOString(),
+          // 修复：必须传入含 attentionScore 的对象；曾传原始 data（无该字段）致优先级永远 low，
+          // 高优先级唤醒机制（含 _handleSignal 的简报触发）从未真正生效
+          recommendation: this._generateRecommendation(target, { attentionScore }),
+        };
+      })
       .sort((a, b) => b.attentionScore - a.attentionScore);
     
     this._logRoutes(routes);

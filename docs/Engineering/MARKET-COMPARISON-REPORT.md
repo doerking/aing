@@ -1,6 +1,6 @@
-# aing 市场定位与竞争分析报告
+# aing 市场定位与竞争分析报告 / Market Positioning & Competition Analysis (Chinese-primary)
 
-> 2026-08-25 · 基于 E:\aing 完整实现 + 市场调研
+> 2026-08-25 · 基于 E:\aing 完整实现 + 市场调研 · *Internal analysis document, written in Chinese.*
 
 ---
 

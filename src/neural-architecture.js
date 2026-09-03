@@ -11,6 +11,8 @@
 const SensoryEndings = require('./sensory-ends');
 const NeuralGuideChain = require('./neural-guide-chain');
 const ConsciousnessLayer = require('./consciousness-layer');
+const fs = require('fs');
+const path = require('path');
 
 class NeuralArchitecture {
   constructor(options = {}) {

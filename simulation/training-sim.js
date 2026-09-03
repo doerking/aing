@@ -39,7 +39,7 @@ const rand = mulberry32(20260828);
 const FACTS = [
   { id: 'F01', text: 'KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80', truth: true },
   { id: 'F02', text: '红灯语义是待回炉，不是人工干预信号', truth: true },
-  { id: 'F03', text: '9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune', truth: true },
+  { id: 'F03', text: '10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune', truth: true },
   { id: 'F04', text: 'KM 维度公式：近7天代谢记录数（每条+0.1，上限0.3）+ 未压缩加0.2', truth: true },
   { id: 'F05', text: '芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>', truth: true },
   { id: 'F06', text: '双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件', truth: true },

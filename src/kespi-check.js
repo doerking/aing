@@ -25,8 +25,9 @@ const KnowledgeStore = require('./knowledge-store');
 const config = require('./growth.config');
 
 class KespiChecker {
-  constructor() {
-    this.store = new KnowledgeStore();
+  constructor(store) {
+    // 可注入共享 store（tri-path 等编排器复用同一连接）；不传则自建（向后兼容）
+    this.store = store || new KnowledgeStore();
   }
 
   async init() {

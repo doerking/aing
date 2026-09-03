@@ -18,8 +18,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { KnowledgeStore } = require('./knowledge-store');
-const { checkKespi, getLightStatus } = require('./kespi-check');
+const KnowledgeStore = require('./knowledge-store');
+const KespiChecker = require('./kespi-check');
 const growthConfig = require('./growth.config');
 
 // 配置
@@ -31,9 +31,11 @@ const CONFIG = {
   auditLog: path.join(__dirname, '..', 'logs', 'shared-spine', 'audit.jsonl')
 };
 
-// 编译规则
+// 编译规则（KESPI 门槛唯一来源 = growth.config，不再本地硬编码）
 const COMPILE_RULES = {
-  minKespi: 0.65,           // 最低 KESPI 门槛
+  minKespi: growthConfig.triPath
+    ? growthConfig.triPath.kespiPass
+    : growthConfig.kespi.yellowLight,
   requireTags: true,        // 必须有关键词
   requireLinks: false,      // 不强制要求链接
   requireContent: 200,      // 最小内容长度
@@ -85,52 +87,18 @@ function extractLinks(content) {
 }
 
 /**
- * 计算实体评分
- */
-function estimateEntityScore(metadata, content) {
-  const tags = metadata.tags || [];
-  const hasCode = content.includes('```');
-  const hasRefs = content.includes('来源') || content.includes('参考') ||
-    /##\s*(References|Sources|Source)\b/i.test(content);
-  const hasScenario = content.includes('使用场景') ||
-    /##\s*(Usage|Example|Scenario|Use Cases?)\b/i.test(content);
-  
-  const scores = {
-    KQ: 0.7 + (hasCode ? 0.1 : 0) + (hasRefs ? 0.05 : 0),
-    KG: tags.length > 0 ? 0.6 : 0.3,
-    KA: hasCode && hasRefs ? 0.7 : 0.5,
-    KM: tags.length >= 3 ? 0.6 : 0.4,
-    KD: extractLinks(content).length > 0 ? 0.6 : 0.3,
-    KC: tags.length > 0 ? 0.7 : 0.4,
-    KR: hasScenario ? 0.7 : 0.5,
-    KB: 0
-  };
-  
-  // 加权计算
-  const weights = growthConfig.kespi.weights;
-  let total = 0;
-  for (const [dim, weight] of Object.entries(weights)) {
-    total += (scores[dim] || 0) * weight;
-  }
-  
-  return {
-    scores,
-    total: Math.min(1.0, total)
-  };
-}
-
-/**
  * 验证实体
+ * @param {object} score 真实 KESPI 结果（KespiChecker.calculateEntity 返回值，含 overall/dimensions）
  */
 function validateEntity(entityId, metadata, content, score) {
   const issues = [];
   
-  // KESPI 门槛检查
-  if (score.total < COMPILE_RULES.minKespi) {
+  // KESPI 门槛检查（真实评分）
+  if (score.overall < COMPILE_RULES.minKespi) {
     issues.push({
       type: 'LOW_KESPI',
       severity: 'ERROR',
-      message: `KESPI ${score.total.toFixed(2)} < ${COMPILE_RULES.minKespi}`,
+      message: `KESPI ${score.overall.toFixed(2)} < ${COMPILE_RULES.minKespi}`,
       action: 'REJECT'
     });
   }
@@ -183,11 +151,17 @@ function writeAuditLog(entry) {
  * 编译验证
  */
 async function compileVerify(options = {}) {
-  console.log('🕸️  Shared Spine 编译验证引擎\n');
+  console.log('🕸️  Shared Spine 编译验证引擎（真实 KESPI 版）\n');
   console.log('📋 配置:');
   console.log(`   最低 KESPI: ${COMPILE_RULES.minKespi}`);
   console.log(`   自动拒收: ${COMPILE_RULES.autoReject ? '是' : '否'}`);
   console.log('');
+  
+  // 真实评分依赖知识库实体（代谢链产物），未入库文件只做结构预检
+  const store = new KnowledgeStore();
+  await store.init();
+  const kespi = new KespiChecker(store);
+  await kespi.init();
   
   // 确保目录存在
   fs.mkdirSync(CONFIG.logsDir, { recursive: true });
@@ -214,35 +188,56 @@ async function compileVerify(options = {}) {
       const { metadata, content: body } = parseFrontmatter(content);
       const links = extractLinks(body);
       
-      // 估算评分
-      const score = estimateEntityScore(metadata, body);
-      const validation = validateEntity(entityId, metadata, body, score);
-      
-      // 记录审计
-      const auditEntry = writeAuditLog({
-        action: validation.valid ? 'ACCEPT' : 'REJECT',
-        entityId,
-        source: relativePath,
-        kespi: score.total,
-        issues: validation.issues,
-        tags: metadata.tags || [],
-        links: links.length
-      });
-      
-      if (validation.valid) {
-        console.log(`   ✅ 接受 (KESPI: ${score.total.toFixed(2)})`);
-        results.accepted.push({ entityId, path: filePath, score: score.total });
-      } else {
-        const hasError = validation.issues.some(i => i.severity === 'ERROR');
-        if (hasError && COMPILE_RULES.autoReject) {
-          console.log(`   ❌ 拒收 (KESPI: ${score.total.toFixed(2)})`);
+      // 真实 KESPI 评分：以知识库实体为唯一评分源
+      const entity = store.getEntity(entityId);
+      if (entity) {
+        const kespiResult = kespi.calculateEntity(entity);
+        const validation = validateEntity(entityId, metadata, body, kespiResult);
+        
+        // 记录审计（含八维明细）
+        writeAuditLog({
+          action: validation.valid ? 'ACCEPT' : 'REJECT',
+          entityId,
+          source: relativePath,
+          kespi: kespiResult.overall,
+          dimensions: kespiResult.dimensions,
+          issues: validation.issues,
+          tags: metadata.tags || [],
+          links: links.length
+        });
+        
+        if (validation.valid) {
+          console.log(`   ✅ 接受 (KESPI: ${kespiResult.overall.toFixed(2)})`);
+          results.accepted.push({ entityId, path: filePath, score: kespiResult.overall });
+        } else if (COMPILE_RULES.autoReject) {
+          console.log(`   ❌ 拒收 (KESPI: ${kespiResult.overall.toFixed(2)})`);
           validation.issues.forEach(i => console.log(`      - ${i.type}: ${i.message}`));
-          results.rejected.push({ entityId, path: filePath, score: score.total, issues: validation.issues });
+          results.rejected.push({ entityId, path: filePath, score: kespiResult.overall, issues: validation.issues });
         } else {
-          console.log(`   ⚠️  警告 (KESPI: ${score.total.toFixed(2)})`);
+          console.log(`   ⚠️  警告 (KESPI: ${kespiResult.overall.toFixed(2)})`);
           validation.issues.forEach(i => console.log(`      - ${i.type}: ${i.message}`));
-          results.warned.push({ entityId, path: filePath, score: score.total, issues: validation.issues });
+          results.warned.push({ entityId, path: filePath, score: kespiResult.overall, issues: validation.issues });
         }
+      } else {
+        // 实体尚未入库（未跑代谢链）：只做结构预检，不凭启发式分数拒收
+        const issues = [];
+        if (COMPILE_RULES.requireTags && (!metadata.tags || metadata.tags.length === 0)) {
+          issues.push({ type: 'MISSING_TAGS', severity: 'WARNING', message: '缺少关键词', action: 'ADD_TAGS' });
+        }
+        if (body.length < COMPILE_RULES.requireContent) {
+          issues.push({ type: 'SHORT_CONTENT', severity: 'WARNING', message: `内容过短 (${body.length} < ${COMPILE_RULES.requireContent})`, action: 'EXPAND' });
+        }
+        console.log(`   ⏳ 未入库 (PENDING_INGEST) — 先跑 run-metabolism 再验证${issues.length ? '；结构预检: ' + issues.map(i => i.type).join(', ') : ''}`);
+        results.warned.push({ entityId, path: filePath, score: null, issues, pending: true });
+        writeAuditLog({
+          action: 'PENDING',
+          entityId,
+          source: relativePath,
+          kespi: null,
+          issues,
+          tags: metadata.tags || [],
+          links: links.length
+        });
       }
       
     } catch (e) {
@@ -260,7 +255,7 @@ async function compileVerify(options = {}) {
   console.log(`   总文件数: ${rawFiles.length}`);
   console.log(`   接受: ${results.accepted.length} (${acceptRate}%)`);
   console.log(`   拒收: ${results.rejected.length}`);
-  console.log(`   警告: ${results.warned.length}`);
+  console.log(`   警告/待入库: ${results.warned.length}`);
   console.log(`   耗时: ${duration}s`);
   
   // 写入汇总报告
@@ -408,7 +403,7 @@ const action = args[0];
 
 switch (action) {
   case 'compile':
-    compileVerify();
+    compileVerify().catch(e => { console.error('致命错误:', e.message); process.exit(1); });
     break;
   case 'audit':
     auditLog();

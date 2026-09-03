@@ -1,7 +1,7 @@
 # Config Reference / 配置参考
 
-> Actual config file: `scripts/growth.config.js` (CommonJS).
-> Example file: `growth.config.example.ts` (reference only).
+> Actual config file: `src/growth.config.js` (CommonJS).
+> Example file: `growth.config.example.js` (reference only).
 >
 > **The actual config only has two sections: `kespi` and `jiezi`.**
 > There are NO `paths`, `ai`, `pruning`, or `performance` sections in the real config.
@@ -69,10 +69,10 @@ The following sections are described in older docs but **do not exist** in `grow
 
 ## 4. How to Change Config
 
-Edit `scripts/growth.config.js` directly. There is **no hot-reload** — restart the script to apply changes.
+Edit `src/growth.config.js` directly. There is **no hot-reload** — restart the script to apply changes.
 
 ```javascript
-// scripts/growth.config.js
+// src/growth.config.js
 const config = {
   kespi: {
     greenLight: 0.80,

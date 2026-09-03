@@ -28,7 +28,7 @@ Yes. The target hardware is an ordinary home / budget PC: 2 GB RAM + mechanical 
 
 ## 7. Do I need to tune those numbers (80/65/75)?
 
-Defaults are fine — run it for 3 months first. For what they mean, see the [KESPI Threshold Guide](./02-KESPI-Threshold-Guide.md). Tuning is just 3 fields in `scripts/growth.config.js`, restart the script to apply (no hot-reload currently).
+Defaults are fine — run it for 3 months first. For what they mean, see the [KESPI Threshold Guide](./02-KESPI-Threshold-Guide.md). Tuning is just 3 fields in `src/growth.config.js`, restart the script to apply (no hot-reload currently).
 
 ## 8. Do I have to watch it every day?
 
@@ -40,7 +40,7 @@ Current version is a single-user local tool. There is no HTTP API server, no mul
 
 ## 10. How does this relate to Karpathy's LLM Wiki?
 
-Not a fork — a paradigm upgrade. LLM Wiki = knowledge compilation (ingest → compile → query, linear, static). aing = layered metabolism on top of those three layers (raw/wiki/schema): sprouting, pollination, mustard seed, regeneration, expiry — from "static asset" to "living ecosystem." Details in the [Architecture doc](../Engineering/ARCHITECTURE.md).
+Not a fork — a paradigm upgrade. Karpathy's LLM Wiki is a **concept/methodology** (April 2026 X post + Gist); the LLM Wiki tools on the market are community implementations of that concept (database-style software). The paradigm itself = knowledge compilation (ingest → compile → query, linear, static). aing = layered metabolism on top of those three layers (raw/wiki/schema): sprouting, pollination, mustard seed, regeneration, expiry — from "static asset" to "living ecosystem." As for lineage: aing's substrate re-implements the architecture of two database tools, **LLM Wiki + Tolaria**, in plain Markdown — because the originals could not be installed at the time. Details in the [Architecture doc](../../Engineering/ARCHITECTURE.md).
 
 ---
 

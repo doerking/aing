@@ -360,6 +360,9 @@ async function main() {
       }
       
       loop.printFeedbackReport(delta, actions);
+      if (autoTune && actions.length > 0) {
+        console.log(`\nℹ️  调优建议已记录至反馈日志（logFeedback），但未自动执行——参数生效需经配置中枢（growth.config.js）裁定，避免调优绕过门禁。`);
+      }
       
       // 保存新快照
       const snapPath = await loop.saveSnapshot(after, 'after');

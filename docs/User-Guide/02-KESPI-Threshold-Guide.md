@@ -84,7 +84,7 @@
 
 ## 在哪改
 
-打开 `scripts/growth.config.js`，改这三个字段：
+打开 `src/growth.config.js`，改这三个字段：
 
 ```javascript
 const config = {

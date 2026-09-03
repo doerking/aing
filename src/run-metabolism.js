@@ -5,7 +5,7 @@
  * 功能：串联所有代谢引擎，执行完整的双脑代谢流程
  * 
  * 三种模式：
- * 1. 完整模式（默认）: 按固定顺序执行全部 9 步
+ * 1. 完整模式（默认）: 按固定顺序执行全部 10 步
  * 2. 智能模式 (--smart): 生长决策器判断该做什么，按需执行
  * 3. 单步模式 (--step xxx): 只执行指定步骤
  * 
@@ -45,6 +45,7 @@ const STEPS = [
   { name: 'compile', desc: '秩序脑编译 (raw/*.md → wiki/entities/*.md)', script: 'compile.js', args: [] },
   { name: 'import', desc: '导入数据库 (wiki/ → SQLite)', script: 'import-from-wiki.js', args: [] },
   { name: 'link', desc: '自动链接发现 (实体关联)', script: 'auto-link.js', args: [] },
+{ name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
   { name: 'vector', desc: '向量索引 (64-dim embedding)', script: 'index-vectors.js', args: [] },
   { name: 'sprout', desc: '发芽引擎 (新关联发现)', script: 'sprout.js', args: [] },
   { name: 'pollinate', desc: '授粉引擎 (跨域融合)', script: 'pollinate.js', args: [] },

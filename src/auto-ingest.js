@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execSync } = require('child_process');
 
 // ========== 配置 ==========
@@ -35,6 +36,16 @@ class SessionStore {
   constructor() {
     this.sessions = new Map();
     this.lastIngestTime = Date.now();
+    // 内容级去重：已入库批次指纹账本（防轮询器/重发器重复入库同一内容）
+    this.dedupFile = path.join(CONFIG.kbRoot, 'data', 'ingest-hashes.json');
+    this.ingestedHashes = new Set();
+    try {
+      if (fs.existsSync(this.dedupFile)) {
+        for (const h of JSON.parse(fs.readFileSync(this.dedupFile, 'utf8'))) {
+          this.ingestedHashes.add(h);
+        }
+      }
+    } catch (e) { /* 账本损坏则从空开始，不影响入库 */ }
   }
 
   getSession(sessionId) {
@@ -114,9 +125,18 @@ class SessionStore {
       return; // 内容太短，跳过
     }
     
-    // 生成文件名
+    // 内容指纹去重：同一批次内容已入库则丢弃本轮，不重复落盘
+    const batchHash = crypto.createHash('sha1').update(bodyText, 'utf8').digest('hex');
+    if (this.ingestedHashes.has(batchHash)) {
+      session.messages = [];
+      console.log(`⏭️  内容指纹命中已入库记录，跳过重复入库 (${sessionId})`);
+      return;
+    }
+    
+    // 生成文件名（会话 ID 可能带租户前缀等非法字符，先净化再入文件名）
+    const safeSessionId = String(sessionId).replace(/[^a-zA-Z0-9\-_\u4e00-\u9fff]/g, '-');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `${sessionId}-${timestamp}.md`;
+    const fileName = `${safeSessionId}-${timestamp}.md`;
     
     // 生成 YAML frontmatter
     const frontmatter = {
@@ -126,7 +146,9 @@ class SessionStore {
       status: 'active',
       confidence: 0.85,
       source: sessionId,
-      created: latestMsg ? latestMsg.timestamp : new Date().toISOString(),
+      created: session.messages.length > 0
+        ? session.messages[session.messages.length - 1].timestamp
+        : new Date().toISOString(),
       messageCount: session.messages.length
     };
     
@@ -152,6 +174,12 @@ ${Array.from(session.tags).join(', ') || '无'}
     
     // 入库成功后清空本批消息，防止轮询器对同一会话重复入库
     session.messages = [];
+    // 记录并持久化批次指纹
+    this.ingestedHashes.add(batchHash);
+    try {
+      fs.mkdirSync(path.dirname(this.dedupFile), { recursive: true });
+      fs.writeFileSync(this.dedupFile, JSON.stringify([...this.ingestedHashes].slice(-5000)), 'utf-8');
+    } catch (e) { /* 账本写失败不阻断入库 */ }
     
     console.log(`✅ 入库完成: ${fileName}`);
     

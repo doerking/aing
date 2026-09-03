@@ -2,7 +2,7 @@
 /**
  * metabolism-log.js — 代谢运行日志落库（训练反馈信号）
  *
- * 每次 run-metabolism 完整流水线结束后，把 9 步的 status/duration 连同
+ * 每次 run-metabolism 完整流水线结束后，把 10 步的 status/duration 连同
  * kespi_before / kespi_after（全库平均 KESPI）写入 metabolism_log 表。
  * 该表是 SkillOpt Gate 评分的反馈信号源（训练三件套之三）。
  *

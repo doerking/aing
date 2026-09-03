@@ -2,8 +2,11 @@
 
 > The release is the **plain-Markdown edition** — nothing in this guide is required to run aing.
 > 本指南面向"有条件、想给两脑装实体"的用户。装外壳不变内脏：aing 的代谢引擎零改动。
+>
+> **底层渊源**：aing 两脑的底层架构正是 LLM Wiki + Tolaria 这两款数据库软件——因当时原版装不上，作者以纯 Markdown + Node 重写了这一底层。本指南讲的"挂实体"，就是把原版软件接回这套 MD 重实现的接口上。
+> **Lineage (EN)**: aing's two-brain substrate re-implements two database tools — LLM Wiki + Tolaria — in plain Markdown + Node, because the originals could not be installed at the time. "Mounting bodies" means plugging the original software back into this MD re-implementation's interfaces.
 
-**English TL;DR**: Point Tolaria (note shell) at the knowledge-base directory to give the Growth Brain a human-readable body and your daily notes an input channel. Run Karpathy's LLM Wiki (compilation-paradigm software) as an *outourced compile shop* for the hot set, with its output flowing back into `raw/` — never writing `wiki/` directly. Unplug either at any time; the metabolism keeps running.
+**English TL;DR**: Point Tolaria (database tool) at the knowledge-base directory to give the Growth Brain a human-readable body and your daily notes an input channel. Run an LLM Wiki tool (community implementation of Karpathy's concept, compilation-paradigm) as an *outourced compile shop* for the hot set, with its output flowing back into `raw/` — never writing `wiki/` directly. Unplug either at any time; the metabolism keeps running.
 
 ---
 
@@ -17,7 +20,7 @@ aing 的两脑是**器官**，Tolaria 和 LLM Wiki 是挂在器官上的**身体
                    ▼             ▼
           ┌─────────────┐  ┌──────────────┐
           │   Tolaria   │  │   LLM Wiki   │   ← 实体软件（可选外壳）
-          │  笔记外壳    │  │  编译范式软件  │
+          │  数据库软件   │  │  编译范式实现  │
           └──────┬──────┘  └──────┬───────┘
        写入 raw/ │                │ ▲ 回流 raw/（唯一的合法接口）
                  ▼                │ │
@@ -30,8 +33,8 @@ aing 的两脑是**器官**，Tolaria 和 LLM Wiki 是挂在器官上的**身体
 
 | 器官 | 实体 | 补上什么 | aing 侧的对接层 |
 |---|---|---|---|
-| 生长脑 Growth Brain | Tolaria（笔记外壳） | 人读视图、双向链接浏览、每日笔记 | `raw/`（输入面）+ `wiki/`（阅读面） |
-| 秩序脑 Order Brain | LLM Wiki（编译范式软件） | 热集编译、"人问它答"的查询面 | `raw/`（回流接口） |
+| 生长脑 Growth Brain | Tolaria（数据库软件） | 人读视图、双向链接浏览、每日笔记 | `raw/`（输入面）+ `wiki/`（阅读面） |
+| 秩序脑 Order Brain | LLM Wiki 类工具（Karpathy 概念的社区实现） | 热集编译、"人问它答"的查询面 | `raw/`（回流接口） |
 
 ---
 
@@ -56,7 +59,7 @@ aing 的两脑是**器官**，Tolaria 和 LLM Wiki 是挂在器官上的**身体
 
 ## 3. LLM Wiki 实装（秩序脑的身体）/ Wiring LLM Wiki
 
-**定位 / Positioning:** LLM Wiki 是编译范式软件（摄入→编译→查询，天花板约 200 sources / 50K tokens）。aing 不重复造它的轮子，而是形成流水线分工：
+**定位 / Positioning:** LLM Wiki 类工具（Karpathy 同名概念的社区实现，数据库软件）走编译范式（摄入→编译→查询，天花板约 200 sources / 50K tokens）。aing 不重复造它们的轮子，而是形成流水线分工：
 
 > **aing 管谁值得编译（KESPI / 芥子 / 剪枝），LLM Wiki 管编译和被问（热集 → 查询面）。**
 

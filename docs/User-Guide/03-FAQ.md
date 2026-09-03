@@ -28,7 +28,7 @@
 
 ## 7. 阈值那几个数字（80/65/75）要调吗？
 
-默认就行，先跑 3 个月再说。想了解含义看 [KESPI 阈值指南](./02-KESPI-Threshold-Guide.md)。调也是改 `scripts/growth.config.js` 三个字段，改完重新运行脚本即可（当前无热加载）。
+默认就行，先跑 3 个月再说。想了解含义看 [KESPI 阈值指南](./02-KESPI-Threshold-Guide.md)。调也是改 `src/growth.config.js` 三个字段，改完重新运行脚本即可（当前无热加载）。
 
 ## 8. 要我天天盯着吗？
 
@@ -40,7 +40,7 @@
 
 ## 10. 跟 Karpathy 的 LLM Wiki 是什么关系？
 
-不是分支，是范式升级。LLM Wiki = 知识编译（摄入→编译→查询，线性、静止）；aing = 在其三层（raw/wiki/schema）之上叠加代谢层（发芽/授粉/芥子/再生/过期），从"静态资产"变"活生态系统"。详情看 [架构文档](../Engineering/ARCHITECTURE.md)。
+不是分支，是范式升级。Karpathy 提出的 LLM Wiki 是**概念/方法论**（2026 年 X 帖 + Gist），市面上的 LLM Wiki 工具是社区基于该概念的多款实现（数据库类软件）。范式本身 = 知识编译（摄入→编译→查询，线性、静止）；aing = 在其三层（raw/wiki/schema）之上叠加代谢层（发芽/授粉/芥子/再生/过期），从"静态资产"变"活生态系统"。渊源上，aing 的底层正是 **LLM Wiki + Tolaria** 两款数据库软件的架构——当时原版装不上，才用纯 Markdown 重写出了 MD 版。详情看 [架构文档](../Engineering/ARCHITECTURE.md)。
 
 ---
 

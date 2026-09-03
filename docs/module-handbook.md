@@ -1,6 +1,6 @@
-# aing 部署包模块手册
+# aing 部署包模块手册 / Module Handbook (Ops Doc, Chinese-primary)
 
-> 各模块功能能力方向 + 高发问题与处置。基于 2026-08 两轮全量审计（26 处已修复问题）沉淀。
+> 各模块功能能力方向 + 高发问题与处置。基于 2026-08 两轮全量审计（26 处已修复问题）沉淀。英文读者：标题、阈值表与铁律条目均有英文关键词，可按模块名检索；本文以中文为主。
 
 ## 总体架构与数据流
 
@@ -8,9 +8,9 @@
 消息/文件 ──► auto-ingest ──► raw/*.md
                                   │ shared-spine (门禁校验)
                                   ▼
-   run-metabolism 9 步代谢链：
-   compile ─► import ─► link ─► vector ─► sprout ─► pollinate ─► compress ─► kespi ─► prune
-   (raw→wiki) (wiki→DB) (auto-link) (64d向量) (关联发现) (跨域融合) (低频归档) (八维自检) (过期清理)
+   run-metabolism 10 步代谢链：
+   compile ─► import ─► link ─► link-sync ─► vector ─► sprout ─► pollinate ─► compress ─► kespi ─► prune
+   (raw→wiki) (wiki→DB) (auto-link) (双脑同步) (64d向量) (关联发现) (跨域融合) (低频归档) (八维自检) (过期清理)
                                   │
         ┌─────────────────────────┼──────────────────────────┐
         ▼                         ▼                          ▼
@@ -23,10 +23,10 @@
 
 ---
 
-## 一、代谢链（9 步管线）
+## 一、代谢链（10 步管线）
 
 ### run-metabolism.js — 管线编排器
-- **能力**：按序执行 9 步；`--resume` 从上次断点续跑；`--force` 出错继续。
+- **能力**：按序执行 10 步；`--resume` 从上次断点续跑；`--force` 出错继续。
 - **用法**：`node src/run-metabolism.js [--resume] [--force]`
 - **高发问题与处置**：
   - 中途失败后重跑总从头来 → 用 `--resume`（游标只在步骤**成功后**推进）。
@@ -45,8 +45,9 @@
 - **能力**：实体间相似度关联，写 `wiki/links/A__B.md` + 数据库 links 表。
 - **高发问题**：链接文件命名 `A__B` 有方向性，去重必须双向查（见 sprout/pollinate）。
 
-### index-vectors.js — 64 维向量索引
-- **能力**：char-ngram-hash 64 维向量写入 entity_embeddings，model 标记 `char-ngram-hash-64`。
+### index-vectors.js — 向量索引（默认语义）
+- **能力**：默认 384 维本地语义向量（模型内置 models/，零外呼；模型缺失自动回退 64 维哈希）；`--hash` 强制哈希；`--reindex` 全量重建。model 标记区分维度（`char-ngram-hash-64` / MiniLM 384）。
+- **设计变更（2026-09-03）**：原默认 64 维致「入库即建索引但语义搜索搜不到新笔记」，改为模型在即语义，保证入库即可被语义召回。
 - **高发问题**：**向量必须用 Float32Array 编码**（`Buffer.from(new Float32Array(vec).buffer)`）。用 `Buffer.from(floatArray)` 会把 0~1 浮点截成零字节，检索全部失真且无报错——这是最难发现的一类静默数据损坏。
 
 ### sprout.js — 发芽引擎
@@ -98,9 +99,10 @@
 - **能力**：错误码→策略（重试次数/告警/丢弃）；未知错误码返回 null → 归为 UNKNOWN_ERROR，**不重试**、留痕后放行。
 - **高发问题**：getAction 别再兜底返回 500 策略——那会让未知错误被静默重试 3 次且 handle 的 UNKNOWN 分支永远不可达。改策略表时同步检查 logError 的空指针防护（error.type 兜底 getErrorType）。
 
-### shared-spine.js — 共享脊梁（校验/门禁）
-- **能力**：`compile`（raw 档 KESPI 门禁 + 标签检查，拒收进 error_log）/ `audit`（验证审计）。
-- **高发问题**：目录不存在要返回空集而非崩溃；所有 `a/b` 百分比都要除零防护（显示 N/A）。
+### shared-spine.js — 共享脊梁（校验/门禁，真实 KESPI 版）
+- **能力**：`compile`（raw 档门禁：库内实体用 KespiChecker.calculateEntity 真评分，未入库实体只做结构预检标 PENDING_INGEST，不凭启发式分数拒收）/ `audit`（验证审计，含八维明细）。
+- **评分铁律**：评分唯一来源 = 知识库实体 + 真 KESPI，门槛唯一来源 = growth.config（`triPath.kespiPass`，同源绑定 `kespi.yellowLight`）；不要在门禁里自建启发式打分（曾致 9/9 健康实体被误杀拒收，真分实测 0.83-0.85）。
+- **高发问题**：目录不存在要返回空集而非崩溃；所有 `a/b` 百分比都要除零防护（显示 N/A）；KnowledgeStore 是直接导出类，`require('./knowledge-store')` 不可解构。
 
 ### vector-search.js — 语义检索
 - **能力**：@xenova/transformers all-MiniLM-L6-v2（384 维），`env.allowRemoteModels = false` 纯本地模式，模型在 `models/Xenova/all-MiniLM-L6-v2/`。
@@ -108,8 +110,8 @@
 - **降级**：isReady=false 时自动退关键词搜索，不会崩但语义精度下降——日志里看到 fallback 要检查模型目录。
 
 ### auto-ingest.js — 自动入库入口
-- **能力**：消息→raw 档→触发 compile→import→向量链（chained，失败即断）。
-- **高发问题**：kbRoot 必须相对 `__dirname` 解析（历史上硬编码路径导致换目录部署全链路失效）。
+- **能力**：消息→raw 档→触发 compile→import→向量链（chained，失败即断）；**内容指纹去重**（批次 SHA-1 账本落盘 `data/ingest-hashes.json`，同内容重发直接跳过）；会话 ID 入文件名前自动净化非法字符（租户前缀冒号等致 Windows ENOENT）。
+- **高发问题**：kbRoot 必须相对 `__dirname` 解析（历史上硬编码路径导致换目录部署全链路失效）；被 api-server 等外部进程 require 时，批冲洗定时器需宿主自备（主模块 10s 轮询不会启动）。
 
 ---
 
@@ -139,10 +141,11 @@
 - **能力**：紧急度→Agent 编组→建议投票→共识；`--dry-run` 只看不动。
 - **高发问题**：报告打印曾因字段缺失（agent/confidence undefined）输出错乱 → 统一 `String(r.agent || r.label || 'unknown')` 式兜底。
 
-### tri-path-orchestrator.js — 三路突击
-- **能力**：探索/验证/优化三路径并行 + 队正裁决 + 熔断器；`run <task> / status / 熔断 / 复位`。
-- **裁决规则**：各路径取各自核心指标（探索=diversity≥0.5、验证=confidence≥0.7 且 crossCheck=passed、优化=finalScore≥0.7），**至少 2 路同意才通过**；结果反馈熔断器（连续失败 3 次开闸，`复位` 恢复）。
-- **教训**：别用统一字段取分（曾 `finalScore||quality||0.5` 致 verify 恒 0.5、裁决永不通过）；单路径异常要 catch 隔离，别拖垮整个任务。
+### tri-path-orchestrator.js — 三路突击（真实评分版）
+- **能力**：探索/验证/优化三路径**真实执行**（语义检索/链接佐证/KESPI 均值，无 mock）+ 队正裁决 + 熔断器；`run <task> / status / 熔断 / 复位`；`TRI_PATH_DB` 环境变量可指向副本库（影子模式）。
+- **裁决规则**：各路径取各自核心指标（探索=diversity≥0.5、验证=confidence≥0.7 且 crossCheck=passed、优化=finalScore≥0.7），**至少 2 路同意才通过**；结果反馈熔断器（连续失败 5 次开闸，`复位` 恢复）。
+- **阈值来源**：唯一来源 `growth.config.js` 的 `triPath` 段（`TRI_PATH_TH_*` 环境变量可覆盖；`kespiPass` 同源绑定 `kespi.yellowLight`）。
+- **教训**：别用统一字段取分（曾 `finalScore||quality||0.5` 致 verify 恒 0.5、裁决永不通过）；单路径异常要 catch 隔离，别拖垮整个任务；语义模型缺失自动回退 hash 64 维，功能可用但精度降。
 
 ### feedback-loop.js — 反馈闭环
 - **能力**：`snapshot`（系统快照）/ `--before`（代谢前后 Delta 对比）/ 自动调参建议。快照在 `snapshots/`。
@@ -150,20 +153,45 @@
 
 ### gap-detector.js / neural-guide-chain.js / self-growth.js — 缺口检测/导链神经网/自生长
 - gap：五维扫描（原创性/一致性等）；guide-chain：基于 wiki/links/index.md 找意外关联邻居（_getNeighbors 要求单行 ≥2 个 wiki-link）；self-growth：自主生长循环。
+- **guide-chain 铁律（bug#11 教训，2026-09-03）**：routeSignals 内算出的 attentionScore 必须显式传入 _generateRecommendation（曾传原始 data 致优先级永远 low，高优先级唤醒机制从未生效）。凡「算出的字段 A 传给下游函数」的场景，传的必须是 A 本身，不是恰好包含别的字段的宿主对象。
+
+### recycle-seeds.js — 芥子回炉（进化回路）
+- **能力**：evolution-loop.md 蓝图的代码实现——芥子库达到条件后回炉再生长，形成「决策→反馈→剪枝→回炉→血统」进化闭环。
+- **高发问题**：主包组件在库但未接入代谢管线（第 11 步在 OPT 侧验证中，M3 窗口 09-05 结束后评估移植），未全绿前不得在 README/汇报中声明为可用能力（绿灯解锁制）。
 
 ### growth.config.js — 全局阈值中枢
 - **阈值红线速查**：
 
 | 参数 | 值 | 说明 |
 |---|---|---|
-| kespi 通过线 | 0.65 | 低于则 prune/compress 重点关注 |
+| kespi 通过线 | 0.65 | 低于则 prune/compress 重点关注；triPath.kespiPass 同源绑定此值 |
 | pollinate 创意阈值 | 0.75 | **上限 0.8，超了功能静默失效** |
 | verify 置信线 | 0.7 | tri-path 裁决用 |
-| 熔断连续失败 | 3 次 | tri-path 开闸阈值 |
+| tri-path 三路阈值 | 0.5/0.7/0.7 | explore/verify/optimize 同意线，`TRI_PATH_TH_*` 可覆盖 |
+| 熔断连续失败 | 5 次 | tri-path 开闸阈值，`TRI_PATH_CB_FAILURES` 可覆盖 |
 
 ---
 
-## 五、运维速查
+## 五、常驻服务与查询
+
+### scheduler.js — 常驻代谢调度器
+- **能力**：定时代谢（默认 30 分钟，`AING_SCHEDULER_INTERVAL_MS` 可调）+ raw/ 变化触发（mtime 快照轮询，15s 间隔）+ 单实例互斥（上轮未完不叠加，结束后补跑挂起触发）+ `--once` 模式（验证/CI 用）。
+- **铁律**：raw/ 检测用轮询快照，**不用 fs.watch**（Windows 上 watch 事件不可靠，sensory-ends 同款教训）。
+- **日志**：`logs/scheduler.log`，代谢输出内嵌 `[metabolism]` 前缀。
+
+### api-server.js — HTTP API 服务（零依赖）
+- **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`；端口 3789（`AING_API_PORT` 可调）。
+- **认证**：设 `AING_API_KEY` 后除 /health 外全部要求 `Authorization: Bearer`，且监听改 `0.0.0.0`；未设则仅监听 `127.0.0.1`（本机信任模式）。缺凭据返回 401。
+- **多租户**：写入端点按 `X-Tenant-ID` 头隔离会话（缺省 default），租户前缀进会话 ID，文件名自动净化。
+- **输入防护**：实体 ID 白名单字符校验（阻断路径穿越）；请求体 1MB 上限。
+- **高发问题**：宿主进程必须自备会话批冲洗定时器（10s 轮询 checkAndIngest），否则消息滞留内存永不出库。
+
+### query.js — 查询 CLI
+- **能力**：`node src/query.js "关键词" [--limit N] [--names]`——语义/关键词混合检索（模型缺失自动回退 hash）+ 名称/ID 模糊匹配 + 最新 KESPI 附分。
+
+---
+
+## 六、运维速查
 
 - **本地 LSP 服务**（可选组件，见 tools/lsp-server.js）：端口 4317；若本机配置了 HTTP 代理，调用前必须设置 `$env:NO_PROXY="localhost,127.0.0.1"`，否则代理会拦截 localhost 致 502。TypeScript 需完整发行版（含 tsserver.js），全局 npm 安装的是阉割版，缺失时服务会回退扫描项目的 node_modules。
 - **数据库损坏恢复**：库文件是单文件 knowledge.db；写路径已原子化（tmp+rename），若仍损坏从最近快照 + 重跑代谢链重建（raw→wiki→DB 全程幂等可重放）。

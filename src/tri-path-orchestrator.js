@@ -18,15 +18,22 @@
 
 const fs = require('fs');
 const path = require('path');
+const KnowledgeStore = require('./knowledge-store');
+const VectorSearch = require('./vector-search');
+const KespiChecker = require('./kespi-check');
+const growthConfig = require('./growth.config');
 
-// 配置
+// 配置（阈值唯一来源 = growth.config.triPath；本文件不再自定义阈值默认值）
 const CONFIG = {
   logsDir: path.join(__dirname, '..', 'logs', 'tri-path'),
   stateFile: path.join(__dirname, '..', 'data', 'tri-path-state.json'),
-  circuitBreaker: {
-    failureThreshold: 5,    // 连续失败阈值
-    resetTimeout: 60000,    // 熔断重置时间 (ms)
-    halfOpenMax: 3          // 半开状态最大尝试
+  circuitBreaker: { ...growthConfig.triPath.circuitBreaker },
+  thresholds: {
+    exploreAgree:  growthConfig.triPath.exploreAgree,
+    verifyAgree:   growthConfig.triPath.verifyAgree,
+    optimizeAgree: growthConfig.triPath.optimizeAgree,
+    verifyLink:    growthConfig.triPath.verifyLink,
+    kespiPass:     growthConfig.triPath.kespiPass
   }
 };
 
@@ -215,29 +222,100 @@ this.saveState();
   }
 
   /**
-   * 运行单条路径
+   * 运行单条路径（真实原子操作版：评分全部来自本地知识库，无 mock）
    */
-  async runPath(path, task, onProgress) {
-    // 模拟路径执行
-    const mockResults = {
-      [PATHS.EXPLORE]: {
-        candidates: ['候选 A', '候选 B', '候选 C'],
-        diversity: 0.8,
-        quality: 0.6
-      },
-      [PATHS.VERIFY]: {
-        validated: ['候选 B'],
-        confidence: 0.9,
-        crossCheck: 'passed'
-      },
-      [PATHS.OPTIMIZE]: {
-        result: '候选 B (优化版)',
-        improvement: 0.15,
-        finalScore: 0.85
+  async _getTools() {
+    if (!this._tools) {
+      const store = new KnowledgeStore(process.env.TRI_PATH_DB || undefined);  // 影子模式可用 TRI_PATH_DB 指向副本库，默认本项目库
+      await store.init();
+      // 影子库只读：向量缓存落在 OPT 侧 vector-cache.db（分块池化现算回填，绝不写影子库）
+      let cacheStore = null;
+      if (process.env.TRI_PATH_DB) {
+        cacheStore = new KnowledgeStore(process.env.TRI_VECTOR_CACHE || path.join(__dirname, '..', 'data', 'vector-cache.db'));
+        await cacheStore.init();
       }
-    };
+      const vectorSearch = new VectorSearch(store, { cacheStore });
+      await vectorSearch.init();                     // 主包默认 hash 64 维，零依赖启动
+      try {
+        await vectorSearch.enableSemantic();         // 本地模型可用则升级 384 维语义
+      } catch (e) {
+        console.error('[tri-path] 语义模型不可用，回退 hash 模式: ' + e.message);
+      }
+      const kespi = new KespiChecker(store);
+      await kespi.init();
+      this._tools = { store, vectorSearch, kespi };
+    }
+    return this._tools;
+  }
 
-    return mockResults[path] || { status: 'unknown' };
+  async runPath(pathKey, task, onProgress) {
+    const { store, vectorSearch, kespi } = await this._getTools();
+    // query 解析：兼容 字符串任务 / {description} / {question}(task-package 字段) / {query}
+    const query = (typeof task === 'string'
+      ? task
+      : task && (task.description || task.question || task.query)) || 'default';
+    const th = CONFIG.thresholds;
+
+    if (pathKey === PATHS.EXPLORE) {
+      // 探索路：语义检索真实候选，多样性 = 候选类型分布的均衡度
+      const results = await vectorSearch.semanticSearch(query, 8);
+      const candidates = results.map(r => r.name || r.id);
+      const uniqueTypes = new Set(results.map(r => r.type || 'unknown')).size;
+      const diversity = results.length === 0
+        ? 0
+        : Math.min(1, uniqueTypes / Math.min(results.length, 4)) * (results.length >= 3 ? 1 : 0.6);
+      const quality = results.length === 0
+        ? 0
+        : results.reduce((s, r) => s + (r.confidence || 0), 0) / results.length;
+      return { candidates, diversity, quality, source: 'vector-search.semanticSearch', resultCount: results.length };
+    }
+
+    if (pathKey === PATHS.VERIFY) {
+      // 验证路：双重佐证——链接置信度（图佐证）或 KESPI 质检通过（质量佐证，兼容稀疏链接库）
+      const results = await vectorSearch.semanticSearch(query, 8);
+      const candidates = results.slice(0, 5);
+      const validated = [];
+      for (const c of candidates) {
+        const links = store.getLinks(c.id) || [];
+        const best = links.reduce((m, l) => Math.max(m, l.confidence || 0), 0);
+        const kespiScore = (c.kespi_score != null ? c.kespi_score : c.confidence) || 0;
+        const viaLink = best >= th.verifyLink;
+        const viaKespi = kespiScore >= th.kespiPass;
+        if (viaLink || viaKespi) {
+          validated.push({
+            id: c.id, name: c.name,
+            linkConfidence: best,
+            kespiScore,
+            via: viaLink ? 'link' : 'kespi'
+          });
+        }
+      }
+      const confidence = candidates.length === 0 ? 0 : validated.length / candidates.length;
+      return {
+        validated: validated.map(v => v.name),
+        confidence,
+        corroboration: { link: validated.filter(v => v.via === 'link').length, kespi: validated.filter(v => v.via === 'kespi').length },
+        crossCheck: validated.length > 0 ? 'passed' : 'failed',
+        source: 'knowledge-store.getLinks + kespi-pass',
+        candidateCount: candidates.length
+      };
+    }
+
+    if (pathKey === PATHS.OPTIMIZE) {
+      // 优化路：KESPI 八维质量评分（只读 calculateEntity，不落库——影子期纪律）
+      const entities = store.getEntities({ status: 'active' });
+      if (entities.length === 0) return { result: null, improvement: 0, finalScore: 0, source: 'kespi-check.calculateEntity' };
+      const overalls = entities.map(e => kespi.calculateEntity(e).overall);
+      const finalScore = overalls.reduce((a, b) => a + b, 0) / overalls.length;
+      return {
+        result: `${entities.length} 实体 KESPI 均分`,
+        improvement: 0,   // 真实改进量需前后两次评估对比，影子期先记 0
+        finalScore: Math.max(0, Math.min(1, finalScore)),
+        source: 'kespi-check.calculateEntity'
+      };
+    }
+
+    return { status: 'unknown' };
   }
 
   /**
@@ -257,9 +335,9 @@ this.saveState();
 
     // 各路径独立判定是否“同意”
     const passed = {
-      explore:  metrics.explore >= 0.5,
-      verify:   metrics.verify >= 0.7 && results[1]?.crossCheck === 'passed',
-      optimize: metrics.optimize >= 0.7
+      explore:  metrics.explore >= CONFIG.thresholds.exploreAgree,
+      verify:   metrics.verify >= CONFIG.thresholds.verifyAgree && results[1]?.crossCheck === 'passed',
+      optimize: metrics.optimize >= CONFIG.thresholds.optimizeAgree
     };
     const agreeCount = Object.values(passed).filter(Boolean).length;
 
@@ -296,39 +374,43 @@ this.saveState();
   }
 }
 
-// CLI
-const args = process.argv.slice(2);
-const action = args[0];
-const orchestrator = new TriPathOrchestrator();
+// CLI（仅直接执行时运行；被 require 时不触发）
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const action = args[0];
+  const orchestrator = new TriPathOrchestrator();
 
-switch (action) {
-  case 'run':
-    const task = args[1] || 'default-task';
-    orchestrator.execute({ description: task }).then(r => {
-      console.log('\n结果:', JSON.stringify(r, null, 2));
-    }).catch(err => {
-      console.error('\n❌ 三路突击执行异常:', err.message);
-      process.exitCode = 1;
-    });
-    break;
-  case 'status':
-    orchestrator.status();
-    break;
-  case '熔断':
-    orchestrator.circuitState = 'OPEN';
-    orchestrator.saveState();
-    console.log('🚫 熔断器已强制打开');
-    break;
-  case 'reset':
-    orchestrator.circuitState = 'CLOSED';
-    orchestrator.failureCount = 0;
-    orchestrator.saveState();
-    console.log('✅ 熔断器已重置');
-    break;
-  default:
-    console.log('用法:');
-    console.log('  node tri-path-orchestrator.js run <task>  # 执行三路突击');
-    console.log('  node tri-path-orchestrator.js status      # 查看状态');
-    console.log('  node tri-path-orchestrator.js 熔断        # 强制熔断');
-    console.log('  node tri-path-orchestrator.js reset       # 重置熔断器');
+  switch (action) {
+    case 'run':
+      const task = args[1] || 'default-task';
+      orchestrator.execute({ description: task }).then(r => {
+        console.log('\n结果:', JSON.stringify(r, null, 2));
+      }).catch(err => {
+        console.error('\n❌ 三路突击执行异常:', err.message);
+        process.exitCode = 1;
+      });
+      break;
+    case 'status':
+      orchestrator.status();
+      break;
+    case '熔断':
+      orchestrator.circuitState = 'OPEN';
+      orchestrator.saveState();
+      console.log('🚫 熔断器已强制打开');
+      break;
+    case 'reset':
+      orchestrator.circuitState = 'CLOSED';
+      orchestrator.failureCount = 0;
+      orchestrator.saveState();
+      console.log('✅ 熔断器已重置');
+      break;
+    default:
+      console.log('用法:');
+      console.log('  node tri-path-orchestrator.js run <task>  # 执行三路突击');
+      console.log('  node tri-path-orchestrator.js status      # 查看状态');
+      console.log('  node tri-path-orchestrator.js 熔断        # 强制熔断');
+      console.log('  node tri-path-orchestrator.js reset       # 重置熔断器');
+  }
 }
+
+module.exports = TriPathOrchestrator;
