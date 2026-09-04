@@ -140,6 +140,7 @@
 ### guide-chain-swarm.js — 导链蜂群（3 Agent 加权投票）
 - **能力**：紧急度→Agent 编组→建议投票→共识；`--dry-run` 只看不动。
 - **高发问题**：报告打印曾因字段缺失（agent/confidence undefined）输出错乱 → 统一 `String(r.agent || r.label || 'unknown')` 式兜底。
+- **形状归一铁律（2026-09-04 超算部署复盘）**：`_vote` 单代理分支曾透传 `think()` 原始形状（`recommendation`），而多代理聚合形状用 `action`，下游统一读 `consensus.action` → 单代理共识永远显示 unknown。修复：单代理也归一为投票形状。教训：**同函数多分支的返回值必须同形状**，字段名漂移比字段缺失更隐蔽——兜底 `|| 'unknown'` 会把 bug 化妆成数据。
 
 ### tri-path-orchestrator.js — 三路突击（真实评分版）
 - **能力**：探索/验证/优化三路径**真实执行**（语义检索/链接佐证/KESPI 均值，无 mock）+ 队正裁决 + 熔断器；`run <task> / status / 熔断 / 复位`；`TRI_PATH_DB` 环境变量可指向副本库（影子模式）。

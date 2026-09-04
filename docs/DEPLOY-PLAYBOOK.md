@@ -11,6 +11,12 @@ tags: ["aing", "部署", "运维", "SOP", "验收", "手册"]
 1. 目录完整性：根目录应有 `package.json`、`verify-deploy.js`、`schema.sql`、`setup-vectors.ps1`、`src/`（43 个 js）、`docs/`、`raw/`（≥1 篇 .md，验收要求 8 篇基线）。
 2. 环境预检：Node ≥ 18（`node -v`）；Windows PowerShell 5.1 用户确认 .ps1 文件带 BOM（本包自带，勿重存）。
 3. 中国大陆网络确认能达 hf-mirror.com（模型下载走镜像，直连 huggingface.co 必超时）。
+4. **配置初始化（克隆后必做）**：仓库不含 `src/growth.config.js`（.gitignore 排除真实配置）。缺它则验收直接失败：
+
+   ```bash
+   cp growth.config.example.js src/growth.config.js      # Linux/macOS
+   copy growth.config.example.js src\growth.config.js    # Windows
+   ```
 
 ## 阶段 1：依赖安装（一条命令，约 2-5 分钟）
 
@@ -52,7 +58,8 @@ node src/query.js "关键词"                        # 查询（加权融合精�
 
 1. 永不在主包直接改源码——复制影子目录（robocopy），影子内改+验，定点同步改动文件回主包，再 `verify-deploy` 全绿。
 2. 影子里的运行数据（库/日志/快照）永不搬回主包。
-3. 阈值只改 `src/growth.config.js`（环境变量覆盖也只在这一个文件里实现）。
+3. **部署与源码保持一致**：部署时不改代码、不打临时补丁。部署中发现的缺陷在源码仓库分支上修复、合入后重新部署——直接改已部署实例，差异会在下次部署时丢失，并让验收基准失效。运行时配置面仅限 `growth.config.js` 与环境变量。
+4. 阈值只改 `src/growth.config.js`（环境变量覆盖也只在这一个文件里实现）。
 
 ## 常见故障速查
 

@@ -349,7 +349,19 @@ class GuideChainSwarm {
    */
   _vote(results) {
     if (results.length === 0) return null;
-    if (results.length === 1) return results[0];
+    if (results.length === 1) {
+      // 单代理也归一为多代理投票形状（下游统一读 action 字段）。
+      // 2026-09-04 超算部署复盘缺陷：单代理透传 think() 原始形状（recommendation），
+      // 报告读 consensus.action 落 unknown 兕底，共识被吞。
+      const r0 = results[0];
+      const w = r0.confidence || 0.5;
+      return {
+        action: r0.recommendation,
+        confidence: w,
+        votes: r0.recommendation ? { [r0.recommendation]: { weight: w, count: 1 } } : {},
+        totalAgents: 1
+      };
+    }
 
     // 按置信度加权
     const votes = {};
