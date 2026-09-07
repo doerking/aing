@@ -11,6 +11,7 @@
 const SensoryEndings = require('./sensory-ends');
 const NeuralGuideChain = require('./neural-guide-chain');
 const ConsciousnessLayer = require('./consciousness-layer');
+const { ConsciousnessKernel } = require('./consciousness-kernel');
 const fs = require('fs');
 const path = require('path');
 
@@ -31,6 +32,11 @@ class NeuralArchitecture {
     
     this.consciousness = new ConsciousnessLayer({
       baseDir: this.baseDir,
+    });
+
+    this.consciousnessKernel = options.consciousnessKernel || new ConsciousnessKernel({
+      baseDir: this.baseDir,
+      mode: 'coordination-only',
     });
     
     // 运行状态
@@ -77,15 +83,27 @@ this.sensory.start();
    * 处理信号
    */
   _handleSignal(signal) {
+    const neural = this.consciousnessKernel.ingest({
+      ...signal,
+      channel: signal.channel || (signal.type === 'delete' ? 'anomaly' : 'structure'),
+      signalType: signal.signalType || signal.type || 'observed',
+      target: signal.target || signal.relativePath || 'system',
+      intensity: signal.intensity ?? signal.severity ?? 0.5,
+      confidence: signal.confidence ?? 0.7,
+      suggestedAction: signal.suggestedAction || 'observe',
+    });
+
     // 1. 路由层处理
     const routes = this.guideChain.routeSignals([signal]);
     
-    // 2. 如果有高优先级路由，触发意识层
+    // 2. 如果有高优先级路由或意识唤醒，触发意识层
     const highPriority = routes.find(r => r.recommendation.priority === 'high');
-    if (highPriority) {
-      console.log(`⚡ 高优先级信号: ${highPriority.target}`);
+    if (highPriority || neural.reactions.some(reaction => reaction.arousal === 'aroused')) {
+      console.log(`⚡ 高优先级意识信号: ${highPriority?.target || neural.reactions[0]?.target || 'system'}`);
       this._triggerConsciousness();
     }
+
+    return { routes, consciousness: neural }; 
   }
   
   /**
@@ -93,7 +111,30 @@ this.sensory.start();
    */
   _triggerConsciousness() {
     const briefing = this.consciousness.generateBriefing();
-    this._logBriefing(briefing);
+    const signals = [
+      ...briefing.alerts.map(alert => ({
+        channel: alert.type === 'broken-links' ? 'structure' : 'anomaly',
+        signalType: alert.type,
+        target: alert.entity || alert.message,
+        intensity: Number(alert.severity) || 0.5,
+        confidence: 0.75,
+        evidence: alert.details || { message: alert.message },
+        suggestedAction: alert.type === 'broken-links' ? 'verify' : 'observe',
+      })),
+      ...briefing.hotspots.slice(0, 5).map(hotspot => ({
+        channel: 'temporal',
+        signalType: 'hotspot',
+        target: hotspot.entity,
+        intensity: Number(hotspot.heat) || 0.5,
+        confidence: 0.7,
+        evidence: { vitality: hotspot.vitality, connections: hotspot.connections },
+        suggestedAction: 'retrieve',
+      })),
+    ];
+    const consciousness = this.consciousnessKernel.ingest(signals);
+    const result = { briefing, consciousness };
+    this._logBriefing(result);
+    return result;
   }
   
   /**
@@ -145,11 +186,22 @@ this.sensory.start();
     // 3. 意识层输出
     console.log('🧠 [意识层] 生成简报...');
     const briefing = this.consciousness.generateBriefing();
+    const consciousness = this.consciousnessKernel.ingest(
+      signals.files.map(file => ({
+        channel: 'structure',
+        signalType: 'filesystem-scan',
+        target: file,
+        intensity: 0.5,
+        confidence: 0.7,
+        evidence: { source: 'sensory.scanDirectory' },
+        suggestedAction: 'observe',
+      }))
+    );
     
     // 4. 输出摘要
     this._printSummary(briefing);
     
-    return briefing;
+    return { briefing, consciousness };
   }
   
   /**

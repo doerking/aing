@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getConfigState } = require('./config-runtime');
 
 // 配置
 const CONFIG = {
@@ -30,7 +31,13 @@ const CONFIG = {
  * 元认知三层模型
  */
 class MetacognitionLayer {
-  constructor() {
+  constructor(options = {}) {
+    this.config = {
+      stateDir: options.stateDir || CONFIG.stateDir,
+      selfStateFile: options.selfStateFile || CONFIG.selfStateFile,
+      evaluationLog: options.evaluationLog || CONFIG.evaluationLog,
+      adjustmentsLog: options.adjustmentsLog || CONFIG.adjustmentsLog,
+    };
     this.selfState = this.loadSelfState();
     this.evaluationHistory = [];
     this.adjustmentHistory = [];
@@ -40,9 +47,9 @@ class MetacognitionLayer {
    * 加载自身状态
    */
   loadSelfState() {
-    if (fs.existsSync(CONFIG.selfStateFile)) {
+    if (fs.existsSync(this.config.selfStateFile)) {
       try {
-        return JSON.parse(fs.readFileSync(CONFIG.selfStateFile, 'utf8'));
+        return JSON.parse(fs.readFileSync(this.config.selfStateFile, 'utf8'));
       } catch (e) {
         return this.defaultSelfState();
       }
@@ -85,8 +92,8 @@ class MetacognitionLayer {
    * 保存自身状态
    */
   saveSelfState() {
-    fs.mkdirSync(path.dirname(CONFIG.selfStateFile), { recursive: true });
-    fs.writeFileSync(CONFIG.selfStateFile, JSON.stringify(this.selfState, null, 2), 'utf8');
+    fs.mkdirSync(path.dirname(this.config.selfStateFile), { recursive: true });
+    fs.writeFileSync(this.config.selfStateFile, JSON.stringify(this.selfState, null, 2), 'utf8');
   }
 
   /**
@@ -288,6 +295,61 @@ class MetacognitionLayer {
   }
 
   /**
+   * 评估意识神经反应并反馈通道健康/注意力版本。
+   * 只调整意识层运行参数，不执行外部动作或晋升候选能力。
+   */
+  reviewConsciousness(reactions = [], context = {}) {
+    const list = Array.isArray(reactions) ? reactions : [];
+    const averageAttention = list.length
+      ? list.reduce((sum, item) => sum + Number(item.attention || 0), 0) / list.length
+      : 0;
+    const averageConfidence = list.length
+      ? list.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / list.length
+      : 0;
+    const channelScores = {};
+    for (const reaction of list) {
+      for (const channel of reaction.channels || []) {
+        if (!channelScores[channel]) channelScores[channel] = [];
+        channelScores[channel].push(Number(reaction.confidence || 0));
+      }
+    }
+    const channelHealth = Object.fromEntries(
+      Object.entries(channelScores).map(([channel, values]) => [
+        channel,
+        values.reduce((sum, value) => sum + value, 0) / values.length,
+      ])
+    );
+    const adjustments = [];
+    if (averageConfidence < 0.6) {
+      this.selfState.selfAwareness.confidence = Math.max(0.1, this.selfState.selfAwareness.confidence - 0.03);
+      adjustments.push('降低意识判断自信度');
+    } else if (averageConfidence >= 0.8) {
+      this.selfState.selfAwareness.confidence = Math.min(1, this.selfState.selfAwareness.confidence + 0.02);
+      adjustments.push('提高意识判断自信度');
+    }
+    if (averageAttention >= 0.8) {
+      this.selfState.parameters.kespiThreshold = Math.min(0.95, this.selfState.parameters.kespiThreshold + 0.01);
+      adjustments.push('提高高注意力事件的验证门槛');
+    }
+    if (!list.length) adjustments.push('本轮无意识反应，保持当前阈值并等待新信号');
+    const feedback = {
+      timestamp: new Date().toISOString(),
+      reactionCount: list.length,
+      averageAttention,
+      averageConfidence,
+      channelHealth,
+      adjustments,
+      context: { accepted: context.accepted?.length || 0, suppressed: context.suppressed?.length || 0 },
+    };
+    this.selfState.lastConsciousnessFeedback = feedback;
+    this.selfState.consciousnessRevision = Number(this.selfState.consciousnessRevision || 0) + 1;
+    this.adjustmentHistory.push(feedback);
+    this.saveAdjustmentLog();
+    this.saveSelfState();
+    return feedback;
+  }
+
+  /**
    * 保存评估日志
    */
   saveEvaluationLog(evaluation) {
@@ -295,18 +357,36 @@ class MetacognitionLayer {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    fs.appendFileSync(CONFIG.evaluationLog, JSON.stringify(evaluation) + '\n', 'utf8');
+    fs.mkdirSync(path.dirname(this.config.evaluationLog), { recursive: true });
+    fs.appendFileSync(this.config.evaluationLog, JSON.stringify(evaluation) + '\n', 'utf8');
   }
 
   /**
    * 保存调整日志
    */
   saveAdjustmentLog() {
-    const logDir = path.dirname(CONFIG.adjustmentsLog);
+    const logDir = path.dirname(this.config.adjustmentsLog);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    fs.appendFileSync(CONFIG.adjustmentsLog, JSON.stringify(this.adjustmentHistory.slice(-1)[0]) + '\n', 'utf8');
+    fs.appendFileSync(this.config.adjustmentsLog, JSON.stringify(this.adjustmentHistory.slice(-1)[0] || {}) + '\n', 'utf8');
+  }
+
+  /**
+   * 审查代谢步骤结果。只记录审查结果，不修改配置或执行外部动作。
+   */
+  reviewStep(step, result) {
+    const passed = Boolean(result && result.status === 'success');
+    const review = {
+      timestamp: new Date().toISOString(),
+      step,
+      passed,
+      status: result && result.status ? result.status : 'unknown',
+      error: result && result.error ? result.error : null,
+      configRevision: getConfigState().revision
+    };
+    this.saveEvaluationLog({ type: 'pipeline-step-review', ...review });
+    return review;
   }
 
   /**
