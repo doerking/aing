@@ -31,12 +31,15 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 
 | # | Check / 检查项 | Fix on failure / 失败修复 |
 |---|---|---|
+| C0 | `src/growth.config.js` present / 配置文件在位 | `cp growth.config.example.js src/growth.config.js` |
 | C1 | Node.js >= 18 | Upgrade Node / 换新 Node |
 | C2 | sql.js / @xenova/transformers / sharp resolvable / 三件可解析 | `npm install` at package root / 包根 `npm install` |
 | C3 | raw/ contains knowledge docs / raw/ 有知识文档 | Put at least one .md / 放入至少一篇 .md |
 | C4 | DB entities + vector index / 数据库实体与向量索引 | `node src/run-metabolism.js`, then / 再 `node src/index-vectors.js --semantic --reindex` |
 | C5 | Local semantic model bundled in models/ (~22MB) / 本地语义模型 | `powershell -File setup-vectors.ps1` |
 | C6 | Semantic search actually hits / 语义检索真实命中 | `node src/index-vectors.js --semantic --reindex` |
+| C7a | KESPI lifecycle consistency wiki↔db / 生命周期一致 | Full metabolism then re-verify / 全量代谢后复验 |
+| C7b | Patch-layer fingerprints (v1 defs) / 补丁层指纹 | Replay all cockpit layers v1→v3 (Pitfall 7) / 整层重放 |
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 

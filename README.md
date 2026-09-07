@@ -28,11 +28,13 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 | Pillar | What it doesn't fuss over | Status |
 |---|---|---|
 | Shell-agnostic | Front-end / storage / runtime | ✅ |
-| Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented |
-| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented |
-| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented (real scoring) |
+| Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented — coordination-only kernel; metabolism→kernel events wired 2026-09-08 (`e847d15`)
+| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only (adjustments/candidates, never auto-executes); pipeline wiring under evaluation (Phase 2.6)
+| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented — real scoring, no mock (docs realigned 2026-09-08)
 
-**Feed it a bowl of plain MD + any LLM + any collaborator, and it grows a complete metabolism.**
+**Zero LLM calls in the core loop: plain MD + Node runs the full metabolism; semantic vectors are local & optional. LLMs are optional host shells (session memory, compile aid) — not engine parts. / 核心代谢环零 LLM 调用：MD + Node 跑完全程，语义向量本地可选；LLM 是可选宿主外壳（会话记忆/编译辅助），不是引擎零件。**
+> **Naming discipline / 措辞纪律**："Consciousness" 在本包中始终指**意识神经协调层**——9 通道事件感知 → 注意力路由 → 简报生成；coordination-only（不执行、不自动批准），写入一律走 `ingest → 代谢管线`。它不是自主意识体：无自主目标、无外部行动力。*"Consciousness" here always means the coordination-only neural layer (sense → route → brief); it is not an autonomous agent — no self-set goals, no external agency, writes only via the ingest pipeline.*
+
 
 ## 🗣️ Two Sentences / 两句话说清
 
@@ -85,7 +87,7 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 |---|---|---|
 | Paradigm | Compilation / 编译 | **Metabolism / 代谢** |
 | Growth | Linear: ingest→compile→query | Non-linear: sprout·pollinate·metabolize·regenerate |
-| LLM role | Single LLM as "programmer" | Order Brain (compile) + Growth Brain (metabolic) |
+| LLM role | Single LLM as "programmer" | None required in the core loop (mechanical steps + local models); optional host-agent shells
 | Ceiling | ~200 sources / 50K tokens | Theoretically unbounded |
 
 ## Architecture / 架构
@@ -231,7 +233,21 @@ node src/query.js "三路突击" --limit 5
 | 实体 KESPI 显示 `pending` | 编译后尚未首评（P1b 流转） | 跑 `node src/kespi-check.js` 或全量代谢；**非故障 / not a fault** |
 | 日志出现「中文 / English」双语文 | 本迭代双语输出（预期） | 无需处理；勿当乱码「修复」，勿改机器令牌 |
 | `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段；缺省落「待生成 / pending」占位，非错误 |
+| 代谢提示「already running (pid=…)」且退出码 0 | 并发保护：跨进程原子锁（2026-09-08 起），第二实例自动让位 | 非故障 / not a fault：等当前代谢结束，或交给 scheduler 排程 |
 | 重复执行双语补丁 | 幂等设计 | 重复运行自动跳过已双语行，不会重复插入 / idempotent by design |
+
+### Automation Boundary / 自动化边界（无人值守 vs 等触发）
+
+> 「自己长」= 左列无需人守；右列等宿主或人触发。与 AGENTS 纪律 8（组件透明化）同源。
+> "Self-growing" = the left column runs unattended; the right column waits for a host/human trigger.
+
+| Unattended / 无人值守自动运行 | Trigger-gated / 等触发才运行 |
+|---|---|
+| 定时代谢 + raw/ 轮询（scheduler） | 单步 `--step` 与智能决策 `--smart` |
+| 会话入库 + 指纹去重（auto-ingest / POST /api/ingest） | 蒸馏债消费（distill.js `--id`） |
+| 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
+| 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
+| 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
 
 ## Database / 数据库
 
@@ -326,7 +342,7 @@ node src/setup-db.js --backup     # 手动备份
 | `metabolism-log.js` | 代谢运行日志落库（训练反馈信号） | 训练/回炉分析需要历史时 |
 | `sql-migrate.js` | SQLite 迁移脚本（sql.js 版） | 表结构升级时 |
 
-### Consciousness Neural / 意识神经
+### Consciousness Neural / 意识神经（协调层）
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
@@ -336,6 +352,11 @@ node src/setup-db.js --backup     # 手动备份
 | `consciousness-layer.js` | 意识层 | 状态监控/告警 |
 | `neural-guide-chain.js` | 神经导链 | 信号路由 |
 | `sensory-ends.js` | 感知末梢（目录感知层） | raw/、wiki/ → 信号 |
+| `consciousness-event.js` | 意识事件协议（9 通道 + 指纹去重） | 任意信号 → ConsciousnessEvent |
+| `consciousness-kernel.js` | 意识核（coordination-only 硬约束） | 事件 → 聚合/抑制/持久化（data/consciousness/state.json） |
+| `consciousness-controller.js` | Agent 侧模式控制器 | 三模式 + 决策血缘（不执行、不自动批准） |
+| `hermes-aing-adapter.js` | 宿主接入适配器（IF-001 参考实现） | ingest / search / briefing / deliberate |
+| `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十步成功/失败 → 9 通道事件（source=metabolism） |
 
 ### Resident Services & Retrieval / 常驻服务与检索
 
@@ -389,6 +410,7 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
 - [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode; no hot-reload / 定时代谢+raw 轮询触发，热重载未纳入)
 - [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
+- [x] Phase 5 — Consciousness upgrade integration (13 modules per original design; G1-G8 gates green; metabolism→kernel events wired 2026-09-08; N1 cross-process atomic lock / N2 timing-safe auth / N3 self-test exit discipline; consciousness-neural docs realigned to code truth — evidence: `e847d15`, verify-deploy + self-test ALL GREEN)
 
 ## Vision & Operations / 愿景与运行
 
