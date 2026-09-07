@@ -1,7 +1,7 @@
 ---
 name: aing-operator
 description: |
-  Skill group for the aing knowledge organism: gives any agent a complete operating capability set — Ops group (deploy/verify, metabolism, resident services), Repair group (shadow discipline /定点同步 patch-sync), Governance group (dual-evidence / green-light unlocks / report panels), Training group (SkillOpt-style skill-doc training loop), Review group (4-role evolution team dispatch). Any task involving aing, E:\aing, E:\OPT, shadow directories, knowledge organisms, metabolism pipeline, KESPI, SkillOpt, mustard-seed recycle, or consciousness-neural (sensory-ends/guide-chain/consciousness-layer) MUST read this skill before acting — aing's governance red lines live in docs, not code; acting without reading them has historically caused 11 bugs and multiple false alarms.
+  Skill group for the aing knowledge organism: gives any agent a complete operating capability set — Ops group (deploy/verify, metabolism, resident services), Repair group (shadow discipline /定点同步 patch-sync), Governance group (dual-evidence / green-light unlocks / report panels), Training group (SkillOpt-style skill-doc training loop), Review group (4-role evolution team dispatch). Any task involving aing, <repo-root>, <opt-copy>, shadow directories, knowledge organisms, metabolism pipeline, KESPI, SkillOpt, mustard-seed recycle, or consciousness-neural (sensory-ends/guide-chain/consciousness-layer) MUST read this skill before acting — aing's governance red lines live in docs, not code; acting without reading them has historically caused 11 bugs and multiple false alarms.
   Use when: the user mentions any yard of the aing ecosystem (master package / training copy / shadow directory / simulator / second machine), asks to deploy, verify, operate, repair, train, or review aing, or the write target is inside an aing repo.
   Do NOT use for ordinary Node.js projects unrelated to aing (that's senior-developer's job).
 version: "0.2"
@@ -16,9 +16,9 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 
 | Yard | Path | What you may do | Red line |
 |---|---|---|---|
-| Master package | `E:\aing` | Read code, edit docs, run verify-deploy / metabolism / resident services | Never run training or experiments, leave no run traces (__pycache__/runs/ckpt); source changes must go through a shadow first |
-| Training copy | `E:\OPT` | All training / simulation / experiments happen here | src frozen (read-only) during M3 shadow window |
-| Shadow dirs | `E:\SQA\aing-shadow-*` | The site of all code changes & verification | Patch-sync only changed files back; keep shadows as audit evidence |
+| Master package | `<repo-root>` | Read code, edit docs, run verify-deploy / metabolism / resident services | Never run training or experiments, leave no run traces (__pycache__/runs/ckpt); source changes must go through a shadow first |
+| Training copy | `<opt-copy>` | All training / simulation / experiments happen here | src frozen (read-only) during M3 shadow window |
+| Shadow dirs | `<sqa-root>/aing-shadow-*` | The site of all code changes & verification | Patch-sync only changed files back; keep shadows as audit evidence |
 | Simulator | EvoX chassis (Group A) | EvoX thinks, aing remembers | Never move EvoX run artifacts into the aing store |
 | Second machine | Group B | Reports only, no direct access | B reports require dual-evidence arbitration before acceptance |
 
@@ -26,12 +26,12 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 
 | Source | Path | When to read |
 |---|---|---|
-| New-agent onboarding (5 steps) | `E:\aing\docs\AGENT-ONBOARDING.md` | Before first aing operation |
-| Agent discipline + one-command deploy | `E:\aing\AGENTS.md` | Before any hands-on work |
-| Capability truth (green list) | `E:\aing\docs\GREEN-LIST.md` | Before claiming any capability |
-| Module handbook (pits & iron rules) | `E:\aing\docs\module-handbook.md` | Before touching any module |
-| Deploy triage prescriptions | `E:\aing\docs\DEPLOY-CHECK-2026-09-02.md` | When deploy/verify fails |
-| Architecture & lineage | `E:\aing\docs\Engineering\` | Architecture discussions |
+| New-agent onboarding (5 steps) | `docs/AGENT-ONBOARDING.md` | Before first aing operation |
+| Agent discipline + one-command deploy | `AGENTS.md` | Before any hands-on work |
+| Capability truth (green list) | `docs/GREEN-LIST.md` | Before claiming any capability |
+| Module handbook (pits & iron rules) | `docs/module-handbook.md` | Before touching any module |
+| Deploy triage prescriptions | `docs/DEPLOY-CHECK-2026-09-02.md` | When deploy/verify fails |
+| Architecture & lineage | `docs/Engineering/` | Architecture discussions |
 
 ## 3. Task Routing & the Semi-Lazy Protocol
 
@@ -49,13 +49,13 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 | Training / skill-doc optimization / SkillOpt | Training [tag:训练] | SkillOpt loop + degraded path without trainer | [training-group.md](../references/training-group.md) |
 | Architecture design / health check / adversarial review | Review [tag:评审] | 4-role evolution team dispatch & gates | [evolution-team.md](../references/evolution-team.md) |
 
-**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Convention: `E:\aing\AGENTS.md` discipline rule 7.
+**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Convention: `AGENTS.md` discipline rule 7.
 
 Routing principle: when unsure, read governance.md first — know what you must not do before deciding how; it counts as your one L2 pull. Multi-group tasks (e.g. "fix bug and report") load serially Repair→Governance, still ≤2.
 
 ## 4. Reporting Discipline (shared by all groups)
 
-After any deploy/modification, reports must attach the **complete verify-deploy.js green panel** (six ✅ items + ALL GREEN line). No panel = incomplete report. Panel template: `E:\aing\AGENTS.md` reporting section.
+After any deploy/modification, reports must attach the **complete verify-deploy.js green panel** (six ✅ items + ALL GREEN line). No panel = incomplete report. Panel template: `AGENTS.md` reporting section.
 
 ## 5. Version & Review
 

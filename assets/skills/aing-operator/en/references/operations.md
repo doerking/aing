@@ -4,7 +4,7 @@ tags: ["aing", "运维", "部署", "验收", "代谢", "常驻服务", "冒烟"]
 
 # Ops Group: Deploy, Verify & Daily Running
 
-## One-command deploy (in order, no skipping; details in `E:\aing\AGENTS.md`)
+## One-command deploy (in order, no skipping; details in `AGENTS.md`)
 
 ```bash
 # at the aing package root
@@ -31,7 +31,7 @@ npm run verify                                    # re-verify anytime; must stay
 
 ## Script map
 
-All 43 src modules are catalogued in `E:\aing\README.md`'s categorized script tables (core pipeline / decision layer / consciousness-neural / resident services / repair & maintenance). Check the table before using a script; don't guess parameters.
+All 43 src modules are catalogued in `README.md`'s categorized script tables (core pipeline / decision layer / consciousness-neural / resident services / repair & maintenance). Check the table before using a script; don't guess parameters.
 
 ## Smoke discipline
 

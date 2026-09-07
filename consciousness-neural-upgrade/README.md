@@ -2,8 +2,8 @@
 
 本目录是从部署包源码整理出的独立意识神经升级副本。
 
-来源：`E:\Sevo\src`
-目标：`E:\aing\consciousness-neural-upgrade`
+来源：`sevo/src`
+目标：`consciousness-neural-upgrade`
 
 包含意识事件协议、意识神经核、感知层、导链、意识层、元认知、成长记录和框架无关适配器等模块。
 

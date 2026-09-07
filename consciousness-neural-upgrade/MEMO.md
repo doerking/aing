@@ -57,7 +57,7 @@
 
 ## 五、运行边界（Stable）
 
-- 本副本**不自动覆盖** `E:\aing\src`；落位为 `E:\aing\consciousness-neural-upgrade` 独立目录。
+- 本副本**不自动覆盖** `src`；落位为 `consciousness-neural-upgrade` 独立目录。
 - 本副本**不直接修改**运行数据库和知识数据；写路径唯一：ingest → 代谢管线。
 - `coordination-only` 是意识神经核的**默认**安全运行模式；高风险维护仍需审批。
 - 意识神经输出定位：感知、路由、建议和复核依据。
@@ -73,13 +73,13 @@
 |---|---|---|---|---|
 | `src/`（13 件 + adapter） | **唯一活体** | 读、改、跑、提交 | —— | **永远赢** |
 | `consciousness-neural-upgrade/` | 档案快照 | 读、对照 | 禁止回灌 src/；禁止修改后当真源用 | 输给 src/ |
-| `E:\consciousness-neural-upgrade\` | 外部对照 | 读、对照 | 同上，且不在 git 内、不随部署走 | 输给 src/ |
-| `E:\Sevo` | **已消亡** | 什么都不做 | 不要去找它；不要从它恢复任何东西 | 不参与 |
+| `consciousness-neural-upgrade/` | 外部对照 | 读、对照 | 同上，且不在 git 内、不随部署走 | 输给 src/ |
+| `Sevo` | **已消亡** | 什么都不做 | 不要去找它；不要从它恢复任何东西 | 不参与 |
 
 **决策规则（IF-THEN）：**
 - IF 要改代码 → 只去 `src/`，改完跑 `node verify-deploy.js`
 - IF 发现副本与 src/ 不一致 → src/ 赢；把差异记进本节变更记录，**不要自行合并**
-- IF 看到任何文档写「来源：E:\Sevo\src」→ 这是历史来源标注，不是可用路径
+- IF 看到任何文档写「来源：sevo/src」→ 这是历史来源标注，不是可用路径
 - IF 要恢复/重装 → 从 git 历史或 src/ 出发，**永远不从档案副本出发**
 
 **自验证（agent 请跑这三条确认本契约未过期，三条全过=契约有效，任一失败=先修 src/ 再信本文档）：**
@@ -91,7 +91,7 @@ git log --oneline -1 -- src/              # 最近修改发生在 src/
 ```
 ## 六、验收门禁（Gate，逐项全绿才可登记 greenlist）
 
-- [x] 在 `E:\aing` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。（2026-09-08 G1：13/13 LOAD-OK + 4 主包件可达）
+- [x] 在 `<repo-root>` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。（2026-09-08 G1：13/13 LOAD-OK + 4 主包件可达）
 - [x] 验证 `ConsciousnessEvent` 归一化、指纹去重和 9 通道约束（含 generic 兜底）。（2026-09-08 G2：7/7 PASS；注意字段名是 channel 非 type）
 - [x] 验证 `ConsciousnessKernel` 事件去重、聚合、抑制和状态持久化（coordination-only 默认生效）。（2026-09-08 G3：3x同件→1收2拒，抑制跨进程存活，state 落 data/consciousness/state.json）
 - [x] 验证 `NeuralArchitecture` 感知→导链→意识输出链路。（2026-09-08 G4：实跑 6.5s，briefing 六件输出 alerts=8/hotspots=5，落 logs/consciousness/）
@@ -109,16 +109,16 @@ git log --oneline -1 -- src/              # 最近修改发生在 src/
 | 意识简报 | logs/consciousness/briefing-YYYYMMDD.md |
 | 蒸馏器 | src/distill.js（v1 未部署态：手动/受控触发 --dry-run/--id；机械确定性摘要，无 LLM，原话保全，contentDigest 可审计；成熟后再评估挂入代谢管线） |
 | 蒸馏迁移 | entities 表 distill_meta 列（建表含新列 + 旧库 ALTER 兜底，幂等） |
-| 验收证据归档 | E:\\SQA\\acceptance-evidence-20260908\\（raw 测试件 + 蒸馏后 wiki 件） |
+| 验收证据归档 | <sqa-root>/acceptance-evidence-20260908/（raw 测试件 + 蒸馏后 wiki 件） |
 | TTL 优化 | recentFingerprints 7 天过期——**待办**（需测试覆盖：未过期去重/过期重收/跨进程一致/不无限增长） |
 
 ## 七、变更记录
 
 - 2026-09-07：建立 `consciousness-neural-upgrade` 独立副本。
-- 2026-09-07：从 `E:\Sevo\src` 同步 13 个意识神经相关源码文件。
+- 2026-09-07：从 `sevo/src` 同步 13 个意识神经相关源码文件。
 - 2026-09-07：完成逐字节比对、依赖闭合检查和 Node 语法检查（CONSCIOUSNESS_SYNTAX_OK）。
 - 2026-09-07：补充本副本备忘录组件 `MEMO.md`。
 - 2026-09-08：**MEMO 升格为「意识神经控制面板」**——固化接口标准四件套（9 通道 / ConsciousnessEvent / adapter CLI 契约 / coordination-only 默认模式），开设预留接口登记区（IF-002~IF-006 + 开放池），确立「aing 组件之外的一切 agent 软件组件均可按标准接入」的总理念。
-- 2026-09-08：副本落位 `E:\aing\consciousness-neural-upgrade`，进入验收队列。- 2026-09-08：验收门禁 8/8 全绿（G1-G8），意识神经系统完成运行时接入；13 件按原设计部署进 src/，副本目录转为档案；adapter 正式位 src/hermes-aing-adapter.js。
+- 2026-09-08：副本落位 `consciousness-neural-upgrade`，进入验收队列。- 2026-09-08：验收门禁 8/8 全绿（G1-G8），意识神经系统完成运行时接入；13 件按原设计部署进 src/，副本目录转为档案；adapter 正式位 src/hermes-aing-adapter.js。
 - 2026-09-08：P0-1 蒸馏器落地（src/distill.js v1）——pending-distillation 有了消化器；定向验证 5/5（dry-run 报告/Debt 2→1/状态转 active/摘要写回含 contentDigest/原话保全）；drill 会话 wiki 缺失按设计拒绝无据蒸馏；knowledge-store 加 distill_meta 列迁移。
 - 2026-09-08：验收残留清理——raw 测试件与蒸馏后 wiki 件归档 SQA；神经核状态 fp 26→0 / suppressed 25→0 / focus 去 IF-TEST；本节真源声明与运维节生效。

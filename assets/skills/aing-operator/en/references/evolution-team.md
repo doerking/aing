@@ -28,4 +28,4 @@ Play the four roles serially within the same task, but **preserve the adversaria
 
 ## aing-specific review inputs
 
-When reviewing aing-related designs, feed the theorist two things: `E:\aing\docs\Engineering\` architecture docs (carrying the think/remember-separation lineage) and the GREEN-LIST capability boundary (prevents false positives like reviewing "capabilities that don't exist"). Health-check reports land in E:\SQA; conclusions go through dual-evidence arbitration.
+When reviewing aing-related designs, feed the theorist two things: `docs/Engineering/` architecture docs (carrying the think/remember-separation lineage) and the GREEN-LIST capability boundary (prevents false positives like reviewing "capabilities that don't exist"). Health-check reports land in <sqa-root>; conclusions go through dual-evidence arbitration.

@@ -1,6 +1,6 @@
 # aing 市场定位与竞争分析报告 / Market Positioning & Competition Analysis (Chinese-primary)
 
-> 2026-08-25 · 基于 E:\aing 完整实现 + 市场调研 · *Internal analysis document, written in Chinese.*
+> 2026-08-25 · 基于 <repo-root> 完整实现 + 市场调研 · *Internal analysis document, written in Chinese.*
 
 ---
 
@@ -181,7 +181,7 @@ aing（E:\）
 3. **三路突击真实执行** — 替换 mock 数据
 
 ### P1（近期补）
-4. **多模型 AI Provider** — 已有代码，移植到 E:\aing
+4. **多模型 AI Provider** — 已有代码，移植到 <repo-root>
 5. **调度器/定时任务** — 定时触发代谢
 6. **FTS5 全文检索** — 替代简单关键词匹配
 

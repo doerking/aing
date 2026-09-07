@@ -175,7 +175,7 @@ async function main() {
   }
 
   // 5) 伪精排：融合 KESPI 与新鲜度（TODO(origin-trust): 低信任降权接入点，
-  //    见 E:\SQA\DESIGN-ORIGIN-TRUST-2026-09-03.md，origin_trust 列落地后在此减分）
+  //    见 DESIGN-ORIGIN-TRUST-2026-09-03.md，origin_trust 列落地后在此减分）
   const candidates = [...pool.values()];
   for (const e of candidates) {
     try {

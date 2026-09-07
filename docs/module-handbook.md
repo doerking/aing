@@ -195,7 +195,7 @@
 ### query.js — 查询 CLI（精排版，2026-09-03）
 - **能力**：`node src/query.js "关键词" [--limit N] [--names] [--slow]`——三路加权融合排序（语义 + 关键词覆盖 + 名称/ID 匹配，权重在 growth.config.js `query.fusionWeights`）+ 双路径慢回忆（候选均相似度 < `slowRecallThreshold` 或 `--slow` 时，复用 neural-guide-chain 邻居遍历二跳扩展，入池分 = 0.3×种子相似度）+ 伪精排（KESPI/新鲜度融合，替代重型 reranker）。
 - **教训（影子期自捕）**：检索池只收真命中（语义/关键词/名称三路 >0），不得全库倾倒——否则慢回忆邻居永远"已在池中"，扩展恒为空。
-- **待接**：origin-trust 低信任降权排序点已在代码留 TODO，等 origin_trust 列落地（见 E:\SQA\DESIGN-ORIGIN-TRUST-2026-09-03.md）。
+- **待接**：origin-trust 低信任降权排序点已在代码留 TODO，等 origin_trust 列落地（见 DESIGN-ORIGIN-TRUST-2026-09-03.md）。
 
 ---
 

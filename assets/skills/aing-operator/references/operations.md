@@ -4,10 +4,10 @@ tags: ["aing", "运维", "部署", "验收", "代谢", "常驻服务", "冒烟"]
 
 # 运维组：部署、验收与日常运行
 
-## 一键部署（按序，不可跳步；详见 `E:\aing\AGENTS.md`）
+## 一键部署（按序，不可跳步；详见 `AGENTS.md`）
 
 ```bash
-# 在 E:\aing 包根
+# 在 <repo-root> 包根
 npm install              # 一条命令装齐 sql.js / @xenova/transformers / sharp
 node verify-deploy.js    # 机器判定验收；退出码 0 = ALL GREEN（或 npm run verify）
 ```
@@ -31,7 +31,7 @@ npm run verify                                    # 随时复验，必须保持�
 
 ## 脚本地图
 
-43 个 src 模块已全部归档进 `E:\aing\README.md` 分类脚本表（核心管线/决策层/意识神经/常驻服务/修复与维护五张表）。用某个脚本前先查表，不要猜参数。
+43 个 src 模块已全部归档进 `README.md` 分类脚本表（核心管线/决策层/意识神经/常驻服务/修复与维护五张表）。用某个脚本前先查表，不要猜参数。
 
 ## 冒烟纪律
 

@@ -33,7 +33,7 @@ tags: ["aing", "业务层", "路线学习", "记忆路由", "受控自改进", "
 - **Gödel Agent**：✅ 已验真。arXiv 2024-10（北大/UC/Arizona），自指递归自改进，四步循环 self_inspect → interact → self_update → continue_improve。
 - **MemR³**：✅ 已验真。Memory Retrieval via Reflective Reasoning：Router（retrieve/reflect/answer 动作选择）+ Evidence-Gap Tracker（证据集 ℰ 与缺口集 𝒢 记账，单调性/完备性/可解释性）+ 闭环迭代，即插即用控制器，QA 提升 5-9%。
 - **Agents 2.0（作为具体论文）**：⚠️ 标题检索未命中，搜到的均为范式性文章。MPO / R2D2 同样待验。**暂按项目内部代号处理**，拿到 arXiv ID 后补验。层的职责定义不依赖该论文成立。
-- 姊妹靠山（验真状态见 `E:\SQA\RESEARCH-DOERONE-PAPERS-2026-09-04.md`）：FluxMem/MPR/Memento2/Hindsight → 5 与 6；RAKG/KG2RAG → 建链底座；AMA-Bench 类 → 评估。
+- 姊妹靠山（验真状态见 `RESEARCH-DOERONE-PAPERS-2026-09-04.md`）：FluxMem/MPR/Memento2/Hindsight → 5 与 6；RAKG/KG2RAG → 建链底座；AMA-Bench 类 → 评估。
 
 ## 三、层 × 现有组件锚点
 

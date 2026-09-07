@@ -6,11 +6,11 @@ tags: ["aing", "修复", "影子", "SOP", "定点同步", "Windows坑"]
 
 Any change to aing source code goes through five steps, none skipped:
 
-1. **Copy a shadow**: robocopy the master package to `E:\SQA\aing-shadow-<date>-<topic>\` (don't hand-pick files — verifying half the code in a shadow equals verifying nothing).
+1. **Copy a shadow**: robocopy the master package to `<sqa-root>/aing-shadow-<date>-<topic>\` (don't hand-pick files — verifying half the code in a shadow equals verifying nothing).
 2. **Edit & verify inside the shadow**: all edits, unit tests, smoke runs, regressions happen there. Pass = module regression + shadow verify-deploy.
 3. **Patch-sync**: copy back only the specific changed files (single-file robocopy or targeted copy). **Never move shadow run data** (knowledge.db, logs/, snapshots/, data/, __pycache__…) — run data is the shadow's autopsy site; mixing it into master pollutes the baseline.
 4. **Master re-verify**: rerun master `verify-deploy.js`, paste the full green panel to the user.
-5. **Bookkeeping**: bug ledger (E:\SQA) event, qa.js archive, daily memory update.
+5. **Bookkeeping**: bug ledger (<sqa-root>) event, qa.js archive, daily memory update.
 
 ## Windows pits at shadow sites (handbook iron rules; violating them = crash)
 

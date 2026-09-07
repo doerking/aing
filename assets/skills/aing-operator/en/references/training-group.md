@@ -12,10 +12,10 @@ In the aing system, **the agent is the host (organism); skill documents are the 
 
 | Role | Location | Notes |
 |---|---|---|
-| Host/organism | aing (E:\aing or a deployment machine) | Carrier of behavior; absorbs, is never edited directly |
+| Host/organism | aing (<repo-root> or a deployment machine) | Carrier of behavior; absorbs, is never edited directly |
 | Trainable parameter | skill doc | The only entry point; self-compiling |
-| Training site | `E:\OPT` (training copy) | All training / simulation / experiments here; never in the source package |
-| Trainer | `E:\DD\321\SkillOpt-full` | Full trainer; **not part of the aing deploy package**; third-party deployments don't have it by default |
+| Training site | `<opt-copy>` (training copy) | All training / simulation / experiments here; never in the source package |
+| Trainer | `SkillOpt-full` | Full trainer; **not part of the aing deploy package**; third-party deployments don't have it by default |
 
 ## Standard loop (with trainer)
 
@@ -32,4 +32,4 @@ Document-level training works without the trainer; minimal loop: edit skill doc 
 
 - Training-site artifacts (ckpt, runs, __pycache__) stay in OPT, never enter the source package.
 - Training conclusions book under dual evidence: doc change + verification score; missing either means "not trained".
-- The aing knowledge base (E:\CATp\knowledge-base) Q&A archive is source material, not training itself.
+- The aing knowledge base (knowledge-base) Q&A archive is source material, not training itself.

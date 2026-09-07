@@ -70,7 +70,7 @@
 
 ## 附二：M2 首轮正式联调跑通（2026-08-28）
 
-在副本环境 E:\OPT 完成首次 SkillOpt 主循环 × AingEnvAdapter 联调，六阶段全绿：
+在副本环境 <opt-copy> 完成首次 SkillOpt 主循环 × AingEnvAdapter 联调，六阶段全绿：
 
 | 项 | 结果 |
 |---|---|

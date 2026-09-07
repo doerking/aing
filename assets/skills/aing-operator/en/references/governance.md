@@ -4,7 +4,7 @@ tags: ["aing", "治理", "红线", "双证据", "绿灯解锁", "汇报面板"]
 
 # Governance Group: Red Lines, Dual Evidence & Report Panels
 
-The full rules live in `E:\aing\AGENTS.md` (Agent discipline section) — read that; this file only explains why.
+The full rules live in `AGENTS.md` (Agent discipline section) — read that; this file only explains why.
 
 ## Five red lines
 
@@ -13,7 +13,7 @@ The full rules live in `E:\aing\AGENTS.md` (Agent discipline section) — read t
 3. **No fake checkboxes**: Roadmap `[x]` must be real; a fake check is immediately reverted to `[ ]` with current status noted.
 4. **No heuristic score fakes**: gate scores must come from real data sources (KESPI computed from actual store entities); hand-rolled scoring functions are a bug category, not an implementation choice.
 5. **Single threshold source**: all thresholds live in growth.config.js; no hardcoding inside components; env overrides are implemented only in that file (envNum pattern).
-6. **Component transparency (AGENTS.md rule 8, added 2026-09-04)**: on first introduction of aing to a user, or when the user wants to implement/enable features, present the basic component list in **plain text, one line each** (name + what it does for the user + status: live / in-library-unwired / in-design) and let the user pick what to implement. Never default the scope to "everything on", never show only live parts while hiding unwired ones. Plain-text template: `E:\aing\docs\AGENT-ONBOARDING.md` Step 6; status source: GREEN-LIST.md.
+6. **Component transparency (AGENTS.md rule 8, added 2026-09-04)**: on first introduction of aing to a user, or when the user wants to implement/enable features, present the basic component list in **plain text, one line each** (name + what it does for the user + status: live / in-library-unwired / in-design) and let the user pick what to implement. Never default the scope to "everything on", never show only live parts while hiding unwired ones. Plain-text template: `docs/AGENT-ONBOARDING.md` Step 6; status source: GREEN-LIST.md.
 7. **Deploy exactly what the source says (AGENTS.md rule 9, added 2026-09-04)**: deployed artifacts = source; no code edits or hot-fixes on deployed instances. Context matters: shadow-SOP repair is the maintainer-yard flow (don't impose it on downstream); downstream git-clone deployments fix via source-branch patches + diff merge-back. Lesson (2026-09-04): the word "shadow" appeared in public docs without context, and a downstream agent started building its own before being stopped — mechanism vocabulary in public docs must carry its context or be explicitly marked maintainer-side.
 
 ## Report panel (mandatory)

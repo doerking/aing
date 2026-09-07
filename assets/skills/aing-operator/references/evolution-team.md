@@ -11,7 +11,7 @@ tags: ["aing", "评审", "进化团队", "四角色", "对抗结构", "拓扑"]
 
 ## 首选：派发 neural-evolution-swarm
 
-已安装时（`C:\Users\Administrator\.meituan-catpaw\<uid>\skills\neural-evolution-swarm\`），按其 workflow.md 派发四角色：
+已安装时（`.meituan-catpaw/<uid>\skills\neural-evolution-swarm\`），按其 workflow.md 派发四角色：
 
 | 角色 | 职责 | Gate |
 |---|---|---|
@@ -28,4 +28,4 @@ tags: ["aing", "评审", "进化团队", "四角色", "对抗结构", "拓扑"]
 
 ## aing 特有的评审输入
 
-评 aing 相关设计时，把这两样喂给理论家：`E:\aing\docs\Engineering\` 架构文档（含想/记分离血脉）与 GREEN-LIST 能力边界（防评审出"能力不存在"的假阳性）。体检报告落 E:\SQA 归档，结论走双证据仲裁。
+评 aing 相关设计时，把这两样喂给理论家：`docs/Engineering/` 架构文档（含想/记分离血脉）与 GREEN-LIST 能力边界（防评审出"能力不存在"的假阳性）。体检报告落 <sqa-root> 归档，结论走双证据仲裁。
