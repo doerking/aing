@@ -62,6 +62,15 @@
 - 意识神经输出定位：感知、路由、建议和复核依据。
 - **源码存在和语法通过 ≠ 生产接入完成**；验收门禁见第六节。
 
+
+### 真源声明 / Single Source of Truth（2026-09-08）
+
+- **src/ = 唯一活体运行源码**（13 件已按原设计入 src/，adapter 正式位 src/hermes-aing-adapter.js）
+- consciousness-neural-upgrade/（本目录）= **档案副本**（byte-verified 快照，不参与运行）
+- E:\\consciousness-neural-upgrade\\ = **外部对照/档案副本**（不参与运行）
+- 原始出处 E:\\Sevo **已不存在**——「来源：E:\\Sevo\\src」为**历史来源**，当前可用真源只有 src/ 与两份档案副本
+- 修改一律发生在 src/；档案副本只在里程碑时刷新快照，日常**不得**从副本向 src/ 回灌
+
 ## 六、验收门禁（Gate，逐项全绿才可登记 greenlist）
 
 - [x] 在 `E:\aing` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。（2026-09-08 G1：13/13 LOAD-OK + 4 主包件可达）
@@ -73,6 +82,18 @@
 - [x] 验证 origin 血统：外部事件 `source` 落库可查，未污染主血统。（2026-09-08 G7：raw frontmatter source=IF-TEST::g6-test + confidence=0 + pending-distillation；entities 表可查；origin_trust 专用列仍按 DESIGN 文档待接线）
 - [x] 完成副本与主运行包之间的独立接入复查。（2026-09-08 G8：接入点 4/4 签名核对 + verify-deploy 回归 + 13 件入 src/ + verify-deploy ALL GREEN）
 
+## 八、运维节 / Operations（2026-09-08 起）
+
+| 项 | 值 |
+|---|---|
+| 活体源码 | src/（13 件） |
+| 神经核状态 | data/consciousness/state.json（抑制/焦点/指纹；测试后清理规程：清 fingerprints+suppressedEvents，focus 去 IF-TEST 项，保机制结构） |
+| 意识简报 | logs/consciousness/briefing-YYYYMMDD.md |
+| 蒸馏器 | src/distill.js（v1 未部署态：手动/受控触发 --dry-run/--id；机械确定性摘要，无 LLM，原话保全，contentDigest 可审计；成熟后再评估挂入代谢管线） |
+| 蒸馏迁移 | entities 表 distill_meta 列（建表含新列 + 旧库 ALTER 兜底，幂等） |
+| 验收证据归档 | E:\\SQA\\acceptance-evidence-20260908\\（raw 测试件 + 蒸馏后 wiki 件） |
+| TTL 优化 | recentFingerprints 7 天过期——**待办**（需测试覆盖：未过期去重/过期重收/跨进程一致/不无限增长） |
+
 ## 七、变更记录
 
 - 2026-09-07：建立 `consciousness-neural-upgrade` 独立副本。
@@ -81,3 +102,5 @@
 - 2026-09-07：补充本副本备忘录组件 `MEMO.md`。
 - 2026-09-08：**MEMO 升格为「意识神经控制面板」**——固化接口标准四件套（9 通道 / ConsciousnessEvent / adapter CLI 契约 / coordination-only 默认模式），开设预留接口登记区（IF-002~IF-006 + 开放池），确立「aing 组件之外的一切 agent 软件组件均可按标准接入」的总理念。
 - 2026-09-08：副本落位 `E:\aing\consciousness-neural-upgrade`，进入验收队列。- 2026-09-08：验收门禁 8/8 全绿（G1-G8），意识神经系统完成运行时接入；13 件按原设计部署进 src/，副本目录转为档案；adapter 正式位 src/hermes-aing-adapter.js。
+- 2026-09-08：P0-1 蒸馏器落地（src/distill.js v1）——pending-distillation 有了消化器；定向验证 5/5（dry-run 报告/Debt 2→1/状态转 active/摘要写回含 contentDigest/原话保全）；drill 会话 wiki 缺失按设计拒绝无据蒸馏；knowledge-store 加 distill_meta 列迁移。
+- 2026-09-08：验收残留清理——raw 测试件与蒸馏后 wiki 件归档 SQA；神经核状态 fp 26→0 / suppressed 25→0 / focus 去 IF-TEST；本节真源声明与运维节生效。

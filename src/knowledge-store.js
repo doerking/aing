@@ -37,6 +37,13 @@ class KnowledgeStore {
     }
     
     this._initTables();
+    this._initTables();
+    // 蒸馏器迁移：旧库补 distill_meta 列（幂等）
+    try {
+      const colsInfo = this.db.exec("PRAGMA table_info(entities)");
+      const hasCol = colsInfo.length && colsInfo[0].values.some(r => r[1] === 'distill_meta');
+      if (!hasCol) { this.db.run('ALTER TABLE entities ADD COLUMN distill_meta TEXT'); console.log('   [migrate] entities + distill_meta'); }
+    } catch (e) { /* PRAGMA 不可用时忽略，建表语句已含新列 */ }
     this._save();
     console.log(`📦 数据库已加载: ${this.dbPath}`);
   }
