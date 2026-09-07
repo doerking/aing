@@ -5,7 +5,7 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 
 # aing · Knowledge Metabolism Engine
 
-> Architecture for Intelligent Networked Growth
+> Architecture for Intelligent Networked Growth — 定名：**交叉时态双脑 / Cross-Temporal Dual Brain**（交叉时态双脑：左右脑单交叉 × 双时态）
 >
 > 让知识库自己活着 —— 超越 RAG，超越 LLM Wiki，进入主动代谢时代。
 >
@@ -406,7 +406,7 @@ node src/setup-db.js --backup     # 手动备份
 | 🧠 思想层 | GWT → Jacobian Lens (2026-07) | [Baars/Dehaene](https://www.transformer-circuits.pub/) · Anthropic 实证 | 已对齐 |
 | 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 血统 | [MSR SkillOpt (arXiv:2605.23904)](https://arxiv.org/abs/2605.23904) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
-| 🧬 结构层 | 左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
+| 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
 | 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
 
 ## 🙏 Acknowledgments / 致谢
@@ -424,11 +424,11 @@ aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
 - **[DeepMind AlphaEvolve 及开源生态](https://github.com/topics/alpha-evolve)**（OpenEvolve / CodeEvolve / GigaEvo）— LLM×进化算法的程序空间优化，双向血统追踪让每个后代可溯源，与 aing 回炉微粒沿 `recycled_from` 血统链可溯源的 KPI 殊途同归。
 - **OPT 实现历程** — aing 的训练副本与实现现场。影子目录隔离、EnvAdapter 按源码签名逐条核对、32 条取自部署包真实口径的矛盾任务包、KESPI 斜率天然挂钩训练奖励，三项核心组件一次冒烟即“已就位”。aing 不需要为被训练而改造自己：它活着的方式就是被训练的方式。
 
-### 数据层 / Data Layer · The Dual-Brain Foundation
+### 数据层 / Data Layer · The Cross-Temporal Dual-Brain Foundation
 
-- **[sql.js](https://github.com/sql-js/sql.js)** 与 **Node.js**（内置 `node:sqlite`）— 双脑数据层的零原生编译底座。
+- **[sql.js](https://github.com/sql-js/sql.js)** 与 **Node.js**（内置 `node:sqlite`）— 交叉时态双脑数据层的零原生编译底座。
 - **[@xenova/transformers](https://github.com/xenova/transformers.js)** 与 **[all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2)** — 纯本地、零外呼的语义向量能力（384 维混合检索）。
-- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564v1)**（Hu et al., 2025，arXiv:2512.13564，NUS、人大、复旦、北大等 12 家机构；官方配套论文列表与资源索引：[Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List)）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
+- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564v1)**（Hu et al., 2025，arXiv:2512.13564，NUS、人大、复旦、北大等 12 家机构；官方配套论文列表与资源索引：[Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List)）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为交叉时态双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
 
 ### 记忆与检索优化研究 / Memory & Retrieval Research
 
