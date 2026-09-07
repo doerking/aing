@@ -58,6 +58,8 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 
 > The release is the **plain-Markdown edition** — MD + Git + Node alone run the full metabolism loop. No extra software required.
 > 底层渊源：aing 两脑的底层架构正是 **LLM Wiki + Tolaria** 这两款数据库软件——因当时原版装不上，作者以纯 Markdown + Node 把这一底层重写成了 MD 版（即本发布包）。
+> 项目时间线：立项 **2026-06** ｜ MD 版底座成形 **2026-07** ｜ 仓库 **2026-08** 起陆续上线（最早归档 2026-08-29）。鸣谢区全部为**独立收敛的同构引证**，非依赖背书；唯一承认为概念源头的是 LLM Wiki（上文「源自」）。
+> Timeline: founded **2026-06**; MD substrate shaped **2026-07**; on public repo since **2026-08** (earliest archive 2026-08-29). The credits section documents **independent convergence** (isomorphic citations), not endorsement-derived lineage; the only acknowledged conceptual origin is LLM Wiki ("derived from" above).
 > Origin note: aing's two-brain substrate re-implements two database tools — **LLM Wiki + Tolaria** — in plain Markdown, because the originals could not be installed at the time.
 > 有条件的用户，可以把两脑各自的实体软件挂上，让秩序脑与生长脑各得其所：
 
