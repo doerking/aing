@@ -21,5 +21,10 @@
     "tripath": "node src/tri-path-orchestrator.js",
     "test": "node verify-deploy.js",
     "test:runtime": "node tools/self-test.js"
+  },
+  "allowScripts": {
+    "sharp@0.32.6": true,
+    "sharp@0.35.4": true,
+    "protobufjs@6.11.6": true
   }
 }
