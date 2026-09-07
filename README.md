@@ -1,3 +1,8 @@
+---
+tags: [aing, overview, quickstart, architecture]
+description: aing 知识代谢引擎总览：快速开始、脚本一览、数据库与常驻服务
+---
+
 # aing · Knowledge Metabolism Engine
 
 > Architecture for Intelligent Networked Growth
@@ -198,6 +203,7 @@ node src/query.js "三路突击" --limit 5
 
 # 端点一览 / endpoints
 # GET  /health                       health check (public) / 健康检查（公开）
+# GET  /api/status                    runtime status (entities/kespi lifecycle/distill debt) / 运行时状态一眼判定
 # GET  /api/entities                 entity list / 实体列表
 # GET  /api/entity/<id>              entity detail + latest KESPI / 实体详情+最新 KESPI
 # GET  /api/query?q=<词>&limit=<N>   semantic/keyword search / 语义与关键词检索

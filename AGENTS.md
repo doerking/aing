@@ -1,3 +1,8 @@
+---
+tags: [aing, deploy, discipline, must-read]
+description: aing 部署必读：一键部署流程、验收清单 C0-C7、已知坑 9 条、汇报格式
+---
+
 # AGENTS.md — aing Deployment Flow (Agent Must-Read) / aing 部署必读流程（Agent 必读）
 
 > Any AI Agent MUST read this file before deploying, verifying, or troubleshooting in this directory.

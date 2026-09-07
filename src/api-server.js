@@ -25,6 +25,8 @@
  */
 
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 const KnowledgeStore = require('./knowledge-store');
 const VectorSearch = require('./vector-search');
 const { SessionStore } = require('./auto-ingest');
@@ -86,6 +88,36 @@ async function handle(req, res) {
   }
 
   // 实体列表
+  // Agent-first：一次调用判定要不要管（C7 同源的运行时产品状态）
+  if (p === '/api/status' && req.method === 'GET') {
+    const st = store.getStats();
+    let distillDebt = 0, pendingKespi = 0, computed = 0;
+    try {
+      // kespi_status 真源在 wiki/entities/*.md frontmatter（双脑契约：文件是事实源）
+      const dir = path.join(__dirname, '..', 'wiki', 'entities');
+      if (fs.existsSync(dir)) {
+        for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.md'))) {
+            const m = fs.readFileSync(path.join(dir, f), 'utf8').match(/kespi_status:\s*(\w+)/);
+          if (!m) continue;
+          if (m[1] === 'pending') pendingKespi++;
+          if (m[1] === 'computed') computed++;
+        }
+      }
+    } catch (e) { /* wiki 目录缺失（全新包） */ }
+    try {
+      const debt = store.all("SELECT COUNT(*) as n FROM entities WHERE status = 'pending-distillation'");
+      distillDebt = debt.length ? debt[0].n : 0;
+    } catch (e) { /* 列不存在（旧包） */ }
+    return json(res, 200, {
+      status: 'ok',
+      mode: API_KEY ? 'auth' : 'local-trust',
+      uptime: Math.round(process.uptime()),
+      entities: st.entities, links: st.links,
+      avgKespi: st.avgKespi, pendingErrors: st.pendingErrors,
+      kespiLifecycle: { computed, pending: pendingKespi },
+      distillationDebt: distillDebt
+    });
+  }
   if (p === '/api/entities' && req.method === 'GET') {
     const entities = store.getEntities().map(e => ({
       id: e.id, name: e.name, type: e.type, updated_at: e.updated_at

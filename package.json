@@ -18,6 +18,8 @@
     "server": "node src/api-server.js",
     "query": "node src/query.js",
     "spine:check": "node src/shared-spine.js compile",
-    "tripath": "node src/tri-path-orchestrator.js"
+    "tripath": "node src/tri-path-orchestrator.js",
+    "test": "node verify-deploy.js",
+    "test:runtime": "node tools/self-test.js"
   }
 }

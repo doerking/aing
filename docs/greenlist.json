@@ -1,0 +1,98 @@
+{
+  "_meta": {
+    "version": 1,
+    "updated": "2026-09-07",
+    "rule": "Single source of truth for capability claims. Agents render panels from this JSON; green items require dated evidence; never promise items in locked.",
+    "syncNote": "docs/GREEN-LIST.md 是本 JSON 的人类视图；改动先改 JSON 再重生成 md。"
+  },
+  "green": [
+    {
+      "id": "metabolism-pipeline",
+      "cap": "完整代谢（10 步）+ --resume/--step/--smart",
+      "evidence": "影子回归 10 步全过 3.28s",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "query-cli",
+      "cap": "查询 CLI 语义+关键词混合检索 + KESPI 附分",
+      "evidence": "命中 3 条 KESPI 0.93 显示正确",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "semantic-384",
+      "cap": "384 维本地语义检索，64 维哈希自动回退",
+      "evidence": "全量重建 13/13 召回命中",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "consciousness-neural",
+      "cap": "导链路优先级分级生效（high/medium/low）",
+      "evidence": "attention 0.900→high；真实 0.590→medium",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "tri-path",
+      "cap": "三路真实评分裁决（无 mock）",
+      "evidence": "run 788ms 交叉校验 2/3 落盘",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "shared-spine",
+      "cap": "编译门禁真实 KESPI 评分；未入库 PENDING 不误杀",
+      "evidence": "10 档 9 接受 1 正确 PENDING",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "scheduler",
+      "cap": "常驻调度 + raw/ 轮询触发（mtime 快照）",
+      "evidence": "--once 全链 3.28s 退出 0 ×2",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "http-api",
+      "cap": "HTTP API（3789）/health 公开，其余 Bearer 认证，租户隔离",
+      "evidence": "5 端点实测 200；401/400 实测",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "ingest-dedup",
+      "cap": "内容指纹去重 + 会话 ID 净化",
+      "evidence": "同内容二批跳过实测",
+      "date": "2026-09-03"
+    },
+    {
+      "id": "kespi-lifecycle",
+      "cap": "KESPI 生命周期 pending→computed + 关键步骤熔断（P0-P2）",
+      "evidence": "三包演练：翻转 8/8、无蒸馏优雅降级、退出码 1 熔断",
+      "date": "2026-09-07"
+    },
+    {
+      "id": "c7-gate",
+      "cap": "verify-deploy C7 运行时产品断言（一致性+指纹）",
+      "evidence": "负向测试：注入腐坏→红，清除→绿",
+      "date": "2026-09-07"
+    }
+  ],
+  "locked": [
+    {
+      "id": "metacognition",
+      "item": "元认知接管线（Phase 2.6）",
+      "note": "组件在库未接代管"
+    },
+    {
+      "id": "hot-reload",
+      "item": "热重排（require 缓存清除）",
+      "note": "未实现"
+    },
+    {
+      "id": "enterprise-tenant",
+      "item": "企业级多租户（独立库/配额/权限）",
+      "note": "现有隔离仅为会话级"
+    },
+    {
+      "id": "b5-self-modify",
+      "item": "B5 自修改回路 / 元认知配置写回",
+      "note": "治理红线，明确不做"
+    }
+  ]
+}
