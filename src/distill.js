@@ -29,6 +29,41 @@ const KnowledgeStore = require('./knowledge-store');
 
 const ROOT = path.resolve(__dirname, '..');
 
+// ===== distill.js v1.1 patches (D1/D4/D5/O-1/O-2) =====
+// D4: atomic lock (wx flag, finally release, stale-lock reclaim)
+function acquireLock() {
+  const lockPath = path.join(ROOT, 'data', 'distill.lock');
+  const payload = JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString(), command: 'distill', host: require('os').hostname() });
+  try {
+    fs.writeFileSync(lockPath, payload, { flag: 'wx' }); // atomic create-or-fail
+    return { ok: true, release: () => { try { fs.unlinkSync(lockPath); } catch (e) {} } };
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    try {
+      const old = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+      const age = Date.now() - new Date(old.startedAt).getTime();
+      let pidAlive = false;
+      try { process.kill(old.pid, 0); pidAlive = true; } catch (err) { pidAlive = err.code === 'EPERM'; }
+      if (age > 10 * 60 * 1000 || !pidAlive) {
+        console.log('[distill] stale lock reclaimed (age=' + Math.round(age / 1000) + 's pidAlive=' + pidAlive + ')');
+        fs.unlinkSync(lockPath);
+        return acquireLock();
+      }
+      return { ok: false, holder: old };
+    } catch (e2) {
+      return { ok: false, holder: null, parseError: e2.message };
+    }
+  }
+}
+
+// D1: idempotent frontmatter upsert (never grows on re-distill)
+function upsertFrontmatterLine(text, key, value) {
+  const re = new RegExp('^' + key + ': .*' + String.fromCharCode(10), 'm');
+  if (re.test(text)) return text.replace(re, key + ': ' + value + String.fromCharCode(10));
+  return text.replace(/^(source: .*)$/m, '$1' + String.fromCharCode(10) + key + ': ' + value);
+}
+
+
 function sha16(obj) {
   return crypto.createHash('sha1').update(JSON.stringify(obj), 'utf8').digest('hex').slice(0, 16);
 }
@@ -84,8 +119,9 @@ function rewriteWikiFile(filePath, dist) {
   text = text.replace(/^status: pending-distillation$/m, 'status: active');
   text = text.replace(/^(modified: .*)$/m, '$1');
   // 追加蒸馏元数据行（幂等：先移除旧的）
-  text = text.replace(/^contentDigest: .*\n/m, '');
-  text = text.replace(/^(source: .*)$/m, '$1\ncontentDigest: ' + dist.digest + '\ndistilledBy: distill.js-v1');
+  text = upsertFrontmatterLine(text, 'contentDigest', dist.digest);
+  text = upsertFrontmatterLine(text, 'distilledBy', 'distill.js-v1');
+  text = upsertFrontmatterLine(text, 'distilledAt', new Date().toISOString()); // O-2
   return text;
 }
 
@@ -94,52 +130,79 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const idIdx = args.indexOf('--id');
   const onlyId = idIdx >= 0 ? args[idIdx + 1] : null;
+  const mode = dryRun ? 'dry-run' : 'apply';
 
-  const store = new KnowledgeStore();
-  await store.init();
-  const pending = store.all("SELECT id, content, tags, confidence, source_file FROM entities WHERE status = 'pending-distillation'");
-  const targets = onlyId ? pending.filter(r => r.id === onlyId) : pending;
-
-  console.log(`[distill] pending 会话实体: ${pending.length} 条，本次处理: ${targets.length} 条${dryRun ? '（dry-run）' : ''}`);
-  if (!targets.length) { console.log('[distill] 无事可做，distillDebt 已为 0'); process.exit(0); }
-
-  let done = 0;
-  for (const row of targets) {
-    const wikiPath = row.source_file ? path.join(ROOT, row.source_file) : null;
-    if (!wikiPath || !fs.existsSync(wikiPath)) {
-      console.error(`[distill] FAIL ${row.id}: wiki 文件缺失 (${row.source_file})`);
-      process.exitCode = 1;
-      continue;
+  // D4: atomic lock (apply only; dry-run is read-only)
+  let lock = { ok: true, release: () => {} };
+  if (!dryRun) {
+    lock = acquireLock();
+    if (!lock.ok) {
+      console.log(JSON.stringify({ mode, result: 'failed', reason: 'lock-held', holder: lock.holder || lock.parseError }));
+      process.exitCode = 1; return;
     }
-    const dist = distillContent(row.content);
-    if (!dist.points.length) {
-      console.error(`[distill] FAIL ${row.id}: 原始消息为空，拒绝无据蒸馏`);
-      process.exitCode = 1;
-      continue;
-    }
-    if (dryRun) {
-      console.log(`[distill][dry] ${row.id}: ${dist.points.length} 要点 / tags=[${dist.tags.join(',')}] / digest=${dist.digest}`);
-      continue;
-    }
-    // 1) 写回 wiki（双脑契约：wiki 是唯一事实源）
-    const newText = rewriteWikiFile(wikiPath, dist);
-    fs.writeFileSync(wikiPath, newText, 'utf8');
-    // 2) 同步 DB：status、tags、content（摘要节已更新，原话节不动）
-    const mergedTags = [...new Set([...JSON.parse(row.tags || '[]'), ...dist.tags])].slice(0, 20);
-    const newContent = newText.replace(/^---[\s\S]*?---\n/, ''); // DB content 存正文
-    store.run("UPDATE entities SET status='active', tags=?, content=?, distill_meta=? WHERE id=?", [
-      JSON.stringify(mergedTags), newContent, JSON.stringify({ digest: dist.digest, by: 'distill.js-v1', at: new Date().toISOString() }), row.id
-    ]);
-    done++;
-    console.log(`[distill] OK ${row.id}: ${dist.points.length} 要点, tags=[${mergedTags.join(',')}], digest=${dist.digest}`);
   }
 
-  const after = store.all("SELECT COUNT(*) as n FROM entities WHERE status='pending-distillation'");
-  console.log(`[distill] 完成 ${done} 条；剩余 pending-distillation: ${after[0].n}（distillDebt 兑付）`);
-  if (!dryRun && done > 0) {
-    console.log('[distill] 注意：DB content 已更新，建议下轮代谢 compile --force 同步 wiki（wiki 已是真源，此处 DB 直写为本步骤契约内动作）');
+  try {
+    const store = new KnowledgeStore();
+    await store.init();
+    const pending = store.all("SELECT id, content, tags, confidence, source_file FROM entities WHERE status = 'pending-distillation'");
+    let targets = pending;
+    let specifiedMissing = false;
+    if (onlyId) {
+      targets = pending.filter(r => r.id === onlyId);
+      if (!targets.length) {
+        // D5: 指定 id 不存在/不在债中 —— 明确区分，不给调度方假成功
+        const exists = store.all("SELECT id, status FROM entities WHERE id = " + JSON.stringify(onlyId));
+        if (!exists.length) { console.log(JSON.stringify({ mode, result: 'failed', reason: 'id-not-found', id: onlyId })); process.exitCode = 2; return; }
+        console.log(JSON.stringify({ mode, result: 'clean', reason: 'id-exists-but-not-pending', id: onlyId, currentStatus: exists[0].status }));
+        process.exitCode = 0; return;
+      }
+    }
+
+    console.log('[distill] pending=' + pending.length + ' targets=' + targets.length + ' mode=' + mode);
+    if (!targets.length) {
+      console.log(JSON.stringify({ mode, result: 'clean', distillDebt: 0 }));
+      process.exitCode = 0; return;
+    }
+
+    let ok = 0, fail = 0;
+    for (const row of targets) {
+      const wikiPath = row.source_file ? path.join(ROOT, row.source_file) : null;
+      if (!wikiPath || !fs.existsSync(wikiPath)) {
+        console.error('[distill] FAIL ' + row.id + ': wiki missing (' + row.source_file + ')');
+        fail++; process.exitCode = 1; continue;
+      }
+      const dist = distillContent(row.content);
+      if (!dist.points.length) {
+        console.error('[distill] FAIL ' + row.id + ': no raw messages, refuse to distill without evidence');
+        fail++; process.exitCode = 1; continue;
+      }
+      if (dryRun) {
+        console.log('[distill][dry] ' + row.id + ': ' + dist.points.length + ' points / tags=[' + dist.tags.join(',') + '] / digest=' + dist.digest);
+        ok++; continue;
+      }
+      const newText = rewriteWikiFile(wikiPath, dist);
+      fs.writeFileSync(wikiPath, newText, 'utf8');
+      const mergedTags = [...new Set([...JSON.parse(row.tags || '[]'), ...dist.tags])].slice(0, 20);
+      const newContent = newText.replace(/^---[\s\S]*?---\n/, '');
+      store.run("UPDATE entities SET status='active', tags=?, content=?, distill_meta=? WHERE id=?", [
+        JSON.stringify(mergedTags), newContent, JSON.stringify({ digest: dist.digest, by: 'distill.js-v1', at: new Date().toISOString() }), row.id
+      ]);
+      ok++;
+      console.log('[distill] OK ' + row.id + ': ' + dist.points.length + ' points, tags=[' + mergedTags.join(',') + '], digest=' + dist.digest);
+    }
+
+    const after = store.all("SELECT COUNT(*) as n FROM entities WHERE status='pending-distillation'");
+    // O-1: machine-readable verdict
+    const result = fail === 0 ? (ok > 0 ? 'completed' : 'clean') : (ok > 0 ? 'partial' : 'failed');
+    console.log(JSON.stringify({ mode, result, ok, fail, distillDebtRemaining: after[0].n }));
+    if (!dryRun && ok > 0) {
+      console.log('[distill] note: wiki is source-of-truth; run compile --force next metabolism to sync DB content');
+    }
+    process.exitCode = fail === 0 ? 0 : (ok > 0 ? 2 : 1); return;   // 0=clean/completed, 2=partial, 1=failed
+  } finally {
+    lock.release();   // D4: guaranteed release
   }
-  process.exit(done > 0 || dryRun ? 0 : 1);
 }
 
-main().catch(e => { console.error('[distill] FATAL:', e.message); process.exit(1); });
+main().catch(e => { console.error('[distill] FATAL:', e.message); process.exitCode = 1; return; });
