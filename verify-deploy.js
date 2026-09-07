@@ -112,6 +112,34 @@ async function main() {
     return `top1 = ${hits[0].name} (${hits[0].score.toFixed(3)})`;
   });
 
+
+  // —— C7. 运行时产品断言（09-07 演练教训：面板绿 ≠ 产品绿）——
+  await check('C7a kespi 生命周期一致性 (wiki computed ↔ db scored)', async () => {
+    const entitiesDir = path.join(PKG_DIR, 'wiki', 'entities');
+    if (!fs.existsSync(entitiesDir)) return; // 全新包未编译，跳过 / fresh package
+    const computedIds = [];
+    for (const f of fs.readdirSync(entitiesDir).filter(f => f.endsWith('.md'))) {
+      const m = fs.readFileSync(path.join(entitiesDir, f), 'utf8').match(/kespi_status:\s*(\w+)/);
+      if (m && m[1] === 'computed') computedIds.push(f.replace(/\.md$/, ''));
+    }
+    const dbPath = path.join(PKG_DIR, 'knowledge.db');
+    if (!fs.existsSync(dbPath)) throw new Error('knowledge.db 缺失 / missing');
+    const SQL = await require('sql.js')();
+    const db = new SQL.Database(fs.readFileSync(dbPath));
+    const r = db.exec('SELECT DISTINCT entity_id FROM kespi_history');
+    const scored = new Set(r.length ? r[0].values.map(v => v[0]) : []);
+    const missing = computedIds.filter(id => !scored.has(id));
+    if (missing.length) throw new Error('wiki 标记 computed 但库内无评分（静默腐坏特征）: ' + missing.slice(0, 3).join(', ') + ' → 跑 node src/kespi-check.js 修复');
+    return computedIds.length + ' computed ↔ db 一致';
+  });
+  await check('C7b 补丁层指纹 (v1 defs present)', async () => {
+    const k = fs.readFileSync(path.join(PKG_DIR, 'src', 'kespi-check.js'), 'utf8');
+    if (/markEntityKespiComputed\s*\(/.test(k) && !/function\s+markEntityKespiComputed/.test(k)) throw new Error('kespi-check 调用 markEntityKespiComputed 但缺定义（v1 层缺失）');
+    const g = fs.readFileSync(path.join(PKG_DIR, 'src', 'auto-ingest.js'), 'utf8');
+    if (/hasDistillation/.test(g) && !/hasDistillation\s*=/.test(g)) throw new Error('auto-ingest 使用 hasDistillation 但无推导来源（v1 层缺失）');
+    return 'v1 defs verified';
+  });
+
   // ── 报告 ─────────────────────────────────────────────────────
   console.log('\n═══ aing 部署验收报告 / Deployment Acceptance Report ═══');
   for (const r of results) {

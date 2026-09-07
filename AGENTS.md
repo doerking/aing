@@ -47,6 +47,9 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 5. **双语输出是预期，不是乱码** — 人读日志为 `中文 / English` 对照；机器令牌（`kespi_status` 等）恒为英文。不要「修复」双语行，也不要给令牌加翻译。/ **Bilingual logs are expected, not mojibake** — human-facing lines are `Chinese / English`; machine tokens stay English. Never "fix" bilingual lines or translate tokens.
 6. **`kespi_status` 生命周期与关键步骤熔断** — `kespi_status` 由 compile 置 `pending`、kespi-check 首评翻转，`pending` 非故障；compile/import/vector/kespi 为关键步骤，失败即中止、退出码 1，`--force` 仅继续非关键步骤。/ **`kespi_status` lifecycle & critical-step breaker** — compile sets `pending`, kespi-check flips it on first evaluation; `pending` is not an error. Critical steps (compile/import/vector/kespi) abort with exit code 1 on failure; `--force` continues non-critical only.
 
+7. **补丁必须整层重放（定义层先于调用层）** — 09-07 事故：v3 座舱带调用行、v1 座舱带函数定义，只重放 v3 导致 `markEntityKespiComputed`/`hasDistillation` 引用悬空；又被 `try/catch` 吞成静默腐坏，面板照样 ALL GREEN。重放任何补丁座舱前，必须枚举**全部**座舱层的 patch 清单并按 v1→v3 顺序执行；提取正则零匹配视为异常，不许当空集。/ **Replay patch layers completely, definitions before call-sites** — replaying only v3 left v1 definitions missing; call-sites survived `node --check` and the try/catch turned ReferenceError into silent divergence with green panels. Enumerate ALL cockpit layers (v1 first) before any replay; zero regex matches is an anomaly, not an empty set.
+8. **同源性≠安全性，绿灯必须配产品断言** — 「E:\aing 与上游逐字节一致」只证明输入血缘，对补丁层完整性零证明力；C1-C6 全是环境/结构检查，DB 与 wiki 静默分叉时照样全绿。任何 ALL GREEN 汇报必须包含 C7 运行时产品断言（生命周期一致性 + 补丁层指纹）；改造门禁后必须做负向测试（注入腐坏样本，确认门禁会红）。/ **Same-origin ≠ safe; green requires product assertions** — byte-identity with upstream proves lineage only. C1-C6 are env/structure checks that stayed green through silent divergence. Every ALL GREEN must include C7 runtime assertions; every gate change must pass a negative test (inject corruption, gate must turn red).
+
 ## Current Iteration Failure Guide / 当前迭代故障引导（P0–P2 + 双语）
 
 | 症状 / Symptom | 处置 / Fix |
