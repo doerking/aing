@@ -53,6 +53,7 @@
 - `neural-guide-chain.js`：信号路由、注意力分配和探索建议。
 - `sensory-ends.js`：文件、定时、活力和外部信号感知。
 - `hermes-aing-adapter.js`：框架无关的宿主 Agent/aing 适配器。【接口标准 3 参考实现】
+- `run-metabolism.js`（内嵌 emitMetabolismEvent）：代谢流水线→意识神经事件发射器，十个代谢步骤成功/失败即向 Kernel 发 9 通道事件（structure/semantic/temporal/kespi，源=metabolism）。【接口标准 1 生产接线 2026-09-08】
 
 ## 五、运行边界（Stable）
 

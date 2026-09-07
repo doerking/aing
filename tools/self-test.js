@@ -42,9 +42,9 @@ try {
     } catch (e) { log(false, '补丁层指纹', e.message); }
 
     console.log(fail === 0 ? '\n🟢 SELF-TEST ALL GREEN' : `\n🔴 ${fail} failed`);
-    process.exit(fail === 0 ? 0 : 1);
+    process.exitCode = fail === 0 ? 0 : 1; // N3: 自然排空异步句柄后带码退出，不在回调里硬杀（0xC0000409 同族，同 distill v1.1 教训）
   });
 } catch (e) {
   console.error('self-test 启动失败:', e.message);
-  process.exit(1);
+  process.exitCode = 1; // N3: 同上
 }

@@ -76,4 +76,4 @@ Three parallel paths with circuit breaker:
 
 Circuit breaker: failureThreshold=5, resetTimeout=60000ms, halfOpenMax=3
 
-> ⚠️ **Current state**: `runPath()` returns mock data (`['候选 A', '候选 B', '候选 C']`). Real path execution is not yet implemented.
+> ✅ **Current state (2026-09-08 aligned)**: `runPath()` is real — EXPLORE via `vector-search.semanticSearch`, VERIFY via `knowledge-store.getLinks` + KESPI thresholds, OPTIMIZE via read-only `kespi-check.calculateEntity`. All scores come from the local knowledge base; no mock.

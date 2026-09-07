@@ -33,6 +33,69 @@ const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+
+// ── N1: 跨进程原子锁（范式同 distill.js D4：wx 原子创建 + finally 释放 + 陈旧锁按 age/pid 回收）──
+const LOCK_PATH = path.join(__dirname, '..', 'data', 'metabolism.lock');
+const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十步全流程宽裕上限
+let heldLock = null; // 持锁句柄，main 结束时保证释放
+
+function pidAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+
+function acquireLock() {
+  const payload = JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() });
+  try {
+    fs.writeFileSync(LOCK_PATH, payload, { flag: 'wx' }); // 原子 create-or-fail
+    return { ok: true, release: () => { try { fs.unlinkSync(LOCK_PATH); } catch (e) {} } };
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    try {
+      const old = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
+      const age = Date.now() - new Date(old.startedAt).getTime();
+      const alive = old.pid ? pidAlive(old.pid) : false;
+      if (age > LOCK_STALE_MS || !alive) {
+        console.log(`[metabolism] 陈旧锁回收 / stale lock reclaimed (age=${Math.round(age / 1000)}s pidAlive=${alive})`);
+        fs.unlinkSync(LOCK_PATH);
+        return acquireLock();
+      }
+      return { ok: false, holder: old };
+    } catch (e2) {
+      return { ok: false, holder: null }; // 锁文件损坏：保守拒绝
+    }
+  }
+}
+
+// ── A1: 代谢→意识神经事件发射（kernel 锁定 coordination-only：只感知/路由/建议，不执行）──
+const METABOLISM_CHANNEL = {
+  compile: 'structure', import: 'structure', 'link-sync': 'structure',
+  link: 'semantic', vector: 'semantic', sprout: 'semantic', pollinate: 'semantic',
+  compress: 'temporal', prune: 'temporal', kespi: 'kespi'
+};
+let _kernel = null;
+function emitMetabolismEvent({ step, ok, intensity, evidence, suggestedAction }) {
+  try {
+    if (!_kernel) {
+      const { ConsciousnessKernel } = require('./consciousness-kernel');
+      _kernel = new ConsciousnessKernel({ baseDir: path.join(__dirname, '..') });
+    }
+    return _kernel.ingest({
+      source: 'metabolism',
+      channel: METABOLISM_CHANNEL[step] || 'generic',
+      signalType: 'observed',
+      target: 'knowledge-base',
+      intensity: Math.max(0, Math.min(1, intensity)),
+      confidence: 0.9,
+      evidence: evidence || {},
+      suggestedAction: suggestedAction || 'observe',
+      tags: ['metabolism', step, ok ? 'ok' : 'fail']
+    });
+  } catch (e) {
+    console.log(`⚠ 意识事件发射失败（不影响代谢）/ consciousness event emit failed: ${e.message}`);
+    return null;
+  }
+}
+
 // 配置
 const CONFIG = {
   scriptsDir: path.join(__dirname),
@@ -124,6 +187,7 @@ function executeStep(index, force = false, resume = false) {
     fs.appendFileSync(logFile, output, 'utf8');
     
     const duration = Date.now() - stepStart;
+    emitMetabolismEvent({ step: step.name, ok: true, intensity: 0.45, evidence: { step: step.name } }); // A1（指纹只含 step，重复步骤 5min 内去重）
     state.steps[step.name] = {
       status: 'success',
       timestamp: new Date().toISOString(),
@@ -141,6 +205,7 @@ function executeStep(index, force = false, resume = false) {
     
   } catch (error) {
     const duration = Date.now() - stepStart;
+    emitMetabolismEvent({ step: step.name, ok: false, intensity: 0.8, evidence: { step: step.name, error: error.message }, suggestedAction: 'inspect' }); // A1（同错重试去重）
     state.steps[step.name] = {
       status: 'failed',
       timestamp: new Date().toISOString(),
@@ -303,6 +368,16 @@ async function main() {
   const smart = args.includes('--smart');
   const feedback = args.includes('--feedback');
   const stepArg = args.find(a => a.startsWith('--step='));
+
+  // N1: 跨进程互斥——手动运行与 scheduler 定时/轮询触发不得同时跑（--smart/--step 同受锁保护）
+  const lock = acquireLock();
+  if (!lock.ok) {
+    const holder = lock.holder || {};
+    console.log(`⛔ 代谢已在运行中，本次跳过 / metabolism already running (pid=${holder.pid}, startedAt=${holder.startedAt})`);
+    process.exitCode = 0;
+    return;
+  }
+  heldLock = lock;
   
   // 智能决策模式
   if (smart) {
@@ -318,7 +393,7 @@ async function main() {
     if (stepIndex === -1) {
       console.error(`❌ 未知步骤: ${stepName} / Unknown step:`);
       console.error(`   可用步骤: ${STEPS.map(s => s.name).join(', ')} / Available steps:`);
-      process.exit(1);
+      process.exitCode = 1; return; // N1: 走 finally 释放代谢锁
     }
     
     executeStep(stepIndex, force);
@@ -407,4 +482,6 @@ async function main() {
   printFinalStats();
 }
 
-main();
+main().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => {
+  try { if (heldLock) heldLock.release(); } catch (e) {}
+});

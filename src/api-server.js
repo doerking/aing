@@ -25,6 +25,7 @@
  */
 
 const http = require('http');
+const crypto = require('crypto'); // N2: 常数时间凭据比较
 const path = require('path');
 const fs = require('fs');
 const KnowledgeStore = require('./knowledge-store');
@@ -48,8 +49,12 @@ function json(res, code, obj) {
 
 function authorized(req) {
   if (!API_KEY) return true; // 未设密钥 = 本机信任模式
-  const header = req.headers['authorization'] || '';
-  return header === `Bearer ${API_KEY}`;
+  const header = String(req.headers['authorization'] || '');
+  const expected = `Bearer ${API_KEY}`;
+  // N2: 常数时间比较，消除 Bearer 凭据的时序侧信道（长度先行相等是 Node API 要求，仅泄露长度）
+  const a = Buffer.from(header);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 function readBody(req) {
