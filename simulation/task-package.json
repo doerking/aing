@@ -1,0 +1,275 @@
+{
+  "count": 30,
+  "tasks": [
+    {
+      "id": "task-01",
+      "factId": "F01",
+      "domain": "threshold",
+      "question": "关于「KESPI 维度通过阈值为 0.65…」哪种说法成立？",
+      "answerA": "KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-02",
+      "factId": "F02",
+      "domain": "pipeline",
+      "question": "关于「红灯语义是待回炉，不是人工干预信号…」哪种说法成立？",
+      "answerA": "红灯语义是待回炉，不是人工干预信号",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-03",
+      "factId": "F03",
+      "domain": "contract",
+      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
+      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "answerB": "(扭曲表述) 未知数 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "correct": "A"
+    },
+    {
+      "id": "task-04",
+      "factId": "F04",
+      "domain": "training",
+      "question": "关于「KM 维度公式：近7天代谢记录数（每…」哪种说法成立？",
+      "answerA": "KM 维度公式：近7天代谢记录数（每条+0.1，上限0.3）+ 未压缩加0.2",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-05",
+      "factId": "F05",
+      "domain": "threshold",
+      "question": "关于「芥子 id 约定 seed-<ent…」哪种说法成立？",
+      "answerA": "芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-06",
+      "factId": "F06",
+      "domain": "pipeline",
+      "question": "关于「双脑契约：wiki 文件是唯一事实源…」哪种说法成立？",
+      "answerA": "双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件",
+      "answerB": "(扭曲表述) 双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件",
+      "correct": "A"
+    },
+    {
+      "id": "task-07",
+      "factId": "F07",
+      "domain": "contract",
+      "question": "关于「残壳判据：compressed=1 …」哪种说法成立？",
+      "answerA": "残壳判据：compressed=1 且芥子已消费的实体才可归档",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-08",
+      "factId": "F08",
+      "domain": "training",
+      "question": "关于「回炉种子 access_count>…」哪种说法成立？",
+      "answerA": "回炉种子 access_count>0 防止无限循环回炉",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-09",
+      "factId": "F09",
+      "domain": "threshold",
+      "question": "关于「三路编排器熔断器状态需持久化到 st…」哪种说法成立？",
+      "answerA": "三路编排器熔断器状态需持久化到 state",
+      "answerB": "(扭曲表述) 三路编排器熔断器状态需持久化到 state",
+      "correct": "A"
+    },
+    {
+      "id": "task-10",
+      "factId": "F10",
+      "domain": "pipeline",
+      "question": "关于「SkillOpt 六阶段：Rollo…」哪种说法成立？",
+      "answerA": "SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-11",
+      "factId": "F01",
+      "domain": "contract",
+      "question": "关于「KESPI 维度通过阈值为 0.65…」哪种说法成立？",
+      "answerA": "KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-12",
+      "factId": "F02",
+      "domain": "training",
+      "question": "关于「红灯语义是待回炉，不是人工干预信号…」哪种说法成立？",
+      "answerA": "红灯语义是待回炉，不是人工干预信号",
+      "answerB": "(扭曲表述) 红灯语义是待回炉，不是人工干预信号",
+      "correct": "A"
+    },
+    {
+      "id": "task-13",
+      "factId": "F03",
+      "domain": "threshold",
+      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
+      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-14",
+      "factId": "F04",
+      "domain": "pipeline",
+      "question": "关于「KM 维度公式：近7天代谢记录数（每…」哪种说法成立？",
+      "answerA": "KM 维度公式：近7天代谢记录数（每条+0.1，上限0.3）+ 未压缩加0.2",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-15",
+      "factId": "F05",
+      "domain": "contract",
+      "question": "关于「芥子 id 约定 seed-<ent…」哪种说法成立？",
+      "answerA": "芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>",
+      "answerB": "(扭曲表述) 芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>",
+      "correct": "A"
+    },
+    {
+      "id": "task-16",
+      "factId": "F06",
+      "domain": "training",
+      "question": "关于「双脑契约：wiki 文件是唯一事实源…」哪种说法成立？",
+      "answerA": "双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-17",
+      "factId": "F07",
+      "domain": "threshold",
+      "question": "关于「残壳判据：compressed=1 …」哪种说法成立？",
+      "answerA": "残壳判据：compressed=1 且芥子已消费的实体才可归档",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-18",
+      "factId": "F08",
+      "domain": "pipeline",
+      "question": "关于「回炉种子 access_count>…」哪种说法成立？",
+      "answerA": "回炉种子 access_count>0 防止无限循环回炉",
+      "answerB": "(扭曲表述) 回炉种子 access_count>未知数 防止无限循环回炉",
+      "correct": "A"
+    },
+    {
+      "id": "task-19",
+      "factId": "F09",
+      "domain": "contract",
+      "question": "关于「三路编排器熔断器状态需持久化到 st…」哪种说法成立？",
+      "answerA": "三路编排器熔断器状态需持久化到 state",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-20",
+      "factId": "F10",
+      "domain": "training",
+      "question": "关于「SkillOpt 六阶段：Rollo…」哪种说法成立？",
+      "answerA": "SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-21",
+      "factId": "F01",
+      "domain": "threshold",
+      "question": "关于「KESPI 维度通过阈值为 0.65…」哪种说法成立？",
+      "answerA": "KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80",
+      "answerB": "(扭曲表述) KESPI 维度通过阈值为 未知数，绿灯阈值为 0.80",
+      "correct": "A"
+    },
+    {
+      "id": "task-22",
+      "factId": "F02",
+      "domain": "pipeline",
+      "question": "关于「红灯语义是待回炉，不是人工干预信号…」哪种说法成立？",
+      "answerA": "红灯语义是待回炉，不是人工干预信号",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-23",
+      "factId": "F03",
+      "domain": "contract",
+      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
+      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-24",
+      "factId": "F04",
+      "domain": "training",
+      "question": "关于「KM 维度公式：近7天代谢记录数（每…」哪种说法成立？",
+      "answerA": "KM 维度公式：近7天代谢记录数（每条+0.1，上限0.3）+ 未压缩加0.2",
+      "answerB": "(扭曲表述) KM 维度公式：近未知数天代谢记录数（每条+0.1，上限0.3）+ 未压缩加0.2",
+      "correct": "A"
+    },
+    {
+      "id": "task-25",
+      "factId": "F05",
+      "domain": "threshold",
+      "question": "关于「芥子 id 约定 seed-<ent…」哪种说法成立？",
+      "answerA": "芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-26",
+      "factId": "F06",
+      "domain": "pipeline",
+      "question": "关于「双脑契约：wiki 文件是唯一事实源…」哪种说法成立？",
+      "answerA": "双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-27",
+      "factId": "F07",
+      "domain": "contract",
+      "question": "关于「残壳判据：compressed=1 …」哪种说法成立？",
+      "answerA": "残壳判据：compressed=1 且芥子已消费的实体才可归档",
+      "answerB": "(扭曲表述) 残壳判据：compressed=未知数 且芥子已消费的实体才可归档",
+      "correct": "A"
+    },
+    {
+      "id": "task-28",
+      "factId": "F08",
+      "domain": "training",
+      "question": "关于「回炉种子 access_count>…」哪种说法成立？",
+      "answerA": "回炉种子 access_count>0 防止无限循环回炉",
+      "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
+      "correct": "A"
+    },
+    {
+      "id": "task-29",
+      "factId": "F09",
+      "domain": "threshold",
+      "question": "关于「三路编排器熔断器状态需持久化到 st…」哪种说法成立？",
+      "answerA": "三路编排器熔断器状态需持久化到 state",
+      "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
+      "correct": "A"
+    },
+    {
+      "id": "task-30",
+      "factId": "F10",
+      "domain": "pipeline",
+      "question": "关于「SkillOpt 六阶段：Rollo…」哪种说法成立？",
+      "answerA": "SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate",
+      "answerB": "(扭曲表述) SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate",
+      "correct": "A"
+    }
+  ]
+}
