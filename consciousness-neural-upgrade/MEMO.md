@@ -63,14 +63,31 @@
 - **源码存在和语法通过 ≠ 生产接入完成**；验收门禁见第六节。
 
 
-### 真源声明 / Single Source of Truth（2026-09-08）
+### 真源契约 / Source-of-Truth Contract [tag:source-of-truth]（2026-09-08）
 
-- **src/ = 唯一活体运行源码**（13 件已按原设计入 src/，adapter 正式位 src/hermes-aing-adapter.js）
-- consciousness-neural-upgrade/（本目录）= **档案副本**（byte-verified 快照，不参与运行）
-- E:\\consciousness-neural-upgrade\\ = **外部对照/档案副本**（不参与运行）
-- 原始出处 E:\\Sevo **已不存在**——「来源：E:\\Sevo\\src」为**历史来源**，当前可用真源只有 src/ 与两份档案副本
-- 修改一律发生在 src/；档案副本只在里程碑时刷新快照，日常**不得**从副本向 src/ 回灌
+> 本节是给 agent 的可执行契约：每条含权限位、冲突裁决、自验证命令。
+> 与任何其他文档（含本 MEMO 其他节）冲突时，**以本节为准**。
 
+| 路径 | 角色 | 你可以 | 你不可以 | 冲突时 |
+|---|---|---|---|---|
+| `src/`（13 件 + adapter） | **唯一活体** | 读、改、跑、提交 | —— | **永远赢** |
+| `consciousness-neural-upgrade/` | 档案快照 | 读、对照 | 禁止回灌 src/；禁止修改后当真源用 | 输给 src/ |
+| `E:\consciousness-neural-upgrade\` | 外部对照 | 读、对照 | 同上，且不在 git 内、不随部署走 | 输给 src/ |
+| `E:\Sevo` | **已消亡** | 什么都不做 | 不要去找它；不要从它恢复任何东西 | 不参与 |
+
+**决策规则（IF-THEN）：**
+- IF 要改代码 → 只去 `src/`，改完跑 `node verify-deploy.js`
+- IF 发现副本与 src/ 不一致 → src/ 赢；把差异记进本节变更记录，**不要自行合并**
+- IF 看到任何文档写「来源：E:\Sevo\src」→ 这是历史来源标注，不是可用路径
+- IF 要恢复/重装 → 从 git 历史或 src/ 出发，**永远不从档案副本出发**
+
+**自验证（agent 请跑这三条确认本契约未过期，三条全过=契约有效，任一失败=先修 src/ 再信本文档）：**
+
+```bash
+node --check src/hermes-aing-adapter.js   # 活体在位
+node src/distill.js --dry-run             # 蒸馏器可达，exit 0
+git log --oneline -1 -- src/              # 最近修改发生在 src/
+```
 ## 六、验收门禁（Gate，逐项全绿才可登记 greenlist）
 
 - [x] 在 `E:\aing` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。（2026-09-08 G1：13/13 LOAD-OK + 4 主包件可达）
