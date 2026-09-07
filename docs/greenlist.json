@@ -71,6 +71,12 @@
       "cap": "verify-deploy C7 运行时产品断言（一致性+指纹）",
       "evidence": "负向测试：注入腐坏→红，清除→绿",
       "date": "2026-09-07"
+    },
+    {
+      "id": "consciousness-neural-full",
+      "desc": "意识神经系统完整接入：13 模块（事件协议/神经核/感知/导链/意识层/元认知/成长闭环/hermes 通用适配器），控制面板 MEMO 固化接口标准四件套（9通道/ConsciousnessEvent/adapter CLI/coordination-only 默认），预留接口池 IF-002~006+开放池",
+      "evidence": "2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；提交 7b54471(副本)+本次(src装配)",
+      "date": "2026-09-08"
     }
   ],
   "locked": [

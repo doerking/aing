@@ -64,14 +64,14 @@
 
 ## 六、验收门禁（Gate，逐项全绿才可登记 greenlist）
 
-- [ ] 在 `E:\aing` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。
-- [ ] 验证 `ConsciousnessEvent` 归一化、指纹去重和 9 通道约束（含 generic 兜底）。
-- [ ] 验证 `ConsciousnessKernel` 事件去重、聚合、抑制和状态持久化（coordination-only 默认生效）。
-- [ ] 验证 `NeuralArchitecture` 感知→导链→意识输出链路。
-- [ ] 验证元认知与成长记录不越过审批边界。
-- [ ] 验证 adapter CLI 四命令：ingest（写走代谢）/ search（只读）/ briefing / deliberate。
-- [ ] 验证 origin 血统：外部事件 `source` 落库可查，未污染主血统。
-- [ ] 完成副本与主运行包之间的独立接入复查。
+- [x] 在 `E:\aing` 真实运行环境中加载全部 13 模块并完成运行时实例化检查。（2026-09-08 G1：13/13 LOAD-OK + 4 主包件可达）
+- [x] 验证 `ConsciousnessEvent` 归一化、指纹去重和 9 通道约束（含 generic 兜底）。（2026-09-08 G2：7/7 PASS；注意字段名是 channel 非 type）
+- [x] 验证 `ConsciousnessKernel` 事件去重、聚合、抑制和状态持久化（coordination-only 默认生效）。（2026-09-08 G3：3x同件→1收2拒，抑制跨进程存活，state 落 data/consciousness/state.json）
+- [x] 验证 `NeuralArchitecture` 感知→导链→意识输出链路。（2026-09-08 G4：实跑 6.5s，briefing 六件输出 alerts=8/hotspots=5，落 logs/consciousness/）
+- [x] 验证元认知与成长记录不越过审批边界。（2026-09-08 G5：reviewConsciousness 只产 adjustments 建议；growth 候选仅 candidate 态；写落 data/growth-loop.json 非 knowledge.db）
+- [x] 验证 adapter CLI 四命令：ingest（写走代谢）/ search（只读）/ briefing / deliberate。（2026-09-08 G6：四命令编程式全通；adapter 需部署在 src/ 内——13 件已按原设计入 src/，副本目录留档）
+- [x] 验证 origin 血统：外部事件 `source` 落库可查，未污染主血统。（2026-09-08 G7：raw frontmatter source=IF-TEST::g6-test + confidence=0 + pending-distillation；entities 表可查；origin_trust 专用列仍按 DESIGN 文档待接线）
+- [x] 完成副本与主运行包之间的独立接入复查。（2026-09-08 G8：接入点 4/4 签名核对 + verify-deploy 回归 + 13 件入 src/ + verify-deploy ALL GREEN）
 
 ## 七、变更记录
 
@@ -80,4 +80,4 @@
 - 2026-09-07：完成逐字节比对、依赖闭合检查和 Node 语法检查（CONSCIOUSNESS_SYNTAX_OK）。
 - 2026-09-07：补充本副本备忘录组件 `MEMO.md`。
 - 2026-09-08：**MEMO 升格为「意识神经控制面板」**——固化接口标准四件套（9 通道 / ConsciousnessEvent / adapter CLI 契约 / coordination-only 默认模式），开设预留接口登记区（IF-002~IF-006 + 开放池），确立「aing 组件之外的一切 agent 软件组件均可按标准接入」的总理念。
-- 2026-09-08：副本落位 `E:\aing\consciousness-neural-upgrade`，进入验收队列。
+- 2026-09-08：副本落位 `E:\aing\consciousness-neural-upgrade`，进入验收队列。- 2026-09-08：验收门禁 8/8 全绿（G1-G8），意识神经系统完成运行时接入；13 件按原设计部署进 src/，副本目录转为档案；adapter 正式位 src/hermes-aing-adapter.js。

@@ -3,7 +3,7 @@
 > 真源：`docs/greenlist.json`（结构化）。本文件是生成视图；改动先改 JSON，再运行 `node tools/gen-greenlist.js`。
 > Agents 渲染面板请直接读 JSON；未列出的能力一律不得对外承诺。
 
-## 绿灯能力（11 项，截至 2026-09-07）
+## 绿灯能力（12 项，截至 2026-09-07）
 
 - ✅ **完整代谢（10 步）+ --resume/--step/--smart**
   - 证据：影子回归 10 步全过 3.28s（2026-09-03）
@@ -27,6 +27,8 @@
   - 证据：三包演练：翻转 8/8、无蒸馏优雅降级、退出码 1 熔断（2026-09-07）
 - ✅ **verify-deploy C7 运行时产品断言（一致性+指纹）**
   - 证据：负向测试：注入腐坏→红，清除→绿（2026-09-07）
+- ✅ **undefined**
+  - 证据：2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；提交 7b54471(副本)+本次(src装配)（2026-09-08）
 
 ## 明确未解锁（4 项，禁止承诺）
 
