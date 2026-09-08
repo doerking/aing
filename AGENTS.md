@@ -40,6 +40,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C6 | Semantic search actually hits / 语义检索真实命中 | `node src/index-vectors.js --semantic --reindex` |
 | C7a | KESPI lifecycle consistency wiki↔db / 生命周期一致 | Full metabolism then re-verify / 全量代谢后复验 |
 | C7b | Patch-layer fingerprints (v1 defs) / 补丁层指纹 | Replay all cockpit layers v1→v3 (Pitfall 7) / 整层重放 |
+| C8 | No drive-letter literals in tracked js/json/md/ps1 (raw/ exempt) / 盘符字面量扫描 | Replace with semantic placeholders (`<repo-root>` etc.) / 改语义占位符 |
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 

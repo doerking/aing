@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const PKG_DIR = path.resolve(__dirname);
 const results = [];
@@ -142,6 +143,25 @@ async function main() {
     const g = fs.readFileSync(path.join(PKG_DIR, 'src', 'auto-ingest.js'), 'utf8');
     if (/hasDistillation/.test(g) && !/hasDistillation\s*=/.test(g)) throw new Error('auto-ingest 使用 hasDistillation 但无推导来源（v1 层缺失）');
     return 'v1 defs verified';
+  });
+
+  // ── C8. 盘符字面量扫描（2026-09-08：人工脱敏三审曾漏正斜杠变体，守门改机器）──
+  await check('C8 硬编码盘符扫描 (redaction gate)', async () => {
+    const tracked = execSync('git ls-files', { cwd: PKG_DIR, encoding: 'utf8' })
+      .split('\n').map(s => s.trim()).filter(Boolean);
+    const scope = tracked.filter(f => /\.(js|json|md|ps1)$/i.test(f) && !/^raw\//.test(f));
+    const driveRe = /(?<![A-Za-z])[A-Za-z]:[\\/]/;
+    const hits = [];
+    for (const f of scope) {
+      let lines;
+      try { lines = fs.readFileSync(path.join(PKG_DIR, f), 'utf8').split('\n'); } catch (e) { continue; }
+      lines.forEach((l, i) => { if (driveRe.test(l)) hits.push(`${f}:${i + 1}`); });
+    }
+    if (hits.length) {
+      throw new Error(`发现 ${hits.length} 处硬编码盘符（人工脱敏漏网风险）→ 改为语义占位符 <repo-root>/<opt-root> 等: `
+        + hits.slice(0, 5).join(', ') + (hits.length > 5 ? ' ...' : ''));
+    }
+    return `${scope.length} 个跟踪文件零盘符字面量`;
   });
 
   // ── 报告 ─────────────────────────────────────────────────────

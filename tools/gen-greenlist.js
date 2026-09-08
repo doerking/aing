@@ -2,6 +2,22 @@
 const fs = require('fs');
 const path = require('path');
 const G = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'greenlist.json'), 'utf8'));
+
+// Schema 断言：绿灯项 cap/evidence/date 必填（缺失曾渲染出 undefined 进"唯一真源"视图，2026-09-08 教训）
+for (const [i, g] of G.green.entries()) {
+  for (const k of ['cap', 'evidence', 'date']) {
+    if (!g[k] || typeof g[k] !== 'string' || !g[k].trim()) {
+      console.error(`❌ greenlist.json green[${i}] (id=${g.id || '?'}) 缺必填字段 "${k}" —— 先修 JSON 再生成`);
+      process.exit(1);
+    }
+  }
+}
+for (const [i, l] of G.locked.entries()) {
+  if (!l.item || !String(l.item).trim()) {
+    console.error(`❌ greenlist.json locked[${i}] 缺 "item"`);
+    process.exit(1);
+  }
+}
 const lines = [];
 lines.push('# aing 绿灯清单 / Green List（自动生成，勿手改）');
 lines.push('');

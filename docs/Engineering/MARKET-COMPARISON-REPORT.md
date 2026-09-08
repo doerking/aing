@@ -1,4 +1,4 @@
-# aing 市场定位与竞争分析报告 / Market Positioning & Competition Analysis (Chinese-primary)
+﻿# aing 市场定位与竞争分析报告 / Market Positioning & Competition Analysis (Chinese-primary)
 
 > 2026-08-25 · 基于 <repo-root> 完整实现 + 市场调研 · *Internal analysis document, written in Chinese.*
 
@@ -63,7 +63,7 @@ HTTP API 服务、多模型 AI 路由、多 Agent 数据链、调度器/定时�
 | **Notecast** | ~800 | 本地 LLM 笔记引擎 | 本地 LLM | ⚠️ 仅分类 |
 | **Beever Atlas** | ~1k | 聊天转知识库 | Neo4j | ⚠️ 仅图谱 |
 | **minne** | ~500 | Rust 自托管图谱 | Rust 运行时 | ⚠️ 仅链接 |
-| **aing（E:\）** | 未发布 | 双脑代谢引擎 | Node.js | ✅ 全代谢 |
+| **aing（本机部署 / local deploy）** | 未发布 | 双脑代谢引擎 | Node.js | ✅ 全代谢 |
 | **aing（GitHub）** | 0 | 零依赖代谢引擎 | Node.js 内置 | ✅ 全代谢 |
 
 ### 2.3 传统知识管理工具
@@ -100,7 +100,7 @@ LLM Wiki 生态（Sage-Wiki/second-brain/Graphify...）
   → 自动过期清理 ❌
   → 跨域发现 ❌
 
-aing（E:\）
+aing（本机部署 / local deploy）
   → 自动编译 ✅
   → 知识图谱 ✅
   → 自动链接 ✅
