@@ -37,7 +37,6 @@ class KnowledgeStore {
     }
     
     this._initTables();
-    this._initTables();
     // 蒸馏器迁移：旧库补 distill_meta 列（幂等）
     try {
       const colsInfo = this.db.exec("PRAGMA table_info(entities)");

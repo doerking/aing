@@ -13,7 +13,7 @@
  * 使用：
  *   node tri-path-orchestrator.js run <task>
  *   node tri-path-orchestrator.js status
- *   node tri-path-orchestrator.js熔断
+ *   node tri-path-orchestrator.js 熔断
  */
 
 const fs = require('fs');
