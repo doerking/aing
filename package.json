@@ -26,7 +26,8 @@
     "calibrate:fusion": "node tools/calibrate-fusion.js",
     "bootstrap": "node src/bootstrap.js",
     "seed:demo": "node src/seed-demo.js",
-    "unseed:demo": "node src/unseed-demo.js"
+    "unseed:demo": "node src/unseed-demo.js",
+    "sync:opt": "node src/sync-opt.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,
