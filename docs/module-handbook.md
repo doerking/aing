@@ -183,7 +183,7 @@
 ### scheduler.js — 常驻代谢调度器
 - **能力**：定时代谢（默认 30 分钟，`AING_SCHEDULER_INTERVAL_MS` 可调）+ raw/ 变化触发（mtime 快照轮询，15s 间隔）+ 单实例互斥（上轮未完不叠加，结束后补跑挂起触发）+ `--once` 模式（验证/CI 用）。
 - **铁律**：raw/ 检测用轮询快照，**不用 fs.watch**（Windows 上 watch 事件不可靠，sensory-ends 同款教训）。
-- **日志**：`logs/scheduler.log`，代谢输出内嵌 `[metabolism]` 前缀。
+- **热配置**（2026-09-08）：常驻模式轮询 data/scheduler-config.json（5s mtime+size 检测），可改 intervalMs / watchRaw / watchPollMs，**改间隔无需重启**；intervalMs 钳最小 60000（防误配把代谢打成高频风暴）；文件删除或 JSON 损坏自动回退启动值；metabolismTimeoutMs 不支持热改；`--once` 模式不启用热配置。
 
 ### api-server.js — HTTP API 服务（零依赖）
 - **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`；端口 3789（`AING_API_PORT` 可调）。
@@ -196,6 +196,11 @@
 - **能力**：`node src/query.js "关键词" [--limit N] [--names] [--slow]`——三路加权融合排序（语义 + 关键词覆盖 + 名称/ID 匹配，权重在 growth.config.js `query.fusionWeights`）+ 双路径慢回忆（候选均相似度 < `slowRecallThreshold` 或 `--slow` 时，复用 neural-guide-chain 邻居遍历二跳扩展，入池分 = 0.3×种子相似度）+ 伪精排（KESPI/新鲜度融合，替代重型 reranker）。
 - **教训（影子期自捕）**：检索池只收真命中（语义/关键词/名称三路 >0），不得全库倾倒——否则慢回忆邻居永远"已在池中"，扩展恒为空。
 - **待接**：origin-trust 低信任降权排序点已在代码留 TODO，等 origin_trust 列落地（见 DESIGN-ORIGIN-TRUST-2026-09-03.md）。
+- **可编程复用**（2026-09-08）：检索管线抽为 `searchCandidates(query, {limit, namesOnly, forceSlow})` 导出，CLI main() 只做参数解析与打印（require.main 守卫）；标定/评测工具直接调用，**不搞第二套融合实现**。
+
+### calibrate-fusion.js — 融合权重标定（tools/，2026-09-08）
+- **能力**：`npm run calibrate:fusion`——MRR@K / nDCG@K 网格评测 query.js 三路融合 + KESPI/新鲜度精排权重；候选召回与权重无关，故每查询只检索一次、24 组合共享候选重打分；`tools/calibrate-set.json` 人工标注优先，缺省自动生成（实体名 + wiki 高频词）。
+- **纪律**：只读评测不改配置；实体 < 30 或查询 < 10 为小样本模式，结论仅作方向参考**不写回配置**；重打分公式与 query.js 同源（含慢回忆 +0.05 加成）；配置改动后必须重跑复核。
 
 ---
 

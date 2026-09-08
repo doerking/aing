@@ -1,6 +1,6 @@
 {
   "name": "aing",
-  "version": "1.0.0",
+  "version": "0.9.1",
   "private": true,
   "description": "aing · Knowledge Metabolism Engine — let your knowledge base grow itself",
   "dependencies": {
@@ -20,7 +20,10 @@
     "spine:check": "node src/shared-spine.js compile",
     "tripath": "node src/tri-path-orchestrator.js",
     "test": "node verify-deploy.js",
-    "test:runtime": "node tools/self-test.js"
+    "test:runtime": "node tools/self-test.js",
+    "all": "node src/start-all.js",
+    "start-all": "node src/start-all.js",
+    "calibrate:fusion": "node tools/calibrate-fusion.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,

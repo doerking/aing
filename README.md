@@ -170,7 +170,7 @@ node src/growth-director.js
 node src/guide-chain-swarm.js
 ```
 
-> **Note**: aing is a collection of standalone Node.js scripts (CommonJS `.js`), not a TypeScript project — each script is run directly with `node`. `package.json` only declares dependencies & shortcuts (`npm run verify` / `npm run metabolism`).
+> **Note**: aing is a collection of standalone Node.js scripts (CommonJS `.js`), not a TypeScript project — each script is run directly with `node`. `package.json` only declares dependencies & shortcuts (`npm run verify` / `npm run all` / `npm run calibrate:fusion`).
 >
 > **Agent 必读：** 部署/验收/排障前先读 [`AGENTS.md`](./AGENTS.md)。部署完成后必跑 `node verify-deploy.js` —— 拿到 ALL GREEN 报告才算部署完成。
 
@@ -408,7 +408,7 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 2.5 — Consciousness Neural Architecture (sensory + guide chain + consciousness)
 - [ ] Phase 2.6 — Metacognition Layer (in repo, not wired into the pipeline; heuristic self-check only — wiring under evaluation / 组件在库、未接管线)
 - [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
-- [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode; no hot-reload / 定时代谢+raw 轮询触发，热重载未纳入)
+- [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode + hot config via data/scheduler-config.json, delete-to-revert, min interval 60s / 定时代谢+raw 轮询触发+配置热重载，删除即回退，最小间隔 60s；2026-09-08)
 - [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
 - [x] Phase 5 — Consciousness upgrade integration (13 modules per original design; G1-G8 gates green; metabolism→kernel events wired 2026-09-08; N1 cross-process atomic lock / N2 timing-safe auth / N3 self-test exit discipline; consciousness-neural docs realigned to code truth — evidence: `e847d15`, verify-deploy + self-test ALL GREEN)
 
