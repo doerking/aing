@@ -29,6 +29,10 @@ function check(name, fn) {
 }
 
 async function main() {
+  // ── C5 前置提示：models/ 模型未就位时先打招呼，避免新环境首跑看到红报错而误判部署失败 ──
+  if (!fs.existsSync(path.join(PKG_DIR, 'models', 'Xenova', 'all-MiniLM-L6-v2'))) {
+    console.log('ℹ️  预告: models/ 语义模型未就位，C5/C6 预期会红 —— 属正常现象，先运行: powershell -File setup-vectors.ps1 （模型约 12MB，不入库）');
+  }
   // ── C1. Node.js ──────────────────────────────────────────────
   await check('C1 Node.js 运行时', () => {
     const ver = process.version;
