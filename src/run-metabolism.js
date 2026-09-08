@@ -114,7 +114,8 @@ const STEPS = [
   { name: 'pollinate', desc: '授粉引擎 (跨域融合)', script: 'pollinate.js', args: [] },
   { name: 'compress', desc: '芥子压缩 (低频归档)', script: 'compress.js', args: [] },
   { name: 'kespi', desc: 'KESPI 八维自检', script: 'kespi-check.js', args: [] },
-  { name: 'prune', desc: '剪枝清理 (过期归档)', script: 'prune.js', args: [] }
+{ name: 'prune', desc: '剪枝清理 (过期归档)', script: 'prune.js', args: [] },
+{ name: 'sync-opt', desc: 'OPT 副本对齐 (marker 启用，非关键步骤)', script: 'sync-opt.js', args: [] }
 ];
 
 // P0: 关键步骤 —— 失败必须中断流水线，不允许「成功 8 失败 1」冒充成功
