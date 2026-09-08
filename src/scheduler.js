@@ -31,6 +31,56 @@ const CONFIG = {
   logFile: path.join(__dirname, '..', 'logs', 'scheduler.log')
 };
 
+// ── 热配置：轮询 data/scheduler-config.json，改间隔/开关无需重启（2026-09-08）──
+// 文件格式：{ "intervalMs": 1800000, "watchRaw": true, "watchPollMs": 15000 }（字段均可省略）
+// 语义：默认文件不存在 = 保持启动时配置（零行为变化）；存在则按内容覆盖；删除文件回退到启动值。
+// 边界：intervalMs 最小 60000（1 分钟），防止误配置把代谢打成高频风暴；metabolismTimeoutMs 不支持热改（单轮保护）。
+const HOT_CONFIG_FILE = path.join(CONFIG.kbRoot, 'data', 'scheduler-config.json');
+const STARTUP_CONFIG = { ...CONFIG };
+
+function _loadHotConfig() {
+  try {
+    const raw = fs.readFileSync(HOT_CONFIG_FILE, 'utf8');
+    const j = JSON.parse(raw);
+    const out = {};
+    if (j.intervalMs != null) {
+      const n = parseInt(j.intervalMs, 10);
+      if (Number.isFinite(n)) out.intervalMs = Math.max(60000, n);
+    }
+    if (j.watchRaw != null) out.watchRaw = !!j.watchRaw;
+    if (j.watchPollMs != null) {
+      const n = parseInt(j.watchPollMs, 10);
+      if (Number.isFinite(n) && n >= 1000) out.watchPollMs = n;
+    }
+    return out;
+  } catch (e) { return null; } // 不存在/JSON 损坏 → 维持现状
+}
+
+function applyHotConfig(hot) {
+  CONFIG.intervalMs = hot.intervalMs != null ? hot.intervalMs : STARTUP_CONFIG.intervalMs;
+  CONFIG.watchRaw = hot.watchRaw != null ? hot.watchRaw : STARTUP_CONFIG.watchRaw;
+  CONFIG.watchPollMs = hot.watchPollMs != null ? hot.watchPollMs : STARTUP_CONFIG.watchPollMs;
+}
+
+function startHotConfigWatcher() {
+  function _hotSig() {
+    try { return fs.statSync(HOT_CONFIG_FILE).mtimeMs + ':' + fs.statSync(HOT_CONFIG_FILE).size; }
+    catch (e) { return ''; }
+  }
+  let lastSig = _hotSig();
+  setInterval(() => {
+    const sig = _hotSig();
+    if (sig === lastSig) return;
+    lastSig = sig;
+    const hot = _loadHotConfig();
+    applyHotConfig(hot || {});
+    log(hot
+      ? `🔥 热配置已生效: interval=${CONFIG.intervalMs / 1000}s watchRaw=${CONFIG.watchRaw} watchPoll=${CONFIG.watchPollMs / 1000}s${hot.intervalMs != null && hot.intervalMs < 60000 ? '（intervalMs 已钳到最小 60s）' : ''}`
+      : `🔥 配置文件已移除/损坏，回退启动配置: interval=${CONFIG.intervalMs / 1000}s watchRaw=${CONFIG.watchRaw}`);
+  }, 5000);
+  log(`♨️  热配置已启用: data/scheduler-config.json（存在即生效，删除即回退）`);
+}
+
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   console.log(line);
@@ -126,6 +176,7 @@ function main() {
     return;
   }
 
+  if (!process.argv.includes('--once')) startHotConfigWatcher();
   setInterval(() => runMetabolism('定时代谢'), CONFIG.intervalMs);
 }
 

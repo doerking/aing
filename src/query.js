@@ -91,17 +91,14 @@ function printEntity(e, rank) {
   console.log(`    ${score}${kespi}类型: ${e.type || '-'} | 更新: ${e.updated_at || '-'}`);
 }
 
-async function main() {
-  const { query, limit, namesOnly, forceSlow } = parseArgs(process.argv.slice(2));
-  if (!query) {
-    console.log('用法:');
-    console.log('  node src/query.js "<关键词>" [--limit N] [--names] [--slow]');
-    console.log('  --names  仅按名称/ID 模糊匹配，不做向量检索');
-    console.log('  --slow   强制启用慢回忆（二跳邻居扩展）');
-    process.exit(1);
-  }
-
+// 检索管线（可编程入口）：向量/语义召回 → 三路融合 → 慢回忆扩展 → KESPI/新鲜度精排
+// CLI main() 只做参数解析与打印；标定/评测工具直接调用本函数，避免第二套融合实现（阈值唯一来源纪律）。
+async function searchCandidates(query, opts = {}) {
+  const limit = opts.limit || 8;
+  const namesOnly = !!opts.namesOnly;
+  const forceSlow = !!opts.forceSlow;
   const store = new KnowledgeStore();
+
   await store.init();
   const pool = new Map(); // id -> entity（含各路分数）
 
@@ -113,10 +110,7 @@ async function main() {
     try {
       await vs.enableSemantic();
       semanticAvailable = true;
-      console.log('🔎 语义检索 (384 维本地模型)\n');
-    } catch (e) {
-      console.log('🔎 向量检索 (hash 64 维；语义模型未就绪)\n');
-    }
+    } catch (e) { /* 回退 hash 模式 */ }
     const hits = await vs.semanticSearch(query, limit * 3); // 取宽池供融合
     for (const e of hits) {
       if (!pool.has(e.id)) pool.set(e.id, e);
@@ -147,6 +141,7 @@ async function main() {
     ? withSim.reduce((s, e) => s + e.score, 0) / withSim.length
     : 0;
   const needSlow = forceSlow || (semanticAvailable && withSim.length > 0 && avgSim < QC.slowRecallThreshold);
+  let slowExpanded = 0;
   if (needSlow) {
     const NeuralGuideChain = require('./neural-guide-chain');
     const gc = new NeuralGuideChain({ baseDir: path.join(__dirname, '..') });
@@ -169,9 +164,7 @@ async function main() {
         }
       }
     }
-    if (expanded.size > 0) {
-      console.log(`⏳ 置信低（均相似度 ${avgSim.toFixed(2)} < ${QC.slowRecallThreshold}），慢回忆扩展 ${expanded.size} 条邻居\n`);
-    }
+    slowExpanded = expanded.size;
   }
 
   // 5) 伪精排：融合 KESPI 与新鲜度（TODO(origin-trust): 低信任降权接入点，
@@ -190,6 +183,28 @@ async function main() {
 
   candidates.sort((a, b) => b._final - a._final);
 
+  return { candidates, semanticAvailable, avgSim, slowExpanded };
+}
+
+async function main() {
+  const { query, limit, namesOnly, forceSlow } = parseArgs(process.argv.slice(2));
+  if (!query) {
+    console.log('用法:');
+    console.log('  node src/query.js "<关键词>" [--limit N] [--names] [--slow]');
+    console.log('  --names  仅按名称/ID 模糊匹配，不做向量检索');
+    console.log('  --slow   强制启用慢回忆（二跳邻居扩展）');
+    process.exit(1);
+  }
+
+  const { candidates, semanticAvailable, avgSim, slowExpanded } = await searchCandidates(query, { limit, namesOnly, forceSlow });
+
+  if (!namesOnly) {
+    console.log(semanticAvailable ? '🔎 语义检索 (384 维本地模型)\n' : '🔎 向量检索 (hash 64 维；语义模型未就绪)\n');
+  }
+  if (slowExpanded > 0) {
+    console.log(`⏳ 置信低（均相似度 ${avgSim.toFixed(2)} < ${QC.slowRecallThreshold}），慢回忆扩展 ${slowExpanded} 条邻居\n`);
+  }
+
   const visible = candidates.filter(e => namesOnly ? e._nm > 0 : true);
   if (visible.length === 0) {
     console.log(`未命中: "${query}"`);
@@ -200,7 +215,12 @@ async function main() {
   visible.slice(0, limit).forEach((e, i) => printEntity(e, i + 1));
 }
 
-main().catch(e => {
-  console.error('查询失败:', e.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(e => {
+    console.error('查询失败:', e.message);
+    process.exit(1);
+  });
+}
+
+// 导出：供标定/评测工具复用同一套检索与融合逻辑（不构成第二实现）
+module.exports = { searchCandidates, keywordScore, nameScore, recencyScore };
