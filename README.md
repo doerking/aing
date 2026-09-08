@@ -203,7 +203,7 @@ npm run unseed:demo   # 拆除：按 demo-% 前缀清 DB 六表 + 文件，真�
 ```
 
 演示组刻意设计：密集双向链接（KD 密度维）、created 时间梯度（KG 生长维）、
-一组符号规范争议文档（KQ 一致性场景）。seed 后实体 >10，`npm run calibrate:fusion` 脱离小样本模式。
+一组符号规范争议文档（KQ 一致性场景）。seed 后实体 14（仍 <30，标定工具按实况提示小样本纪律；实体 ≥30 后结论才够硬）。
 
 ## Resident Services & API (Optional) / 常驻服务与 API（可选）
 

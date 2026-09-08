@@ -97,6 +97,6 @@ function sh(cmd) {
 🟢 seed-demo 完成。试试：
    npm run query -- "千纸鹤"            # 命中演示实体，看融合分构成
    npm run query -- "符号规范"          # 争议文档对
-   node tools/calibrate-fusion.js       # 现在实体 >10，标定工具脱离小样本模式
+   node tools/calibrate-fusion.js       # 标定演示（实体 14 <30，仍为小样本模式，结论仅方向参考）
    npm run unseed:demo                  # 不想要了？一键拆干净`);
 })();

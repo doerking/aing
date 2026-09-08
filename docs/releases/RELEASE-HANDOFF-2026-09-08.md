@@ -21,8 +21,8 @@ GitHub Release 说明页（tag 已就位，`releases/` 页面至今为空）。*
 远端 main 当前 `8494623`，本地 master 领先三个提交（快进，无 force）：
 
 ```
-git -C E:\aing push origin master:main
-git -C E:\aing push origin v0.9.2
+git -C <repo-root> push origin master:main
+git -C <repo-root> push origin v0.9.2
 ```
 
 可选：若想把 sync-opt（`2796805`）单独成版，打 `v0.9.3-mirror` tag 后拆开发布；默认不拆，`v0.9.2` 说明页已涵盖两者（文内注明）。
@@ -53,4 +53,4 @@ git -C E:\aing push origin v0.9.2
 
 - 推送报告：当日 `PUSH-REPORT-AING-2026-09-08.md`（含 backup 分支、tag、质量门实测记录）
 - 上游交接：`PUSH-HANDOFF-AING-2026-09-08.md`（第 2 号交接单）
-- 回滚锚：`backup/remote-main-20260908` = `00abed2`；本地另有 `E:\aing-history-backup-20260908.bundle`（止于 `16889c0`）
+- 回滚锚：`backup/remote-main-20260908` = `00abed2`；真源主机另有全史 bundle `aing-history-backup-20260908.bundle`（`<repo-root>` 同级，止于 `16889c0`）
