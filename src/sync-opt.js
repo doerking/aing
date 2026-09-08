@@ -13,7 +13,7 @@
  *   data/ / logs/ / mustard-seeds / src/growth.config.js / wiki
  *   唯一动作：代码变了才触发 OPT 侧 npm install + 代谢链 + verify-deploy 自证
  *
- * 启用方式（机器本地）：aing 根 data/opt-root.json = {"root":"E:\\OPT","enabled":true}
+ * 启用方式（机器本地）：aing 根 data/opt-root.json = {"root":"<opt-root>","enabled":true}（如本机 "E:\\OPT"）
  *   文件不存在或 enabled=false → 本脚本直接退出 0（其他 clone 零影响）
  *   代谢链尾挂本步骤（sync-opt），每轮代谢自动对齐；已对齐时走秒级快路径
  *
