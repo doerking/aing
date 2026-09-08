@@ -422,6 +422,10 @@ function printStats() {
  * Git commit
  */
 function gitCommit() {
+  if (process.env.AING_NO_AUTOCOMMIT === '1') {
+    console.log('\n⏭️  Git commit 跳过（AING_NO_AUTOCOMMIT=1，供 seed-demo 等临时数据往返使用）');
+    return;
+  }
   try {
     if (!fs.existsSync(path.join(CONFIG.rootDir, '.git'))) {
       console.log('\n⚠️  Git commit 跳过（非 git 仓库） / Git commit skipped (not a git repo)');

@@ -23,7 +23,10 @@
     "test:runtime": "node tools/self-test.js",
     "all": "node src/start-all.js",
     "start-all": "node src/start-all.js",
-    "calibrate:fusion": "node tools/calibrate-fusion.js"
+    "calibrate:fusion": "node tools/calibrate-fusion.js",
+    "bootstrap": "node src/bootstrap.js",
+    "seed:demo": "node src/seed-demo.js",
+    "unseed:demo": "node src/unseed-demo.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,

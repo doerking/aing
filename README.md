@@ -124,6 +124,8 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 
 ## Quick Start / 快速开始
 
+
+> **最短路径 / Fastest path**：`npm run bootstrap` —— 一键完成 依赖 → 配置 → 建库 → 代谢链 → 语义模型 → 验收，跑完即可查询。以下为分步说明。
 ```bash
 # 1. Clone
 git clone https://github.com/doerking/aing.git
@@ -191,6 +193,17 @@ node src/index-vectors.js --semantic --reindex
 - 回退：删掉 `models\` 目录即自动回退纯哈希模式（或加 `--hash` 强制），两套向量在库里按维度自动区分、互不干扰。
 
 ---
+
+## Try Demo Data (Optional) / 演示数据（可选，60 秒体验）
+
+```bash
+npm run seed:demo     # 灌入 6 篇虚构演示文档（云杉折纸社）：不碰真实数据、不产生 git 提交
+npm run query -- "千纸鹤"       # 看融合分构成与链接命中
+npm run unseed:demo   # 拆除：按 demo-% 前缀清 DB 六表 + 文件，真实数据零接触
+```
+
+演示组刻意设计：密集双向链接（KD 密度维）、created 时间梯度（KG 生长维）、
+一组符号规范争议文档（KQ 一致性场景）。seed 后实体 >10，`npm run calibrate:fusion` 脱离小样本模式。
 
 ## Resident Services & API (Optional) / 常驻服务与 API（可选）
 
