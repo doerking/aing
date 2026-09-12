@@ -1,0 +1,15 @@
+{
+  "name": "aing-agent-dashboard",
+  "version": "1.0.0",
+  "description": "aing Agent 控制面板 - 一站式知识库管理",
+  "main": "src/agent-dashboard.js",
+  "scripts": {
+    "dashboard": "node src/agent-dashboard.js",
+    "dashboard:dev": "node src/agent-dashboard.js --port 3789",
+    "dashboard:auth": "node src/agent-dashboard.js --port 3789 --api-key your-secret-key",
+    "server": "npm run dashboard"
+  },
+  "keywords": ["aing", "agent", "dashboard", "knowledge-base"],
+  "author": "Sapiens AI",
+  "license": "MIT"
+}

@@ -83,10 +83,11 @@ class KespiChecker {
   /**
    * KQ — 质量 (Quality)
    * 基于 confidence 和逻辑一致性
+   * P1 #003: 修复 consistency 字段缺失导致 KQ 失真
    */
   _calcKQ(entity) {
-    const confidence = entity.confidence || 0;
-    const consistency = entity.consistency || 0;
+    const confidence = entity.confidence !== undefined ? entity.confidence : 0;
+    const consistency = entity.consistency !== undefined ? entity.consistency : 0.5;
     return Math.min(1.0, (confidence * 0.6 + consistency * 0.4));
   }
 

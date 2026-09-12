@@ -40,6 +40,14 @@ const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十步全流程宽裕上限
 let heldLock = null; // 持锁句柄，main 结束时保证释放
 
 function pidAlive(pid) {
+  // P1 #002: 跨平台 PID 检查（Windows 使用 tasklist，Unix 使用 kill -0）
+  if (process.platform === 'win32') {
+    try {
+      const { execSync } = require('child_process');
+      execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, { encoding: 'utf8', stdio: 'pipe' });
+      return true;
+    } catch (e) { return false; }
+  }
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
 }
 
@@ -108,7 +116,7 @@ const STEPS = [
   { name: 'compile', desc: '秩序脑编译 (raw/*.md → wiki/entities/*.md)', script: 'compile.js', args: [] },
   { name: 'import', desc: '导入数据库 (wiki/ → SQLite)', script: 'import-from-wiki.js', args: [] },
   { name: 'link', desc: '自动链接发现 (实体关联)', script: 'auto-link.js', args: [] },
-{ name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
+  { name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
   { name: 'vector', desc: '向量索引 (64-dim embedding)', script: 'index-vectors.js', args: [] },
   { name: 'sprout', desc: '发芽引擎 (新关联发现)', script: 'sprout.js', args: [] },
   { name: 'pollinate', desc: '授粉引擎 (跨域融合)', script: 'pollinate.js', args: [] },
@@ -363,6 +371,7 @@ async function smartMode(enableFeedback = false) {
  */
 async function main() {
   const args = process.argv.slice(2);
+  const forceLock = args.includes('--force-lock');
   const force = args.includes('--force');
   const resume = args.includes('--resume');
   const smart = args.includes('--smart');

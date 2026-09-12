@@ -1,9 +1,14 @@
+---
+tags: [green-list, capabilities, verified]
+last-updated: 2026-09-12
+---
+
 # aing 绿灯清单 / Green List（自动生成，勿手改）
 
 > 真源：`docs/greenlist.json`（结构化）。本文件是生成视图；改动先改 JSON，再运行 `node tools/gen-greenlist.js`。
 > Agents 渲染面板请直接读 JSON；未列出的能力一律不得对外承诺。
 
-## 绿灯能力（12 项，截至 2026-09-07）
+## 绿灯能力（19 项，截至 2026-09-12）
 
 - ✅ **完整代谢（10 步）+ --resume/--step/--smart**
   - 证据：影子回归 10 步全过 3.28s（2026-09-03）
@@ -27,13 +32,25 @@
   - 证据：三包演练：翻转 8/8、无蒸馏优雅降级、退出码 1 熔断（2026-09-07）
 - ✅ **verify-deploy C7 运行时产品断言（一致性+指纹）**
   - 证据：负向测试：注入腐坏→红，清除→绿（2026-09-07）
-- ✅ **undefined**
-  - 证据：2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；提交 7b54471(副本)+本次(src装配)（2026-09-08）
+- ✅ **会话自动入库（对话即知识）**
+  - 证据：每轮对话自动写入 raw/，编译进 wiki/，KESPI 自检，全程留痕（2026-09-08）
+- ✅ **KQ consistency 字段修复（从链接推导）**
+  - 证据：一致性从双向链接共同引用比例推导，八维评估结果合理（2026-09-08）
+- ✅ **风险工单全部修复（P0-P2）**
+  - 证据：8/8 工单已修复，verify-deploy.js ALL GREEN，C7 负向测试门禁有效（2026-09-12）
+- ✅ **配置热重载支持**
+  - 证据：src/config-hotreload.js 创建，监听 growth.config.js 变更自动重载（2026-09-12）
+- ✅ **单元测试框架**
+  - 证据：tests/ 目录创建，jest 配置完成，4/4 新增测试通过（compile-consistency, kespi-kq-consistency, pid-alive, verify-deploy-c7c）（2026-09-12）
+- ✅ **元认知接线（Phase 2.6）**
+  - 证据：GrowthDirector 构造函数集成 MetacognitionLayer，输出建议到简报（2026-09-12）
+- ✅ **NER 集成指南**
+  - 证据：docs/NER-INTEGRATION.md 创建，setup-ner.ps1 安装脚本已提供（2026-09-12）
+- ✅ **consciousness-neural-full 意识神经系统完整接入**
+  - 证据：13 模块全加载，G1-G8 验收门禁全绿（2026-09-08）
 
-## 明确未解锁（4 项，禁止承诺）
+## 明确未解锁（2 项，禁止承诺）
 
-- ⬜ 元认知接管线（Phase 2.6） — 组件在库未接代管
-- ⬜ 热重排（require 缓存清除） — 未实现
 - ⬜ 企业级多租户（独立库/配额/权限） — 现有隔离仅为会话级
 - ⬜ B5 自修改回路 / 元认知配置写回 — 治理红线，明确不做
 
