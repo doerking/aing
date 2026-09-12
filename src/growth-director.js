@@ -18,11 +18,6 @@
  *   - maintain         : 连续 3 次健康
  *   - scheduled_metabolism: 时间节律触发
  *   - observe          : 无显著信号
- * 
- * 用法：
- *   node growth-director.js              # 评估并输出决策
- *   node growth-director.js --execute     # 评估并执行决策
- *   node growth-director.js --dry-run     # 只看不执行
  */
 
 const fs = require('fs');
@@ -47,29 +42,155 @@ const ACTIONS = {
   targeted_pollinate:  { priority: 1, label: '🎯 定向授粉', desc: '高优缺口，精准补充' },
   compile:             { priority: 1, label: '💻 编译', desc: '新文件变化，需要编译' },
   boost_growth:        { priority: 2, label: '🚀 促进生长', desc: '停滞状态，加速生长' },
-  pollinate:           { priority: 2, label: '🌸 授粉', desc: '普通缺口，常规授粉' },
-  scheduled_metabolism: { priority: 2, label: '⏰ 定时代谢', desc: '时间节律触发' },
-  maintain:            { priority: 3, label: '🔧 维护', desc: '持续健康，例行维护' },
-  observe:             { priority: 5, label: '👁️ 观察', desc: '无显著信号，继续观察' }
-};
-
-// 紧急度级别
-const URGENCY_LEVELS = {
-  critical: { threshold: 5, label: '🔴 紧急' },
-  high:     { threshold: 3, label: '🟠 高' },
-  medium:   { threshold: 1, label: '🟡 中' },
-  low:      { threshold: 0, label: '🟢 低' }
+  pollinate:           { priority: 2, label: '🌸 常规授粉', desc: '普通缺口，常规授粉' },
+  maintain:            { priority: 3, label: '✅ 维持', desc: '系统健康，无需操作' },
+  scheduled_metabolism:{ priority: 3, label: '⏰ 定时代谢', desc: '时间节律触发' },
+  observe:             { priority: 4, label: '👁️ 观察', desc: '无显著信号' }
 };
 
 class GrowthDirector {
+  /**
+   * 构造函数
+   */
   constructor(dbPath) {
-    this.dbPath = dbPath;
+    this.dbPath = dbPath || DB_PATH;
     this.signals = {};
     this.decisionHistory = [];
     this.consecutiveStagnant = 0;
     this.consecutiveHealthy = 0;
     this.lastDecision = null;
     this.lastDecisionTime = null;
+    
+    // P2 #006: 集成元认知层
+    try {
+      const MetacognitionLayer = require('./metacognition-layer');
+      this.metacognition = new MetacognitionLayer({
+        stateDir: path.join(path.dirname(this.dbPath), 'data', 'metacognition')
+      });
+    } catch (e) {
+      console.log('⚠ 元认知层加载失败，跳过集成 / Metacognition layer failed:', e.message);
+      this.metacognition = null;
+    }
+  }
+
+  /**
+   * 获取知识库连接
+   */
+  async _getStore() {
+    const KnowledgeStore = require('./knowledge-store');
+    const store = new KnowledgeStore(this.dbPath);
+    await store.init();
+    return store;
+  }
+
+  /**
+   * 计算 KESPI 趋势
+   */
+  _calcKespiTrend(store) {
+    try {
+      const history = store.getAllLatestKespi();
+      if (history.length < 2) return null;
+      
+      const sorted = history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const recent = sorted.slice(-5);
+      const prevAvg = recent[0] ? recent[0].overall_score : 0;
+      const currAvg = recent[recent.length - 1].overall_score;
+      
+      return {
+        decline: prevAvg - currAvg,
+        trend: prevAvg > currAvg ? 'declining' : 'improving',
+        recentScores: recent.map(r => r.overall_score)
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * 统计文件变化
+   */
+  _countFileChanges(store) {
+    try {
+      const rawDir = resolvePath('raw');
+      if (!fs.existsSync(rawDir)) return 0;
+      
+      const rawFiles = fs.readdirSync(rawDir).filter(f => f.endsWith('.md'));
+      return rawFiles.length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /**
+   * 检测知识缺口
+   */
+  _countKnowledgeGaps(store) {
+    try {
+      const gaps = store.all(`
+        SELECT COUNT(*) as cnt FROM entities e
+        LEFT JOIN links l ON e.id = l.source_id OR e.id = l.target_id
+        WHERE l.source_id IS NULL
+      `)[0];
+      
+      return { highPriority: Math.max(0, (gaps?.cnt || 0) - 5), normal: gaps?.cnt || 0 };
+    } catch (e) {
+      return { highPriority: 0, normal: 0 };
+    }
+  }
+
+  /**
+   * 获取停滞天数
+   */
+  _getStagnantDays(store) {
+    try {
+      const lastRun = store.get('SELECT MAX(created_at) as last_run FROM metabolism_log')[0];
+      if (!lastRun?.last_run) return 7; // 无记录则假设为 7 天
+      
+      const lastDate = new Date(lastRun.last_run);
+      const now = new Date();
+      const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /**
+   * 检查时间触发
+   */
+  _checkTimeTrigger() {
+    const hour = new Date().getHours();
+    // 每天 6:00 和 18:00 触发代谢
+    return hour === 6 || hour === 18;
+  }
+
+  /**
+   * 评估代谢状态
+   */
+  _evaluateMetabolism(store) {
+    try {
+      const stats = store.getStats();
+      const avgKespi = stats.avgKespi;
+      
+      if (avgKespi >= 0.80) return 'healthy';
+      if (avgKespi >= 0.65) return 'stable';
+      return 'stagnant';
+    } catch (e) {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * 获取实体统计
+   */
+  _getEntityStats(store) {
+    try {
+      const count = store.get('SELECT COUNT(*) as cnt FROM entities')[0];
+      return { total: count?.cnt || 0 };
+    } catch (e) {
+      return { total: 0 };
+    }
   }
 
   /**
@@ -78,27 +199,20 @@ class GrowthDirector {
   async perceive() {
     const store = await this._getStore();
     this.signals = {
-      // KESPI 趋势
       kespiTrend: this._calcKespiTrend(store),
-      
-      // 文件变化
       fileChanges: this._countFileChanges(store),
-      
-      // 知识缺口
       knowledgeGaps: this._countKnowledgeGaps(store),
-      
-      // 停滞天数
       stagnantDays: this._getStagnantDays(store),
-      
-      // 时间触发
       timeTrigger: this._checkTimeTrigger(),
-      
-      // 代谢评估
       metabolismStatus: this._evaluateMetabolism(store),
-      
-      // 实体统计
       entityStats: this._getEntityStats(store)
     };
+    
+    // P2 #006: 元认知反馈
+    if (this.metacognition) {
+      const feedback = this.metacognition.reviewConsciousness([]);
+      console.log('🧠 元认知反馈:', JSON.stringify(feedback.adjustments));
+    }
     
     return this.signals;
   }
@@ -139,349 +253,101 @@ class GrowthDirector {
     
     if (signals.timeTrigger) {
       urgency += 1;
-      reasons.push('时间节律触发');
+      reasons.push('时间触发');
     }
 
-    // 确定紧急度级别
-    let urgencyLevel = 'low';
-    for (const [level, cfg] of Object.entries(URGENCY_LEVELS)) {
-      if (urgency >= cfg.threshold) {
-        urgencyLevel = level;
-        break;
-      }
-    }
-
-    // 选择动作
-    const action = this._selectAction(urgency, urgencyLevel, signals);
-    
-    // 更新连续计数
-    if (signals.metabolismStatus === 'stagnant') {
-      this.consecutiveStagnant++;
-      this.consecutiveHealthy = 0;
+    // 根据紧急度和状态选择动作
+    let action;
+    if (urgency >= 4) {
+      action = 'emergency_fix';
+    } else if (urgency >= 3) {
+      action = 'full_metabolism';
+    } else if (signals.knowledgeGaps?.highPriority > 0) {
+      action = 'targeted_pollinate';
+    } else if (signals.fileChanges > 0) {
+      action = 'compile';
+    } else if (signals.metabolismStatus === 'stagnant') {
+      action = 'boost_growth';
+    } else if (signals.knowledgeGaps?.normal > 0) {
+      action = 'pollinate';
     } else if (signals.metabolismStatus === 'healthy') {
-      this.consecutiveHealthy++;
-      this.consecutiveStagnant = 0;
+      action = 'maintain';
+    } else if (signals.timeTrigger) {
+      action = 'scheduled_metabolism';
     } else {
-      this.consecutiveStagnant = Math.max(0, this.consecutiveStagnant - 1);
-      this.consecutiveHealthy = Math.max(0, this.consecutiveHealthy - 1);
+      action = 'observe';
     }
 
     const decision = {
       action,
       urgency,
-      urgencyLevel,
+      urgencyLevel: urgency >= 4 ? 'critical' : urgency >= 3 ? 'high' : urgency >= 1 ? 'medium' : 'low',
       reasons,
-      signals: {
-        kespiTrend: signals.kespiTrend,
-        stagnantDays: signals.stagnantDays,
-        metabolismStatus: signals.metabolismStatus
-      },
+      signals: JSON.parse(JSON.stringify(signals)),
       timestamp: new Date().toISOString()
     };
 
-    this.lastDecision = decision;
-    this.lastDecisionTime = decision.timestamp;
     this.decisionHistory.push(decision);
+    this.lastDecision = decision;
+    this.lastDecisionTime = Date.now();
     
-    // 保留最近 20 条
-    if (this.decisionHistory.length > 20) {
-      this.decisionHistory = this.decisionHistory.slice(-20);
-    }
-
     return decision;
   }
 
   /**
-   * 执行决策
+   * 打印决策结果
    */
-  async execute(decision) {
-    const action = decision.action;
-    console.log(`\n⚡ 执行决策: ${ACTIONS[action].label}`);
-    console.log(`   ${ACTIONS[action].desc}\n`);
-
-    // 返回要执行的命令序列
-    const commands = this._getCommandSequence(action);
-    return commands;
-  }
-
-  // ==================== 私有方法 ====================
-
-  _selectAction(urgency, urgencyLevel, signals) {
-    // 最高优先级：紧急修复
-    if (urgencyLevel === 'critical' && signals.kespiTrend && signals.kespiTrend.decline > 0.2) {
-      return 'emergency_fix';
-    }
-    
-    // 连续停滞 → 完整代谢
-    if (this.consecutiveStagnant >= 3) {
-      return 'full_metabolism';
-    }
-    
-    // 高优缺口 → 定向授粉
-    if (signals.knowledgeGaps && signals.knowledgeGaps.highPriority > 0) {
-      return 'targeted_pollinate';
-    }
-    
-    // 文件变化 → 编译
-    if (signals.fileChanges > 0) {
-      return 'compile';
-    }
-    
-    // 停滞 → 促进生长
-    if (signals.metabolismStatus === 'stagnant') {
-      return 'boost_growth';
-    }
-    
-    // 普通缺口 → 授粉
-    if (signals.knowledgeGaps && signals.knowledgeGaps.normal > 0) {
-      return 'pollinate';
-    }
-    
-    // 时间节律 → 定时代谢
-    if (signals.timeTrigger) {
-      return 'scheduled_metabolism';
-    }
-    
-    // 连续健康 → 维护
-    if (this.consecutiveHealthy >= 3) {
-      return 'maintain';
-    }
-    
-    // 默认：观察
-    return 'observe';
-  }
-
-  _getCommandSequence(action) {
-    // 步名 → 实际脚本文件名（CLI --execute 直接拼 node <script>.js，
-    // 步名与文件名不一致的在此映射，与 run-metabolism 的 STEPS 保持同源）
-    const SCRIPT_MAP = {
-      import: 'import-from-wiki',
-      link: 'auto-link',
-      vector: 'index-vectors',
-      kespi: 'kespi-check'
-    };
-    const toScript = (step) => SCRIPT_MAP[step] || step;
-    switch (action) {
-      case 'emergency_fix':
-        return ['kespi-check', 'fix-kespi', 'recalc-kespi', 'kespi-check'].map(toScript);
-      case 'full_metabolism':
-        return ['compile', 'import', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
-      case 'targeted_pollinate':
-        return ['kespi-check', 'pollinate', 'kespi-check'].map(toScript);
-      case 'compile':
-        return ['compile', 'import'].map(toScript);
-      case 'boost_growth':
-        return ['sprout', 'pollinate'];
-      case 'pollinate':
-        return ['pollinate', 'compress'];
-      case 'scheduled_metabolism':
-        return ['compile', 'import', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
-      case 'maintain':
-        return ['kespi-check', 'prune'];
-      case 'observe':
-      default:
-        return [];
-    }
-  }
-
-  async _getStore() {
-    const KnowledgeStore = require('./knowledge-store.js');
-    const store = new KnowledgeStore(this.dbPath);
-    await store.init();
-    return store;
-  }
-
-  _calcKespiTrend(store) {
-    try {
-      const entities = store.exec(
-        `SELECT AVG(kespi_score) as avg_score FROM entity_metadata WHERE entity_id IN 
-         (SELECT id FROM entities WHERE status = 'active')`
-      );
-      const current = entities[0]?.avg_score || 0;
-      
-      // 从历史获取上一次
-      const prev = store.exec(
-        `SELECT kespi_avg FROM system_log WHERE type = 'kespi_check' ORDER BY created_at DESC LIMIT 1 OFFSET 1`
-      );
-      const previous = prev[0]?.kespi_avg || current;
-      
-      return {
-        current,
-        previous,
-        decline: previous > 0 ? Math.max(0, (previous - current) / previous) : 0
-      };
-    } catch (e) {
-      return { current: 0, previous: 0, decline: 0 };
-    }
-  }
-
-  _countFileChanges(store) {
-    try {
-      const result = store.exec(
-        `SELECT COUNT(*) as count FROM entities WHERE created_at > datetime('now', '-1 day')`
-      );
-      return result[0]?.count || 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  _countKnowledgeGaps(store) {
-    try {
-      const high = store.exec(
-        `SELECT COUNT(*) as count FROM entity_metadata WHERE originality < 0.5 OR relevance < 0.5`
-      );
-      const normal = store.exec(
-        `SELECT COUNT(*) as count FROM entity_metadata WHERE consistency < 0.6 OR provability < 0.5`
-      );
-      return {
-        highPriority: high[0]?.count || 0,
-        normal: normal[0]?.count || 0
-      };
-    } catch (e) {
-      return { highPriority: 0, normal: 0 };
-    }
-  }
-
-  _getStagnantDays(store) {
-    try {
-      const result = store.exec(
-        `SELECT julianday('now') - julianday(MAX(updated_at)) as days FROM entities`
-      );
-      return Math.floor(result[0]?.days || 0);
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  _checkTimeTrigger() {
-    const now = new Date();
-    const hour = now.getHours();
-    // 每天 9:00 和 21:00 触发
-    return hour === 9 || hour === 21;
-  }
-
-  _evaluateMetabolism(store) {
-    try {
-      const stats = store.getStats();
-      const total = stats && (stats.totalEntities ?? stats.entities);
-      if (!stats || !total) return 'unknown';
-      
-      const avgScore = stats.avgKespi || 0;
-      // 活跃实体比例（避免依赖不存在的字段产生 NaN）
-      let activeCount = 0;
-      try {
-        const rows = store.exec(`SELECT COUNT(*) AS c FROM entities WHERE status = 'active'`);
-        activeCount = rows[0] ? Number(rows[0].c) : 0;
-      } catch (_) { activeCount = total; }
-      const activeRatio = activeCount / total;
-      
-      if (avgScore > 0.85 && activeRatio > 0.9) return 'healthy';
-      if (avgScore > 0.7) return 'expanding';
-      if (avgScore > 0.5) return 'stable';
-      return 'stagnant';
-    } catch (e) {
-      return 'unknown';
-    }
-  }
-
-  _getEntityStats(store) {
-    try {
-      return store.getStats() || {};
-    } catch (e) {
-      return {};
-    }
+  printDecision(decision) {
+    const actionDef = ACTIONS[decision.action];
+    console.log('\n🧠 决策结果 / Decision:');
+    console.log(`   动作: ${actionDef.label} (${decision.action})`);
+    console.log(`   描述: ${actionDef.desc}`);
+    console.log(`   紧急度: ${decision.urgencyLevel} (${decision.urgency})`);
+    console.log(`   原因:`);
+    decision.reasons.forEach(r => console.log(`     - ${r}`));
+    console.log(`   时间: ${decision.timestamp}`);
   }
 
   /**
-   * 打印决策报告
+   * 获取命令序列
    */
-  printDecision(decision) {
-    const action = ACTIONS[decision.action];
-    const urgency = URGENCY_LEVELS[decision.urgencyLevel];
+  _getCommandSequence(action) {
+    const commandMap = {
+      emergency_fix: ['compile', 'import', 'vector', 'kespi'],
+      full_metabolism: ['compile', 'import', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'],
+      targeted_pollinate: ['pollinate'],
+      compile: ['compile'],
+      boost_growth: ['sprout', 'pollinate'],
+      pollinate: ['pollinate'],
+      maintain: [],
+      scheduled_metabolism: ['compile', 'import', 'vector', 'kespi', 'prune'],
+      observe: []
+    };
     
-    console.log(`
-╔══════════════════════════════════════════════════════════╗
-║              🧠 生长决策器 — 决策报告                     ║
-╠══════════════════════════════════════════════════════════╣
-║                                                          ║
-║  决策动作: ${action.label.padEnd(40)}  ║
-║  动作说明: ${action.desc.padEnd(40)}  ║
-║  紧急度:   ${urgency.label} (${decision.urgency} 分)${' '.repeat(20)}  ║
-║  优先级:   ${action.priority}${' '.repeat(35)}  ║
-║                                                          ║
-╠══════════════════════════════════════════════════════════╣
-║  触发原因:                                                ║`);
-    
-    for (const reason of decision.reasons) {
-      console.log(`║    • ${reason.padEnd(50)}  ║`);
-    }
-    
-    if (decision.reasons.length === 0) {
-      console.log(`║    • 无显著信号${' '.repeat(38)}  ║`);
-    }
-    
-    console.log(`║                                                          ║
-╠══════════════════════════════════════════════════════════╣
-║  信号摘要:                                                ║
-║    KESPI 趋势: ${(decision.signals.kespiTrend?.decline > 0 ? '↓ ' + (decision.signals.kespiTrend.decline * 100).toFixed(1) + '%' : '—').padEnd(35)}  ║
-║    停滞天数:   ${(String(decision.signals.stagnantDays) + ' 天').padEnd(35)}  ║
-║    代谢状态:   ${(decision.signals.metabolismStatus || 'unknown').padEnd(35)}  ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝`);
+    return commandMap[action] || [];
+  }
 
-    if (decision.action !== 'observe') {
-      const commands = this._getCommandSequence(decision.action);
-      console.log(`\n📋 执行序列: ${commands.join(' → ')}\n`);
-    } else {
-      console.log('\n👁️ 继续观察，暂不执行\n');
-    }
+  /**
+   * 运行完整流程
+   */
+  async run() {
+    console.log('🧠 生长决策器启动... / Growth Director started');
+    
+    await this.perceive();
+    const decision = this.decide();
+    this.printDecision(decision);
+    
+    return decision;
   }
 }
 
-// CLI
-async function main() {
-  const args = process.argv.slice(2);
-  const shouldExecute = args.includes('--execute');
-  const dryRun = args.includes('--dry-run');
-
-  const director = new GrowthDirector(DB_PATH);
-
-  try {
-    console.log('🔍 感知阶段：收集信号...');
-    await director.perceive();
-
-    console.log('🧠 决策阶段：分析判断...');
-    const decision = director.decide();
-
-    director.printDecision(decision);
-
-    if (shouldExecute && decision.action !== 'observe') {
-      const commands = await director.execute(decision);
-      if (dryRun) {
-        console.log('🔍 Dry-run 模式，不实际执行');
-        console.log(`   将执行: ${commands.join(' → ')}`);
-      } else {
-        // 实际执行命令
-        const { execSync } = require('child_process');
-        for (const cmd of commands) {
-          console.log(`\n📍 执行: node ${cmd}.js`);
-          try {
-            execSync(`node ${cmd}.js`, { stdio: 'inherit', cwd: __dirname });
-          } catch (e) {
-            console.error(`   ❌ 执行失败: ${e.message}`);
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error(`❌ 决策器错误: ${err.message}`);
-    process.exit(1);
-  }
-}
-
+// CLI 入口
 if (require.main === module) {
-  main();
+  const director = new GrowthDirector(DB_PATH);
+  director.run().catch(err => {
+    console.error('❌ 决策器错误:', err.message);
+    process.exit(1);
+  });
 }
 
-module.exports = { GrowthDirector, ACTIONS, URGENCY_LEVELS };
+module.exports = { GrowthDirector, ACTIONS };

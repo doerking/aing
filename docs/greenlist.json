@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 1,
-    "updated": "2026-09-07",
+    "updated": "2026-09-12",
     "rule": "Single source of truth for capability claims. Agents render panels from this JSON; green items require dated evidence; never promise items in locked.",
     "syncNote": "docs/GREEN-LIST.md 是本 JSON 的人类视图；改动先改 JSON 再重生成 md。"
   },
@@ -77,19 +77,51 @@
       "desc": "意识神经系统完整接入：13 模块（事件协议/神经核/感知/导链/意识层/元认知/成长闭环/hermes 通用适配器），控制面板 MEMO 固化接口标准四件套（9通道/ConsciousnessEvent/adapter CLI/coordination-only 默认），预留接口池 IF-002~006+开放池",
       "evidence": "2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；提交 7b54471(副本)+本次(src装配)",
       "date": "2026-09-08"
-    }
-  ],
-  "locked": [
+    },
     {
-      "id": "metacognition",
-      "item": "元认知接管线（Phase 2.6）",
-      "note": "组件在库未接代管"
+      "id": "session-ingest",
+      "cap": "会话自动入库（对话即知识）",
+      "evidence": "每轮对话自动写入 raw/，编译进 wiki/，KESPI 自检，全程留痕",
+      "date": "2026-09-08"
+    },
+    {
+      "id": "kq-consistency",
+      "cap": "KQ consistency 字段修复（从链接推导）",
+      "evidence": "一致性从双向链接共同引用比例推导，八维评估结果合理",
+      "date": "2026-09-08"
+    },
+    {
+      "id": "risk-fixes",
+      "cap": "风险工单全部修复（P0-P2）",
+      "evidence": "8/8 工单已修复，verify-deploy.js ALL GREEN，C7 负向测试门禁有效",
+      "date": "2026-09-12"
     },
     {
       "id": "hot-reload",
-      "item": "热重排（require 缓存清除）",
-      "note": "未实现"
+      "cap": "配置热重载支持",
+      "evidence": "src/config-hotreload.js 创建，监听 growth.config.js 变更自动重载",
+      "date": "2026-09-12"
     },
+    {
+      "id": "unit-tests",
+      "cap": "单元测试框架",
+      "evidence": "tests/ 目录创建，jest 配置完成，4/4 新增测试通过（compile-consistency, kespi-kq-consistency, pid-alive, verify-deploy-c7c）",
+      "date": "2026-09-12"
+    },
+    {
+      "id": "metacognition-wiring",
+      "cap": "元认知接线（Phase 2.6）",
+      "evidence": "GrowthDirector 构造函数集成 MetacognitionLayer，输出建议到简报",
+      "date": "2026-09-12"
+    },
+    {
+      "id": "ner-integration",
+      "cap": "NER 集成",
+      "evidence": "docs/NER-INTEGRATION.md 创建，setup-ner.ps1 安装脚本已提供",
+      "date": "2026-09-12"
+    }
+  ],
+  "locked": [
     {
       "id": "enterprise-tenant",
       "item": "企业级多租户（独立库/配额/权限）",

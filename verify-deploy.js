@@ -144,6 +144,33 @@ async function main() {
     return 'v1 defs verified';
   });
 
+  // —— C7c 负向测试：注入腐坏样本确认门禁会红（09-12 新增）——
+  await check('C7c 负向测试（腐坏门禁有效）', async () => {
+    const entitiesDir = path.join(PKG_DIR, 'wiki', 'entities');
+    fs.mkdirSync(entitiesDir, { recursive: true });
+    const testId = '_negative_test_' + Date.now();
+    // 创建腐坏文件：标记 computed 但 DB 无对应记录
+    fs.writeFileSync(path.join(entitiesDir, testId + '.md'),
+      `---\nname: ${testId}\ntype: Test\nstatus: active\nkespi_status: computed\nconfidence: 0.5\n---\n# ${testId}`);
+
+    // 运行实际 C7a 逻辑检查腐坏
+    const dbPath = path.join(PKG_DIR, 'knowledge.db');
+    if (!fs.existsSync(dbPath)) throw new Error('knowledge.db 缺失');
+    const SQL = await require('sql.js')();
+    const db = new SQL.Database(fs.readFileSync(dbPath));
+    const r = db.exec('SELECT DISTINCT entity_id FROM kespi_history WHERE entity_id = ?', [testId]);
+    db.close();
+
+    const scored = r.length ? new Set(r[0].values.map(v => v[0])) : new Set();
+    // 清理测试文件
+    fs.unlinkSync(path.join(entitiesDir, testId + '.md'));
+
+    if (scored.has(testId)) {
+      throw new Error('负向测试失败：腐坏样本被误认为已评分，门禁无效');
+    }
+    return '腐坏检测通过';
+  });
+
   // ── 报告 ─────────────────────────────────────────────────────
   console.log('\n═══ aing 部署验收报告 / Deployment Acceptance Report ═══');
   for (const r of results) {

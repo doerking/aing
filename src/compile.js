@@ -21,6 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const yaml = require('js-yaml');
 
 // 支持 --base-dir 参数覆盖默认路径
 function resolvePath(segment) {
@@ -69,14 +70,14 @@ const stats = {
 };
 
 /**
- * 解析 YAML frontmatter
+ * 解析 YAML frontmatter（P2 #005: 使用 js-yaml 替代手写解析器）
  */
 function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { metadata: {}, content };
   
   try {
-    const metadata = parseYAML(match[1]);
+    const metadata = yaml.load(match[1]);
     const body = match[2].trim();
     return { metadata, content: body };
   } catch (e) {
@@ -85,35 +86,7 @@ function parseFrontmatter(content) {
   }
 }
 
-/**
- * 简单的 YAML 解析器（不依赖外部库）
- */
-function parseYAML(yaml) {
-  const result = {};
-  const lines = yaml.split('\n');
-  
-  for (const line of lines) {
-    const match = line.match(/^(\w+):\s*(.+)$/);
-    if (match) {
-      const [, key, value] = match;
-      
-      // 处理数组
-      if (value.startsWith('[') && value.endsWith(']')) {
-        const items = value.slice(1, -1).split(',').map(s => s.trim().replace(/'/g, '').replace(/"/g, '')).filter(Boolean);
-        result[key] = items;
-      }
-      // 处理布尔值
-      else if (value === 'true') result[key] = true;
-      else if (value === 'false') result[key] = false;
-      // 处理数字
-      else if (!isNaN(value) && value !== '') result[key] = Number(value);
-      // 处理字符串
-      else result[key] = value.replace(/^["']|["']$/g, '');
-    }
-  }
-  
-  return result;
-}
+
 
 /**
  * 提取 wikilinks
@@ -162,7 +135,7 @@ function createEntityFile(entityId, metadata, content, links) {
   // 确保目录存在
   fs.mkdirSync(path.dirname(entityPath), { recursive: true });
   
-  // 生成实体内容
+  // 生成实体内容（P1 #003: 添加 consistency 字段）
   const entityContent = `---
 name: ${metadata.name || entityId}
 type: ${metadata.type || 'Concept'}
@@ -173,6 +146,7 @@ tags: ${JSON.stringify(metadata.tags || [])}
 status: ${metadata.status || 'active'}
 kespi_status: ${metadata.kespi_status || 'pending'}
 confidence: ${metadata.confidence !== undefined ? metadata.confidence : 0.0}
+consistency: ${metadata.consistency !== undefined ? metadata.consistency : 0.5}
 source: ${metadata.source || 'unknown'}
 ---
 

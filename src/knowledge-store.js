@@ -43,6 +43,12 @@ class KnowledgeStore {
       const hasCol = colsInfo.length && colsInfo[0].values.some(r => r[1] === 'distill_meta');
       if (!hasCol) { this.db.run('ALTER TABLE entities ADD COLUMN distill_meta TEXT'); console.log('   [migrate] entities + distill_meta'); }
     } catch (e) { /* PRAGMA 不可用时忽略，建表语句已含新列 */ }
+    // P1 #003: consistency 列迁移（幂等）
+    try {
+      const colsInfo2 = this.db.exec("PRAGMA table_info(entities)");
+      const hasConsistency = colsInfo2.length && colsInfo2[0].values.some(r => r[1] === 'consistency');
+      if (!hasConsistency) { this.db.run('ALTER TABLE entities ADD COLUMN consistency REAL DEFAULT 0.5'); console.log('   [migrate] entities + consistency'); }
+    } catch (e) { /* PRAGMA 不可用时忽略，建表语句已含新列 */ }
     this._save();
     console.log(`📦 数据库已加载: ${this.dbPath}`);
   }
@@ -60,6 +66,7 @@ class KnowledgeStore {
         tags TEXT DEFAULT '[]',
         status TEXT DEFAULT 'active',
         confidence REAL DEFAULT 0.0,
+        consistency REAL DEFAULT 0.5,
         source_file TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -143,11 +150,14 @@ class KnowledgeStore {
     `);
 
     this.db.run(`
-      CREATE TABLE IF NOT EXISTS system_log (
+      CREATE TABLE IF NOT EXISTS metabolism_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL,
-        action TEXT NOT NULL,
-        kespi_avg REAL,
+        run_id TEXT NOT NULL,
+        step TEXT NOT NULL,
+        status TEXT NOT NULL,
+        duration_ms INTEGER DEFAULT 0,
+        kespi_before REAL,
+        kespi_after REAL,
         details TEXT DEFAULT '{}',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -231,12 +241,12 @@ class KnowledgeStore {
    * 保存实体
    */
   saveEntity(entity) {
-    const { id, name, type, content, tags = [], status = 'active', confidence = 0.0, source_file = null } = entity;
+    const { id, name, type, content, tags = [], status = 'active', confidence = 0.0, consistency = 0.5, source_file = null } = entity;
     
     // UPSERT：已存在则更新内容与元数据（而非抛 UNIQUE 异常）
     this.run(`
-      INSERT INTO entities (id, name, type, content, tags, status, confidence, source_file, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO entities (id, name, type, content, tags, status, confidence, consistency, source_file, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         type = excluded.type,
@@ -244,9 +254,10 @@ class KnowledgeStore {
         tags = excluded.tags,
         status = excluded.status,
         confidence = excluded.confidence,
+        consistency = excluded.consistency,
         source_file = excluded.source_file,
         updated_at = datetime('now')
-    `, [id, name, type, content, JSON.stringify(tags), status, confidence, source_file]);
+    `, [id, name, type, content, JSON.stringify(tags), status, confidence, consistency, source_file]);
     
     // 类型变更时清理旧索引，避免同一实体在 type_index 残留多条
     this.run(`

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS entities (
   tags TEXT DEFAULT '[]',
   status TEXT DEFAULT 'active',
   confidence REAL DEFAULT 0.0,
+  consistency REAL DEFAULT 0.5,
   source_file TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
