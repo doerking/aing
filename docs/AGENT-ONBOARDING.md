@@ -4,10 +4,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '8d71c9e7-29f6-4b48-8be6-b4af6845b161'
-  PropagateID: '8d71c9e7-29f6-4b48-8be6-b4af6845b161'
-  ReservedCode1: '0e1e97e3-74ad-4e17-a43f-65a2408e9fc7'
-  ReservedCode2: '0e1e97e3-74ad-4e17-a43f-65a2408e9fc7'
+  ProduceID: '70d4aa8f-2d57-4971-9838-f0b8fe829767'
+  PropagateID: '70d4aa8f-2d57-4971-9838-f0b8fe829767'
+  ReservedCode1: '4f7569b9-2575-434d-a02b-0ed43b13b0d6'
+  ReservedCode2: '4f7569b9-2575-434d-a02b-0ed43b13b0d6'
 ---
 
 # Agent Onboarding — 新 agent 上手引导
@@ -51,6 +51,8 @@ node verify-deploy.js   # 末行必须 🟢 ALL GREEN，否则禁止宣布成功
 ## Step 4 · 标签随取随用（Tolaria 格式）
 
 本包所有文档和技能文档都带 `tags` frontmatter + `[tag:xxx]` 或 `[tag:xxx:N]` 行内标签。**9 段数值**：`N` 为 1-9 的关联强度（1 最弱 → 9 最强），不带 `:N` 默认 5。**标签是加载单位**：按需读带对应标签的文件，不必全量加载。标签数值用于自动建链加权与 KESPI 评分。诚实状态：标签的存储/解析/数值化链路已全绿；标签驱动的自动加载 API 在库内**未接线**，目前靠纪律约定（读到规则即执行）。
+
+> **9 段容量范围**（agent 需知）：50 类目健康 / 100 可用 / 150 退化 / 200+ 走样。50 类目为 Tolaria + LLM.WIKI 数据库软件进入时机。完整推演数据见 [TAG-CAPACITY-ANALYSIS.md](./Engineering/TAG-CAPACITY-ANALYSIS.md)。
 
 > 附赠：`assets/skills/aing-operator/` 内置完整操作技能组（运维/修复/治理/训练/评审，中英双语，半拉起协议）——把目录接入你的 agent 技能系统即可获得 aing 操作全套纪律与 SOP。
 
