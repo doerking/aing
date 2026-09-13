@@ -36,7 +36,8 @@ function parseArgs(argv) {
   const limit = limitIdx !== -1 ? parseInt(argv[limitIdx + 1], 10) || 8 : 8;
   const namesOnly = argv.includes('--names');
   const forceSlow = argv.includes('--slow');
-  return { query, limit, namesOnly, forceSlow };
+  const json = argv.includes('--json');
+  return { query, limit, namesOnly, forceSlow, json };
 }
 
 // 关键词命中分：query 拆词对 (name + tags + type) 的覆盖率
@@ -187,16 +188,63 @@ async function searchCandidates(query, opts = {}) {
 }
 
 async function main() {
-  const { query, limit, namesOnly, forceSlow } = parseArgs(process.argv.slice(2));
+  const { query, limit, namesOnly, forceSlow, json } = parseArgs(process.argv.slice(2));
   if (!query) {
     console.log('用法:');
-    console.log('  node src/query.js "<关键词>" [--limit N] [--names] [--slow]');
+    console.log('  node src/query.js "<关键词>" [--limit N] [--names] [--slow] [--json]');
     console.log('  --names  仅按名称/ID 模糊匹配，不做向量检索');
     console.log('  --slow   强制启用慢回忆（二跳邻居扩展）');
+    console.log('  --json   程序化 JSON 输出（供 agent / 工具消费，含 answer-pack）');
     process.exit(1);
   }
 
   const { candidates, semanticAvailable, avgSim, slowExpanded } = await searchCandidates(query, { limit, namesOnly, forceSlow });
+
+  if (json) {
+    // agent 程序化输出：answer-pack（含 snippet / kespi / neighbors / tags / 分数明细）
+    const store = new KnowledgeStore();
+    await store.init();
+    const visible = candidates.filter(e => namesOnly ? e._nm > 0 : true);
+    const pack = visible.slice(0, limit).map(e => {
+      // content snippet：前 200 字符
+      const snippet = (e.content || '').slice(0, 200).replace(/\n/g, ' ');
+      // neighbors：从 links 表取直接邻居
+      let neighbors = [];
+      try {
+        const links = store.all('SELECT target_id FROM links WHERE source_id = ? UNION SELECT source_id FROM links WHERE target_id = ?', [e.id, e.id]);
+        neighbors = links.map(l => l.target_id || l.source_id).filter(id => id !== e.id).slice(0, 5);
+      } catch (err) { /* 无链接表则空 */ }
+      let tags = [];
+      try { tags = JSON.parse(e.tags || '[]'); } catch (err) {}
+      return {
+        id: e.id,
+        name: e.name,
+        type: e.type,
+        snippet,
+        tags,
+        neighbors,
+        scores: {
+          final: Number(e._final || 0).toFixed(3),
+          semantic: Number(e.score || 0).toFixed(3),
+          keyword: Number(e._kw || 0).toFixed(3),
+          name: Number(e._nm || 0).toFixed(3),
+          kespi: e._kespi != null ? Number(e._kespi).toFixed(2) : null,
+          slowRecall: !!e._slowRecall
+        },
+        updated_at: e.updated_at || null
+      };
+    });
+    const result = {
+      query,
+      mode: semanticAvailable ? 'semantic-384' : 'hash-64',
+      avgSim: Number(avgSim.toFixed(3)),
+      slowExpanded,
+      count: pack.length,
+      results: pack
+    };
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
 
   if (!namesOnly) {
     console.log(semanticAvailable ? '🔎 语义检索 (384 维本地模型)\n' : '🔎 向量检索 (hash 64 维；语义模型未就绪)\n');

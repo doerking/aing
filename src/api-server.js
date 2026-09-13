@@ -31,6 +31,7 @@ const fs = require('fs');
 const KnowledgeStore = require('./knowledge-store');
 const VectorSearch = require('./vector-search');
 const { SessionStore } = require('./auto-ingest');
+const { searchCandidates } = require('./query');
 
 const PORT = parseInt(process.env.AING_API_PORT, 10) || 3789;
 const API_KEY = process.env.AING_API_KEY || null;
@@ -144,16 +145,50 @@ async function handle(req, res) {
     return json(res, 200, { entity, latestKespi: kespi });
   }
 
-  // 检索
+  // 检索（agent-first：走 searchCandidates 全链融合，不再是裸向量检索）
   if (p === '/api/query' && req.method === 'GET') {
     const q = url.searchParams.get('q');
     if (!q) return json(res, 400, { error: '缺少查询词 ?q=' });
     const limit = Math.min(parseInt(url.searchParams.get('limit'), 10) || 8, 50);
-    const hits = await vectorSearch.semanticSearch(q, limit);
+    const namesOnly = url.searchParams.get('names') === '1';
+    const forceSlow = url.searchParams.get('slow') === '1';
+    const pack = url.searchParams.get('pack') !== '0'; // 默认带 answer-pack
+
+    const { candidates, semanticAvailable, avgSim, slowExpanded } = await searchCandidates(q, { limit, namesOnly, forceSlow });
+
+    const visible = candidates.filter(e => namesOnly ? e._nm > 0 : true);
+    const results = visible.slice(0, limit).map(e => {
+      const item = {
+        id: e.id, name: e.name, type: e.type,
+        scores: {
+          final: Number(e._final || 0).toFixed(3),
+          semantic: Number(e.score || 0).toFixed(3),
+          keyword: Number(e._kw || 0).toFixed(3),
+          name: Number(e._nm || 0).toFixed(3),
+          kespi: e._kespi != null ? Number(e._kespi).toFixed(2) : null,
+          slowRecall: !!e._slowRecall
+        },
+        updated_at: e.updated_at || null
+      };
+      if (pack) {
+        // answer-pack：agent 不用再二次查详情
+        item.snippet = (e.content || '').slice(0, 200).replace(/\n/g, ' ');
+        try { item.tags = JSON.parse(e.tags || '[]'); } catch (err) { item.tags = []; }
+        try {
+          const links = store.all('SELECT target_id FROM links WHERE source_id = ? UNION SELECT source_id FROM links WHERE target_id = ?', [e.id, e.id]);
+          item.neighbors = links.map(l => l.target_id || l.source_id).filter(id => id !== e.id).slice(0, 5);
+        } catch (err) { item.neighbors = []; }
+      }
+      return item;
+    });
+
     return json(res, 200, {
       query: q,
-      mode: vectorSearch.mode,
-      results: hits.map(e => ({ id: e.id, name: e.name, type: e.type, score: e.score }))
+      mode: semanticAvailable ? 'semantic-384' : 'hash-64',
+      avgSim: Number(avgSim.toFixed(3)),
+      slowExpanded,
+      count: results.length,
+      results
     });
   }
 
@@ -170,6 +205,116 @@ async function handle(req, res) {
         distillation: body.distillation
     });
     return json(res, 200, { accepted: true, tenant });
+  }
+
+  // ── agent 驾驶面：冷启动注入（一次调用拿全貌）──
+  if (p === '/api/context' && req.method === 'GET') {
+    const ctx = { generatedAt: new Date().toISOString() };
+
+    // panel.json（意识层卡 3）
+    try {
+      const panel = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'panel.json'), 'utf8'));
+      ctx.panel = panel;
+    } catch (e) { ctx.panel = null; }
+
+    // 运行时状态
+    const st = store.getStats();
+    ctx.health = {
+      entities: st.entities, links: st.links,
+      avgKespi: st.avgKespi, pendingErrors: st.pendingErrors
+    };
+
+    // 最近时间线（最新 5 条会话实体）
+    try {
+      const recent = store.all("SELECT id, name, source, created_at FROM entities WHERE type='Conversation' ORDER BY created_at DESC LIMIT 5");
+      ctx.timeline = recent;
+    } catch (e) { ctx.timeline = []; }
+
+    // pending todos
+    try {
+      const todos = store.all("SELECT id, name, tags FROM entities WHERE type='Todo' AND status='active' ORDER BY created_at");
+      ctx.todos = todos;
+    } catch (e) { ctx.todos = []; }
+
+    // stale 告警（超 14 天未更新的活跃实体）
+    try {
+      const stale = store.all("SELECT id, name, type FROM entities WHERE status='active' AND updated_at < datetime('now','-14 days') LIMIT 10");
+      ctx.stale = stale;
+    } catch (e) { ctx.stale = []; }
+
+    return json(res, 200, ctx);
+  }
+
+  // ── agent 自管理：创建实体（Todo/Skill/Output，type 自由字符串零迁移）──
+  if (p === '/api/entity' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.name || !body.type) {
+      return json(res, 400, { error: '需要 {name, type} 字段；type 自由字符串（Todo/Skill/Output/Concept/...）' });
+    }
+    const id = body.id || String(body.name).replace(/[^\w\u4e00-\u9fff-]+/g, '-').slice(0, 80).toLowerCase();
+    if (!ID_PATTERN.test(id)) {
+      return json(res, 400, { error: 'id 含非法字符（仅允许字母/数字/-_中文）' });
+    }
+    if (store.getEntity(id)) {
+      return json(res, 409, { error: `实体已存在: ${id}` });
+    }
+    const tags = Array.isArray(body.tags) ? JSON.stringify(body.tags) : '[]';
+    store.db.run(
+      'INSERT INTO entities (id, name, type, content, tags, status, confidence, source_file) VALUES (?,?,?,?,?,?,?,?)',
+      [id, String(body.name), String(body.type), String(body.content || ''), tags, String(body.status || 'active'), Number(body.confidence || 0.7), body.source_file || null]
+    );
+    store._save();
+    return json(res, 201, { id, name: body.name, type: body.type, status: body.status || 'active' });
+  }
+
+  // ── agent 自管理：状态翻转（pending→active→archived 等）──
+  const patchMatch = p.match(/^\/api\/entity\/([^/]+)$/);
+  if (patchMatch && req.method === 'PATCH') {
+    const id = decodeURIComponent(patchMatch[1]);
+    if (!ID_PATTERN.test(id)) {
+      return json(res, 400, { error: '非法实体 ID' });
+    }
+    const entity = store.getEntity(id);
+    if (!entity) return json(res, 404, { error: `实体不存在: ${id}` });
+    const body = await readBody(req);
+    const updates = [];
+    const params = [];
+    if (body.status) { updates.push('status = ?'); params.push(String(body.status)); }
+    if (body.content) { updates.push('content = ?'); params.push(String(body.content)); }
+    if (body.tags) { updates.push('tags = ?'); params.push(JSON.stringify(body.tags)); }
+    if (body.confidence != null) { updates.push('confidence = ?'); params.push(Number(body.confidence)); }
+    if (updates.length === 0) {
+      return json(res, 400, { error: '无更新字段（可更新 status/content/tags/confidence）' });
+    }
+    updates.push("updated_at = datetime('now')");
+    params.push(id);
+    store.db.run(`UPDATE entities SET ${updates.join(', ')} WHERE id = ?`, params);
+    store._save();
+    return json(res, 200, { id, updated: Object.keys(body).filter(k => ['status','content','tags','confidence'].includes(k)) });
+  }
+
+  // ── agent 增量感知：上次会话以来变了什么 ──
+  if (p === '/api/delta' && req.method === 'GET') {
+    const since = url.searchParams.get('since');
+    if (!since) return json(res, 400, { error: '缺少 ?since=<ISO时间戳>' });
+    let sinceTs = since;
+    try { sinceTs = new Date(since).toISOString(); } catch (e) { return json(res, 400, { error: 'since 格式无效' }); }
+    const added = store.all("SELECT id, name, type FROM entities WHERE created_at >= ? ORDER BY created_at DESC", [sinceTs]);
+    const updated = store.all("SELECT id, name, type, updated_at FROM entities WHERE updated_at >= ? AND created_at < ? ORDER BY updated_at DESC", [sinceTs, sinceTs]);
+    return json(res, 200, { since: sinceTs, added: added.length, updated: updated.length, items: { added, updated } });
+  }
+
+  // ── 标签驱动加载（AGENTS.md 纪律 #7：标签是加载单位）──
+  const tagMatch = p.match(/^\/api\/tags\/([^/]+)$/);
+  if (tagMatch && req.method === 'GET') {
+    const tag = decodeURIComponent(tagMatch[1]);
+    const all = store.getEntities({ status: 'active' });
+    const matched = all.filter(e => {
+      let tags = [];
+      try { tags = JSON.parse(e.tags || '[]'); } catch (err) {}
+      return tags.some(t => String(t).toLowerCase() === tag.toLowerCase());
+    }).map(e => ({ id: e.id, name: e.name, type: e.type, tags: (() => { try { return JSON.parse(e.tags || '[]'); } catch (err) { return []; } })() }));
+    return json(res, 200, { tag, count: matched.length, entities: matched });
   }
 
   return json(res, 404, { error: `未知端点: ${req.method} ${p}` });
@@ -204,7 +349,7 @@ async function main() {
     console.log('🌐 aing API 服务启动');
     console.log(`   监听: http://${host}:${PORT}`);
     console.log(`   认证: ${API_KEY ? 'Bearer (AING_API_KEY 已设置)' : '本机信任模式（未设 AING_API_KEY，仅监听 127.0.0.1）'}`);
-    console.log(`   端点: /health /api/entities /api/entity/<id> /api/query /api/ingest`);
+    console.log(`   端点: /health /api/status /api/entities /api/entity/<id> /api/query /api/context /api/ingest /api/entity /api/delta /api/tags/<tag>`);
   });
 }
 

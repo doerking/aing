@@ -1,5 +1,13 @@
 ---
 tags: [aing, agent引导, 上手, 院子地图, 纪律, 绿灯]
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'cd697b4a-77e9-4dc0-92a2-321f689434b9'
+  PropagateID: 'cd697b4a-77e9-4dc0-92a2-321f689434b9'
+  ReservedCode1: '4a084662-3675-4dd0-ba6c-9af28abe6b7c'
+  ReservedCode2: '4a084662-3675-4dd0-ba6c-9af28abe6b7c'
 ---
 
 # Agent Onboarding — 新 agent 上手引导
@@ -19,7 +27,7 @@ tags: [aing, agent引导, 上手, 院子地图, 纪律, 绿灯]
 | 院子 | 用途 | 铁律 |
 |---|---|---|
 | 本包（发布包） | 部署、验收、日常运维 | **严禁**跑训练、留运行痕迹（__pycache__/runs/ckpt） |
-| 训练副本 <opt-copy> | 训练/推演/实验 | src 冻结期只读，影子窗口以治理组公告为准 |
+| 训练副本 <opt-root> | 训练/推演/实验 | src 冻结期只读，影子窗口以治理组公告为准 |
 | 影子目录 <sqa-root> | 一切改动的试验场 | robocopy 复制 → 影子验证 → 定点同步 → 主包全绿 |
 
 ## Step 2 · 首次部署（照抄即可）
