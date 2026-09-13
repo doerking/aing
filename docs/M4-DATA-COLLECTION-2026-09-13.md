@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '3a62887c-2931-468b-8872-de1b86efab13'
-  PropagateID: '3a62887c-2931-468b-8872-de1b86efab13'
-  ReservedCode1: '87e1bc3f-3840-476a-a96c-75798ecff550'
-  ReservedCode2: '87e1bc3f-3840-476a-a96c-75798ecff550'
+  ProduceID: '49815b7d-0cff-488a-8a57-e658ebea71c6'
+  PropagateID: '49815b7d-0cff-488a-8a57-e658ebea71c6'
+  ReservedCode1: 'b26f0d40-4bd3-4f75-97b2-aa797151c7c4'
+  ReservedCode2: 'b26f0d40-4bd3-4f75-97b2-aa797151c7c4'
 ---
 
 # M4 数据采集表（实测填写）
