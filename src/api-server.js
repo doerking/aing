@@ -208,7 +208,8 @@ async function handle(req, res) {
     });
   }
 
-  // 会话消息入库（写入路径，按租户隔离会话）
+  // 会话消息入库（按租户隔离会话）
+  // role: user（用户提问）/ assistant（agent回复）/ analysis（agent分析）/ research（收集资料）
   if (p === '/api/ingest' && req.method === 'POST') {
     const tenant = String(req.headers['x-tenant-id'] || 'default').replace(/[^a-zA-Z0-9\-_]/g, '-');
     const body = await readBody(req);
@@ -218,27 +219,60 @@ async function handle(req, res) {
     sessions.addMessage(`${tenant}::${String(body.sessionId)}`, {
       role: String(body.role || 'user'),
       content: String(body.content),
-        distillation: body.distillation
+      distillation: body.distillation,
+      source: body.source || null,
+      metadata: body.metadata || null
     });
-    return json(res, 200, { accepted: true, tenant });
+    return json(res, 200, { accepted: true, tenant, role: body.role || 'user' });
   }
 
   // ── 意识神经控制 + 备忘录（agent ↔ aing 的主界面）──
 
-  // 备忘录：agent 冷启动第一读物（意识状态 + briefing + panel 合一）
+  // 备忘录（agent 仪表台）：aing 状态 + 组件链接状态 + 待办 + 会话交接
+  // agent 出场手持这份备忘录，用户只看其中的待办和会话交接
   if (p === '/api/consciousness/briefing' && req.method === 'GET') {
     const briefing = aingAdapter.generateBriefing();
     const kernelStatus = consciousnessKernel.status();
+
+    // 组件链接状态：检测各组件是否在线
+    const componentLinks = {
+      consciousnessKernel: { status: kernelStatus.state, events: kernelStatus.activeEventCount, focus: kernelStatus.focusTargets?.slice(0, 3) || [] },
+      vectorSearch: { status: vectorSearch?.mode || 'offline', semantic: vectorSearch?.mode === 'semantic-384' },
+      knowledgeStore: { status: 'online', entities: store.getStats().entities },
+      metabolism: { status: 'available', lastRun: null }, // 代谢链非常驻，标记可用即可
+      autoIngest: { status: 'online', pendingSessions: [...sessions.sessions.values()].filter(s => s.messages.length > 0).length }
+    };
+
+    // 会话交接：最近 3 条会话的时间线（上次聊到哪）
+    let sessionHandoff = [];
+    try {
+      sessionHandoff = store.all("SELECT id, name, type, created_at FROM entities WHERE type='Conversation' ORDER BY created_at DESC LIMIT 3");
+    } catch (e) {}
+
+    // 待办事项：agent 和用户的待办
+    let todos = [];
+    try {
+      todos = store.all("SELECT id, name, tags, status FROM entities WHERE type='Todo' AND status='active' ORDER BY created_at");
+    } catch (e) {}
+
+    // 用户面（对用户负责的部分）：只有待办 + 会话交接
+    const userFacing = {
+      todos: todos.map(t => ({ id: t.id, name: t.name, tags: (() => { try { return JSON.parse(t.tags || '[]'); } catch (e) { return []; } })() })),
+      sessionHandoff: sessionHandoff.map(s => ({ id: s.id, name: s.name, created_at: s.created_at }))
+    };
+
+    // agent 仪表台（完整）
     return json(res, 200, {
       generatedAt: new Date().toISOString(),
+      // ── agent 仪表台 ──
       consciousness: kernelStatus,
-      briefing: briefing.briefing,
-      reactions: briefing.consciousness.reactions?.slice(0, 5) || [],
+      componentLinks,
       alerts: briefing.briefing.alerts,
       hotspots: briefing.briefing.hotspots?.slice(0, 5) || [],
       recommendations: briefing.briefing.recommendations || [],
       priority: briefing.priority,
-      requiresApproval: briefing.requiresApproval
+      // ── 对用户负责的部分 ──
+      userFacing
     });
   }
 
