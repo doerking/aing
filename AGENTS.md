@@ -1,14 +1,14 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程、验收清单 C0-C7、已知坑 9 条、汇报格式
+description: aing 部署必读：一键部署流程、验收清单 C0-C9、M4 组件链引导、已知坑 9 条、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'ec585207-4919-441a-be70-1a675a9cc15c'
-  PropagateID: 'ec585207-4919-441a-be70-1a675a9cc15c'
-  ReservedCode1: '0cdbb67e-5a13-4736-8fe4-6a096e365d6c'
-  ReservedCode2: '0cdbb67e-5a13-4736-8fe4-6a096e365d6c'
+  ProduceID: '266cf2c8-af93-49ef-a6bb-ab47822f9bed'
+  PropagateID: '266cf2c8-af93-49ef-a6bb-ab47822f9bed'
+  ReservedCode1: 'bd63fd49-4485-454b-b54c-3e32a624128b'
+  ReservedCode2: 'bd63fd49-4485-454b-b54c-3e32a624128b'
 ---
 
 # AGENTS.md — aing Deployment Flow (Agent Must-Read) / aing 部署必读流程（Agent 必读）
@@ -56,6 +56,25 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C9b | Greenlist-declared references exist / 绿名单引用存在 | Check `data/component-registry.json` declarations against `docs/greenlist.json` |
 | C9c | Consciousness panel schema complete / 意识层面板 schema 完整 | Run `node src/metabolism-panel.js` to regenerate `data/panel.json` |
 
+## M4 Component Chain / M4 组件链引导（部署后检查）
+
+> 部署全绿后，以下组件链应可端到端跑通。每条链附验证命令和预期结果，排障时逐条检查。
+> M4 数据报告：[docs/M4-DATA-COLLECTION-2026-09-13.md](./docs/M4-DATA-COLLECTION-2026-09-13.md)（A-H 逐项 + 6 项架构证明，含核验意见）
+
+| 组件链 | 验证命令 | 预期结果 | 故障排查 |
+|--------|----------|----------|----------|
+| 代谢管线 (11 步) | `node src/run-metabolism.js` | 11 步全成功, KESPI 稳定 | 失败步看 stderr; 非关键步 `--force` 跳过 |
+| KESPI 敏感性 | 注入空实体 → `node src/kespi-check.js` | 腐坏实体 < 0.50 红灯 | 确认无探针残留; 八维独立可测 |
+| 意识层闭环 | 设 kernel stagnationCount=3 → `node src/growth-director.js --dry-run` | decide=full_metabolism | 确认 `data/consciousness/state.json` 被正确读取 |
+| 决策因果链 | 查看 `logs/metabolism-decision-lineage.jsonl` | ≥12 条（11 步 + 1 汇总）| 每条含 action/evidence/reason/alternatives/causalChain |
+| 自我建模 | `node -e "require('./src/metacognition-layer').selfCheck()"` | confidence≈87% measured=true | 确认 knowledge.db 可加载; metabolism_log 表存在 |
+| 自我报告 | `npm run server` → `GET /api/consciousness/briefing` | selfAssessment 六属性全 ✓ | 确认 KB_ROOT 变量; skillopt-evidence.json 存在 |
+| 轨迹表 | `node src/trajectory-store.js --count` | ≥124 条真实轨迹 | `--init` 建表; 从代谢日志/tri-path/SkillOpt 导入 |
+| SkillOpt adapter | `PYTHONPATH=. python -c "from skillopt.envs.aing.adapter import AingEnvAdapter"` | 导入成功 | 确认 `skillopt/envs/aing/__init__.py` 存在 |
+| 检索 A/B | 语义检索 vs SQL LIKE 对比 | 语义命中率 > 关键词 2 倍 | 确认 models/ 存在, 384 维向量已索引 |
+| FadeMem 衰减 | `node src/growth-loop.js decay` | weight < 1.0, 三因子可见 | 确认 growth-loop.json 有 patterns 数据 |
+| 四门回滚 | propose → evaluate → promote → rollback | rolledBack=true | 确认 proposal 状态为 tested 且 overall >= 0.7 |
+
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 
 1. **NEVER install sharp with `--ignore-scripts`** — the native binary goes missing and importing transformers crashes outright. If transformers' nested old sharp lacks the binary, delete it and Node falls back to the top-level newer sharp.
@@ -84,6 +103,14 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | 日志双语「中文 / English」 | 预期行为；按 Pitfall 5 处理，禁止改写 |
 | `/api/ingest` 后无蒸馏摘要 | 确认 body 是否带可选 `distillation`；缺省落「待生成 / pending」占位，非错误 |
 | 排障后汇报 | 先修复复跑至 ALL GREEN，再按 Reporting Format 汇报并附完整面板 |
+| C8 盘符扫描红灯 | simulation/ 下 JSON 含绝对盘符路径 → 改为 `<repo-root>` 语义占位符，重跑 `verify-deploy.js` |
+| C9a 组件登记簿不一致 | 加步必须同步 `data/component-registry.json`，distill 步已登记（11 步 ↔ 11 登记） |
+| distill 步骤失败 `no raw messages` | selftest-probe 残留实体导致 distill 拒绝空消息；清理 `DELETE FROM entities WHERE id LIKE '%selftest%'` 后重跑 |
+| 意识层 `stagnant` 但代谢不触发 | 确认 `data/consciousness/state.json` 的 `stagnationCount >= 3`；跑 `node src/growth-director.js --execute` 触发 full_metabolism |
+| briefing selfAssessment 显示 `✗` 或 `△` | 自我建模: 跑 `node -e "require('./src/metacognition-layer').selfCheck()"` 刷新真实指标; 自我解释: 跑一轮代谢生成 decision-lineage.jsonl; 自我提升: 跑 `node simulation/training-sim.js` 生成证据 |
+| SkillOpt adapter 导入失败 | 确认 `PYTHONPATH=.` 指向 SkillOpt 根目录; aing adapter 在 `skillopt/envs/aing/`，不是 `aing/training/adapter.py` |
+| 检索结果全是同一类型实体 | 语义向量未加载 → 确认 `models/` 目录存在；跑 `node src/index-vectors.js --semantic --reindex` |
+| KESPI 全库均分突降 | 检查是否有探针/测试实体未清理 → `SELECT id FROM entities WHERE id LIKE '%probe%' OR id LIKE '%selftest%'` → 删除后重跑 `kespi-check.js` |
 
 ## Daily Operation / 日常运行（部署完成后）
 
