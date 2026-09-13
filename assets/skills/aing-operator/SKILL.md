@@ -10,10 +10,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '00a37886-490b-42c6-b227-7448b4cf09c1'
-  PropagateID: '00a37886-490b-42c6-b227-7448b4cf09c1'
-  ReservedCode1: '67381800-2283-42ef-9874-48dfc294419f'
-  ReservedCode2: '67381800-2283-42ef-9874-48dfc294419f'
+  ProduceID: 'e0b67a09-daab-4083-a179-0d9f68580c57'
+  PropagateID: 'e0b67a09-daab-4083-a179-0d9f68580c57'
+  ReservedCode1: 'c2023df0-c6f1-48c2-9c8e-5c9408b2a041'
+  ReservedCode2: 'c2023df0-c6f1-48c2-9c8e-5c9408b2a041'
 ---
 
 # aing Operator — aing 知识生命体操作技能组
@@ -57,7 +57,7 @@ AIGC:
 | 训练 / 技能文档优化 / SkillOpt | 训练组 [tag:训练] | SkillOpt 闭环 + 无训练师降级路径 | [training-group.md](references/training-group.md) |
 | 架构设计 / 体检 / 对抗评审 | 评审组 [tag:评审] | 四角色进化团队派发与门禁 | [evolution-team.md](references/evolution-team.md) |
 
-**标签加载（Tolaria 格式，随取随用）**：本技能全部文件带 frontmatter `tags`，标签是加载单位。行内标签支持 9 段数值 `[tag:xxx:N]`（N=1-9 关联强度，不带 `:N` 默认 5）。标签约定见 `AGENTS.md` 纪律第 7 条。
+**标签加载（Tolaria 格式，随取随用）**：本技能全部文件带 frontmatter `tags`，标签是加载单位。行内标签支持 9 段数值 `[tag:xxx:N]`（N=1-9 关联强度，不带 `:N` 默认 5）。标签约定见 `AGENTS.md` 纪律第 7 条。**9 段容量范围**：50 类目健康 / 100 可用 / 150 退化 / 200+ 走样；50 类目为数据库软件进入时机。推演数据见 [TAG-CAPACITY-ANALYSIS.md](../../../docs/Engineering/TAG-CAPACITY-ANALYSIS.md)。
 
 路由原则：拿不准时先读 governance.md——先知道什么不能做，再决定怎么做；这份算 L2 预算内的那份。多组任务（如"修 bug 并汇报"）按 修复→治理 顺序串行加载，仍不超 2 份。
 

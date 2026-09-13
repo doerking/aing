@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '90a07653-09a4-4cc6-97a0-ee18d1408fff'
-  PropagateID: '90a07653-09a4-4cc6-97a0-ee18d1408fff'
-  ReservedCode1: 'fee8311b-1f9f-419c-adf8-87ca612a90d6'
-  ReservedCode2: 'fee8311b-1f9f-419c-adf8-87ca612a90d6'
+  ProduceID: '3c0f6540-beac-40a6-97dd-b47e9fcb3fd2'
+  PropagateID: '3c0f6540-beac-40a6-97dd-b47e9fcb3fd2'
+  ReservedCode1: '20e9d21d-9f97-4da0-a780-0cdf389ba07f'
+  ReservedCode2: '20e9d21d-9f97-4da0-a780-0cdf389ba07f'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -251,6 +251,8 @@ node src/query.js "三路突击" --limit 5
 # GET  /api/delta?since=<ISO>        incremental awareness / 增量感知
 # GET  /api/tags/<tag>               tag-driven loading / 标签驱动加载
 ```
+
+> **Tolaria 9 段标签容量**：`[tag:xxx:N]` N=1-9 关联强度。50 类目健康 / 100 可用 / 150 退化 / 200+ 走样。50 类目为 Tolaria + LLM.WIKI 数据库软件进入时机。推演数据见 [TAG-CAPACITY-ANALYSIS.md](./docs/Engineering/TAG-CAPACITY-ANALYSIS.md)。
 
 ---
 
