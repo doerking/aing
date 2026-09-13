@@ -319,13 +319,18 @@ async function handle(req, res) {
           const stats = selfState?.stats || {};
           const measured = awareness.measured === true;
 
-          // 读取训练提升证据
+          // 读取训练提升证据（优先 SkillOpt adapter 真实 rollout，降级到 training-sim 推演）
           let improvement = null;
           try {
-            const lastRun = path.join(KB_ROOT, 'simulation', 'last-run.json');
-            if (fs.existsSync(lastRun)) {
-              const run = JSON.parse(fs.readFileSync(lastRun, 'utf8'));
-              improvement = run.improvementEvidence || null;
+            const skilloptEvidence = path.join(KB_ROOT, 'simulation', 'skillopt-evidence.json');
+            if (fs.existsSync(skilloptEvidence)) {
+              improvement = JSON.parse(fs.readFileSync(skilloptEvidence, 'utf8'));
+            } else {
+              const lastRun = path.join(KB_ROOT, 'simulation', 'last-run.json');
+              if (fs.existsSync(lastRun)) {
+                const run = JSON.parse(fs.readFileSync(lastRun, 'utf8'));
+                improvement = run.improvementEvidence || null;
+              }
             }
           } catch (e) {}
 
@@ -359,7 +364,9 @@ async function handle(req, res) {
             selfImprovement: {
               score: improvement ? '✓' : '△',
               evidence: improvement
-                ? `训练提升: ${improvement.improvementPercent}% / Gate ${improvement.gatePassed ? 'PASS' : 'FAIL'} / ${improvement.falseBeliefsRemoved} 个错误信念修正`
+                ? improvement.source === 'SkillOpt aing adapter (Python, offline rollout)'
+                  ? `SkillOpt adapter 真实 rollout: ${improvement.baseline.hardCorrect}/${improvement.taskCount} → ${improvement.corrected.hardCorrect}/${improvement.taskCount} (soft ${improvement.baseline.softScore} → ${improvement.corrected.softScore}), Gate ${improvement.improvement.gatePassed ? 'PASS' : 'FAIL'}, delta=${improvement.improvement.deltaSoft}`
+                  : `训练推演: ${improvement.improvementPercent}% 改进 / Gate ${improvement.gatePassed ? 'PASS' : 'FAIL'} / ${improvement.falseBeliefsRemoved} 个错误信念修正`
                 : '训练循环未产出证据',
               improvement,
             },
