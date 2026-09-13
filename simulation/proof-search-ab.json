@@ -1,0 +1,2673 @@
+{
+  "title": "检索质量 A/B 对照：语义向量检索 vs 朴素关键词匹配",
+  "timestamp": "2026-09-13T11:38:08.861Z",
+  "method": "A: vectorSearch.semanticSearch(desc,5) | B: SQL LIKE 关键词(2-3个) 聚合取 top-5",
+  "vectorMode": "semantic",
+  "topK": 5,
+  "entityCount": 22,
+  "planA": {
+    "taskCount": 21,
+    "avgResultCount": 5,
+    "taskHitRate": 1,
+    "avgHitRatio": 0.838,
+    "aggregateHitRate": 0.838,
+    "kwTaskHitRate": 0.857,
+    "kwAvgHitRatio": 0.4,
+    "avgTypeDistinct": 2.05,
+    "typeDistribution": {
+      "Concept": 82,
+      "Design": 12,
+      "Conversation": 11
+    }
+  },
+  "planB": {
+    "taskCount": 21,
+    "avgResultCount": 4.52,
+    "taskHitRate": 0.905,
+    "avgHitRatio": 0.428,
+    "aggregateHitRate": 0.432,
+    "kwTaskHitRate": 1,
+    "kwAvgHitRatio": 1,
+    "avgTypeDistinct": 1.9,
+    "typeDistribution": {
+      "Conversation": 19,
+      "Concept": 71,
+      "Design": 5
+    }
+  },
+  "tasks": [
+    {
+      "id": "task-1789294236815",
+      "description": "知识代谢引擎架构",
+      "keywords": [
+        "代谢",
+        "知识"
+      ],
+      "groundTruth": {
+        "verified": [
+          "代谢范式 vs 编译范式",
+          "sqa-leader-integration-final",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-training-notes"
+        ],
+        "verifiedIds": [
+          "metabolism-paradigm",
+          "sqa-leader-integration-final",
+          "tri-path-orchestrator",
+          "consciousness-panel-design",
+          "sqa-training-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.5097541037366315
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "score": 0.3622135599030664
+          },
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.3160875562796182
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.30642680338700495
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.3049003902615804
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "代谢",
+              "知识"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "代谢",
+              "知识"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "代谢",
+              "知识"
+            ]
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "matched": [
+              "代谢",
+              "知识"
+            ]
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "代谢"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 1,
+        "hitRatio": 0.2,
+        "recall": 0.2,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 1,
+          "Concept": 4
+        }
+      }
+    },
+    {
+      "id": "task-1789294246495",
+      "description": "harness engineering agent",
+      "keywords": [
+        "agent",
+        "harness",
+        "engineering"
+      ],
+      "groundTruth": {
+        "verified": [
+          "Harness Engineering：Agent 的马具",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "意识神经协调层设计",
+          "sqa-training-notes"
+        ],
+        "verifiedIds": [
+          "harness-engineering-2026",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "consciousness-panel-design",
+          "sqa-training-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "harness-engineering-2026",
+            "name": "Harness Engineering：Agent 的马具",
+            "type": "Concept",
+            "score": 0.3956740235560352
+          },
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.23777420272134936
+          },
+          {
+            "id": "sqa-gwt-discovery",
+            "name": "sqa-gwt-discovery",
+            "type": "Concept",
+            "score": 0.1892051177876788
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.18810106172790972
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "score": 0.18214520921771396
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 5,
+        "hitRatio": 1,
+        "recall": 1,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "harness-engineering-2026",
+            "name": "Harness Engineering：Agent 的马具",
+            "type": "Concept",
+            "matched": [
+              "agent",
+              "harness",
+              "engineering"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z",
+            "name": "会话-2026-09-07T05-18-20-790Z",
+            "type": "Conversation",
+            "matched": [
+              "agent"
+            ]
+          },
+          {
+            "id": "ingest-distill-pipeline",
+            "name": "会话入库与蒸馏",
+            "type": "Concept",
+            "matched": [
+              "agent"
+            ]
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "matched": [
+              "agent"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "agent"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Conversation": 1,
+          "Design": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294248749",
+      "description": "KESPI 八维质量评估",
+      "keywords": [
+        "质量",
+        "评估",
+        "kespi"
+      ],
+      "groundTruth": {
+        "verified": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "三路突击：探索/验证/优化",
+          "会话-2026-09-07T05-17-44-651Z"
+        ],
+        "verifiedIds": [
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "kespi-system",
+          "sqa-consciousness-notes",
+          "tri-path-orchestrator",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.5707701432521984
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.4689904943644903
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.380056817317295
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.3661916912863461
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.3326411209089007
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 4,
+        "kwHitRatio": 0.8,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "matched": [
+              "质量",
+              "评估",
+              "kespi"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "质量",
+              "评估"
+            ]
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "质量"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "matched": [
+              "kespi"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "kespi"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 3,
+        "hitRatio": 0.6,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 3,
+          "Conversation": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294250947",
+      "description": "意识神经协调层",
+      "keywords": [
+        "意识",
+        "神经"
+      ],
+      "groundTruth": {
+        "verified": [
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes"
+        ],
+        "verifiedIds": [
+          "consciousness-panel-design",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+          "kespi-system",
+          "sqa-consciousness-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.5516607380603364
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.3749821531934722
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.2977305701496905
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "score": 0.2909731256312385
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.279071674641823
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 1,
+        "kwHitRatio": 0.2,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Design": 1,
+          "Conversation": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "matched": [
+              "意识",
+              "神经"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "意识",
+              "神经"
+            ]
+          },
+          {
+            "id": "sqa-engineer-implementation-audit",
+            "name": "sqa-engineer-implementation-audit",
+            "type": "Concept",
+            "matched": [
+              "意识",
+              "神经"
+            ]
+          },
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "matched": [
+              "意识",
+              "神经"
+            ]
+          },
+          {
+            "id": "sqa-gwt-discovery",
+            "name": "sqa-gwt-discovery",
+            "type": "Concept",
+            "matched": [
+              "意识"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Design": 1,
+          "Concept": 4
+        }
+      }
+    },
+    {
+      "id": "task-1789294252767",
+      "description": "SkillOpt 训练循环",
+      "keywords": [
+        "训练",
+        "循环",
+        "skillopt"
+      ],
+      "groundTruth": {
+        "verified": [
+          "KESPI 评分体系",
+          "sqa-training-notes",
+          "sqa-consciousness-notes",
+          "sqa-trainer-skillopt-readiness",
+          "KESPI 八维知识质量评估体系"
+        ],
+        "verifiedIds": [
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "sqa-training-notes",
+          "sqa-consciousness-notes",
+          "sqa-trainer-skillopt-readiness",
+          "kespi-system"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.6149323134729867
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.37065511214204955
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "score": 0.3451564105154169
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.3391203823275644
+          },
+          {
+            "id": "sqa-trainer-skillopt-readiness",
+            "name": "sqa-trainer-skillopt-readiness",
+            "type": "Concept",
+            "score": 0.3183783019405156
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 0.6,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "sqa-industry-position",
+            "name": "sqa-industry-position",
+            "type": "Concept",
+            "matched": [
+              "训练",
+              "skillopt"
+            ]
+          },
+          {
+            "id": "sqa-trainer-skillopt-readiness",
+            "name": "sqa-trainer-skillopt-readiness",
+            "type": "Concept",
+            "matched": [
+              "训练",
+              "skillopt"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "训练",
+              "skillopt"
+            ]
+          },
+          {
+            "id": "harness-engineering-2026",
+            "name": "Harness Engineering：Agent 的马具",
+            "type": "Concept",
+            "matched": [
+              "循环"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "skillopt"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 3,
+        "hitRatio": 0.6,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      }
+    },
+    {
+      "id": "task-1789294254759",
+      "description": "不存在的虚构概念测试区分度",
+      "keywords": [
+        "存在",
+        "概念"
+      ],
+      "groundTruth": {
+        "verified": [
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏"
+        ],
+        "verifiedIds": [
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+          "kespi-system",
+          "tri-path-orchestrator",
+          "ingest-distill-pipeline"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.5819356189083977
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.3241620298007169
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "score": 0.3106627569067436
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.29139090537059487
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.256825753486258
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 0,
+        "kwHitRatio": 0,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "matched": [
+              "存在"
+            ]
+          },
+          {
+            "id": "sqa-engineer-implementation-audit",
+            "name": "sqa-engineer-implementation-audit",
+            "type": "Concept",
+            "matched": [
+              "存在"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "概念"
+            ]
+          }
+        ],
+        "resultCount": 3,
+        "hitCount": 0,
+        "hitRatio": 0,
+        "recall": 0,
+        "taskHit": false,
+        "kwHitCount": 3,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Design": 1,
+          "Concept": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294447895",
+      "description": "交叉时态双脑",
+      "keywords": [
+        "双脑",
+        "时态"
+      ],
+      "groundTruth": {
+        "verified": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes"
+        ],
+        "verifiedIds": [
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "kespi-system",
+          "tri-path-orchestrator",
+          "consciousness-panel-design",
+          "sqa-consciousness-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.9544842723848295
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.2389683881480475
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.223087252807541
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.19769542535694842
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.19271335667214773
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 0,
+        "kwHitRatio": 0,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "双脑",
+              "时态"
+            ]
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "双脑"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "双脑"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "双脑"
+            ]
+          },
+          {
+            "id": "sqa-engineer-implementation-audit",
+            "name": "sqa-engineer-implementation-audit",
+            "type": "Concept",
+            "matched": [
+              "双脑"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 1,
+        "hitRatio": 0.2,
+        "recall": 0.2,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294449803",
+      "description": "蒸馏器 pending distillation",
+      "keywords": [
+        "蒸馏",
+        "蒸馏器",
+        "pending"
+      ],
+      "groundTruth": {
+        "verified": [
+          "意识神经协调层设计",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏"
+        ],
+        "verifiedIds": [
+          "consciousness-panel-design",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "tri-path-orchestrator",
+          "ingest-distill-pipeline"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.4222968745674011
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.3909297077198234
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.3806924563948123
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.38015667122547026
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.35775324473003606
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 1,
+        "kwHitRatio": 0.2,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Design": 1,
+          "Conversation": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "ingest-distill-pipeline",
+            "name": "会话入库与蒸馏",
+            "type": "Concept",
+            "matched": [
+              "蒸馏",
+              "蒸馏器",
+              "pending"
+            ]
+          },
+          {
+            "id": "selftest-probe-2026-09-13T11-00-36-054Z",
+            "name": "会话-2026-09-13T11-00-36-054Z",
+            "type": "Conversation",
+            "matched": [
+              "蒸馏",
+              "pending"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z",
+            "name": "会话-2026-09-07T05-18-20-790Z",
+            "type": "Conversation",
+            "matched": [
+              "蒸馏"
+            ]
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "matched": [
+              "蒸馏"
+            ]
+          },
+          {
+            "id": "sqa-industry-position",
+            "name": "sqa-industry-position",
+            "type": "Concept",
+            "matched": [
+              "蒸馏"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 3,
+          "Conversation": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294452389",
+      "description": "gap detector 五维缺口",
+      "keywords": [
+        "缺口",
+        "五维缺口",
+        "detector"
+      ],
+      "groundTruth": {
+        "verified": [
+          "三路突击：探索/验证/优化",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes"
+        ],
+        "verifiedIds": [
+          "tri-path-orchestrator",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+          "consciousness-panel-design",
+          "sqa-consciousness-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.35725853877467517
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.3486954961467786
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "score": 0.29655626763675486
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.2938053098996323
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.26688145078949593
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 5,
+        "hitRatio": 1,
+        "recall": 1,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Conversation": 1,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "matched": [
+              "detector"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "缺口"
+            ]
+          },
+          {
+            "id": "sqa-theorist-six-attributes",
+            "name": "sqa-theorist-six-attributes",
+            "type": "Concept",
+            "matched": [
+              "缺口"
+            ]
+          },
+          {
+            "id": "sqa-trainer-skillopt-readiness",
+            "name": "sqa-trainer-skillopt-readiness",
+            "type": "Concept",
+            "matched": [
+              "缺口"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "缺口"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      }
+    },
+    {
+      "id": "task-1789294453956",
+      "description": "回炉芥子 compress recycle",
+      "keywords": [
+        "芥子",
+        "回炉",
+        "compress"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构"
+        ],
+        "verifiedIds": [
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "consciousness-panel-design",
+          "sqa-analyst-topology-health",
+          "metabolism-paradigm",
+          "dual-brain-architecture"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.42889792201123716
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.3920998084281056
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.2754770785937019
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "score": 0.24940534207827605
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "score": 0.24897642200593811
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Conversation": 1,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "芥子",
+              "回炉",
+              "compress"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "芥子",
+              "compress"
+            ]
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "matched": [
+              "芥子"
+            ]
+          },
+          {
+            "id": "sqa-trainer-skillopt-readiness",
+            "name": "sqa-trainer-skillopt-readiness",
+            "type": "Concept",
+            "matched": [
+              "compress"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "回炉"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 3,
+        "hitRatio": 0.6,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 1,
+          "Concept": 4
+        }
+      }
+    },
+    {
+      "id": "task-1789294455783",
+      "description": "conductor 决策谱系 lineage",
+      "keywords": [
+        "决策",
+        "决策谱系",
+        "conductor"
+      ],
+      "groundTruth": {
+        "verified": [
+          "sqa-leader-integration-final",
+          "意识神经协调层设计",
+          "交叉时态双脑架构",
+          "三路突击：探索/验证/优化",
+          "Harness Engineering：Agent 的马具"
+        ],
+        "verifiedIds": [
+          "sqa-leader-integration-final",
+          "consciousness-panel-design",
+          "dual-brain-architecture",
+          "tri-path-orchestrator",
+          "harness-engineering-2026"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.34594013827608044
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.34520218872032865
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "score": 0.34035926475692885
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.33954114967940285
+          },
+          {
+            "id": "harness-engineering-2026",
+            "name": "Harness Engineering：Agent 的马具",
+            "type": "Concept",
+            "score": 0.31778637784552943
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 5,
+        "hitRatio": 1,
+        "recall": 1,
+        "taskHit": true,
+        "kwHitCount": 0,
+        "kwHitRatio": 0,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "决策"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "决策"
+            ]
+          },
+          {
+            "id": "sqa-engineer-implementation-audit",
+            "name": "sqa-engineer-implementation-audit",
+            "type": "Concept",
+            "matched": [
+              "决策"
+            ]
+          }
+        ],
+        "resultCount": 3,
+        "hitCount": 0,
+        "hitRatio": 0,
+        "recall": 0,
+        "taskHit": false,
+        "kwHitCount": 3,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 1,
+          "Concept": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294481740",
+      "description": "forms functions dynamics 记忆三维框架",
+      "keywords": [
+        "记忆",
+        "记忆三维框架",
+        "functions"
+      ],
+      "groundTruth": {
+        "verified": [
+          "三路突击：探索/验证/优化",
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-industry-position",
+          "sqa-gwt-discovery"
+        ],
+        "verifiedIds": [
+          "tri-path-orchestrator",
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-industry-position",
+          "sqa-gwt-discovery"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "score": 0.3169714293841392
+          },
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.28084030115118397
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.254194745582736
+          },
+          {
+            "id": "sqa-industry-position",
+            "name": "sqa-industry-position",
+            "type": "Concept",
+            "score": 0.22267944762452044
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.21250050345646834
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "记忆"
+            ]
+          },
+          {
+            "id": "sqa-gwt-discovery",
+            "name": "sqa-gwt-discovery",
+            "type": "Concept",
+            "matched": [
+              "记忆"
+            ]
+          },
+          {
+            "id": "sqa-industry-position",
+            "name": "sqa-industry-position",
+            "type": "Concept",
+            "matched": [
+              "记忆"
+            ]
+          },
+          {
+            "id": "sqa-theorist-six-attributes",
+            "name": "sqa-theorist-six-attributes",
+            "type": "Concept",
+            "matched": [
+              "记忆"
+            ]
+          }
+        ],
+        "resultCount": 4,
+        "hitCount": 3,
+        "hitRatio": 0.75,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 4,
+        "kwHitRatio": 1,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 4
+        }
+      }
+    },
+    {
+      "id": "task-1789294483684",
+      "description": "sprout 发芽引擎 链接发现",
+      "keywords": [
+        "链接",
+        "发现",
+        "sprout"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-18-20-790Z"
+        ],
+        "verifiedIds": [
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "metabolism-paradigm",
+          "dual-brain-architecture",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.3742232602731704
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.37333833774154573
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "score": 0.3420052305980216
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "score": 0.333683253756281
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.33088880270023335
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 0.6,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "链接",
+              "发现",
+              "sprout"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "链接",
+              "发现",
+              "sprout"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "链接",
+              "sprout"
+            ]
+          },
+          {
+            "id": "tri-path-orchestrator",
+            "name": "三路突击：探索/验证/优化",
+            "type": "Concept",
+            "matched": [
+              "链接",
+              "发现"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "链接"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 3,
+        "hitRatio": 0.6,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294485979",
+      "description": "pollinate 授粉 跨域融合",
+      "keywords": [
+        "授粉",
+        "跨域融合",
+        "pollinate"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes"
+        ],
+        "verifiedIds": [
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "consciousness-panel-design",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "kespi-system",
+          "sqa-consciousness-notes"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.4934237366859984
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.3713735414214393
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.34626320004617406
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.3401752058078642
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.33686717977922065
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Conversation": 1,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "授粉",
+              "跨域融合",
+              "pollinate"
+            ]
+          },
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "授粉",
+              "pollinate"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "授粉",
+              "pollinate"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "pollinate"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "授粉"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294488241",
+      "description": "prune 剪枝 过期归档",
+      "keywords": [
+        "剪枝",
+        "过期",
+        "prune"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "sqa-analyst-topology-health",
+          "意识神经协调层设计",
+          "sqa-training-notes",
+          "三路突击：探索/验证/优化"
+        ],
+        "verifiedIds": [
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "sqa-analyst-topology-health",
+          "consciousness-panel-design",
+          "sqa-training-notes",
+          "tri-path-orchestrator"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.5124833668457259
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.3940671862767081
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "score": 0.35780557444051575
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.3294779162642548
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "score": 0.32461002263308675
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 0.6,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 3,
+          "Conversation": 1,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "剪枝",
+              "过期",
+              "prune"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "剪枝",
+              "过期",
+              "prune"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "剪枝",
+              "prune"
+            ]
+          },
+          {
+            "id": "sqa-theorist-six-attributes",
+            "name": "sqa-theorist-six-attributes",
+            "type": "Concept",
+            "matched": [
+              "过期",
+              "prune"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "过期"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 1,
+        "hitRatio": 0.2,
+        "recall": 0.2,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Conversation": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294489994",
+      "description": "shared-spine 编译门禁 KESPI门槛",
+      "keywords": [
+        "编译",
+        "门禁",
+        "kespi"
+      ],
+      "groundTruth": {
+        "verified": [
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "代谢范式 vs 编译范式"
+        ],
+        "verifiedIds": [
+          "dual-brain-architecture",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "kespi-system",
+          "sqa-consciousness-notes",
+          "metabolism-paradigm"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "score": 0.39215486733778415
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.32742044264186276
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.3154316338807317
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.27793167074032626
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.2658871469026155
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 4,
+        "kwHitRatio": 0.8,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "metabolism-paradigm",
+            "name": "代谢范式 vs 编译范式",
+            "type": "Concept",
+            "matched": [
+              "编译",
+              "门禁"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "编译",
+              "kespi"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z",
+            "name": "会话-2026-09-07T05-18-20-790Z",
+            "type": "Conversation",
+            "matched": [
+              "编译",
+              "kespi"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "编译",
+              "门禁"
+            ]
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "matched": [
+              "门禁",
+              "kespi"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 3,
+        "types": {
+          "Concept": 2,
+          "Conversation": 2,
+          "Design": 1
+        }
+      }
+    },
+    {
+      "id": "task-1789294491894",
+      "description": "auto-ingest 会话入库 指纹去重",
+      "keywords": [
+        "会话",
+        "入库",
+        "auto-ingest"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话入库与蒸馏",
+          "会话-2026-09-07T05-17-41-454Z",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 八维知识质量评估体系",
+          "KESPI 评分体系"
+        ],
+        "verifiedIds": [
+          "ingest-distill-pipeline",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "kespi-system",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "ingest-distill-pipeline",
+            "name": "会话入库与蒸馏",
+            "type": "Concept",
+            "score": 0.37405957560393954
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "score": 0.3634334197662674
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.35578260847277504
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.30867387451601225
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.2684098689397091
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 0.6,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 3,
+          "Conversation": 2
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "会话",
+              "auto-ingest"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z",
+            "name": "会话-2026-09-07T05-18-20-790Z",
+            "type": "Conversation",
+            "matched": [
+              "会话",
+              "入库"
+            ]
+          },
+          {
+            "id": "ingest-distill-pipeline",
+            "name": "会话入库与蒸馏",
+            "type": "Concept",
+            "matched": [
+              "会话",
+              "入库"
+            ]
+          },
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+            "name": "会话-2026-09-07T05-17-41-454Z",
+            "type": "Conversation",
+            "matched": [
+              "会话"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "入库"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 3,
+        "hitRatio": 0.6,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 3,
+          "Concept": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294493601",
+      "description": "consciousness kernel 协调层 coordination",
+      "keywords": [
+        "协调层",
+        "协调",
+        "consciousness"
+      ],
+      "groundTruth": {
+        "verified": [
+          "sqa-gwt-discovery",
+          "交叉时态双脑架构",
+          "sqa-consciousness-notes",
+          "意识神经协调层设计",
+          "sqa-leader-integration-final"
+        ],
+        "verifiedIds": [
+          "sqa-gwt-discovery",
+          "dual-brain-architecture",
+          "sqa-consciousness-notes",
+          "consciousness-panel-design",
+          "sqa-leader-integration-final"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sqa-gwt-discovery",
+            "name": "sqa-gwt-discovery",
+            "type": "Concept",
+            "score": 0.3535469169726273
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "score": 0.2901707988425636
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.2569663442258892
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.24660097397700392
+          },
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.23226646074075877
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 5,
+        "hitRatio": 1,
+        "recall": 1,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 0.6,
+        "typeDistinct": 2,
+        "types": {
+          "Concept": 4,
+          "Design": 1
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "matched": [
+              "协调层",
+              "协调",
+              "consciousness"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "consciousness"
+            ]
+          },
+          {
+            "id": "sqa-gwt-discovery",
+            "name": "sqa-gwt-discovery",
+            "type": "Concept",
+            "matched": [
+              "consciousness"
+            ]
+          }
+        ],
+        "resultCount": 3,
+        "hitCount": 3,
+        "hitRatio": 1,
+        "recall": 0.6,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Design": 1,
+          "Concept": 2
+        }
+      }
+    },
+    {
+      "id": "task-1789294495456",
+      "description": "growth-director 生长决策器 九种动作",
+      "keywords": [
+        "决策",
+        "生长",
+        "growth-director"
+      ],
+      "groundTruth": {
+        "verified": [
+          "KESPI 八维知识质量评估体系",
+          "sqa-analyst-topology-health",
+          "KESPI 评分体系",
+          "会话入库与蒸馏",
+          "sqa-trainer-skillopt-readiness"
+        ],
+        "verifiedIds": [
+          "kespi-system",
+          "sqa-analyst-topology-health",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "ingest-distill-pipeline",
+          "sqa-trainer-skillopt-readiness"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "score": 0.34552451469570034
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "score": 0.2934713400175845
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.268106870225757
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.2588681466684627
+          },
+          {
+            "id": "ingest-distill-pipeline",
+            "name": "会话入库与蒸馏",
+            "type": "Concept",
+            "score": 0.2533129878583581
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "决策"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "生长"
+            ]
+          },
+          {
+            "id": "kespi-system",
+            "name": "KESPI 八维知识质量评估体系",
+            "type": "Concept",
+            "matched": [
+              "生长"
+            ]
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "matched": [
+              "生长"
+            ]
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "matched": [
+              "决策"
+            ]
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 2,
+        "hitRatio": 0.4,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 5,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 1,
+          "Concept": 4
+        }
+      }
+    },
+    {
+      "id": "task-1789294497508",
+      "description": "feedback-loop 闭环反馈 效果感知",
+      "keywords": [
+        "闭环",
+        "反馈",
+        "feedback-loop"
+      ],
+      "groundTruth": {
+        "verified": [
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-training-notes",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化"
+        ],
+        "verifiedIds": [
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-training-notes",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "tri-path-orchestrator"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "sqa-leader-integration-final",
+            "name": "sqa-leader-integration-final",
+            "type": "Concept",
+            "score": 0.3680424382774212
+          },
+          {
+            "id": "sqa-consciousness-notes",
+            "name": "sqa-consciousness-notes",
+            "type": "Concept",
+            "score": 0.3554783759921936
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "score": 0.34577925983894936
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.34426297682726414
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.33739264855278317
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 1,
+        "kwHitRatio": 0.2,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 5
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "harness-engineering-2026",
+            "name": "Harness Engineering：Agent 的马具",
+            "type": "Concept",
+            "matched": [
+              "反馈"
+            ]
+          },
+          {
+            "id": "sqa-trainer-skillopt-readiness",
+            "name": "sqa-trainer-skillopt-readiness",
+            "type": "Concept",
+            "matched": [
+              "闭环"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "闭环"
+            ]
+          }
+        ],
+        "resultCount": 3,
+        "hitCount": 1,
+        "hitRatio": 0.333,
+        "recall": 0.2,
+        "taskHit": true,
+        "kwHitCount": 3,
+        "kwHitRatio": 1,
+        "typeDistinct": 1,
+        "types": {
+          "Concept": 3
+        }
+      }
+    },
+    {
+      "id": "task-1789294499076",
+      "description": "mustard-seed 芥子 回炉 recycle",
+      "keywords": [
+        "芥子",
+        "回炉",
+        "mustard-seed"
+      ],
+      "groundTruth": {
+        "verified": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式"
+        ],
+        "verifiedIds": [
+          "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+          "consciousness-panel-design",
+          "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+          "sqa-analyst-topology-health",
+          "metabolism-paradigm"
+        ]
+      },
+      "planA": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "score": 0.4293816761198019
+          },
+          {
+            "id": "consciousness-panel-design",
+            "name": "意识神经协调层设计",
+            "type": "Design",
+            "score": 0.3425069871337894
+          },
+          {
+            "id": "sensitivity-probe-1789298972531",
+            "name": "腐坏探针",
+            "type": "Concept",
+            "score": 0.3365264031140149
+          },
+          {
+            "id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+            "name": "KESPI 评分体系",
+            "type": "Concept",
+            "score": 0.325611212063323
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "score": 0.3128690857994334
+          }
+        ],
+        "resultCount": 5,
+        "hitCount": 4,
+        "hitRatio": 0.8,
+        "recall": 0.8,
+        "taskHit": true,
+        "kwHitCount": 2,
+        "kwHitRatio": 0.4,
+        "typeDistinct": 3,
+        "types": {
+          "Conversation": 1,
+          "Design": 1,
+          "Concept": 3
+        }
+      },
+      "planB": {
+        "results": [
+          {
+            "id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+            "name": "会话-2026-09-07T05-17-44-651Z",
+            "type": "Conversation",
+            "matched": [
+              "芥子",
+              "回炉"
+            ]
+          },
+          {
+            "id": "sqa-analyst-topology-health",
+            "name": "sqa-analyst-topology-health",
+            "type": "Concept",
+            "matched": [
+              "芥子",
+              "mustard-seed"
+            ]
+          },
+          {
+            "id": "dual-brain-architecture",
+            "name": "交叉时态双脑架构",
+            "type": "Concept",
+            "matched": [
+              "芥子"
+            ]
+          },
+          {
+            "id": "sqa-training-notes",
+            "name": "sqa-training-notes",
+            "type": "Concept",
+            "matched": [
+              "回炉"
+            ]
+          }
+        ],
+        "resultCount": 4,
+        "hitCount": 2,
+        "hitRatio": 0.5,
+        "recall": 0.4,
+        "taskHit": true,
+        "kwHitCount": 4,
+        "kwHitRatio": 1,
+        "typeDistinct": 2,
+        "types": {
+          "Conversation": 1,
+          "Concept": 3
+        }
+      }
+    }
+  ]
+}

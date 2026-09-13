@@ -1,0 +1,1118 @@
+{
+  "title": "实体全生命周期追踪: kespi-system",
+  "entityId": "kespi-system",
+  "timestamp": "2026-09-13T11:40:22.647Z",
+  "rawFile": {
+    "exists": true,
+    "path": "raw\\kespi-system.md",
+    "created_at": "2026-09-13T09:42:39.773Z",
+    "modified_at": "2026-09-13T09:42:39.773Z",
+    "sizeBytes": 2824,
+    "lineCount": 76,
+    "summary": "---\nname: \"KESPI 八维知识质量评估体系\"\ntype: \"Concept\"\ntags: [kespi, quality, scoring, metabolism]\nconfidence: 0.9\nstatus: \"active\"\nsource: \"aing 源码 + TipKay 会话分析\"\ncreated: 2026-09-07\nAIGC:\n  ContentProducer: '001191110102MAD55U9H"
+  },
+  "wikiFile": {
+    "exists": true,
+    "path": "wiki\\entities\\kespi-system.md",
+    "frontmatter": {
+      "name": "KESPI 八维知识质量评估体系",
+      "type": "Concept",
+      "id": "kespi-system",
+      "created": "2026-09-07",
+      "modified": "2026-09-13T09:43:20.737Z",
+      "tags": "[\"kespi\",\"quality\",\"scoring\",\"metabolism\"]",
+      "status": "active",
+      "kespi_status": "computed",
+      "confidence": "0.9",
+      "source": "aing 源码 + TipKay 会话分析"
+    },
+    "kespiStatusBlock": {
+      "status": "computed",
+      "overall": 0.96,
+      "dimensions": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      }
+    },
+    "lineCount": 55
+  },
+  "dbEntity": {
+    "id": "kespi-system",
+    "name": "KESPI 八维知识质量评估体系",
+    "type": "Concept",
+    "status": "active",
+    "confidence": 0.9,
+    "source_file": "wiki/entities/kespi-system.md",
+    "created_at": "2026-09-13 09:43:22",
+    "updated_at": "2026-09-13 11:39:36"
+  },
+  "entityMetadata": {
+    "kespi_score": 0.96,
+    "originality": 0.7,
+    "relevance": 0.7,
+    "consistency": 0.9,
+    "provability": 0.6,
+    "utility": 0.7,
+    "last_checked_at": "2026-09-13 11:39:44",
+    "metadata": "{}"
+  },
+  "kespiHistory": [
+    {
+      "id": 20,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 09:43:31"
+    },
+    {
+      "id": 31,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 09:55:24"
+    },
+    {
+      "id": 51,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 10:22:50"
+    },
+    {
+      "id": 81,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 10:39:23"
+    },
+    {
+      "id": 93,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 11:34:12"
+    },
+    {
+      "id": 114,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 11:35:31"
+    },
+    {
+      "id": 136,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 11:37:24"
+    },
+    {
+      "id": 154,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 11:39:32"
+    },
+    {
+      "id": 176,
+      "overall_score": 0.96,
+      "dimension_scores": {
+        "KQ": 0.9,
+        "KG": 1,
+        "KA": 1,
+        "KM": 1,
+        "KD": 1,
+        "KC": 1,
+        "KR": 0.8,
+        "KB": 1
+      },
+      "created_at": "2026-09-13 11:39:44"
+    }
+  ],
+  "links": [
+    {
+      "source_id": "kespi-system",
+      "target_id": "metabolism-paradigm",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "代谢范式 vs 编译范式"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "tri-path-orchestrator",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "三路突击：探索/验证/优化"
+    },
+    {
+      "source_id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-41-454Z",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "会话-2026-09-07T05-17-41-454Z",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-17-44-651Z",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "会话-2026-09-07T05-17-44-651Z",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "default--tipkay-aing-analysis-20260907-2026-09-07T05-18-20-790Z",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "会话-2026-09-07T05-18-20-790Z",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "tipkay-distill-test-1-2026-09-07T07-05-38-227Z",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "KESPI 评分体系",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "consciousness-panel-design",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "意识神经协调层设计",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "dual-brain-architecture",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "交叉时态双脑架构",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "harness-engineering-2026",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "Harness Engineering：Agent 的马具",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "ingest-distill-pipeline",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:43:23",
+      "source_name": "会话入库与蒸馏",
+      "target_name": "KESPI 八维知识质量评估体系"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-analyst-topology-health",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-analyst-topology-health"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-consciousness-notes",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-consciousness-notes"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-engineer-implementation-audit",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-engineer-implementation-audit"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-gwt-discovery",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-gwt-discovery"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-industry-position",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-industry-position"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-leader-integration-final",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-leader-integration-final"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-theorist-six-attributes",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-theorist-six-attributes"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-trainer-skillopt-readiness",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-trainer-skillopt-readiness"
+    },
+    {
+      "source_id": "kespi-system",
+      "target_id": "sqa-training-notes",
+      "relation": "related",
+      "confidence": 1,
+      "created_at": "2026-09-13 09:55:13",
+      "source_name": "KESPI 八维知识质量评估体系",
+      "target_name": "sqa-training-notes"
+    },
+    {
+      "source_id": "sensitivity-probe-1789298972531",
+      "target_id": "kespi-system",
+      "relation": "related",
+      "confidence": 0.3,
+      "created_at": "2026-09-13 11:34:07",
+      "source_name": "腐坏探针",
+      "target_name": "KESPI 八维知识质量评估体系"
+    }
+  ],
+  "embedding": {
+    "entity_id": "kespi-system",
+    "dimension": 384,
+    "model": "Xenova/all-MiniLM-L6-v2",
+    "created_at": "2026-09-13 09:43:28",
+    "byteLength": 1536,
+    "first8Floats": [
+      -0.039004381746053696,
+      0.05810410529375076,
+      -0.026278607547283173,
+      -0.014721972867846489,
+      -0.01987381838262081,
+      -0.01659603789448738,
+      0.04197990521788597,
+      0.03708627074956894
+    ]
+  },
+  "triPathState": {
+    "file": "data\\tri-path-state.json",
+    "exists": true,
+    "taskTotal": 21,
+    "matchedTasks": [
+      {
+        "id": "task-1789294236815",
+        "description": "知识代谢引擎架构",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 2
+        },
+        "exploreCandidates": [
+          "代谢范式 vs 编译范式",
+          "sqa-leader-integration-final",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-training-notes",
+          "sqa-consciousness-notes",
+          "KESPI 八维知识质量评估体系",
+          "会话-2026-09-07T05-17-41-454Z"
+        ],
+        "validated": [
+          "代谢范式 vs 编译范式",
+          "sqa-leader-integration-final",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-training-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:10:38.123Z"
+      },
+      {
+        "id": "task-1789294246495",
+        "description": "harness engineering agent",
+        "keywordHits": {
+          "KESPI": 1
+        },
+        "exploreCandidates": [
+          "Harness Engineering：Agent 的马具",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "意识神经协调层设计",
+          "sqa-training-notes",
+          "sqa-engineer-implementation-audit",
+          "会话入库与蒸馏",
+          "sqa-trainer-skillopt-readiness"
+        ],
+        "validated": [
+          "Harness Engineering：Agent 的马具",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "意识神经协调层设计",
+          "sqa-training-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:10:48.331Z"
+      },
+      {
+        "id": "task-1789294248749",
+        "description": "KESPI 八维质量评估",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 6
+        },
+        "exploreCandidates": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "三路突击：探索/验证/优化",
+          "会话-2026-09-07T05-17-44-651Z",
+          "sqa-leader-integration-final",
+          "sqa-training-notes",
+          "意识神经协调层设计"
+        ],
+        "validated": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "三路突击：探索/验证/优化",
+          "会话-2026-09-07T05-17-44-651Z"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:10:50.488Z"
+      },
+      {
+        "id": "task-1789294250947",
+        "description": "意识神经协调层",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "会话-2026-09-07T05-17-44-651Z",
+          "三路突击：探索/验证/优化",
+          "sqa-leader-integration-final"
+        ],
+        "validated": [
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:10:52.389Z"
+      },
+      {
+        "id": "task-1789294252767",
+        "description": "SkillOpt 训练循环",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "KESPI 评分体系",
+          "sqa-training-notes",
+          "sqa-consciousness-notes",
+          "sqa-trainer-skillopt-readiness",
+          "KESPI 八维知识质量评估体系",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "意识神经协调层设计"
+        ],
+        "validated": [
+          "KESPI 评分体系",
+          "sqa-training-notes",
+          "sqa-consciousness-notes",
+          "sqa-trainer-skillopt-readiness",
+          "KESPI 八维知识质量评估体系"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:10:54.119Z"
+      },
+      {
+        "id": "task-1789294254759",
+        "description": "不存在的虚构概念测试区分度",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏",
+          "sqa-consciousness-notes",
+          "sqa-training-notes",
+          "会话-2026-09-07T05-17-44-651Z"
+        ],
+        "validated": [
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:10:56.209Z"
+      },
+      {
+        "id": "task-1789294447895",
+        "description": "交叉时态双脑",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes",
+          "会话-2026-09-07T05-17-41-454Z",
+          "会话-2026-09-07T05-17-44-651Z",
+          "sqa-training-notes"
+        ],
+        "validated": [
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "三路突击：探索/验证/优化",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:09.247Z"
+      },
+      {
+        "id": "task-1789294449803",
+        "description": "蒸馏器 pending distillation",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 4
+        },
+        "exploreCandidates": [
+          "意识神经协调层设计",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "sqa-leader-integration-final"
+        ],
+        "validated": [
+          "意识神经协调层设计",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化",
+          "会话入库与蒸馏"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:11.687Z"
+      },
+      {
+        "id": "task-1789294452389",
+        "description": "gap detector 五维缺口",
+        "keywordHits": {
+          "KESPI": 3
+        },
+        "exploreCandidates": [
+          "三路突击：探索/验证/优化",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes",
+          "sqa-leader-integration-final",
+          "sqa-gwt-discovery",
+          "会话-2026-09-07T05-17-44-651Z"
+        ],
+        "validated": [
+          "三路突击：探索/验证/优化",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-17-41-454Z",
+          "意识神经协调层设计",
+          "sqa-consciousness-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:13.650Z"
+      },
+      {
+        "id": "task-1789294453956",
+        "description": "回炉芥子 compress recycle",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 3
+        },
+        "exploreCandidates": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "KESPI 评分体系"
+        ],
+        "validated": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:15.396Z"
+      },
+      {
+        "id": "task-1789294455783",
+        "description": "conductor 决策谱系 lineage",
+        "keywordHits": {
+          "KESPI": 1
+        },
+        "exploreCandidates": [
+          "sqa-leader-integration-final",
+          "意识神经协调层设计",
+          "交叉时态双脑架构",
+          "三路突击：探索/验证/优化",
+          "Harness Engineering：Agent 的马具",
+          "sqa-industry-position",
+          "sqa-analyst-topology-health",
+          "sqa-gwt-discovery"
+        ],
+        "validated": [
+          "sqa-leader-integration-final",
+          "意识神经协调层设计",
+          "交叉时态双脑架构",
+          "三路突击：探索/验证/优化",
+          "Harness Engineering：Agent 的马具"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:14:17.258Z"
+      },
+      {
+        "id": "task-1789294481740",
+        "description": "forms functions dynamics 记忆三维框架",
+        "keywordHits": {
+          "KESPI": 1
+        },
+        "exploreCandidates": [
+          "三路突击：探索/验证/优化",
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-industry-position",
+          "sqa-gwt-discovery",
+          "sqa-training-notes",
+          "意识神经协调层设计",
+          "会话-2026-09-07T05-17-44-651Z"
+        ],
+        "validated": [
+          "三路突击：探索/验证/优化",
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-industry-position",
+          "sqa-gwt-discovery"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:43.153Z"
+      },
+      {
+        "id": "task-1789294483684",
+        "description": "sprout 发芽引擎 链接发现",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 4
+        },
+        "exploreCandidates": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-18-20-790Z",
+          "会话入库与蒸馏",
+          "KESPI 八维知识质量评估体系",
+          "sqa-training-notes"
+        ],
+        "validated": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "代谢范式 vs 编译范式",
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "会话-2026-09-07T05-18-20-790Z"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:14:45.695Z"
+      },
+      {
+        "id": "task-1789294485979",
+        "description": "pollinate 授粉 跨域融合",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "会话-2026-09-07T05-18-20-790Z",
+          "sqa-analyst-topology-health",
+          "会话入库与蒸馏"
+        ],
+        "validated": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:47.862Z"
+      },
+      {
+        "id": "task-1789294488241",
+        "description": "prune 剪枝 过期归档",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 2
+        },
+        "exploreCandidates": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "sqa-analyst-topology-health",
+          "意识神经协调层设计",
+          "sqa-training-notes",
+          "三路突击：探索/验证/优化",
+          "KESPI 八维知识质量评估体系",
+          "会话-2026-09-07T05-18-20-790Z",
+          "sqa-theorist-six-attributes"
+        ],
+        "validated": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "sqa-analyst-topology-health",
+          "意识神经协调层设计",
+          "sqa-training-notes",
+          "三路突击：探索/验证/优化"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:49.677Z"
+      },
+      {
+        "id": "task-1789294489994",
+        "description": "shared-spine 编译门禁 KESPI门槛",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 6
+        },
+        "exploreCandidates": [
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "代谢范式 vs 编译范式",
+          "sqa-training-notes",
+          "sqa-gwt-discovery",
+          "意识神经协调层设计"
+        ],
+        "validated": [
+          "交叉时态双脑架构",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-consciousness-notes",
+          "代谢范式 vs 编译范式"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:14:51.398Z"
+      },
+      {
+        "id": "task-1789294491894",
+        "description": "auto-ingest 会话入库 指纹去重",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "会话入库与蒸馏",
+          "会话-2026-09-07T05-17-41-454Z",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 八维知识质量评估体系",
+          "KESPI 评分体系",
+          "意识神经协调层设计",
+          "会话-2026-09-07T05-18-20-790Z",
+          "代谢范式 vs 编译范式"
+        ],
+        "validated": [
+          "会话入库与蒸馏",
+          "会话-2026-09-07T05-17-41-454Z",
+          "会话-2026-09-07T05-17-44-651Z",
+          "KESPI 八维知识质量评估体系",
+          "KESPI 评分体系"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:53.204Z"
+      },
+      {
+        "id": "task-1789294493601",
+        "description": "consciousness kernel 协调层 coordination",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 3
+        },
+        "exploreCandidates": [
+          "sqa-gwt-discovery",
+          "交叉时态双脑架构",
+          "sqa-consciousness-notes",
+          "意识神经协调层设计",
+          "sqa-leader-integration-final",
+          "KESPI 评分体系",
+          "KESPI 八维知识质量评估体系",
+          "sqa-theorist-six-attributes"
+        ],
+        "validated": [
+          "sqa-gwt-discovery",
+          "交叉时态双脑架构",
+          "sqa-consciousness-notes",
+          "意识神经协调层设计",
+          "sqa-leader-integration-final"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.7898333333333333
+        },
+        "timestamp": "2026-09-13T10:14:54.966Z"
+      },
+      {
+        "id": "task-1789294495456",
+        "description": "growth-director 生长决策器 九种动作",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 2,
+          "KESPI": 5
+        },
+        "exploreCandidates": [
+          "KESPI 八维知识质量评估体系",
+          "sqa-analyst-topology-health",
+          "KESPI 评分体系",
+          "会话入库与蒸馏",
+          "sqa-trainer-skillopt-readiness",
+          "意识神经协调层设计",
+          "sqa-engineer-implementation-audit",
+          "会话-2026-09-07T05-17-41-454Z"
+        ],
+        "validated": [
+          "KESPI 八维知识质量评估体系",
+          "sqa-analyst-topology-health",
+          "KESPI 评分体系",
+          "会话入库与蒸馏",
+          "sqa-trainer-skillopt-readiness"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:56.988Z"
+      },
+      {
+        "id": "task-1789294497508",
+        "description": "feedback-loop 闭环反馈 效果感知",
+        "keywordHits": {
+          "KESPI": 3
+        },
+        "exploreCandidates": [
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-training-notes",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化",
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "sqa-theorist-six-attributes"
+        ],
+        "validated": [
+          "sqa-leader-integration-final",
+          "sqa-consciousness-notes",
+          "sqa-training-notes",
+          "KESPI 评分体系",
+          "三路突击：探索/验证/优化"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:14:58.761Z"
+      },
+      {
+        "id": "task-1789294499076",
+        "description": "mustard-seed 芥子 回炉 recycle",
+        "keywordHits": {
+          "KESPI 八维知识质量评估体系": 1,
+          "KESPI": 4
+        },
+        "exploreCandidates": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式",
+          "会话-2026-09-07T05-17-41-454Z",
+          "KESPI 八维知识质量评估体系",
+          "会话入库与蒸馏"
+        ],
+        "validated": [
+          "会话-2026-09-07T05-17-44-651Z",
+          "意识神经协调层设计",
+          "KESPI 评分体系",
+          "sqa-analyst-topology-health",
+          "代谢范式 vs 编译范式"
+        ],
+        "verdict": {
+          "success": true,
+          "average": 0.8731666666666666
+        },
+        "timestamp": "2026-09-13T10:15:00.540Z"
+      }
+    ],
+    "matchedCount": 21
+  },
+  "decisionLineage": {
+    "file": "logs\\metabolism-decision-lineage.jsonl",
+    "exists": true,
+    "totalEntries": 36,
+    "matchedEntries": [
+      {
+        "timestamp": "2026-09-13T10:39:24.131Z",
+        "step": "kespi",
+        "action": "execute",
+        "target": "step:kespi",
+        "outcome": "success",
+        "reason": "代谢步骤 KESPI 八维自检 正常执行完成"
+      },
+      {
+        "timestamp": "2026-09-13T11:39:32.743Z",
+        "step": "kespi",
+        "action": "execute",
+        "target": "step:kespi",
+        "outcome": "success",
+        "reason": "代谢步骤 KESPI 八维自检 正常执行完成"
+      },
+      {
+        "timestamp": "2026-09-13T11:39:44.794Z",
+        "step": "kespi",
+        "action": "execute",
+        "target": "step:kespi",
+        "outcome": "success",
+        "reason": "代谢步骤 KESPI 八维自检 正常执行完成"
+      }
+    ],
+    "matchedCount": 3,
+    "byStep": {
+      "kespi": 3
+    }
+  },
+  "timeline": [
+    {
+      "at": "2026-09-07",
+      "stage": "wiki 实体（frontmatter.created）"
+    },
+    {
+      "at": "2026-09-13 09:43:22",
+      "stage": "DB entities.created_at"
+    },
+    {
+      "at": "2026-09-13 09:43:28",
+      "stage": "向量嵌入创建（entity_embeddings.created_at）"
+    },
+    {
+      "at": "2026-09-13 09:43:31",
+      "stage": "首个 KESPI 历史评分"
+    },
+    {
+      "at": "2026-09-13 11:39:36",
+      "stage": "DB entities.updated_at（最近代谢）"
+    },
+    {
+      "at": "2026-09-13 11:39:44",
+      "stage": "DB 最近 KESPI 检查（last_checked_at）"
+    },
+    {
+      "at": "2026-09-13 11:39:44",
+      "stage": "最新 KESPI 历史评分（第 9 次）"
+    },
+    {
+      "at": "2026-09-13T09:42:39.773Z",
+      "stage": "raw 诞生（raw/kespi-system.md 创建）"
+    },
+    {
+      "at": "2026-09-13T09:43:20.737Z",
+      "stage": "wiki 实体最近修改（frontmatter.modified）"
+    }
+  ],
+  "dataFlow": {
+    "raw": "raw/kespi-system.md",
+    "wiki": "wiki/entities/kespi-system.md",
+    "dbEntity": "entities 表记录存在",
+    "dbMetadata": "entity_metadata 记录存在",
+    "kespiHistoryCount": 9,
+    "linkCount": 20,
+    "embedding": "entity_embeddings 记录存在",
+    "triPathTaskCount": 21,
+    "decisionLineageCount": 3
+  }
+}
