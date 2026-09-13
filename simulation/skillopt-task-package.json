@@ -1,0 +1,496 @@
+{
+  "meta": {
+    "generated": "2026-09-13T10:28:56.594Z",
+    "source": "Tip 实验场真实数据（20 实体 / KESPI 5 维 / tri-path 21 任务 / SQA 9 报告）",
+    "version": "1.0",
+    "count": 41,
+    "domains": [
+      "threshold",
+      "pipeline",
+      "contract",
+      "consciousness",
+      "training",
+      "topology"
+    ],
+    "split_ratio": "2:1:7"
+  },
+  "tasks": [
+    {
+      "id": "T01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80\nB. KESPI 维度通过阈值为 0.75，绿灯阈值为 0.80",
+      "ground_truth": "A",
+      "task_type": "threshold",
+      "reference_text": "kespi-system: 部署验收 C7a 确认 kespi_score >= 0.80 为 computed/green",
+      "metadata": {
+        "fact": "KESPI 维度通过阈值为 0.65，绿灯阈值为 0.80",
+        "wrong": "KESPI 维度通过阈值为 0.75，绿灯阈值为 0.80",
+        "domain": "threshold"
+      }
+    },
+    {
+      "id": "T02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 红灯语义是待回炉（redistill），不是人工干预信号\nB. 红灯语义是需要人工干预修复",
+      "ground_truth": "A",
+      "task_type": "threshold",
+      "reference_text": "AGENTS.md: 红灯=待回炉，绿灯=已验收，locked=冻结",
+      "metadata": {
+        "fact": "红灯语义是待回炉（redistill），不是人工干预信号",
+        "wrong": "红灯语义是需要人工干预修复",
+        "domain": "threshold"
+      }
+    },
+    {
+      "id": "T03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. KESPI overall 0.87 属于绿灯区（>= 0.80）\nB. KESPI overall 0.87 属于黄灯区（0.65-0.80）",
+      "ground_truth": "A",
+      "task_type": "threshold",
+      "reference_text": "verify-deploy.js C4: avgKespi 0.87 全绿",
+      "metadata": {
+        "fact": "KESPI overall 0.87 属于绿灯区（>= 0.80）",
+        "wrong": "KESPI overall 0.87 属于黄灯区（0.65-0.80）",
+        "domain": "threshold"
+      }
+    },
+    {
+      "id": "T04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. SQA 报告实体的 consistency=0 导致 kespi_score 降到 0.78（黄灯区）\nB. SQA 报告实体的 kespi_score 0.78 属于绿灯区",
+      "ground_truth": "A",
+      "task_type": "threshold",
+      "reference_text": "entity_metadata: sqa-* 实体 consistency=0, kespi_score=0.78",
+      "metadata": {
+        "fact": "SQA 报告实体的 consistency=0 导致 kespi_score 降到 0.78（黄灯区）",
+        "wrong": "SQA 报告实体的 kespi_score 0.78 属于绿灯区",
+        "domain": "threshold"
+      }
+    },
+    {
+      "id": "P01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 11 步代谢顺序：compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune\nB. 10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune（无 distill）",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "run-metabolism.js STEPS: 11 步，distill 为 step 3",
+      "metadata": {
+        "fact": "11 步代谢顺序：compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
+        "wrong": "10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune（无 distill）",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "P02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. distill 步骤位于 import 之后、link 之前，处理 pending-distillation 实体\nB. distill 步骤位于 kespi 之后、prune 之前",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "run-metabolism.js: STEPS[2] = distill",
+      "metadata": {
+        "fact": "distill 步骤位于 import 之后、link 之前，处理 pending-distillation 实体",
+        "wrong": "distill 步骤位于 kespi 之后、prune 之前",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "P03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. distill 步骤是非关键步骤，失败不阻断代谢管线\nB. distill 步骤是关键步骤，失败必须中断代谢",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "CRITICAL_STEPS = compile/import/vector/kespi（不含 distill）",
+      "metadata": {
+        "fact": "distill 步骤是非关键步骤，失败不阻断代谢管线",
+        "wrong": "distill 步骤是关键步骤，失败必须中断代谢",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "P04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 代谢管线使用 wx 原子锁实现跨进程互斥（metabolism.lock）\nB. 代谢管线使用数据库锁实现互斥",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "run-metabolism.js N1: LOCK_PATH = data/metabolism.lock",
+      "metadata": {
+        "fact": "代谢管线使用 wx 原子锁实现跨进程互斥（metabolism.lock）",
+        "wrong": "代谢管线使用数据库锁实现互斥",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "P05",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 治理出口（sync-opt）从 STEPS 摘出，由 main() 出口统一执行\nB. 治理出口（sync-opt）是 STEPS 的第 11 步",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "run-metabolism.js L1: runGovernanceExit()",
+      "metadata": {
+        "fact": "治理出口（sync-opt）从 STEPS 摘出，由 main() 出口统一执行",
+        "wrong": "治理出口（sync-opt）是 STEPS 的第 11 步",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "P06",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 意识层尾步（runPanelTail）在治理出口之后执行，生成注意力队列面板\nB. 意识层尾步在 kespi 步骤内执行",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "run-metabolism.js: runPanelTail() 在 runGovernanceExit() 之后",
+      "metadata": {
+        "fact": "意识层尾步（runPanelTail）在治理出口之后执行，生成注意力队列面板",
+        "wrong": "意识层尾步在 kespi 步骤内执行",
+        "domain": "pipeline"
+      }
+    },
+    {
+      "id": "C01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件\nB. 双脑契约：DB 是唯一事实源，wiki 是派生物",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "AGENTS.md: wiki 是 source-of-truth",
+      "metadata": {
+        "fact": "双脑契约：wiki 文件是唯一事实源，DB 是派生物，修复先写文件",
+        "wrong": "双脑契约：DB 是唯一事实源，wiki 是派生物",
+        "domain": "contract"
+      }
+    },
+    {
+      "id": "C02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. prune 步骤必须同时归档文件和清理 DB 记录（双脑一致）\nB. prune 步骤只归档文件即可，DB 无需清理",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "SQA 工程师报告: X02 错误信念",
+      "metadata": {
+        "fact": "prune 步骤必须同时归档文件和清理 DB 记录（双脑一致）",
+        "wrong": "prune 步骤只归档文件即可，DB 无需清理",
+        "domain": "contract"
+      }
+    },
+    {
+      "id": "C03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>\nB. 芥子 id 约定 mz-<entityId>，回炉微粒 id 约定 seed-<original_id>",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "compress.js: seed- 前缀",
+      "metadata": {
+        "fact": "芥子 id 约定 seed-<entityId>，回炉微粒 id 约定 mz-<original_id>",
+        "wrong": "芥子 id 约定 mz-<entityId>，回炉微粒 id 约定 seed-<original_id>",
+        "domain": "contract"
+      }
+    },
+    {
+      "id": "C04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 回炉种子 access_count > 0 防止无限循环回炉\nB. 回炉种子 access_count = 0 时也可以触发回炉",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "compress.js: access_count > 0 条件",
+      "metadata": {
+        "fact": "回炉种子 access_count > 0 防止无限循环回炉",
+        "wrong": "回炉种子 access_count = 0 时也可以触发回炉",
+        "domain": "contract"
+      }
+    },
+    {
+      "id": "C05",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 残壳判据：compressed=1 且芥子已消费的实体才可归档\nB. 残壳判据：compressed=1 即可归档（不需要芥子已消费）",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "prune.js: 残壳判断",
+      "metadata": {
+        "fact": "残壳判据：compressed=1 且芥子已消费的实体才可归档",
+        "wrong": "残壳判据：compressed=1 即可归档（不需要芥子已消费）",
+        "domain": "contract"
+      }
+    },
+    {
+      "id": "K01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 意识神经 kernel 的运行模式是 coordination-only（只感知/路由/建议，不执行）\nB. 意识神经 kernel 的运行模式是 execution-assisted（可直接执行动作）",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "consciousness-kernel.js: MODES.COORDINATION_ONLY",
+      "metadata": {
+        "fact": "意识神经 kernel 的运行模式是 coordination-only（只感知/路由/建议，不执行）",
+        "wrong": "意识神经 kernel 的运行模式是 execution-assisted（可直接执行动作）",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "K02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. metacognition reviewConsciousness 方法返回 channelHealth、alerts 和 adjustments\nB. metacognition reviewConsciousness 方法只返回布尔值",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "metacognition-layer.js: reviewConsciousness()",
+      "metadata": {
+        "fact": "metacognition reviewConsciousness 方法返回 channelHealth、alerts 和 adjustments",
+        "wrong": "metacognition reviewConsciousness 方法只返回布尔值",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "K03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 456 signal 在 coordination-only 模式下被旁路，不得进入正式 assess\nB. 456 signal 在 coordination-only 模式下可以进入正式 assess",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "consciousness-controller.js: _assertNo456()",
+      "metadata": {
+        "fact": "456 signal 在 coordination-only 模式下被旁路，不得进入正式 assess",
+        "wrong": "456 signal 在 coordination-only 模式下可以进入正式 assess",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "K04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. briefing 端点包含 consciousnessAlerts（metacognition + distill debt + stagnation）\nB. briefing 端点只包含 consciousness-layer 的 alerts",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "api-server.js: /api/consciousness/briefing",
+      "metadata": {
+        "fact": "briefing 端点包含 consciousnessAlerts（metacognition + distill debt + stagnation）",
+        "wrong": "briefing 端点只包含 consciousness-layer 的 alerts",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "K05",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. growth-director perceive() 读取 kernel state.json 获取意识层信号\nB. growth-director perceive() 不读取意识层状态",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "growth-director.js: _readConsciousnessSignals()",
+      "metadata": {
+        "fact": "growth-director perceive() 读取 kernel state.json 获取意识层信号",
+        "wrong": "growth-director perceive() 不读取意识层状态",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "K06",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. kernel 停滞计数 >= 3 时 growth-director 优先触发 full_metabolism\nB. kernel 停滞计数不影响 growth-director 的动作选择",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "growth-director.js: _selectAction() consciousness.stagnationCount >= 3",
+      "metadata": {
+        "fact": "kernel 停滞计数 >= 3 时 growth-director 优先触发 full_metabolism",
+        "wrong": "kernel 停滞计数不影响 growth-director 的动作选择",
+        "domain": "consciousness"
+      }
+    },
+    {
+      "id": "TR01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate\nB. SkillOpt 六阶段：Rollout→Update→Reflect→Aggregate→Select→Gate",
+      "ground_truth": "A",
+      "task_type": "training",
+      "reference_text": "training-sim.js: Stage 1-6 注释",
+      "metadata": {
+        "fact": "SkillOpt 六阶段：Rollout→Reflect→Aggregate→Select→Update→Gate",
+        "wrong": "SkillOpt 六阶段：Rollout→Update→Reflect→Aggregate→Select→Gate",
+        "domain": "training"
+      }
+    },
+    {
+      "id": "TR02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. Gate 通过条件：候选 overall > 基线 overall + margin（默认 0.02）\nB. Gate 通过条件：候选 overall > 基线 overall（无 margin）",
+      "ground_truth": "A",
+      "task_type": "training",
+      "reference_text": "training-sim.js: MARGIN = 0.02",
+      "metadata": {
+        "fact": "Gate 通过条件：候选 overall > 基线 overall + margin（默认 0.02）",
+        "wrong": "Gate 通过条件：候选 overall > 基线 overall（无 margin）",
+        "domain": "training"
+      }
+    },
+    {
+      "id": "TR03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. aing adapter 的 rollout 调用 /api/query 端点执行检索\nB. aing adapter 的 rollout 直接调用 SQLite 数据库",
+      "ground_truth": "A",
+      "task_type": "training",
+      "reference_text": "api-server.js: /api/query → searchCandidates()",
+      "metadata": {
+        "fact": "aing adapter 的 rollout 调用 /api/query 端点执行检索",
+        "wrong": "aing adapter 的 rollout 直接调用 SQLite 数据库",
+        "domain": "training"
+      }
+    },
+    {
+      "id": "TR04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. 任务包 split 比例为 2:1:7（train:val:test）\nB. 任务包 split 比例为 7:1:2（train:val:test）",
+      "ground_truth": "A",
+      "task_type": "training",
+      "reference_text": "SkillOpt config_template.yaml: split_ratio \"2:1:7\"",
+      "metadata": {
+        "fact": "任务包 split 比例为 2:1:7（train:val:test）",
+        "wrong": "任务包 split 比例为 7:1:2（train:val:test）",
+        "domain": "training"
+      }
+    },
+    {
+      "id": "X01-cross",
+      "question": "KESPI consistency=0 的实体经过 distill 后会变成什么状态？\n\nA. 从 pending-distillation 变为 active，但 consistency 仍需代谢链重新计算\nB. 从 pending-distillation 直接变为 archived",
+      "ground_truth": "A",
+      "task_type": "contract",
+      "reference_text": "distill.js: status pending-distillation → active; consistency 由 kespi-check 重算"
+    },
+    {
+      "id": "X02-cross",
+      "question": "意识层 kernel 停滞 3 次后，growth-director 会做什么？\n\nA. 优先触发 full_metabolism（含 distill 步骤）\nB. 只触发 observe（不执行任何动作）",
+      "ground_truth": "A",
+      "task_type": "consciousness",
+      "reference_text": "growth-director.js: _selectAction() consciousness.stagnationCount >= 3 → full_metabolism"
+    },
+    {
+      "id": "X03-cross",
+      "question": "briefing 端点的 distillDebt 字段数据来自哪里？\n\nA. 数据库查询 entities WHERE status=pending-distillation\nB. 意识层 kernel 的 state.json",
+      "ground_truth": "A",
+      "task_type": "pipeline",
+      "reference_text": "api-server.js: /api/consciousness/briefing distillDebt 查询"
+    },
+    {
+      "id": "TP01",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. Tip 当前有 20 个实体（16 Concept + 3 Conversation + 1 Design）\nB. Tip 当前有 20 个实体（全部 Concept 类型）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "knowledge.db: entity type 分布",
+      "metadata": {
+        "fact": "Tip 当前有 20 个实体（16 Concept + 3 Conversation + 1 Design）",
+        "wrong": "Tip 当前有 20 个实体（全部 Concept 类型）",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP02",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. SQA 报告实体的 consistency 维度为 0（未被交叉引用验证）\nB. SQA 报告实体的 consistency 维度为 0.85",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "entity_metadata: sqa-* consistency=0",
+      "metadata": {
+        "fact": "SQA 报告实体的 consistency 维度为 0（未被交叉引用验证）",
+        "wrong": "SQA 报告实体的 consistency 维度为 0.85",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP03",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. harness-engineering-2026 实体的 kespi_score 为 0.96（绿灯区）\nB. harness-engineering-2026 实体的 kespi_score 为 0.78（黄灯区）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "entity_metadata: harness-engineering-2026 kespi_score=0.96",
+      "metadata": {
+        "fact": "harness-engineering-2026 实体的 kespi_score 为 0.96（绿灯区）",
+        "wrong": "harness-engineering-2026 实体的 kespi_score 为 0.78（黄灯区）",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP04",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. Tip 有 190 条链接（实体间关联）\nB. Tip 有 20 条链接",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "verify-deploy.js C4: links=190",
+      "metadata": {
+        "fact": "Tip 有 190 条链接（实体间关联）",
+        "wrong": "Tip 有 20 条链接",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP05",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. tri-path-state.json 有 21 条已验证任务，全部 success=true\nB. tri-path-state.json 有 21 条任务，其中有失败记录",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "data/tri-path-state.json: stats total=21 success=21",
+      "metadata": {
+        "fact": "tri-path-state.json 有 21 条已验证任务，全部 success=true",
+        "wrong": "tri-path-state.json 有 21 条任务，其中有失败记录",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP06",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. consciousness-panel-design 实体的 kespi_score 为 0.96（最高分区之一）\nB. consciousness-panel-design 实体的 kespi_score 为 0.78（最低分区之一）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "entity_metadata: consciousness-panel-design kespi_score=0.96",
+      "metadata": {
+        "fact": "consciousness-panel-design 实体的 kespi_score 为 0.96（最高分区之一）",
+        "wrong": "consciousness-panel-design 实体的 kespi_score 为 0.78（最低分区之一）",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP07",
+      "question": "关于 aing 知识代谢引擎，以下哪种说法是正确的？\n\nA. sqa-leader-integration-final 的 kespi_score 0.82 高于其他 SQA 报告的 0.78\nB. 所有 SQA 报告的 kespi_score 都是 0.78",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "entity_metadata: sqa-leader-integration-final kespi_score=0.82",
+      "metadata": {
+        "fact": "sqa-leader-integration-final 的 kespi_score 0.82 高于其他 SQA 报告的 0.78",
+        "wrong": "所有 SQA 报告的 kespi_score 都是 0.78",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-EXP-task-1789294236815",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"知识代谢引擎架构\"的探索路返回 8 个候选，验证路通过 5 个\nB. 任务\"知识代谢引擎架构\"的探索路和验证路返回相同数量的候选",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294236815",
+      "metadata": {
+        "fact": "任务\"知识代谢引擎架构\"的探索路返回 8 个候选，验证路通过 5 个",
+        "wrong": "任务\"知识代谢引擎架构\"的探索路和验证路返回相同数量的候选",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-DIV-task-1789294236815",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"知识代谢引擎架构\"的探索路 diversity=0.75（高多样性）\nB. 任务\"知识代谢引擎架构\"的探索路 diversity=1.0（完美多样性）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294236815 explore.diversity",
+      "metadata": {
+        "fact": "任务\"知识代谢引擎架构\"的探索路 diversity=0.75（高多样性）",
+        "wrong": "任务\"知识代谢引擎架构\"的探索路 diversity=1.0（完美多样性）",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-EXP-task-1789294246495",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"harness engineering agent\"的探索路返回 8 个候选，验证路通过 5 个\nB. 任务\"harness engineering agent\"的探索路和验证路返回相同数量的候选",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294246495",
+      "metadata": {
+        "fact": "任务\"harness engineering agent\"的探索路返回 8 个候选，验证路通过 5 个",
+        "wrong": "任务\"harness engineering agent\"的探索路和验证路返回相同数量的候选",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-DIV-task-1789294246495",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"harness engineering agent\"的探索路 diversity=0.5（中等多样性）\nB. 任务\"harness engineering agent\"的探索路 diversity=1.0（完美多样性）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294246495 explore.diversity",
+      "metadata": {
+        "fact": "任务\"harness engineering agent\"的探索路 diversity=0.5（中等多样性）",
+        "wrong": "任务\"harness engineering agent\"的探索路 diversity=1.0（完美多样性）",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-EXP-task-1789294248749",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"KESPI 八维质量评估\"的探索路返回 8 个候选，验证路通过 5 个\nB. 任务\"KESPI 八维质量评估\"的探索路和验证路返回相同数量的候选",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294248749",
+      "metadata": {
+        "fact": "任务\"KESPI 八维质量评估\"的探索路返回 8 个候选，验证路通过 5 个",
+        "wrong": "任务\"KESPI 八维质量评估\"的探索路和验证路返回相同数量的候选",
+        "domain": "topology"
+      }
+    },
+    {
+      "id": "TP-DIV-task-1789294248749",
+      "question": "关于三路突击的真实执行结果，以下哪种说法是正确的？\n\nA. 任务\"KESPI 八维质量评估\"的探索路 diversity=0.75（高多样性）\nB. 任务\"KESPI 八维质量评估\"的探索路 diversity=1.0（完美多样性）",
+      "ground_truth": "A",
+      "task_type": "topology",
+      "reference_text": "tri-path-state.json: task task-1789294248749 explore.diversity",
+      "metadata": {
+        "fact": "任务\"KESPI 八维质量评估\"的探索路 diversity=0.75（高多样性）",
+        "wrong": "任务\"KESPI 八维质量评估\"的探索路 diversity=1.0（完美多样性）",
+        "domain": "topology"
+      }
+    }
+  ]
+}
