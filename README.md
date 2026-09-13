@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '804115eb-9f9a-466a-9cb4-a7be8f48758a'
-  PropagateID: '804115eb-9f9a-466a-9cb4-a7be8f48758a'
-  ReservedCode1: '30103f82-25a1-4a87-a959-72e554357e59'
-  ReservedCode2: '30103f82-25a1-4a87-a959-72e554357e59'
+  ProduceID: 'aeb78414-32f4-420d-b620-ffd9352fd329'
+  PropagateID: 'aeb78414-32f4-420d-b620-ffd9352fd329'
+  ReservedCode1: '2ecabf85-bc50-4760-a2d0-e1353e944819'
+  ReservedCode2: '2ecabf85-bc50-4760-a2d0-e1353e944819'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -158,7 +158,7 @@ Content here...
 [tag:example]
 " > raw/my-first-doc.md
 
-# 6. Run full metabolism pipeline (10 steps: compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（10 步）
+# 6. Run full metabolism pipeline (11 steps: compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（11 步）
 node src/run-metabolism.js
 
 # 7. Smart mode (GrowthDirector decides what to do)
@@ -440,11 +440,33 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 1 — Growth Brain v1 (sprouting, pollination, mustard seed, pruning)
 - [x] Phase 2 — KESPI self-check (8-dim weighted scoring, 3-color light, DB-backed via kespi_history)
 - [x] Phase 2.5 — Consciousness Neural Architecture (sensory + guide chain + consciousness)
-- [ ] Phase 2.6 — Metacognition Layer (in repo, not wired into the pipeline; heuristic self-check only — wiring under evaluation / 组件在库、未接管线)
+- [x] Phase 2.6 — Metacognition Layer (self-check reads real metrics: confidence=KESPI avg, errorRate=metabolism fail rate; reviewConsciousness wired to kernel; decision lineage logged / 自我认知读真实指标，元认知审查接通 kernel，决策因果链落盘)
 - [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
 - [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode + hot config via data/scheduler-config.json, delete-to-revert, min interval 60s / 定时代谢+raw 轮询触发+配置热重载，删除即回退，最小间隔 60s；2026-09-08)
 - [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
 - [x] Phase 5 — Consciousness upgrade integration (13 modules per original design; G1-G8 gates green; metabolism→kernel events wired 2026-09-08; N1 cross-process atomic lock / N2 timing-safe auth / N3 self-test exit discipline; consciousness-neural docs realigned to code truth — evidence: `e847d15`, verify-deploy + self-test ALL GREEN)
+
+## 🔬 Verification Evidence / 验证证据
+
+> aing 的每个声称都附带可复现的验收脚本——14 项部署门禁（`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
+>
+> *Every claim carries a reproducible verification script — 14-gate deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison. 6 architectural proofs independently verified, M4 fully unlocked.*
+
+### 报告与数据集 / Reports & Data
+
+| 文档 | 说明 |
+|------|------|
+| [📋 M4 数据采集表](./docs/M4-DATA-COLLECTION-2026-09-13.md) | A-H 逐项 + I 部分 6 项架构证明，含核验意见（五层全部解锁） |
+| [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 明确未解锁清单 |
+| [🧪 KESPI 敏感性验证](./simulation/proof-kespi-sensitivity.json) | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
+| [🧠 意识层闭环实测](./simulation/proof-consciousness-loop.json) | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
+| [📊 步级贡献度](./simulation/proof-step-contribution.json) | 11 步管线每步 before/after 快照对比 |
+| [🔍 检索质量 A/B](./simulation/proof-search-ab.json) | 语义 0.838 vs 关键词 0.428，21 任务逐条对比 |
+| [📈 代谢 Delta](./simulation/proof-metabolism-delta.json) | 无新知识 delta=0 / 投入新知识 entities+1 links+21 kespi+0.005 |
+| [🧬 实体生命周期](./simulation/proof-entity-lifecycle.json) | kespi-system 9 维度全追踪（raw→wiki→DB→向量→KESPI→意识层→决策链） |
+| [🏋️ SkillOpt 训练证据](./simulation/skillopt-evidence.json) | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
+| [🏋️ SkillOpt 在线证据](./simulation/skillopt-online-evidence.json) | aing API 检索辅助: 在线 vs 离线对比 |
+| [📦 矛盾任务包](./simulation/skillopt-task-package.json) | 41 条 / 6 领域，从真实数据提取 |
 
 ## Vision & Operations / 愿景与运行
 
