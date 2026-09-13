@@ -53,6 +53,9 @@ const sessions = new SessionStore();
 let store = null;
 let vectorSearch = null;
 
+// M4 自我报告：知识库根路径（模块级常量，briefing handler 需要读 self-state/训练证据/决策链）
+const KB_ROOT = path.resolve(__dirname, '..');
+
 // 意识神经层（agent ↔ aing 的真正界面）
 let consciousnessKernel = null;
 let consciousnessController = null;
@@ -303,6 +306,72 @@ async function handle(req, res) {
       recommendations: briefing.briefing.recommendations || [],
       priority: briefing.priority,
       distillDebt,
+      // ── M4 自我报告：六属性自评 ──
+      selfAssessment: (() => {
+        try {
+          // 读取最新自我认知状态
+          const selfStateFile = path.join(KB_ROOT, 'data', 'metacognition', 'self-state.json');
+          let selfState = null;
+          if (fs.existsSync(selfStateFile)) {
+            selfState = JSON.parse(fs.readFileSync(selfStateFile, 'utf8'));
+          }
+          const awareness = selfState?.selfAwareness || {};
+          const stats = selfState?.stats || {};
+          const measured = awareness.measured === true;
+
+          // 读取训练提升证据
+          let improvement = null;
+          try {
+            const lastRun = path.join(KB_ROOT, 'simulation', 'last-run.json');
+            if (fs.existsSync(lastRun)) {
+              const run = JSON.parse(fs.readFileSync(lastRun, 'utf8'));
+              improvement = run.improvementEvidence || null;
+            }
+          } catch (e) {}
+
+          // 读取决策因果链条数
+          let decisionCount = 0;
+          try {
+            const dlFile = path.join(KB_ROOT, 'logs', 'metabolism-decision-lineage.jsonl');
+            if (fs.existsSync(dlFile)) {
+              decisionCount = fs.readFileSync(dlFile, 'utf8').trim().split('\n').length;
+            }
+          } catch (e) {}
+
+          // 六属性打分（理论家 Gate2 标准对照）
+          return {
+            memory: { score: '✓', evidence: `${store.getStats().entities} 实体 / ${store.getStats().links} 链接 / 三层记忆架构` },
+            attention: { score: '✓', evidence: `五因子注意力公式 / kernel state=${kernelStatus.state} / ${kernelStatus.activeEventCount} 活跃事件` },
+            selfModeling: {
+              score: measured ? '✓' : '△',
+              evidence: measured
+                ? `真实测量: confidence=${(awareness.confidence*100).toFixed(0)}% errorRate=${(awareness.errorRate*100).toFixed(1)}% coverage=${(awareness.knowledgeCoverage*100).toFixed(0)}%`
+                : '硬编码默认值（未测量）',
+              metrics: awareness,
+            },
+            selfExplanation: {
+              score: decisionCount > 0 ? '✓' : '△',
+              evidence: decisionCount > 0
+                ? `${decisionCount} 条决策因果链记录 / metabolism-decision-lineage.jsonl`
+                : '决策因果链未建立',
+              decisionCount,
+            },
+            selfImprovement: {
+              score: improvement ? '✓' : '△',
+              evidence: improvement
+                ? `训练提升: ${improvement.improvementPercent}% / Gate ${improvement.gatePassed ? 'PASS' : 'FAIL'} / ${improvement.falseBeliefsRemoved} 个错误信念修正`
+                : '训练循环未产出证据',
+              improvement,
+            },
+            selfReport: {
+              score: '✓',
+              evidence: 'briefing 结构化输出 / KESPI 八维可查 / consciousness alerts 可消费',
+            },
+          };
+        } catch (e) {
+          return { error: e.message };
+        }
+      })(),
       // ── 对用户负责的部分 ──
       userFacing
     });
@@ -493,7 +562,6 @@ async function main() {
   }
 
   // 意识神经层初始化（agent ↔ aing 的真正界面）
-  const KB_ROOT = path.resolve(__dirname, '..');
   consciousnessKernel = new ConsciousnessKernel({ baseDir: KB_ROOT, mode: 'coordination-only' });
   aingAdapter = new HermesAingAdapter({
     kbRoot: KB_ROOT,
