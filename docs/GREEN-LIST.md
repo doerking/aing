@@ -1,3 +1,14 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'e0868bc4-799f-4361-bc07-c4c86e242ba0'
+  PropagateID: 'e0868bc4-799f-4361-bc07-c4c86e242ba0'
+  ReservedCode1: 'f8bb2609-3e7a-4c4a-9e50-d093b926c878'
+  ReservedCode2: 'f8bb2609-3e7a-4c4a-9e50-d093b926c878'
+---
+
 # aing 绿灯清单 / Green List（自动生成，勿手改）
 
 > 真源：`docs/greenlist.json`（结构化）。本文件是生成视图；改动先改 JSON，再运行 `node tools/gen-greenlist.js`。
@@ -5,8 +16,8 @@
 
 ## 绿灯能力（12 项，截至 2026-09-07）
 
-- ✅ **完整代谢（11 步，含 sync-opt 副本对齐）+ --resume/--step/--smart**
-  - 证据：影子回归 10 步全过 3.28s（2026-09-03）
+- ✅ **完整代谢（11 步，含 distill 蒸馏器）+ --resume/--step/--smart**
+  - 证据：影子回归 11 步全过 7.6s（2026-09-13 M4 验证）
 - ✅ **查询 CLI 语义+关键词混合检索 + KESPI 附分**
   - 证据：命中 3 条 KESPI 0.93 显示正确（2026-09-03）
 - ✅ **384 维本地语义检索，64 维哈希自动回退**
@@ -30,9 +41,8 @@
 - ✅ **意识神经系统完整接入（13 模块：事件协议/神经核/感知/导链/意识层/元认知/成长闭环/hermes 适配器，控制面板接口标准四件套，预留接口池 IF-002~006+开放池）**
   - 证据：2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；锚点提交 7b54471（git merge-base --is-ancestor 实测在 master 谱系）（2026-09-08）
 
-## 明确未解锁（4 项，禁止承诺）
+## 明确未解锁（3 项，禁止承诺）
 
-- ⬜ 元认知接管线（Phase 2.6） — 组件在库未接代管
 - ⬜ 热重排（require 缓存清除） — 未实现
 - ⬜ 企业级多租户（独立库/配额/权限） — 现有隔离仅为会话级
 - ⬜ B5 自修改回路 / 元认知配置写回 — 治理红线，明确不做

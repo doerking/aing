@@ -30,3 +30,9 @@ models/
 
 # Agent 中间产物（不入库）
 .temp/
+
+# M4 验证产物（可复现，不入库）
+simulation/proof-*.json
+simulation/skillopt-evidence.json
+simulation/skillopt-online-evidence.json
+simulation/last-run.json

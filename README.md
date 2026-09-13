@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'fe4fa5f6-83e5-4387-b458-5a7f5f28778c'
-  PropagateID: 'fe4fa5f6-83e5-4387-b458-5a7f5f28778c'
-  ReservedCode1: 'e8626dee-c3a8-4175-87db-6224e52c84d7'
-  ReservedCode2: 'e8626dee-c3a8-4175-87db-6224e52c84d7'
+  ProduceID: '9cdc7258-f4fd-4c61-abe4-f4789cf0cf89'
+  PropagateID: '9cdc7258-f4fd-4c61-abe4-f4789cf0cf89'
+  ReservedCode1: 'f74d0d9d-59a7-43a4-9754-3c3ad441c810'
+  ReservedCode2: 'f74d0d9d-59a7-43a4-9754-3c3ad441c810'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -37,7 +37,7 @@ AIGC:
 |---|---|---|
 | Shell-agnostic | Front-end / storage / runtime | ✅ |
 | Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented — coordination-only kernel; metabolism→kernel events wired 2026-09-08 (`e847d15`)
-| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only (adjustments/candidates, never auto-executes); pipeline wiring under evaluation (Phase 2.6)
+| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only; selfCheck reads real KESPI/errorRate (M4); reviewConsciousness wired to kernel; decision lineage logged (Phase 2.6 complete)
 | Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented — real scoring, no mock (docs realigned 2026-09-08)
 
 **Zero LLM calls in the core loop: plain MD + Node runs the full metabolism; semantic vectors are local & optional. LLMs are optional host shells (session memory, compile aid) — not engine parts. / 核心代谢环零 LLM 调用：MD + Node 跑完全程，语义向量本地可选；LLM 是可选宿主外壳（会话记忆/编译辅助），不是引擎零件。**
@@ -341,7 +341,7 @@ node src/setup-db.js --backup     # 手动备份
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
 | `init-knowledge-base.js` | 知识库初始化（首装一步） | 空 → 初始目录与库 |
-| `run-metabolism.js` | **全流程（10 步）**+ 智能模式；关键步骤（compile/import/vector/kespi）失败熔断并置退出码 1，`--force` 仅续行非关键步骤 / critical-step breaker with exit code 1; `--force` continues non-critical | raw/* → 完整代谢 |
+| `run-metabolism.js` | **全流程（11 步）**+ 智能模式；关键步骤（compile/import/vector/kespi）失败熔断并置退出码 1，`--force` 仅续行非关键步骤 / critical-step breaker with exit code 1; `--force` continues non-critical | raw/* → 完整代谢 |
 | `compile.js` | 秩序脑编译；实体 `kespi_status` 首置 `pending`，待 kespi-check 首评翻转 / writes `kespi_status: pending` until first KESPI run | raw/*.md → wiki/entities/*.md |
 | `import-from-wiki.js` | 导入数据库 | wiki/ → SQLite |
 | `auto-link.js` | 自动发现链接 | 实体标签/关键词 → links 表 |
@@ -396,7 +396,7 @@ node src/setup-db.js --backup     # 手动备份
 | `consciousness-kernel.js` | 意识核（coordination-only 硬约束） | 事件 → 聚合/抑制/持久化（data/consciousness/state.json） |
 | `consciousness-controller.js` | Agent 侧模式控制器 | 三模式 + 决策血缘（不执行、不自动批准） |
 | `hermes-aing-adapter.js` | 宿主接入适配器（IF-001 参考实现） | ingest / search / briefing / deliberate |
-| `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十步成功/失败 → 9 通道事件（source=metabolism） |
+| `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十一步成功/失败 → 9 通道事件（source=metabolism） |
 
 ### Resident Services & Retrieval / 常驻服务与检索
 
