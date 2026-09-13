@@ -96,12 +96,16 @@ class SessionStore {
 
   addMessage(sessionId, message) {
     const session = this.getSession(sessionId);
+    // role 扩展：user（用户提问）/ assistant（agent回复）/ analysis（agent分析）/ research（收集资料）
+    // 旧调用方传 role:user/assistant 仍兼容；新增 role:analysis/research 不影响
     session.messages.push({
       id: Date.now(),
       timestamp: new Date().toISOString(),
-      role: message.role,
+      role: message.role || 'user',
       content: message.content,
-      length: message.content.length
+      length: message.content.length,
+      source: message.source || null,      // 资料来源（URL/文件路径，research 专用）
+      metadata: message.metadata || null    // 附加元数据（分析结果的结构化数据等）
     });
     session.updatedAt = Date.now();
     if (message.distillation) session.distillation = message.distillation;
@@ -152,7 +156,13 @@ class SessionStore {
 
   ingestSession(sessionId) {
     const session = this.getSession(sessionId);
-    // 全量拼接本批消息（原实现只存最新一条，同批其余消息丢弃）
+    // 按角色分区：用户提问 / agent回复 / agent分析 / 收集资料
+    const byRole = { user: [], assistant: [], analysis: [], research: [] };
+    for (const m of session.messages) {
+      const role = byRole[m.role] ? m.role : 'user';
+      byRole[role].push(m);
+    }
+    // 全量内容（用于指纹去重，与旧逻辑兼容）
     const bodyText = session.messages.map(m => m.content).join('\n\n');
     
     if (bodyText.length < CONFIG.minMessageLength) {
@@ -213,15 +223,52 @@ class SessionStore {
       messageCount: session.messages.length
     };
     
-    // 生成 Markdown 内容
+    // 生成 Markdown 内容 — 按角色分区（不混合，保留来源可追溯）
+    const sections = [];
+
     const summarySection = distillation.summary
       ? `## 蒸馏摘要\n${distillation.summary}\n\n`
       : `## 蒸馏摘要\n待生成\n\n`;
 
+    if (byRole.user.length) {
+      sections.push('## 用户提问');
+      for (const m of byRole.user) {
+        sections.push(`> [${m.timestamp}] ${m.role === 'user' ? '用户' : m.role}`);
+        sections.push(m.content);
+        sections.push('');
+      }
+    }
+    if (byRole.assistant.length) {
+      sections.push('## Agent 回复');
+      for (const m of byRole.assistant) {
+        sections.push(`> [${m.timestamp}]`);
+        sections.push(m.content);
+        sections.push('');
+      }
+    }
+    if (byRole.analysis.length) {
+      sections.push('## Agent 分析');
+      for (const m of byRole.analysis) {
+        sections.push(`> [${m.timestamp}]`);
+        sections.push(m.content);
+        if (m.metadata) { sections.push('```json'); sections.push(typeof m.metadata === 'string' ? m.metadata : JSON.stringify(m.metadata, null, 2)); sections.push('```'); }
+        sections.push('');
+      }
+    }
+    if (byRole.research.length) {
+      sections.push('## 收集资料');
+      for (const m of byRole.research) {
+        sections.push(`> [${m.timestamp}]${m.source ? ' 来源: ' + m.source : ''}`);
+        sections.push(m.content);
+        sections.push('');
+      }
+    }
+
+    const bodySections = sections.join('\n');
+
     const content = `# ${frontmatter.name}
 
-${summarySection}## 原始消息
-${bodyText}
+${summarySection}${bodySections}
 
 ## 提取实体
 
