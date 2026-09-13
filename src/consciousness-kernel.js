@@ -9,8 +9,11 @@
 const fs = require('fs');
 const path = require('path');
 const { ConsciousnessEvent, CHANNELS, clamp } = require('./consciousness-event');
-const { GrowthDocs } = require('./growth-docs');
-const MetacognitionLayer = require('./metacognition-layer');
+
+// Harness 自维继原则：依赖链优雅降级——核心管道不因可选模块缺失而崩溃
+let GrowthDocs = null, MetacognitionLayer = null;
+try { GrowthDocs = require('./growth-docs').GrowthDocs; } catch (e) { /* growth-docs 不可用时降级 */ }
+try { MetacognitionLayer = require('./metacognition-layer'); } catch (e) { /* metacognition 不可用时降级 */ }
 
 const MODES = Object.freeze({
   COORDINATION_ONLY: 'coordination-only',
@@ -47,13 +50,13 @@ class ConsciousnessKernel {
       ...(options.weights || {}),
     };
     this.growthStateFile = options.growthStateFile || path.join(this.baseDir, 'data', 'growth-loop.json');
-    this.growthDocs = options.growthDocs || null;
-    this.metacognition = options.metacognition || new MetacognitionLayer({
+    this.growthDocs = options.growthDocs || (GrowthDocs ? new GrowthDocs({ rawDir: path.join(this.baseDir, 'raw', 'growth'), stateFile: this.growthStateFile }) : null);
+    this.metacognition = options.metacognition || (MetacognitionLayer ? new MetacognitionLayer({
       stateDir: path.join(this.baseDir, 'data', 'metacognition'),
       selfStateFile: path.join(this.baseDir, 'data', 'metacognition', 'self-state.json'),
       evaluationLog: path.join(this.baseDir, 'logs', 'metacognition', 'evaluation.log'),
       adjustmentsLog: path.join(this.baseDir, 'logs', 'metacognition', 'adjustments.log'),
-    });
+    }) : null);
     this.mode = options.mode || MODES.COORDINATION_ONLY;
     if (this.mode !== MODES.COORDINATION_ONLY) {
       throw new Error(`不支持的意识神经运行模式: ${this.mode}`);
