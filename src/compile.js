@@ -143,18 +143,34 @@ function formatKespiPending() {
  * 生成实体文件
  */
 function createEntityFile(entityId, metadata, content, links) {
-  // 解析正文中的 [tag:xxx] 标记 → 合并进 tags 并从正文剥离
-  // （蓝图尾部 tag 约定此前从未被编译器解析，tags 列恒空）
+  // 解析正文中的 [tag:xxx] 或 [tag:xxx:N] 标记 → 合并进 tags 并从正文剥离
+  // N 为 1-9 的九段数值，表示该标签对实体的关联强度（1 最弱 → 9 最强）
+  // 不带 :N 的 [tag:xxx] 默认中位值 5（向后兼容）
   const bodyTags = [];
-  const tagRegex = /\[tag:([^\]]+)\]/g;
+  const tagRegex = /\[tag:([^\]]+?)(?::([1-9]))?\]/g;
   let tm;
   while ((tm = tagRegex.exec(content)) !== null) {
-    bodyTags.push(tm[1].trim());
+    const tagName = tm[1].trim();
+    const tagVal = tm[2] ? parseInt(tm[2], 10) : 5;
+    bodyTags.push(`${tagName}:${tagVal}`);
   }
   if (bodyTags.length > 0) {
     content = content.replace(/\s*\[tag:[^\]]+\]/g, '');
+  }
+  // 始终 normalize tags：frontmatter + body 合并，纯字符串标签默认 5
+  {
     const baseTags = Array.isArray(metadata.tags) ? metadata.tags : [];
-    metadata.tags = [...new Set([...baseTags, ...bodyTags])];
+    const tagMap = new Map();
+    for (const t of [...baseTags, ...bodyTags]) {
+      const m = String(t).match(/^(.+):([1-9])$/);
+      if (m) {
+        const name = m[1], val = parseInt(m[2], 10);
+        tagMap.set(name, Math.max(tagMap.get(name) || 0, val));
+      } else {
+        tagMap.set(String(t), Math.max(tagMap.get(String(t)) || 0, 5));
+      }
+    }
+    metadata.tags = [...tagMap.entries()].map(([name, val]) => `${name}:${val}`);
   }
 
   const entityPath = path.join(CONFIG.entitiesDir, `${entityId}.md`);

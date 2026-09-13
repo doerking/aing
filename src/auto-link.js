@@ -74,15 +74,31 @@ async function main() {
       let confidence = 0;
       let reason = '';
       
-      // 1. 共享标签
+      // 1. 共享标签（9 段数值加权）
       let tagsA = [], tagsB = [];
       try { tagsA = JSON.parse(a.tags || '[]'); } catch (e) {}
       try { tagsB = JSON.parse(b.tags || '[]'); } catch (e) {}
       
-      const sharedTags = tagsA.filter(t => tagsB.includes(t));
+      // 解析标签名和数值：["metabolism:8"] → Map { metabolism → 8 }
+      // 无 :N 的标签默认 5
+      const parseTagVals = (arr) => {
+        const m = new Map();
+        for (const t of arr) {
+          const mm = String(t).match(/^(.+):([1-9])$/);
+          if (mm) m.set(mm[1], parseInt(mm[2], 10));
+          else m.set(String(t), 5);
+        }
+        return m;
+      };
+      const valsA = parseTagVals(tagsA);
+      const valsB = parseTagVals(tagsB);
+      
+      const sharedTags = [...valsA.keys()].filter(k => valsB.has(k));
       if (sharedTags.length > 0) {
-        confidence = Math.max(confidence, 0.6 + sharedTags.length * 0.1);
-        reason = `共享标签: ${sharedTags.join(', ')}`;
+        // 共享标签的数值之和归一化：min(1.0, 0.3 + sum(min(a,b)/9 * 0.15))
+        const tagStrength = sharedTags.reduce((s, t) => s + Math.min(valsA.get(t), valsB.get(t)), 0);
+        confidence = Math.max(confidence, Math.min(1.0, 0.3 + tagStrength / 9 * 0.15));
+        reason = `共享标签: ${sharedTags.map(t => `${t}:${Math.min(valsA.get(t), valsB.get(t))}`).join(', ')}`;
       }
       
       // 2. 关键词重叠
