@@ -113,10 +113,17 @@ class KespiChecker {
   _calcKA(entity) {
     let score = 0.0;
     
-    // 有标签 +0.3
+    // 有标签 +0.3（9 段数值细化：标签平均数值 / 9 * 0.3，纯字符串标签默认 5）
     try {
       const tags = JSON.parse(entity.tags || '[]');
-      if (tags.length > 0) score += 0.3;
+      if (tags.length > 0) {
+        const vals = tags.map(t => {
+          const m = String(t).match(/:([1-9])$/);
+          return m ? parseInt(m[1], 10) : 5;
+        });
+        const avgVal = vals.reduce((s, v) => s + v, 0) / vals.length;
+        score += avgVal / 9 * 0.3;
+      }
     } catch (e) {}
     
     // 有来源 +0.3
