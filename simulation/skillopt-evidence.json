@@ -1,0 +1,64 @@
+{
+  "source": "SkillOpt aing adapter (Python, offline rollout)",
+  "taskPackage": "simulation/skillopt-task-package.json",
+  "taskCount": 41,
+  "baseline": {
+    "skill": "baseline-with-2-errors",
+    "hardCorrect": 7,
+    "hardRate": 0.171,
+    "softScore": 0.585
+  },
+  "corrected": {
+    "skill": "corrected",
+    "hardCorrect": 20,
+    "hardRate": 0.488,
+    "softScore": 0.744
+  },
+  "improvement": {
+    "deltaSoft": 0.159,
+    "improvementPercent": 27.1,
+    "hardImprovement": 13,
+    "gateMargin": 0.02,
+    "gatePassed": true
+  },
+  "byDomain": {
+    "threshold": {
+      "baseline": "1/4",
+      "corrected": "2/4",
+      "improvement": 1
+    },
+    "pipeline": {
+      "baseline": "2/7",
+      "corrected": "3/7",
+      "improvement": 1
+    },
+    "contract": {
+      "baseline": "2/6",
+      "corrected": "4/6",
+      "improvement": 2
+    },
+    "consciousness": {
+      "baseline": "1/7",
+      "corrected": "7/7",
+      "improvement": 6
+    },
+    "training": {
+      "baseline": "1/4",
+      "corrected": "2/4",
+      "improvement": 1
+    },
+    "topology": {
+      "baseline": "0/13",
+      "corrected": "2/13",
+      "improvement": 2
+    }
+  },
+  "auditableTrail": [
+    "SkillOpt aing adapter (skillopt.envs.aing.rollout.run_rollout)",
+    "Task package: 41 tasks, 6 domains, offline mode",
+    "Baseline: 7/41 correct (soft=0.585)",
+    "Corrected: 20/41 correct (soft=0.744)",
+    "Gate(margin=0.02): PASS — delta=0.159"
+  ],
+  "timestamp": "2026-09-13T18:57:08.852741"
+}

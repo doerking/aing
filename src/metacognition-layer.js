@@ -473,8 +473,8 @@ class MetacognitionLayer {
       });
     }
 
-    // 4. 更新自身状态：意识反应数量纳入统计
-    this.selfState.stats.totalTasks++;
+    // 4. 更新时间戳（不递增 totalTasks——M4 自我建模后 stats 来自真实代谢日志，
+    //    此处只更新 lastUpdate，避免覆盖异步 selfCheck 写入的真实统计）
     this.selfState.stats.lastUpdate = new Date().toISOString();
     this.saveSelfState();
 
@@ -502,11 +502,7 @@ class MetacognitionLayer {
     // 第三层：元认知
     const adjustments = this.adjust(evaluation);
     
-    // 更新统计
-    this.selfState.stats.totalTasks++;
-    if (evaluation.overall >= 0.7) {
-      this.selfState.stats.successTasks++;
-    }
+    // 更新时间戳（M4: stats 来自真实代谢日志，此处不递增 totalTasks/successTasks）
     this.selfState.stats.lastUpdate = new Date().toISOString();
     this.saveSelfState();
     
