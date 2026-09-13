@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '9cdc7258-f4fd-4c61-abe4-f4789cf0cf89'
-  PropagateID: '9cdc7258-f4fd-4c61-abe4-f4789cf0cf89'
-  ReservedCode1: 'f74d0d9d-59a7-43a4-9754-3c3ad441c810'
-  ReservedCode2: 'f74d0d9d-59a7-43a4-9754-3c3ad441c810'
+  ProduceID: '90a07653-09a4-4cc6-97a0-ee18d1408fff'
+  PropagateID: '90a07653-09a4-4cc6-97a0-ee18d1408fff'
+  ReservedCode1: 'fee8311b-1f9f-419c-adf8-87ca612a90d6'
+  ReservedCode2: 'fee8311b-1f9f-419c-adf8-87ca612a90d6'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -159,7 +159,7 @@ echo "# My First Knowledge
 
 Content here...
 
-[tag:example]
+[tag:example:5]
 " > raw/my-first-doc.md
 
 # 6. Run full metabolism pipeline (11 steps: compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（11 步）

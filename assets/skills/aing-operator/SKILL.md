@@ -6,6 +6,14 @@ description: |
   Do NOT use for 与 aing 无关的普通 Node.js 项目开发（那是 senior-developer 的事）。
 version: "0.2"
 tags: ["aing", "技能组", "院子地图", "治理", "训练", "评审", "运维", "修复"]
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '00a37886-490b-42c6-b227-7448b4cf09c1'
+  PropagateID: '00a37886-490b-42c6-b227-7448b4cf09c1'
+  ReservedCode1: '67381800-2283-42ef-9874-48dfc294419f'
+  ReservedCode2: '67381800-2283-42ef-9874-48dfc294419f'
 ---
 
 # aing Operator — aing 知识生命体操作技能组
@@ -49,7 +57,7 @@ tags: ["aing", "技能组", "院子地图", "治理", "训练", "评审", "运�
 | 训练 / 技能文档优化 / SkillOpt | 训练组 [tag:训练] | SkillOpt 闭环 + 无训练师降级路径 | [training-group.md](references/training-group.md) |
 | 架构设计 / 体检 / 对抗评审 | 评审组 [tag:评审] | 四角色进化团队派发与门禁 | [evolution-team.md](references/evolution-team.md) |
 
-**标签加载（Tolaria 格式，随取随用）**：本技能全部文件带 frontmatter `tags`，标签是加载单位。标签约定见 `AGENTS.md` 纪律第 7 条。
+**标签加载（Tolaria 格式，随取随用）**：本技能全部文件带 frontmatter `tags`，标签是加载单位。行内标签支持 9 段数值 `[tag:xxx:N]`（N=1-9 关联强度，不带 `:N` 默认 5）。标签约定见 `AGENTS.md` 纪律第 7 条。
 
 路由原则：拿不准时先读 governance.md——先知道什么不能做，再决定怎么做；这份算 L2 预算内的那份。多组任务（如"修 bug 并汇报"）按 修复→治理 顺序串行加载，仍不超 2 份。
 
