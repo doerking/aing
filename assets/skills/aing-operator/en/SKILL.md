@@ -6,6 +6,14 @@ description: |
   Do NOT use for ordinary Node.js projects unrelated to aing (that's senior-developer's job).
 version: "0.2"
 tags: ["aing", "技能组", "院子地图", "治理", "训练", "评审", "运维", "修复"]
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'ad8606e9-3262-4367-96b6-5abe70be44f3'
+  PropagateID: 'ad8606e9-3262-4367-96b6-5abe70be44f3'
+  ReservedCode1: '34a50584-1cbb-430e-b1eb-c2c4e1fb619d'
+  ReservedCode2: '34a50584-1cbb-430e-b1eb-c2c4e1fb619d'
 ---
 
 # aing Operator — Skill Group for the aing Knowledge Organism
@@ -49,7 +57,7 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 | Training / skill-doc optimization / SkillOpt | Training [tag:训练] | SkillOpt loop + degraded path without trainer | [training-group.md](../references/training-group.md) |
 | Architecture design / health check / adversarial review | Review [tag:评审] | 4-role evolution team dispatch & gates | [evolution-team.md](../references/evolution-team.md) |
 
-**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Convention: `AGENTS.md` discipline rule 7.
+**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Inline tags support 9-segment numeric values `[tag:xxx:N]` (N=1-9 relevance strength, default 5 without `:N`). Convention: `AGENTS.md` discipline rule 7.
 
 Routing principle: when unsure, read governance.md first — know what you must not do before deciding how; it counts as your one L2 pull. Multi-group tasks (e.g. "fix bug and report") load serially Repair→Governance, still ≤2.
 
