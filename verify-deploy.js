@@ -64,14 +64,19 @@ async function main() {
     return configPath;
   });
 
-  // ── C2. 三件依赖 ─────────────────────────────────────────────
-  await check('C2 依赖三件套 (sql.js / transformers / sharp)', () => {
-    const missing = ['sql.js', '@xenova/transformers', 'sharp']
+  // ── C2. 核心依赖（Harness 自维继原则：核心管道零外部依赖）──
+  await check('C2 核心依赖 (sql.js / transformers)', () => {
+    const missing = ['sql.js', '@xenova/transformers']
       .filter(m => { try { require.resolve(m); return false; } catch (e) { return true; } });
     if (missing.length) {
       throw new Error(`缺失: ${missing.join(', ')} → 在包根目录运行 npm install`);
     }
     return '全部可解析';
+  });
+
+  await check('C2b 可选依赖 (sharp)', () => {
+    try { require.resolve('sharp'); return 'sharp 已安装（可选，非核心管道所需）'; }
+    catch (e) { return 'sharp 未安装（可选依赖，不影响核心管道；仅图片处理场景缺失）'; }
   });
 
   // ── C3. 知识源 ───────────────────────────────────────────────
