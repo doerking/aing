@@ -23,8 +23,78 @@ const CONFIG = {
   stateDir: path.join(__dirname, '..', 'data', 'metacognition'),
   selfStateFile: path.join(__dirname, '..', 'data', 'metacognition', 'self-state.json'),
   evaluationLog: path.join(__dirname, '..', 'logs', 'metacognition', 'evaluation.log'),
-  adjustmentsLog: path.join(__dirname, '..', 'logs', 'metacognition', 'adjustments.log')
+  adjustmentsLog: path.join(__dirname, '..', 'logs', 'metacognition', 'adjustments.log'),
+  dbPath: path.join(__dirname, '..', 'knowledge.db'),
+  decisionLineageFile: path.join(__dirname, '..', 'logs', 'metabolism-decision-lineage.jsonl'),
 };
+
+// M4 自我建模：从真实系统指标计算自我认知参数（替代硬编码默认值）
+// sql.js init 是异步的，此处用异步测量
+async function measureSelfAwarenessAsync() {
+  try {
+    const KnowledgeStore = require('./knowledge-store');
+    const store = new KnowledgeStore(CONFIG.dbPath);
+    await store.init();
+
+    // confidence = 全库平均 KESPI（真实质量感知）
+    let avgKespi = 0.7;
+    try {
+      const row = store.get('SELECT AVG(kespi_score) AS avg FROM entity_metadata');
+      if (row && row.avg != null) avgKespi = Number(row.avg);
+    } catch (e) { /* 保持默认 */ }
+
+    // knowledgeCoverage = 活跃实体占比（真实覆盖感知）
+    let knowledgeCoverage = 0.6;
+    try {
+      const total = store.get('SELECT COUNT(*) AS n FROM entities');
+      const active = store.get("SELECT COUNT(*) AS n FROM entities WHERE status = 'active'");
+      if (total && total.n > 0 && active) {
+        knowledgeCoverage = Math.min(1, active.n / total.n);
+      }
+    } catch (e) { /* 保持默认 */ }
+
+    // errorRate = 代谢失败率（从 metabolism_log 读真实失败率）
+    let errorRate = 0.05;
+    try {
+      const total = store.get('SELECT COUNT(*) AS n FROM metabolism_log');
+      const failed = store.get("SELECT COUNT(*) AS n FROM metabolism_log WHERE status = 'failed'");
+      if (total && total.n > 0 && failed) {
+        errorRate = Math.min(1, failed.n / total.n);
+      }
+    } catch (e) { /* metabolism_log 表不存在时用默认值 */ }
+
+    // responseTime = 最近 7 天代谢平均耗时（真实响应感知）
+    let responseTime = 1.2;
+    try {
+      const row = store.get("SELECT AVG(duration_ms) AS avg FROM metabolism_log WHERE created_at >= datetime('now', '-7 days')");
+      if (row && row.avg != null && row.avg > 0) {
+        responseTime = Number(row.avg) / 1000; // ms → s
+      }
+    } catch (e) { /* 表不存在时用默认值 */ }
+
+    // 真实任务统计：代谢日志步数
+    try {
+      const totalSteps = store.get('SELECT COUNT(*) AS n FROM metabolism_log');
+      if (totalSteps && totalSteps.n > 0) {
+        // 更新运行统计（真实值）
+        const successSteps = store.get("SELECT COUNT(*) AS n FROM metabolism_log WHERE status = 'success'");
+        return {
+          selfAwareness: { confidence: avgKespi, knowledgeCoverage, errorRate, responseTime },
+          stats: { totalTasks: totalSteps.n, successTasks: successSteps ? successSteps.n : 0 },
+        };
+      }
+    } catch (e) { /* 保持默认 */ }
+
+    try { store.close(); } catch (e) {}
+    return {
+      selfAwareness: { confidence: avgKespi, knowledgeCoverage, errorRate, responseTime },
+      stats: null,
+    };
+  } catch (e) {
+    // 知识库不可用时降级到默认值
+    return { selfAwareness: null, stats: null };
+  }
+}
 
 /**
  * 元认知三层模型
@@ -91,10 +161,30 @@ class MetacognitionLayer {
 
   /**
    * 第一层：自我认知
-   * 监控当前状态，生成自我评估报告
+   * M4 自我建模：从真实系统指标更新自我评估（替代硬编码默认值）
    */
-  selfCheck() {
-    console.log('\n🧠 第一层：自我认知\n');
+  async selfCheck() {
+    console.log('\n🧠 第一层：自我认知（M4: 真实指标驱动）\n');
+    
+    // M4: 从真实系统指标测量自我认知（异步读 DB）
+    const measured = await measureSelfAwarenessAsync();
+    if (measured.selfAwareness) {
+      this.selfState.selfAwareness = {
+        ...measured.selfAwareness,
+        measured: true, // 标记：这是真实测量值，不是硬编码
+        measuredAt: new Date().toISOString(),
+      };
+      if (measured.stats) {
+        this.selfState.stats = {
+          ...this.selfState.stats,
+          totalTasks: measured.stats.totalTasks,
+          successTasks: measured.stats.successTasks,
+        };
+      }
+      this.saveSelfState();
+    } else {
+      this.selfState.selfAwareness.measured = false;
+    }
     
     const awareness = this.selfState.selfAwareness;
     const params = this.selfState.parameters;
@@ -403,8 +493,8 @@ class MetacognitionLayer {
   async run(output) {
     console.log('🧠 元认知三层模型启动\n');
     
-    // 第一层：自我认知
-    const selfCheck = this.selfCheck();
+    // 第一层：自我认知（M4: 异步测量真实指标）
+    const selfCheck = await this.selfCheck();
     
     // 第二层：批判认知
     const evaluation = this.evaluate(output);
@@ -438,7 +528,7 @@ const layer = new MetacognitionLayer();
 
 switch (action) {
   case 'self-check':
-    layer.selfCheck();
+    layer.selfCheck().then(() => {}).catch(() => {});
     break;
   case 'evaluate':
     const output = args.slice(1).join(' ');

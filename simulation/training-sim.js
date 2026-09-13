@@ -206,7 +206,31 @@ function main() {
     taskCount: tasks.length, trainSize: trainTasks.length, evalSize: evalTasks.length,
     candidateCount: candidates.length,
     baseline: baseScore, best: { name: best.c.name, beliefs: [...best.c.beliefs], ...best.s },
-    gatePass, margin: MARGIN, rejected, monteCarlo: mcRows
+    gatePass, margin: MARGIN, rejected, monteCarlo: mcRows,
+    // M4 自我提升：可审计提升证据
+    improvementEvidence: {
+      baselineOverall: Number(baseScore.overall.toFixed(4)),
+      bestOverall: Number(best.s.overall.toFixed(4)),
+      improvementDelta: Number((best.s.overall - baseScore.overall).toFixed(4)),
+      improvementPercent: Number(((best.s.overall - baseScore.overall) / baseScore.overall * 100).toFixed(1)),
+      baselineAcc: baseScore.accEval,
+      bestAcc: best.s.accEval,
+      accImprovement: Number((best.s.accEval - baseScore.accEval).toFixed(4)),
+      baselineConsistency: baseScore.consistency,
+      bestConsistency: best.s.consistency,
+      consistencyImprovement: Number((best.s.consistency - baseScore.consistency).toFixed(4)),
+      falseBeliefsRemoved: BASELINE.beliefs.size - best.c.beliefs.size > 0
+        ? BASELINE.beliefs.size - best.c.beliefs.size
+        : [...BASELINE.beliefs].filter(b => b.startsWith('X') && !best.c.beliefs.has(b)).length,
+      gateMargin: MARGIN,
+      gatePassed: gatePass,
+      auditableTrail: [
+        `基线策略 ${BASELINE.name}: overall=${baseScore.overall.toFixed(3)} acc=${baseScore.accEval.toFixed(2)} consistency=${baseScore.consistency.toFixed(2)}`,
+        `候选扰动: ${candidates.length} 个（修正型/噪声型/混合型）`,
+        `最优候选 ${best.c.name}: overall=${best.s.overall.toFixed(3)} acc=${best.s.accEval.toFixed(2)} consistency=${best.s.consistency.toFixed(2)}`,
+        `Gate(margin=${MARGIN}): ${gatePass ? 'PASS' : 'FAIL'} — 改进 ${((best.s.overall - baseScore.overall) * 100).toFixed(1)}%`,
+      ],
+    },
   }, null, 2));
 
   console.log('\n产物: simulation/task-package.json, simulation/last-run.json');

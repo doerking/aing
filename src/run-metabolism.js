@@ -96,6 +96,30 @@ function emitMetabolismEvent({ step, ok, intensity, evidence, suggestedAction })
   }
 }
 
+// ── M4 自我解释：代谢决策因果链日志 ──
+// 每步记录：做了什么决策、基于什么证据、考虑了什么替代方案、结果如何
+const DECISION_LINEAGE_FILE = path.join(__dirname, '..', 'logs', 'metabolism-decision-lineage.jsonl');
+
+function logDecisionLineage(step, decision) {
+  try {
+    fs.mkdirSync(path.dirname(DECISION_LINEAGE_FILE), { recursive: true });
+    const entry = {
+      timestamp: new Date().toISOString(),
+      step,
+      action: decision.action || 'execute',
+      target: decision.target || `step:${step}`,
+      evidence: decision.evidence || {},
+      reason: decision.reason || '',
+      alternatives: decision.alternatives || [],
+      outcome: decision.outcome || 'unknown',
+      causalChain: decision.causalChain || [`${step} → ${decision.outcome || 'executed'}`],
+    };
+    fs.appendFileSync(DECISION_LINEAGE_FILE, JSON.stringify(entry) + '\n', 'utf8');
+  } catch (e) {
+    // 非关键：日志写入失败不影响代谢
+  }
+}
+
 // 配置
 const CONFIG = {
   scriptsDir: path.join(__dirname),
@@ -195,6 +219,17 @@ function executeStep(index, force = false, resume = false) {
       duration
     };
     
+    // M4 自我解释：记录决策因果链
+    logDecisionLineage(step.name, {
+      action: 'execute',
+      target: `step:${step.name}`,
+      evidence: { script: step.script, duration, output: output.slice(0, 200) },
+      reason: `代谢步骤 ${step.desc} 正常执行完成`,
+      alternatives: ['跳过（--step 模式）', '强制重试（--force）'],
+      outcome: 'success',
+      causalChain: [`run-metabolism.main → executeStep(${step.name}) → execSync(${step.script}) → success (${duration}ms)`],
+    });
+    
     console.log(`\n✅ 完成: ${step.desc} (${duration}ms) / Done:`);
     
     // 保存恢复点
@@ -214,6 +249,18 @@ function executeStep(index, force = false, resume = false) {
       error: error.message
     };
     state.errors.push({ step: step.name, error: error.message });
+    
+    // M4 自我解释：记录失败决策因果链
+    const isCritical = CRITICAL_STEPS.has(step.name);
+    logDecisionLineage(step.name, {
+      action: 'execute',
+      target: `step:${step.name}`,
+      evidence: { script: step.script, error: error.message, duration },
+      reason: `代谢步骤 ${step.desc} 执行失败: ${error.message}`,
+      alternatives: isCritical ? ['中断管线（关键步骤失败）'] : ['跳过继续（非关键步骤失败）', '强制重试（--force）'],
+      outcome: 'failed',
+      causalChain: [`run-metabolism.main → executeStep(${step.name}) → execSync(${step.script}) → FAIL: ${error.message} → ${isCritical ? '管线中断' : '继续后续步骤'}`],
+    });
     
     console.error(`\n❌ 失败: ${step.desc} (${duration}ms) / Failed:`);
     console.error(`   错误: ${error.message} / Error:`);
@@ -532,6 +579,26 @@ async function main() {
 
   // 打印统计
   printFinalStats();
+
+  // M4 自我解释：记录全局代谢决策因果链
+  logDecisionLineage('pipeline-summary', {
+    action: 'summarize',
+    target: 'metabolism-pipeline',
+    evidence: {
+      totalSteps: STEPS.length,
+      successSteps: Object.values(state.steps).filter(s => s.status === 'success').length,
+      failedSteps: state.errors.length,
+      totalDuration: Date.now() - state.startTime,
+    },
+    reason: `完整代谢${state.errors.length === 0 ? '全部成功' : '存在失败步骤'}`,
+    alternatives: ['--smart 智能模式', '--step 单步模式'],
+    outcome: state.errors.length === 0 ? 'success' : 'partial-failure',
+    causalChain: [
+      `run-metabolism.main → ${STEPS.length} steps → ${Object.values(state.steps).filter(s => s.status === 'success').length} success / ${state.errors.length} failed`,
+      `→ sync-opt（治理出口）→ panel（意识层尾步）`,
+      `→ 决策因果链已记录至 logs/metabolism-decision-lineage.jsonl`,
+    ],
+  });
 }
 
 main().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => {
