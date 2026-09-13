@@ -462,7 +462,7 @@ node src/setup-db.js --backup     # 手动备份
 
 ### 报告与数据集 / Reports & Data
 
-> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。
+> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`last-run.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。（注：`simulation/task-package.json`、`skillopt-task-package.json`、`training-sim.js` 为入库文件，可直接访问。）
 > *The proof files below are locally reproducible artifacts (gitignored, not committed) — regenerate them locally by running the corresponding verification scripts.*
 
 | 文档 | 说明 |
