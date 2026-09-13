@@ -17,7 +17,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { getConfigState } = require('./config-runtime');
 
 // 配置
 const CONFIG = {
@@ -31,13 +30,7 @@ const CONFIG = {
  * 元认知三层模型
  */
 class MetacognitionLayer {
-  constructor(options = {}) {
-    this.config = {
-      stateDir: options.stateDir || CONFIG.stateDir,
-      selfStateFile: options.selfStateFile || CONFIG.selfStateFile,
-      evaluationLog: options.evaluationLog || CONFIG.evaluationLog,
-      adjustmentsLog: options.adjustmentsLog || CONFIG.adjustmentsLog,
-    };
+  constructor() {
     this.selfState = this.loadSelfState();
     this.evaluationHistory = [];
     this.adjustmentHistory = [];
@@ -47,9 +40,9 @@ class MetacognitionLayer {
    * 加载自身状态
    */
   loadSelfState() {
-    if (fs.existsSync(this.config.selfStateFile)) {
+    if (fs.existsSync(CONFIG.selfStateFile)) {
       try {
-        return JSON.parse(fs.readFileSync(this.config.selfStateFile, 'utf8'));
+        return JSON.parse(fs.readFileSync(CONFIG.selfStateFile, 'utf8'));
       } catch (e) {
         return this.defaultSelfState();
       }
@@ -92,8 +85,8 @@ class MetacognitionLayer {
    * 保存自身状态
    */
   saveSelfState() {
-    fs.mkdirSync(path.dirname(this.config.selfStateFile), { recursive: true });
-    fs.writeFileSync(this.config.selfStateFile, JSON.stringify(this.selfState, null, 2), 'utf8');
+    fs.mkdirSync(path.dirname(CONFIG.selfStateFile), { recursive: true });
+    fs.writeFileSync(CONFIG.selfStateFile, JSON.stringify(this.selfState, null, 2), 'utf8');
   }
 
   /**
@@ -295,61 +288,6 @@ class MetacognitionLayer {
   }
 
   /**
-   * 评估意识神经反应并反馈通道健康/注意力版本。
-   * 只调整意识层运行参数，不执行外部动作或晋升候选能力。
-   */
-  reviewConsciousness(reactions = [], context = {}) {
-    const list = Array.isArray(reactions) ? reactions : [];
-    const averageAttention = list.length
-      ? list.reduce((sum, item) => sum + Number(item.attention || 0), 0) / list.length
-      : 0;
-    const averageConfidence = list.length
-      ? list.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / list.length
-      : 0;
-    const channelScores = {};
-    for (const reaction of list) {
-      for (const channel of reaction.channels || []) {
-        if (!channelScores[channel]) channelScores[channel] = [];
-        channelScores[channel].push(Number(reaction.confidence || 0));
-      }
-    }
-    const channelHealth = Object.fromEntries(
-      Object.entries(channelScores).map(([channel, values]) => [
-        channel,
-        values.reduce((sum, value) => sum + value, 0) / values.length,
-      ])
-    );
-    const adjustments = [];
-    if (averageConfidence < 0.6) {
-      this.selfState.selfAwareness.confidence = Math.max(0.1, this.selfState.selfAwareness.confidence - 0.03);
-      adjustments.push('降低意识判断自信度');
-    } else if (averageConfidence >= 0.8) {
-      this.selfState.selfAwareness.confidence = Math.min(1, this.selfState.selfAwareness.confidence + 0.02);
-      adjustments.push('提高意识判断自信度');
-    }
-    if (averageAttention >= 0.8) {
-      this.selfState.parameters.kespiThreshold = Math.min(0.95, this.selfState.parameters.kespiThreshold + 0.01);
-      adjustments.push('提高高注意力事件的验证门槛');
-    }
-    if (!list.length) adjustments.push('本轮无意识反应，保持当前阈值并等待新信号');
-    const feedback = {
-      timestamp: new Date().toISOString(),
-      reactionCount: list.length,
-      averageAttention,
-      averageConfidence,
-      channelHealth,
-      adjustments,
-      context: { accepted: context.accepted?.length || 0, suppressed: context.suppressed?.length || 0 },
-    };
-    this.selfState.lastConsciousnessFeedback = feedback;
-    this.selfState.consciousnessRevision = Number(this.selfState.consciousnessRevision || 0) + 1;
-    this.adjustmentHistory.push(feedback);
-    this.saveAdjustmentLog();
-    this.saveSelfState();
-    return feedback;
-  }
-
-  /**
    * 保存评估日志
    */
   saveEvaluationLog(evaluation) {
@@ -357,36 +295,106 @@ class MetacognitionLayer {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    fs.mkdirSync(path.dirname(this.config.evaluationLog), { recursive: true });
-    fs.appendFileSync(this.config.evaluationLog, JSON.stringify(evaluation) + '\n', 'utf8');
+    fs.appendFileSync(CONFIG.evaluationLog, JSON.stringify(evaluation) + '\n', 'utf8');
   }
 
   /**
    * 保存调整日志
    */
   saveAdjustmentLog() {
-    const logDir = path.dirname(this.config.adjustmentsLog);
+    const logDir = path.dirname(CONFIG.adjustmentsLog);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    fs.appendFileSync(this.config.adjustmentsLog, JSON.stringify(this.adjustmentHistory.slice(-1)[0] || {}) + '\n', 'utf8');
+    fs.appendFileSync(CONFIG.adjustmentsLog, JSON.stringify(this.adjustmentHistory.slice(-1)[0]) + '\n', 'utf8');
   }
 
   /**
-   * 审查代谢步骤结果。只记录审查结果，不修改配置或执行外部动作。
+   * 意识反应审查：由 consciousness-kernel.processReactions() 调用
+   *
+   * 审查 kernel 产出的 reactions，返回通道健康度、调整建议和告警。
+   * kernel 消费 channelHealth 更新 state.channelWeights 并递增 attentionRevision。
+   * briefing 消费 alerts 向 agent 仪表台展示意识层告警。
+   *
+   * @param {Array} reactions - kernel.integrate() 产出的反应数组
+   * @param {Object} context - 上下文（accepted/suppressed/stagnationCount 等）
+   * @returns {{ channelHealth: Object, adjustments: Array, alerts: Array, reviewed: boolean, reactionCount: number }}
    */
-  reviewStep(step, result) {
-    const passed = Boolean(result && result.status === 'success');
-    const review = {
-      timestamp: new Date().toISOString(),
-      step,
-      passed,
-      status: result && result.status ? result.status : 'unknown',
-      error: result && result.error ? result.error : null,
-      configRevision: getConfigState().revision
+  reviewConsciousness(reactions, context = {}) {
+    const alerts = [];
+    const channelHealth = {};
+    const adjustments = [];
+
+    if (!Array.isArray(reactions) || reactions.length === 0) {
+      return { channelHealth, adjustments, alerts, reviewed: true, reactionCount: 0 };
+    }
+
+    // 1. 通道健康度：按通道聚合注意力均值，高注意力通道加权、低注意力通道降权
+    const channelScores = {};
+    const channelCounts = {};
+    for (const r of reactions) {
+      for (const ch of (r.channels || [])) {
+        if (!channelScores[ch]) { channelScores[ch] = 0; channelCounts[ch] = 0; }
+        channelScores[ch] += r.attention || 0;
+        channelCounts[ch] += 1;
+      }
+    }
+    for (const ch of Object.keys(channelScores)) {
+      const avg = channelScores[ch] / channelCounts[ch];
+      channelHealth[ch] = Math.max(0.1, Math.min(1.0, avg));
+    }
+
+    // 2. 告警检测
+    const aroused = reactions.filter(r => r.arousal === 'aroused');
+    if (aroused.length >= 3) {
+      alerts.push({
+        type: 'consciousness-aroused',
+        severity: 0.8,
+        message: `${aroused.length} 个高唤醒意识事件同时活跃`,
+        targets: aroused.map(r => r.target).slice(0, 5),
+      });
+    }
+
+    const lowConfidence = reactions.filter(r => (r.confidence || 1) < 0.5);
+    if (lowConfidence.length > 0) {
+      alerts.push({
+        type: 'consciousness-low-confidence',
+        severity: 0.6,
+        message: `${lowConfidence.length} 个反应置信度过低（<0.5），可能需要补充证据`,
+        targets: lowConfidence.map(r => r.target).slice(0, 5),
+      });
+    }
+
+    // 3. 调整建议
+    const stagnationCount = Number(context.stagnationCount || 0);
+    if (stagnationCount > 0) {
+      adjustments.push({
+        type: 'stagnation-detected',
+        suggestion: `连续 ${stagnationCount} 次空产出，建议降低 KESPI 阈值或扩大检索范围`,
+      });
+    }
+
+    const highAttention = reactions.filter(r => (r.attention || 0) >= 0.8);
+    if (highAttention.length > 0) {
+      adjustments.push({
+        type: 'high-attention',
+        suggestion: `${highAttention.length} 个高注意力目标需要优先处理`,
+        targets: highAttention.map(r => r.target).slice(0, 3),
+      });
+    }
+
+    // 4. 更新自身状态：意识反应数量纳入统计
+    this.selfState.stats.totalTasks++;
+    this.selfState.stats.lastUpdate = new Date().toISOString();
+    this.saveSelfState();
+
+    return {
+      channelHealth,
+      adjustments,
+      alerts,
+      reviewed: true,
+      reactionCount: reactions.length,
     };
-    this.saveEvaluationLog({ type: 'pipeline-step-review', ...review });
-    return review;
   }
 
   /**

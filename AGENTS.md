@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '9cc47bbf-bd08-4a4f-a830-9bfa6bd863cb'
-  PropagateID: '9cc47bbf-bd08-4a4f-a830-9bfa6bd863cb'
-  ReservedCode1: '73a540af-cbb3-4ef8-8a2e-c691df628a48'
-  ReservedCode2: '73a540af-cbb3-4ef8-8a2e-c691df628a48'
+  ProduceID: 'ec585207-4919-441a-be70-1a675a9cc15c'
+  PropagateID: 'ec585207-4919-441a-be70-1a675a9cc15c'
+  ReservedCode1: '0cdbb67e-5a13-4736-8fe4-6a096e365d6c'
+  ReservedCode2: '0cdbb67e-5a13-4736-8fe4-6a096e365d6c'
 ---
 
 # AGENTS.md — aing Deployment Flow (Agent Must-Read) / aing 部署必读流程（Agent 必读）

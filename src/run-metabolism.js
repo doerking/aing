@@ -68,7 +68,7 @@ function acquireLock() {
 
 // ── A1: 代谢→意识神经事件发射（kernel 锁定 coordination-only：只感知/路由/建议，不执行）──
 const METABOLISM_CHANNEL = {
-  compile: 'structure', import: 'structure', 'link-sync': 'structure',
+  compile: 'structure', import: 'structure', distill: 'structure', 'link-sync': 'structure',
   link: 'semantic', vector: 'semantic', sprout: 'semantic', pollinate: 'semantic',
   compress: 'temporal', prune: 'temporal', kespi: 'kespi'
 };
@@ -107,6 +107,7 @@ const CONFIG = {
 const STEPS = [
   { name: 'compile', desc: '秩序脑编译 (raw/*.md → wiki/entities/*.md)', script: 'compile.js', args: [] },
   { name: 'import', desc: '导入数据库 (wiki/ → SQLite)', script: 'import-from-wiki.js', args: [] },
+  { name: 'distill', desc: '蒸馏器 (pending-distillation → active)', script: 'distill.js', args: [] },
   { name: 'link', desc: '自动链接发现 (实体关联)', script: 'auto-link.js', args: [] },
 { name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
   { name: 'vector', desc: '向量索引 (64-dim embedding)', script: 'index-vectors.js', args: [] },

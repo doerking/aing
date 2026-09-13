@@ -240,7 +240,8 @@ async function handle(req, res) {
       vectorSearch: { status: vectorSearch?.mode || 'offline', semantic: vectorSearch?.mode === 'semantic-384' },
       knowledgeStore: { status: 'online', entities: store.getStats().entities },
       metabolism: { status: 'available', lastRun: null }, // 代谢链非常驻，标记可用即可
-      autoIngest: { status: 'online', pendingSessions: [...sessions.sessions.values()].filter(s => s.messages.length > 0).length }
+      autoIngest: { status: 'online', pendingSessions: [...sessions.sessions.values()].filter(s => s.messages.length > 0).length },
+      metacognition: { status: briefing.metacognition ? 'online' : 'degraded', reviewed: briefing.metacognition?.reviewed || false }
     };
 
     // 会话交接：最近 3 条会话的时间线（上次聊到哪）
@@ -255,6 +256,33 @@ async function handle(req, res) {
       todos = store.all("SELECT id, name, tags, status FROM entities WHERE type='Todo' AND status='active' ORDER BY created_at");
     } catch (e) {}
 
+    // 蒸馏债务：pending-distillation 实体数量
+    let distillDebt = 0;
+    try {
+      const debt = store.all("SELECT COUNT(*) as n FROM entities WHERE status = 'pending-distillation'");
+      distillDebt = debt.length ? debt[0].n : 0;
+    } catch (e) {}
+
+    // 意识层告警：合并 consciousness-layer alerts + metacognition alerts + distill debt
+    const consciousnessAlerts = [
+      ...(briefing.metacognition?.alerts || []),
+      ...(distillDebt > 0 ? [{ type: 'distill-debt', severity: 0.5, message: `${distillDebt} 个实体待蒸馏（pending-distillation）`, targets: [] }] : []),
+      ...(kernelStatus.stagnationCount >= 3 ? [{ type: 'consciousness-stagnant', severity: 0.8, message: `连续 ${kernelStatus.stagnationCount} 次空产出，意识层已进入停滞态`, targets: [] }] : []),
+    ];
+
+    // 意识层反应：从 kernel state 提取高注意力反应摘要
+    const kernelReactions = (consciousnessKernel.state?.activeEvents || [])
+      .sort((a, b) => (b.attention || 0) - (a.attention || 0))
+      .slice(0, 5)
+      .map(r => ({
+        target: r.target,
+        arousal: r.arousal,
+        attention: Number(r.attention || 0).toFixed(3),
+        channels: r.channels || [],
+        suggestedActions: r.suggestedActions || [],
+        createdAt: r.createdAt,
+      }));
+
     // 用户面（对用户负责的部分）：只有待办 + 会话交接
     const userFacing = {
       todos: todos.map(t => ({ id: t.id, name: t.name, tags: (() => { try { return JSON.parse(t.tags || '[]'); } catch (e) { return []; } })() })),
@@ -268,9 +296,13 @@ async function handle(req, res) {
       consciousness: kernelStatus,
       componentLinks,
       alerts: briefing.briefing.alerts,
+      consciousnessAlerts,
+      kernelReactions,
+      metacognitionAdjustments: briefing.metacognition?.adjustments || [],
       hotspots: briefing.briefing.hotspots?.slice(0, 5) || [],
       recommendations: briefing.briefing.recommendations || [],
       priority: briefing.priority,
+      distillDebt,
       // ── 对用户负责的部分 ──
       userFacing
     });
