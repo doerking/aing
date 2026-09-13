@@ -97,7 +97,10 @@ class GrowthDirector {
       metabolismStatus: this._evaluateMetabolism(store),
       
       // 实体统计
-      entityStats: this._getEntityStats(store)
+      entityStats: this._getEntityStats(store),
+
+      // 意识层信号：读取 kernel state.json，让智能模式对意识层有感知
+      consciousness: this._readConsciousnessSignals(),
     };
     
     return this.signals;
@@ -140,6 +143,22 @@ class GrowthDirector {
     if (signals.timeTrigger) {
       urgency += 1;
       reasons.push('时间节律触发');
+    }
+
+    // 意识层信号：kernel 停滞或高唤醒提升紧急度
+    if (signals.consciousness) {
+      if (signals.consciousness.stagnationCount >= 3) {
+        urgency += 3;
+        reasons.push(`意识层连续 ${signals.consciousness.stagnationCount} 次空产出`);
+      }
+      if (signals.consciousness.state === 'aroused') {
+        urgency += 1;
+        reasons.push('意识层处于高唤醒态');
+      }
+      if (signals.consciousness.activeEventCount > 10) {
+        urgency += 1;
+        reasons.push(`意识层积压 ${signals.consciousness.activeEventCount} 个事件`);
+      }
     }
 
     // 确定紧急度级别
@@ -212,6 +231,11 @@ class GrowthDirector {
       return 'emergency_fix';
     }
     
+    // 意识层停滞 → 完整代谢（优先于连续停滞判断，因为 kernel 停滞比代谢停滞更严重）
+    if (signals.consciousness && signals.consciousness.stagnationCount >= 3) {
+      return 'full_metabolism';
+    }
+
     // 连续停滞 → 完整代谢
     if (this.consecutiveStagnant >= 3) {
       return 'full_metabolism';
@@ -265,7 +289,7 @@ class GrowthDirector {
       case 'emergency_fix':
         return ['kespi-check', 'fix-kespi', 'recalc-kespi', 'kespi-check'].map(toScript);
       case 'full_metabolism':
-        return ['compile', 'import', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
+        return ['compile', 'import', 'distill', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
       case 'targeted_pollinate':
         return ['kespi-check', 'pollinate', 'kespi-check'].map(toScript);
       case 'compile':
@@ -275,7 +299,7 @@ class GrowthDirector {
       case 'pollinate':
         return ['pollinate', 'compress'];
       case 'scheduled_metabolism':
-        return ['compile', 'import', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
+        return ['compile', 'import', 'distill', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
       case 'maintain':
         return ['kespi-check', 'prune'];
       case 'observe':
@@ -435,6 +459,27 @@ class GrowthDirector {
       console.log(`\n📋 执行序列: ${commands.join(' → ')}\n`);
     } else {
       console.log('\n👁️ 继续观察，暂不执行\n');
+    }
+  }
+
+  /**
+   * 读取意识层 kernel 状态（data/consciousness/state.json）
+   * 让生长决策器对意识层信号有感知——停滞/高唤醒/积压事件影响决策
+   */
+  _readConsciousnessSignals() {
+    try {
+      const stateFile = path.join(__dirname, '..', 'data', 'consciousness', 'state.json');
+      if (!fs.existsSync(stateFile)) return null;
+      const raw = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+      return {
+        state: raw.state || 'idle',
+        activeEventCount: Array.isArray(raw.activeEvents) ? raw.activeEvents.length : 0,
+        stagnationCount: Number(raw.stagnationCount || 0),
+        focusTargets: Array.isArray(raw.focusTargets) ? raw.focusTargets.slice(0, 3) : [],
+        attentionRevision: Number(raw.attentionRevision || 0),
+      };
+    } catch (e) {
+      return null;
     }
   }
 }

@@ -7,6 +7,7 @@
   "components": [
     { "id": "compile", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
     { "id": "import", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "distill", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13", "note": "蒸馏器（distill.js）：pending-distillation → active；自带 D4 原子锁" },
     { "id": "link", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
     { "id": "link-sync", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
     { "id": "vector", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#semantic-384"], "registered": "2026-09-13" },

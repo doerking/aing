@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '15d45710-abff-4844-8250-58f251078182'
-  PropagateID: '15d45710-abff-4844-8250-58f251078182'
-  ReservedCode1: '32cb7f2f-5f9f-4ee2-b3e8-8446564d6417'
-  ReservedCode2: '32cb7f2f-5f9f-4ee2-b3e8-8446564d6417'
+  ProduceID: '804115eb-9f9a-466a-9cb4-a7be8f48758a'
+  PropagateID: '804115eb-9f9a-466a-9cb4-a7be8f48758a'
+  ReservedCode1: '30103f82-25a1-4a87-a959-72e554357e59'
+  ReservedCode2: '30103f82-25a1-4a87-a959-72e554357e59'
 ---
 
 # aing · Knowledge Metabolism Engine

@@ -121,7 +121,7 @@ class ConsciousnessKernel {
 
     this.state.suppressedEvents = [...this.state.suppressedEvents, ...suppressed].slice(-this.maxEvents);
     const reactions = this.integrate(accepted);
-    const processed = this.processReactions(reactions, { accepted, suppressed });
+    const processed = this.processReactions(reactions, { accepted, suppressed, stagnationCount: this.state.stagnationCount });
     this.saveState();
     return { accepted: accepted.map(event => event.toJSON()), suppressed, reactions, growth: processed.growth, metacognition: processed.metacognition, state: this.status() };
   }
