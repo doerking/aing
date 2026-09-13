@@ -1,6 +1,14 @@
 ---
 tags: [aing, overview, quickstart, architecture]
 description: aing 知识代谢引擎总览：快速开始、脚本一览、数据库与常驻服务
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '60d51fbc-38b1-4f0d-91a7-eb4ad2c29005'
+  PropagateID: '60d51fbc-38b1-4f0d-91a7-eb4ad2c29005'
+  ReservedCode1: '855d8446-8f6f-46a9-b5ee-343d25612503'
+  ReservedCode2: '855d8446-8f6f-46a9-b5ee-343d25612503'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -46,9 +54,9 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 
 **给 Agent / For your agent:**
 
-> 你负责想，aing 负责记：召回你的不是散落片段，而是带关系、带评分、带血统的知识图谱——这次会话的结论，下次会话还有依据。
+> aing 为你准备好一切——资料、思维导链、备忘录，你出场就手持备忘录从容工作。你负责分析用户、给用户策划方向，其余的 aing 管。
 >
-> *You think; aing remembers. It recalls a knowledge graph with relations, scores and lineage — not loose fragments. This session's conclusions are next session's evidence.*
+> *aing prepares everything for you — materials, thinking chains, and a memo. You walk in holding the memo, calm and ready. You focus on analyzing the user and planning their direction; aing handles the rest.*
 
 **诚实的边界 / The honest edge:**
 
@@ -131,7 +139,7 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 git clone https://github.com/doerking/aing.git
 cd aing
 
-# 2. Install dependencies（一条命令装齐：sql.js / transformers / sharp）
+# 2. Install dependencies（核心：sql.js / transformers；sharp 可选，非核心管道所需）
 npm install
 
 # 3. Configure
@@ -219,12 +227,25 @@ AING_API_KEY=my-key npm run server   # with key: 0.0.0.0 + Bearer auth on all bu
 node src/query.js "三路突击" --limit 5
 
 # 端点一览 / endpoints
+# ── 意识神经控制 + 备忘录（agent ↔ aing 主界面）──
+# GET  /api/consciousness/briefing    memo / 备忘录（aing 状态 + 组件链接 + 告警热点 + 待办 + 会话交接）
+# GET  /api/consciousness             意识神经状态（焦点/唤醒/通道健康）
+# POST /api/consciousness/event      agent 向 kernel 投递意识事件
+# POST /api/consciousness/sense      agent 感知（检索 + 记录谱系）
+# POST /api/consciousness/assess     agent 评估（事件 → kernel 整合）
+# GET  /api/consciousness/lineage    最近决策谱系
+# ── 知识检索 ──
 # GET  /health                       health check (public) / 健康检查（公开）
-# GET  /api/status                    runtime status (entities/kespi lifecycle/distill debt) / 运行时状态一眼判定
+# GET  /api/status                    runtime status / 运行时状态
 # GET  /api/entities                 entity list / 实体列表
 # GET  /api/entity/<id>              entity detail + latest KESPI / 实体详情+最新 KESPI
-# GET  /api/query?q=<词>&limit=<N>   semantic/keyword search / 语义与关键词检索
-# POST /api/ingest                   session ingest (optional X-Tenant-ID; optional body.distillation passthrough) / 会话入库，可带租户头与蒸馏透传
+# GET  /api/query?q=<词>&limit=<N>   full-chain search (answer-pack: snippet/kespi/neighbors/tags) / 全链检索
+# ── 入库写入 ──
+# POST /api/ingest                   session ingest (role: user/assistant/analysis/research) / 会话入库（四种角色）
+# POST /api/entity                  create entity (Todo/Skill/Output) / 创建实体
+# PATCH /api/entity/<id>            update entity status/content / 更新实体
+# GET  /api/delta?since=<ISO>        incremental awareness / 增量感知
+# GET  /api/tags/<tag>               tag-driven loading / 标签驱动加载
 ```
 
 ---
@@ -443,6 +464,7 @@ node src/setup-db.js --backup     # 手动备份
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
 | 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
 | 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
+| 🏗️ 工程层 | Harness Engineering：aing 即 agent 的 harness | [LangChain Harness Anatomy 2026](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) · [翁荔 SEAGym 2026](https://arxiv.org/abs/2606.17546) · [Browser Harness 592 行](https://github.com/browser-use/browser-harness) | 已对齐 |
 
 ## 🙏 Acknowledgments / 致谢
 
