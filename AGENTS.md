@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '266cf2c8-af93-49ef-a6bb-ab47822f9bed'
-  PropagateID: '266cf2c8-af93-49ef-a6bb-ab47822f9bed'
-  ReservedCode1: 'bd63fd49-4485-454b-b54c-3e32a624128b'
-  ReservedCode2: 'bd63fd49-4485-454b-b54c-3e32a624128b'
+  ProduceID: '8dc92ffc-b429-4dd9-8262-e95354e884b4'
+  PropagateID: '8dc92ffc-b429-4dd9-8262-e95354e884b4'
+  ReservedCode1: '5e82a93c-9e17-46ad-8765-50d4d9886493'
+  ReservedCode2: '5e82a93c-9e17-46ad-8765-50d4d9886493'
 ---
 
 # AGENTS.md — aing Deployment Flow (Agent Must-Read) / aing 部署必读流程（Agent 必读）
@@ -122,6 +122,72 @@ npm run server                            # HTTP API (optional) / HTTP API 服�
 node src/query.js "关键词"                 # Query CLI / 查询 CLI
 npm run verify                            # Re-verify anytime; must stay ALL GREEN / 随时复验，必须保持全绿
 ```
+
+## Memo as Operations Dashboard / 备忘录即运维仪表台
+
+> 备忘录（`GET /api/consciousness/briefing`）不是给用户看的文档——它是 aing 给 agent 的**驾驶仪表台**。agent 出场第一步永远是读备忘录，拿到三样东西后才开始工作：
+>
+> 1. **aing 当前状态**：意识层 state（idle/integrating/focused/aroused/stagnant）、通道健康度（structure/semantic/kespi/anomaly/feedback/temporal 六通道 EMA）、活跃事件数、停滞计数
+> 2. **组件链接状态**：知识库在线？向量模型就绪（384 维语义 vs 64 维哈希）？代谢上次跑完？蒸馏债多少？元认知在线？
+> 3. **待办与会话交接**：上次聊到哪（最近 3 条 Conversation）、有什么挂起的 Todo、意识层告警（consciousnessAlerts: 高唤醒/低置信/停滞/蒸馏债）
+>
+> **备忘录里的数据指标驱动运维决策**——agent 不需要"检查系统"，读备忘录就知道该做什么：
+>
+> | 备忘录指标 | 正常值 | 异常时 agent 该做什么 |
+> |------------|--------|----------------------|
+> | consciousness.state | idle / integrating | stagnant → 触发 full_metabolism |
+> | consciousnessAlerts 含 distill-debt | debt=0 | debt>0 → 跑 `node src/distill.js` |
+> | consciousnessAlerts 含 consciousness-stagnant | 无 | stagnationCount>=3 → `node src/growth-director.js --execute` |
+> | componentLinks.vectorSearch.status | semantic-384 | offline/hash → `node src/index-vectors.js --semantic --reindex` |
+> | componentLinks.metacognition.status | online | degraded → `node -e "require('./src/metacognition-layer').selfCheck()"` 刷新 |
+> | distillDebt | 0 | >0 → 跑代谢或单独 distill |
+> | kernelReactions 高注意力 | <5 | >=5 → 检查 alert targets, 优先处理 |
+> | selfAssessment 六属性 | 全 ✓ | 有 ✗/△ → 按 M4 组件链引导逐项修复 |
+>
+> **这是 aing 的"按数据指标自动维护"**：不是 agent 猜该做什么，是 aing 通过备忘录告诉 agent 该做什么。agent 的工作从"排障"变成"读仪表台→执行建议"。
+
+## Neural Evolution Swarm (Half-Lifted) / 神经进化团队（半拉起）
+
+> aing 的神经进化团队（理论家/工程师/训练师/分析师）目前是**半拉起状态**——技能文件已装入 TeleAgent skills 目录，可以由 agent 按需调用做评审，但不是常驻自走的自动化服务。半拉起的正确用法是：**agent 读备忘录后发现指标异常 → 调用对应角色做诊断 → 根据诊断结论执行修复 → 修复后跑 verify-deploy 确认全绿**。
+>
+> *The neural evolution swarm (theorist/engineer/trainer/analyst) is half-lifted: skill files installed, callable on demand, but not a resident auto-running service. Usage: agent reads memo → detects anomaly → invokes the right role for diagnosis → executes fix → re-verifies ALL GREEN.*
+
+### 半拉起角色与触发条件
+
+| 角色 | 何时调用 | 调用方式 | 输出 |
+|------|----------|----------|------|
+| **理论家** | selfAssessment 有 ✗/△；六属性评分需要复审 | SQA 报告 + briefing selfAssessment → 理论家过堂 | 六属性打分表 + 缺口清单 |
+| **工程师** | 代谢步骤失败；C8/C9 门禁红灯；组件链断裂 | 失败步 stderr + verify-deploy 输出 → 工程师审计 | P0-P3 修复清单 |
+| **训练师** | SkillOpt rollout 需要跑；任务包需要扩充 | adapter + task-package → 训练师就绪度评估 | 训练环境就绪/缺口报告 |
+| **分析师** | KESPI 均分突降；链接拓扑异常；孤岛率上升 | gap-detector + topology scan → 分析师体检 | 拓扑健康报告 + 工单 |
+
+### 按数据指标自动维护流程
+
+```
+                    ┌─────────────────────────────────────┐
+                    │   GET /api/consciousness/briefing    │
+                    │   (agent 每次出场第一步)              │
+                    └──────────────┬──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────┐
+                    │   备忘录数据指标检查                  │
+                    │   (上表 8 项指标)                    │
+                    └──────────────┬──────────────────────┘
+                                   │
+              ┌────────────────────┼────────────────────┐
+              │                    │                    │
+    ┌─────────▼──────┐  ┌─────────▼──────┐  ┌──────────▼──────┐
+    │ 指标全正常      │  │ 有告警/异常     │  │ 有 ✗/△ 属性     │
+    │ → 正常工作      │  │ → 执行修复       │  │ → 调用对应角色    │
+    └────────────────┘  └────────┬───────┘  └──────────┬──────┘
+                                 │                     │
+                    ┌────────────▼─────────────────────▼────┐
+                    │   修复后: verify-deploy.js ALL GREEN    │
+                    │   再读备忘录确认指标恢复                  │
+                    └───────────────────────────────────────┘
+```
+
+> **核心原则**：agent 不猜——aing 通过备忘录的数据指标告诉 agent 该做什么。agent 不修——除非指标指向明确的修复动作。修完后必须验证——`verify-deploy.js` ALL GREEN 才算修完。
 
 ## Agent Discipline / Agent 行为纪律（新增，必须遵守）
 
