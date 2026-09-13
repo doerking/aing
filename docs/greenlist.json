@@ -81,11 +81,6 @@
   ],
   "locked": [
     {
-      "id": "metacognition",
-      "item": "元认知接管线（Phase 2.6）",
-      "note": "组件在库未接代管"
-    },
-    {
       "id": "hot-reload",
       "item": "热重排（require 缓存清除）",
       "note": "未实现"
