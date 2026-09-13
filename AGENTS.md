@@ -1,6 +1,14 @@
 ---
 tags: [aing, deploy, discipline, must-read]
 description: aing 部署必读：一键部署流程、验收清单 C0-C7、已知坑 9 条、汇报格式
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '9cc47bbf-bd08-4a4f-a830-9bfa6bd863cb'
+  PropagateID: '9cc47bbf-bd08-4a4f-a830-9bfa6bd863cb'
+  ReservedCode1: '73a540af-cbb3-4ef8-8a2e-c691df628a48'
+  ReservedCode2: '73a540af-cbb3-4ef8-8a2e-c691df628a48'
 ---
 
 # AGENTS.md — aing Deployment Flow (Agent Must-Read) / aing 部署必读流程（Agent 必读）
@@ -10,14 +18,16 @@ description: aing 部署必读：一键部署流程、验收清单 C0-C7、已�
 >
 > 🆕 第一次接触 aing？先走 [docs/AGENT-ONBOARDING.md](./docs/AGENT-ONBOARDING.md) 五步引导（30 秒纪律 → 院子地图 → 部署 → 日常 → 汇报格式），再回来读本文件全文。
 >
+> **部署铁律 / Deploy Iron Rule**：agent 必须严格按 aing 组件部署步骤执行——不能另行自改、不能跳步、不能在部署过程中修改源码或打临时补丁。部署中发现缺陷，在源码仓库分支上修复并附变更说明，经确认合入后重新部署。允许的运行时配置面仅限 `growth.config.js` 与环境变量。/ **Agent MUST follow aing deployment steps exactly — no self-modification, no step-skipping, no hot-fixes during deploy. Defects found during deployment are fixed on the source side. The only supported runtime config surface is `growth.config.js` and environment variables.**
+>
 > Core discipline: **No ALL GREEN report from `verify-deploy.js` = deployment NOT complete. Never announce success to the user without it.**
 > 核心纪律：**没有 `verify-deploy.js` 的 ALL GREEN 报告 = 部署未完成，禁止向用户宣布部署成功。**
 
 ## One-Click Deploy Flow / 一键部署流程（按序执行，不可跳步）
 
 ```bash
-# 1) Install all dependencies in one command (sql.js / @xenova/transformers / sharp)
-#    一条命令装齐三件依赖
+# 1) Install all dependencies in one command (sql.js / @xenova/transformers required; sharp optional)
+#    一条命令装齐核心依赖（sql.js + transformers 必需；sharp 可选，非核心管道所需）
 npm install
 
 # 2) All-green acceptance (machine-judged; exit 0 = ALL GREEN)
@@ -33,7 +43,8 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 |---|---|---|
 | C0 | `src/growth.config.js` present / 配置文件在位 | `cp growth.config.example.js src/growth.config.js` |
 | C1 | Node.js >= 18 | Upgrade Node / 换新 Node |
-| C2 | sql.js / @xenova/transformers / sharp resolvable / 三件可解析 | `npm install` at package root / 包根 `npm install` |
+| C2 | sql.js / @xenova/transformers resolvable / 核心依赖可解析 | `npm install` at package root / 包根 `npm install` |
+| C2b | sharp (optional, non-critical) / 可选依赖 | `npm install` if needed; absence does not block deployment / 缺失不阻塞部署 |
 | C3 | raw/ contains knowledge docs / raw/ 有知识文档 | Put at least one .md / 放入至少一篇 .md |
 | C4 | DB entities + vector index / 数据库实体与向量索引 | `node src/run-metabolism.js`, then / 再 `node src/index-vectors.js --semantic --reindex` |
 | C5 | Local semantic model bundled in models/ (~22MB) / 本地语义模型 | `powershell -File setup-vectors.ps1` |
@@ -41,6 +52,9 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C7a | KESPI lifecycle consistency wiki↔db / 生命周期一致 | Full metabolism then re-verify / 全量代谢后复验 |
 | C7b | Patch-layer fingerprints (v1 defs) / 补丁层指纹 | Replay all cockpit layers v1→v3 (Pitfall 7) / 整层重放 |
 | C8 | No drive-letter literals in tracked js/json/md/ps1 (raw/ exempt) / 盘符字面量扫描 | Replace with semantic placeholders (`<repo-root>` etc.) / 改语义占位符 |
+| C9a | Component registry ↔ STEPS bidirectional consistency / 组件登记簿与代谢步骤双向一致 | Sync `data/component-registry.json` with `STEPS` in `run-metabolism.js` |
+| C9b | Greenlist-declared references exist / 绿名单引用存在 | Check `data/component-registry.json` declarations against `docs/greenlist.json` |
+| C9c | Consciousness panel schema complete / 意识层面板 schema 完整 | Run `node src/metabolism-panel.js` to regenerate `data/panel.json` |
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 
