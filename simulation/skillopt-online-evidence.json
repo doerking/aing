@@ -1,0 +1,19 @@
+{
+  "source": "SkillOpt aing adapter (在线 (aing API))",
+  "taskCount": 20,
+  "baseline": {
+    "softScore": 0.575,
+    "hardCorrect": 3
+  },
+  "corrected": {
+    "softScore": 0.575,
+    "hardCorrect": 3
+  },
+  "improvement": {
+    "deltaSoft": 0.0,
+    "gatePassed": false,
+    "gateMargin": 0.02
+  },
+  "mode": "在线 (aing API)",
+  "timestamp": "2026-09-13T19:18:01"
+}

@@ -14,6 +14,21 @@
 
 const KnowledgeStore = require('./knowledge-store');
 
+// M4 RAKG: 幻觉过滤——语义相似度门槛
+// 关键词重叠可以触发候选，但 confidence >= 0.8 必须通过语义相似度验证
+// 防止"提到了同一个词但讨论完全不同事物"的虚假链接
+let _vectorSearch = null;
+async function getVectorSearch(store) {
+  if (_vectorSearch) return _vectorSearch;
+  const VectorSearch = require('./vector-search');
+  _vectorSearch = new VectorSearch(store);
+  await _vectorSearch.init();
+  try { await _vectorSearch.enableSemantic(); } catch (e) {
+    console.log('[auto-link] 语义模型不可用，回退 hash 模式');
+  }
+  return _vectorSearch;
+}
+
 function extractKeywords(content) {
   const stopWords = new Set([
     'the', 'a', 'an', 'is', 'are', 'was', 'were', 'in', 'on', 'at', 'to', 'for',
@@ -86,6 +101,37 @@ async function main() {
         reason = `同类型: ${a.type}`;
       }
       
+      // M4 RAKG: 幻觉过滤——高置信度链接必须通过语义相似度验证
+      // 关键词重叠 >= 0.8 的候选需要语义确认，防止"同词不同义"的虚假链接
+      if (confidence >= 0.8) {
+        try {
+          const vs = await getVectorSearch(store);
+          // 直接对比 a 和 b 的向量相似度
+          const embARow = store.getEmbedding(a.id);
+          const embBRow = store.getEmbedding(b.id);
+          if (embARow?.embedding && embBRow?.embedding) {
+            const bufA = Buffer.isBuffer(embARow.embedding) ? embARow.embedding : Buffer.from(embARow.embedding);
+            const bufB = Buffer.isBuffer(embBRow.embedding) ? embBRow.embedding : Buffer.from(embBRow.embedding);
+            const vecA = [];
+            const vecB = [];
+            for (let k = 0; k < bufA.length; k += 4) vecA.push(bufA.readFloatLE(k));
+            for (let k = 0; k < bufB.length; k += 4) vecB.push(bufB.readFloatLE(k));
+            const simScore = vs.cosineSimilarity(vecA, vecB);
+            if (simScore < 0.35) {
+              // 语义不匹配，降级置信度（低于真实实体对分布下界 0.338）
+              confidence = Math.min(confidence, 0.5);
+              reason = reason + ' [语义未通过 降级 sim=' + simScore.toFixed(3) + ']';
+            } else {
+              reason = reason + ' [语义通过 sim=' + simScore.toFixed(3) + ']';
+            }
+          } else {
+            reason = reason + ' [语义跳过: 无向量]';
+          }
+        } catch (e) {
+          reason = reason + ' [语义跳过: ' + e.message + ']';
+        }
+      }
+
       // 创建链接
       if (confidence >= 0.3) {
         const linkKey = `${a.id}__${b.id}`;
