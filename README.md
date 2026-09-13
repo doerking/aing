@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'aeb78414-32f4-420d-b620-ffd9352fd329'
-  PropagateID: 'aeb78414-32f4-420d-b620-ffd9352fd329'
-  ReservedCode1: '2ecabf85-bc50-4760-a2d0-e1353e944819'
-  ReservedCode2: '2ecabf85-bc50-4760-a2d0-e1353e944819'
+  ProduceID: 'fe4fa5f6-83e5-4387-b458-5a7f5f28778c'
+  PropagateID: 'fe4fa5f6-83e5-4387-b458-5a7f5f28778c'
+  ReservedCode1: 'e8626dee-c3a8-4175-87db-6224e52c84d7'
+  ReservedCode2: 'e8626dee-c3a8-4175-87db-6224e52c84d7'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -57,6 +57,10 @@ AIGC:
 > aing 为你准备好一切——资料、思维导链、备忘录，你出场就手持备忘录从容工作。你负责分析用户、给用户策划方向，其余的 aing 管。
 >
 > *aing prepares everything for you — materials, thinking chains, and a memo. You walk in holding the memo, calm and ready. You focus on analyzing the user and planning their direction; aing handles the rest.*
+
+> **备忘录的意义 / Why the memo matters**：备忘录是 agent 的驾驶仪表台——它不是给用户看的文档，是 aing 给 agent 的"出场包"。每次会话开始，agent 先读 `GET /api/consciousness/briefing`，拿到三样东西：**aing 当前状态**（意识层 state / 通道健康 / 活跃事件）、**组件链接状态**（知识库在线？向量就绪？代谢上次跑完？蒸馏债多少？）、**待办与会话交接**（上次聊到哪、有什么挂起的 Todo）。读完备忘录，agent 不用问"知识库里有什么"——它已经知道了。备忘录让 agent 从"翻文件找线索"变成"手持仪表台做判断"。
+>
+> *The memo is the agent's dashboard — not a user-facing document, but aing's "walk-in package." Before each session, the agent reads the briefing and gets: aing's current state (consciousness kernel, channel health, active events), component link status (KB online? vectors ready? metabolism last run? distill debt?), and session handoff (where we left off, pending Todos). The memo turns the agent from "scavenging files for clues" into "reading a dashboard and making decisions."*
 
 **诚实的边界 / The honest edge:**
 
@@ -282,6 +286,8 @@ node src/query.js "三路突击" --limit 5
 | 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
 | 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
 | 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
+| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 神经进化团队半拉起（理论家/工程师/训练师/分析师，按指标触发） |
+| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
 
 ## Database / 数据库
 
