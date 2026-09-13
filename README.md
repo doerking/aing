@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '3c0f6540-beac-40a6-97dd-b47e9fcb3fd2'
-  PropagateID: '3c0f6540-beac-40a6-97dd-b47e9fcb3fd2'
-  ReservedCode1: '20e9d21d-9f97-4da0-a780-0cdf389ba07f'
-  ReservedCode2: '20e9d21d-9f97-4da0-a780-0cdf389ba07f'
+  ProduceID: '33642f0c-a56a-4d41-a59e-8dce6dc5ec25'
+  PropagateID: '33642f0c-a56a-4d41-a59e-8dce6dc5ec25'
+  ReservedCode1: 'e9922f97-caac-462e-8bf3-0169ea4cdf00'
+  ReservedCode2: 'e9922f97-caac-462e-8bf3-0169ea4cdf00'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -100,7 +100,7 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 | Paradigm | Compilation / 编译 | **Metabolism / 代谢** |
 | Growth | Linear: ingest→compile→query | Non-linear: sprout·pollinate·metabolize·regenerate |
 | LLM role | Single LLM as "programmer" | None required in the core loop (mechanical steps + local models); optional host-agent shells
-| Ceiling | ~200 sources / 50K tokens | Theoretically unbounded |
+| Ceiling | ~200 sources / 50K tokens | 单库 50 标签类目健康 / 100 可用 / 150+ 退化（多库扩展，容量推演见 [TAG-CAPACITY-ANALYSIS](./docs/Engineering/TAG-CAPACITY-ANALYSIS.md)） |
 
 ## Architecture / 架构
 
@@ -461,6 +461,9 @@ node src/setup-db.js --backup     # 手动备份
 > *Every claim carries a reproducible verification script — 14-gate deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison. 6 architectural proofs independently verified, M4 fully unlocked.*
 
 ### 报告与数据集 / Reports & Data
+
+> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。
+> *The proof files below are locally reproducible artifacts (gitignored, not committed) — regenerate them locally by running the corresponding verification scripts.*
 
 | 文档 | 说明 |
 |------|------|
