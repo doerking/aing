@@ -1,0 +1,93 @@
+{
+  "title": "KESPI 敏感性验证",
+  "timestamp": "2026-09-13T11:30:59.563Z",
+  "phases": [
+    {
+      "phase": "baseline",
+      "entityCount": 21,
+      "avgKespi": "0.8281",
+      "greenCount": 12,
+      "description": "注入前全库基线"
+    },
+    {
+      "phase": "corrupt-injected",
+      "probeId": "sensitivity-probe-1789299058832",
+      "probeScore": "0.3700",
+      "probeDimensions": {
+        "KQ": 0,
+        "KG": 1,
+        "KA": 0,
+        "KM": 1,
+        "KD": 0,
+        "KC": 0,
+        "KR": 0.2,
+        "KB": 1
+      },
+      "avgKespi": "0.8073",
+      "greenCount": 12,
+      "redCount": 2,
+      "avgDelta": "-0.0208",
+      "description": "注入腐坏实体后（空内容/无链接/无标签）"
+    },
+    {
+      "phase": "fix-content",
+      "probeScore": "0.4600",
+      "probeDimensions": {
+        "KQ": 0,
+        "KG": 1,
+        "KA": 0.2,
+        "KM": 1,
+        "KD": 0,
+        "KC": 0,
+        "KR": 0.6,
+        "KB": 1
+      },
+      "description": "修复1: 补充内容（KR/KQ 维度）"
+    },
+    {
+      "phase": "fix-tags",
+      "probeScore": "0.5300",
+      "probeDimensions": {
+        "KQ": 0,
+        "KG": 1,
+        "KA": 0.8,
+        "KM": 1,
+        "KD": 0,
+        "KC": 0,
+        "KR": 0.6,
+        "KB": 1
+      },
+      "description": "修复2: 添加标签+来源（KA 维度）"
+    },
+    {
+      "phase": "fix-links",
+      "probeScore": "0.6200",
+      "probeDimensions": {
+        "KQ": 0,
+        "KG": 1,
+        "KA": 0.8,
+        "KM": 1,
+        "KD": 0.7,
+        "KC": 0,
+        "KR": 0.6,
+        "KB": 1
+      },
+      "description": "修复3: 建立3条链接（KD 维度）"
+    },
+    {
+      "phase": "final",
+      "entityCount": 22,
+      "avgKespi": "0.8186",
+      "greenCount": 12,
+      "avgDelta": "-0.0095",
+      "description": "修复后全库状态"
+    }
+  ],
+  "conclusion": {
+    "corruptScore": "0.3700",
+    "fixedScore": "0.6200",
+    "sensitivity": "0.2500",
+    "avgImpact": "-0.0208",
+    "verdict": "NEEDS REVIEW"
+  }
+}

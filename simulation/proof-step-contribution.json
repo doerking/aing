@@ -1,0 +1,345 @@
+{
+  "title": "步级贡献度表（run-metabolism.js 11 步管线）",
+  "description": "每步执行前后对 knowledge.db 拍快照并计算 delta",
+  "timestamp": "2026-09-13T11:37:26.749Z",
+  "dbPath": "<repo-root>/knowledge.db",
+  "metrics": [
+    "entities",
+    "links",
+    "kespiAvg",
+    "embeddings",
+    "metadataRows"
+  ],
+  "baseline": {
+    "entities": 21,
+    "links": 206,
+    "kespiAvg": 0.8566666666666666,
+    "embeddings": 21,
+    "metadataRows": 21
+  },
+  "steps": [
+    {
+      "step": "compile",
+      "script": "compile.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 432,
+      "before": {
+        "entities": 21,
+        "links": 206,
+        "kespiAvg": 0.8566666666666666,
+        "embeddings": 21,
+        "metadataRows": 21
+      },
+      "after": {
+        "entities": 21,
+        "links": 206,
+        "kespiAvg": 0.8566666666666666,
+        "embeddings": 21,
+        "metadataRows": 21
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "import",
+      "script": "import-from-wiki.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 1433,
+      "before": {
+        "entities": 21,
+        "links": 206,
+        "kespiAvg": 0.8566666666666666,
+        "embeddings": 21,
+        "metadataRows": 21
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 1,
+        "links": 0,
+        "kespiAvg": -0.0389,
+        "embeddings": 0,
+        "metadataRows": 1
+      }
+    },
+    {
+      "step": "distill",
+      "script": "distill.js",
+      "status": "failed",
+      "error": "Command failed: node \"<repo-root>/src/distill.js\"\n[distill] FAIL selftest-probe: no raw messages, refuse to distill without evidence\n",
+      "durationMs": 877,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "link",
+      "script": "auto-link.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 2356,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "link-sync",
+      "script": "sync-links-to-fs.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 739,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "vector",
+      "script": "index-vectors.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 2160,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "sprout",
+      "script": "sprout.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 453,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "pollinate",
+      "script": "pollinate.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 349,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "compress",
+      "script": "compress.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 300,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "kespi",
+      "script": "kespi-check.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 1147,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    },
+    {
+      "step": "prune",
+      "script": "prune.js",
+      "status": "success",
+      "error": null,
+      "durationMs": 451,
+      "before": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "after": {
+        "entities": 22,
+        "links": 206,
+        "kespiAvg": 0.8177272727272726,
+        "embeddings": 21,
+        "metadataRows": 22
+      },
+      "delta": {
+        "entities": 0,
+        "links": 0,
+        "kespiAvg": 0,
+        "embeddings": 0,
+        "metadataRows": 0
+      }
+    }
+  ],
+  "totals": {
+    "entities": 1,
+    "links": 0,
+    "kespiAvg": -0.0389,
+    "embeddings": 0,
+    "metadataRows": 1
+  },
+  "final": {
+    "entities": 22,
+    "links": 206,
+    "kespiAvg": 0.8177272727272726,
+    "embeddings": 21,
+    "metadataRows": 22
+  },
+  "totalDurationMs": 18345
+}
