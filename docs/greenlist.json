@@ -1,14 +1,14 @@
 {
   "_meta": {
     "version": 1,
-    "updated": "2026-09-07",
+    "updated": "2026-09-13",
     "rule": "Single source of truth for capability claims. Agents render panels from this JSON; green items require dated evidence; never promise items in locked.",
     "syncNote": "docs/GREEN-LIST.md 是本 JSON 的人类视图；改动先改 JSON 再重生成 md。"
   },
   "green": [
     {
       "id": "metabolism-pipeline",
-    "cap": "完整代谢（11 步，含 sync-opt 副本对齐）+ --resume/--step/--smart",
+      "cap": "完整代谢（10 步）+ --resume/--step/--smart",
       "evidence": "影子回归 10 步全过 3.28s",
       "date": "2026-09-03"
     },
@@ -73,11 +73,10 @@
       "date": "2026-09-07"
     },
     {
-      "id": "consciousness-neural-full",
-      "cap": "意识神经系统完整接入（13 模块：事件协议/神经核/感知/导链/意识层/元认知/成长闭环/hermes 适配器，控制面板接口标准四件套，预留接口池 IF-002~006+开放池）",
-      "desc": "意识神经系统完整接入：13 模块（事件协议/神经核/感知/导链/意识层/元认知/成长闭环/hermes 通用适配器），控制面板 MEMO 固化接口标准四件套（9通道/ConsciousnessEvent/adapter CLI/coordination-only 默认），预留接口池 IF-002~006+开放池",
-      "evidence": "2026-09-08 G1-G8 验收门禁全绿：13/13加载+事件7/7+kernel去重抑制持久化+全链路briefing+元认知边界+adapter四命令+origin血统(source=IF-TEST::g6-test, confidence=0)+verify-deploy回归ALL GREEN+SELF-TEST ALL GREEN；锚点提交 7b54471（git merge-base --is-ancestor 实测在 master 谱系）",
-      "date": "2026-09-08"
+      "id": "consciousness-panel",
+      "cap": "意识层三件套（组件登记簿 + 注意力队列 panel + C9 契约门）",
+      "evidence": "代谢尾步生成 panel 实测 0.87；负向测试：鬼步登记→C9a 红、panel 缺失→C9c 红，恢复→绿",
+      "date": "2026-09-13"
     }
   ],
   "locked": [

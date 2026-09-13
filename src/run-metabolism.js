@@ -306,6 +306,18 @@ async function runGovernanceExit() {
   }
 }
 
+/**
+ * 意识层尾步：生成注意力队列面板（卡 3）。非关键步骤，失败不影响代谢退出码。
+ */
+async function runPanelTail() {
+  try {
+    const panelMod = require('./metabolism-panel.js');
+    await panelMod();
+  } catch (e) {
+    console.log(`\n⚠️  意识层面板生成失败（非关键，不影响代谢结果）: ${e.message}`);
+  }
+}
+
 async function smartMode(enableFeedback = false) {
   console.log('🧬 aing 知识代谢流水线 — 智能决策模式\n / smart-decision mode');
   
@@ -414,6 +426,7 @@ async function main() {
   if (smart) {
     await smartMode(feedback);
     await runGovernanceExit(); // L1: 治理出口（含 observe 路径）
+    await runPanelTail();    // 意识层尾步：注意力队列面板
     return;
   }
   
@@ -512,6 +525,9 @@ async function main() {
 
   // L1: 治理出口——full 链同样汇入（sync-opt 从 STEPS 摘出后的统一执行点）
   await runGovernanceExit();
+
+  // 意识层尾步：注意力队列面板（卡 3，非关键）
+  await runPanelTail();
 
   // 打印统计
   printFinalStats();

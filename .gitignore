@@ -6,22 +6,16 @@ package-lock.json
 *.db
 *.db.tmp
 knowledge.db
+raw/
 wiki/
 logs/
 snapshots/
-data/
+data/*
+!data/component-registry.json
 mustard-seeds/
 metabolism-state.json
 
-# 模型权重（setup-vectors.ps1 下载产物，约 22MB，可重建）
-models/
-
-# raw/：运行产物与用户文档不入库，但种子知识源 .md 随仓库分发（验收 C3 依赖）
-raw/*
-!raw/*.md
-!raw/.gitkeep
-
-# 本地配置（用 growth.config.example.js 作为模板）
+# 本地配置（用 growth.config.example.ts 作为模板）
 src/growth.config.js
 
 # 环境与密钥
@@ -32,3 +26,7 @@ src/growth.config.js
 .DS_Store
 Thumbs.db
 desktop.ini
+models/
+
+# Agent 中间产物（不入库）
+.temp/

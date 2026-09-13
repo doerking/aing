@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "version": 1,
+    "rule": "组件契约登记簿（意识层卡 2）。C9 门：pipeline-step 组件 id 集合必须与 run-metabolism.js STEPS 数组双向一致（防加步忘登记 / 登记鬼步）；greenlist-declared 契约的 declarations 引用必须真实存在于 greenlist.json；panel.json 由代谢尾步生成，缺块即红。",
+    "updated": "2026-09-13"
+  },
+  "components": [
+    { "id": "compile", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "import", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "link", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "link-sync", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "vector", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#semantic-384"], "registered": "2026-09-13" },
+    { "id": "sprout", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "pollinate", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "compress", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "kespi", "role": "pipeline-step", "pipeline": "full-chain", "critical": true, "contracts": ["takes-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#kespi-lifecycle"], "registered": "2026-09-13" },
+    { "id": "prune", "role": "pipeline-step", "pipeline": "full-chain", "critical": false, "contracts": ["greenlist-declared"], "declarations": ["docs/greenlist.json#metabolism-pipeline"], "registered": "2026-09-13" },
+    { "id": "auto-ingest-subchain", "role": "sidechain", "contracts": ["pending-t2-must-take-lock", "greenlist-declared"], "declarations": ["docs/greenlist.json#ingest-dedup"], "registered": "2026-09-13", "note": "会话入库侧链（auto-ingest.js）；登记即暴露：T2 陷阱挂牌——子链与主链竞争同一 DB 时必须以锁互斥" }
+  ]
+}

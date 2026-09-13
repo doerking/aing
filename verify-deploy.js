@@ -164,6 +164,56 @@ async function main() {
     return `${scope.length} 个跟踪文件零盘符字面量`;
   });
 
+  // ── C9. 意识层契约门（卡 2 登记簿 + 卡 3 面板 schema）──
+  await check('C9a 组件登记簿 ↔ STEPS 双向一致', () => {
+    const regPath = path.join(PKG_DIR, 'data', 'component-registry.json');
+    if (!fs.existsSync(regPath)) throw new Error('缺少 data/component-registry.json → 意识层卡 2 登记簿缺失');
+    let reg;
+    try { reg = JSON.parse(fs.readFileSync(regPath, 'utf8')); } catch (e) { throw new Error('component-registry.json 无法解析: ' + e.message); }
+    const registrySteps = (reg.components || []).filter(c => c.role === 'pipeline-step').map(c => c.id).sort();
+    const rmSrc = fs.readFileSync(path.join(PKG_DIR, 'src', 'run-metabolism.js'), 'utf8');
+    const stepsSeg = rmSrc.slice(rmSrc.indexOf('const STEPS'), rmSrc.indexOf('];'));
+    const steps = [...stepsSeg.matchAll(/name:\s*'([^']+)'/g)].map(m => m[1]).sort();
+    if (JSON.stringify(steps) !== JSON.stringify(registrySteps)) {
+      throw new Error(`双向不一致 → STEPS(${steps.length}): ${steps.join(',')} vs 登记(${registrySteps.length}): ${registrySteps.join(',')}；加步必须同步登记，登记鬼步同样红灯`);
+    }
+    return `${registrySteps.length} 个 pipeline-step 登记 ↔ STEPS 双向一致`;
+  });
+
+  await check('C9b greenlist-declared 引用存在', () => {
+    const regPath = path.join(PKG_DIR, 'data', 'component-registry.json');
+    const glPath = path.join(PKG_DIR, 'docs', 'greenlist.json');
+    if (!fs.existsSync(glPath)) throw new Error('缺少 docs/greenlist.json');
+    const reg = JSON.parse(fs.readFileSync(regPath, 'utf8'));
+    const gl = JSON.parse(fs.readFileSync(glPath, 'utf8'));
+    const greenIds = new Set((gl.green || []).map(g => g.id));
+    const lockedIds = new Set((gl.locked || []).map(l => l.id));
+    const refs = [];
+    for (const c of reg.components || []) {
+      if ((c.contracts || []).includes('greenlist-declared')) {
+        for (const d of c.declarations || []) {
+          const id = String(d).split('#')[1];
+          if (!id) refs.push(`${c.id}: ${d}`);
+          else if (!greenIds.has(id) && !lockedIds.has(id)) refs.push(`${c.id}: ${d}`);
+        }
+      }
+    }
+    if (refs.length) throw new Error('登记簿引用不存在的绿名单项: ' + refs.join('；'));
+    return `${(reg.components || []).length} 组件引用校验通过`;
+  });
+
+  await check('C9c 意识层面板 schema 完整', () => {
+    const panelPath = path.join(PKG_DIR, 'data', 'panel.json');
+    if (!fs.existsSync(panelPath)) throw new Error('缺少 data/panel.json → 跑 node src/metabolism-panel.js（意识层卡 3 缺失）');
+    let p;
+    try { p = JSON.parse(fs.readFileSync(panelPath, 'utf8')); } catch (e) { throw new Error('panel.json 无法解析: ' + e.message); }
+    const required = ['_meta', 'health', 'lines', 'queues', 'gaps', 'chains', 'timeline'];
+    const missing = required.filter(k => !(k in p));
+    if (missing.length) throw new Error('panel.json 缺块: ' + missing.join(', '));
+    if (!p._meta.generatedAt) throw new Error('panel.json 缺 _meta.generatedAt（意识层未刷新）');
+    return `${required.length} 块完整（fresh @${p._meta.generatedAt}）`;
+  });
+
   // ── 报告 ─────────────────────────────────────────────────────
   console.log('\n═══ aing 部署验收报告 / Deployment Acceptance Report ═══');
   for (const r of results) {
