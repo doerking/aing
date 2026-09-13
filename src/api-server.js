@@ -20,18 +20,29 @@
  *   GET  /health                        健康检查（公开）
  *   GET  /api/entities                  实体列表
  *   GET  /api/entity/<id>               实体详情 + 最新 KESPI
- *   GET  /api/query?q=<词>&limit=<N>    语义/关键词检索
+ *   GET  /api/query?q=<词>&limit=<N>    全链检索（answer-pack）
  *   POST /api/ingest                    会话消息入库 {sessionId, role, content}
+ *
+ *   ── 意识神经控制 + 备忘录（agent ↔ aing 的主界面）──
+ *   GET  /api/consciousness             意识神经状态（kernel.status：焦点/唤醒/通道健康/注意力）
+ *   GET  /api/consciousness/briefing    备忘录（热点+告警+维护建议+意识反应，agent 冷启动第一读物）
+ *   POST /api/consciousness/event       agent 向 kernel 投递意识事件（channel/intensity/target/...）
+ *   GET  /api/consciousness/lineage     最近决策谱系（sense→assess→deliberate→verify→record）
+ *   POST /api/consciousness/sense       agent 感知（经 adapter.search 检索 → controller.sense 记录）
+ *   POST /api/consciousness/assess      agent 评估（投递事件 → kernel.ingest → controller.assess 记录）
  */
 
 const http = require('http');
-const crypto = require('crypto'); // N2: 常数时间凭据比较
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const KnowledgeStore = require('./knowledge-store');
 const VectorSearch = require('./vector-search');
 const { SessionStore } = require('./auto-ingest');
 const { searchCandidates } = require('./query');
+const { ConsciousnessKernel } = require('./consciousness-kernel');
+const { ConsciousnessController, MODES } = require('./consciousness-controller');
+const { HermesAingAdapter } = require('./hermes-aing-adapter');
 
 const PORT = parseInt(process.env.AING_API_PORT, 10) || 3789;
 const API_KEY = process.env.AING_API_KEY || null;
@@ -41,6 +52,11 @@ const ID_PATTERN = /^[a-zA-Z0-9\-_\u4e00-\u9fff]+$/; // 实体 ID 白名单，�
 const sessions = new SessionStore();
 let store = null;
 let vectorSearch = null;
+
+// 意识神经层（agent ↔ aing 的真正界面）
+let consciousnessKernel = null;
+let consciousnessController = null;
+let aingAdapter = null;
 
 function json(res, code, obj) {
   const body = JSON.stringify(obj, null, 2);
@@ -207,7 +223,85 @@ async function handle(req, res) {
     return json(res, 200, { accepted: true, tenant });
   }
 
-  // ── agent 驾驶面：冷启动注入（一次调用拿全貌）──
+  // ── 意识神经控制 + 备忘录（agent ↔ aing 的主界面）──
+
+  // 备忘录：agent 冷启动第一读物（意识状态 + briefing + panel 合一）
+  if (p === '/api/consciousness/briefing' && req.method === 'GET') {
+    const briefing = aingAdapter.generateBriefing();
+    const kernelStatus = consciousnessKernel.status();
+    return json(res, 200, {
+      generatedAt: new Date().toISOString(),
+      consciousness: kernelStatus,
+      briefing: briefing.briefing,
+      reactions: briefing.consciousness.reactions?.slice(0, 5) || [],
+      alerts: briefing.briefing.alerts,
+      hotspots: briefing.briefing.hotspots?.slice(0, 5) || [],
+      recommendations: briefing.briefing.recommendations || [],
+      priority: briefing.priority,
+      requiresApproval: briefing.requiresApproval
+    });
+  }
+
+  // 意识神经状态
+  if (p === '/api/consciousness' && req.method === 'GET') {
+    return json(res, 200, consciousnessKernel.status());
+  }
+
+  // agent 向 kernel 投递意识事件
+  if (p === '/api/consciousness/event' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.channel || !body.target) {
+      return json(res, 400, { error: '需要 {channel, target} 字段；channel ∈ structure/semantic/temporal/kespi/behavior/feedback/anomaly/intent/generic' });
+    }
+    const result = consciousnessKernel.ingest([{
+      channel: body.channel,
+      target: body.target,
+      source: body.source || 'agent',
+      signalType: body.signalType || 'observed',
+      intensity: body.intensity != null ? Number(body.intensity) : 0.5,
+      confidence: body.confidence != null ? Number(body.confidence) : 0.7,
+      evidence: body.evidence || {},
+      suggestedAction: body.suggestedAction || 'observe',
+      tags: body.tags || [],
+      requiresApproval: !!body.requiresApproval
+    }]);
+    return json(res, 200, result);
+  }
+
+  // agent 感知（经 adapter.search 检索 → controller.sense 记录谱系）
+  if (p === '/api/consciousness/sense' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.query) return json(res, 400, { error: '需要 {query} 字段' });
+    const lineage = await consciousnessController.sense({
+      query: body.query,
+      limit: body.limit || 8,
+      taskId: body.taskId || null
+    });
+    return json(res, 200, lineage);
+  }
+
+  // agent 评估（投递事件 → kernel.ingest → controller.assess 记录谱系）
+  if (p === '/api/consciousness/assess' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.events || !body.events.length) return json(res, 400, { error: '需要 {events: [...]} 字段' });
+    const lineage = consciousnessController.assess({
+      events: body.events,
+      taskId: body.taskId || null
+    });
+    return json(res, 200, lineage);
+  }
+
+  // 最近决策谱系（sense→assess→deliberate→verify→record 链路）
+  if (p === '/api/consciousness/lineage' && req.method === 'GET') {
+    const limit = Math.min(parseInt(url.searchParams.get('limit'), 10) || 10, 50);
+    try {
+      const lines = fs.readFileSync(consciousnessController.lineageFile, 'utf8').trim().split('\n').slice(-limit);
+      const records = lines.map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
+      return json(res, 200, { count: records.length, records });
+    } catch (e) { return json(res, 200, { count: 0, records: [] }); }
+  }
+
+  // 旧 /api/context 保留兼容，但推荐用 /api/consciousness/briefing
   if (p === '/api/context' && req.method === 'GET') {
     const ctx = { generatedAt: new Date().toISOString() };
 
@@ -332,13 +426,28 @@ async function main() {
     console.log('🔎 检索模式: hash (64 维；语义模型未就绪)');
   }
 
+  // 意识神经层初始化（agent ↔ aing 的真正界面）
+  const KB_ROOT = path.resolve(__dirname, '..');
+  consciousnessKernel = new ConsciousnessKernel({ baseDir: KB_ROOT, mode: 'coordination-only' });
+  aingAdapter = new HermesAingAdapter({
+    kbRoot: KB_ROOT,
+    sessions,
+    store,
+    vectorSearch,
+    consciousnessKernel
+  });
+  consciousnessController = new ConsciousnessController({
+    adapter: aingAdapter,
+    baseDir: KB_ROOT,
+    mode: MODES.COORDINATION_ONLY
+  });
+  console.log('🧠 意识神经层已就绪（coordination-only）');
+
   const host = API_KEY ? '0.0.0.0' : '127.0.0.1';
   const server = http.createServer((req, res) => {
     handle(req, res).catch(e => json(res, 500, { error: e.message }));
   });
 
-  // 定期冲洗会话批（auto-ingest 的轮询仅在其自身为主模块时启动，
-  // API server 挂载 SessionStore 后必须自备冲洗循环，否则消息滞留内存永不出库）
   setInterval(() => {
     for (const [sid, session] of sessions.sessions) {
       if (session.messages.length > 0) sessions.checkAndIngest(sid);
@@ -349,7 +458,9 @@ async function main() {
     console.log('🌐 aing API 服务启动');
     console.log(`   监听: http://${host}:${PORT}`);
     console.log(`   认证: ${API_KEY ? 'Bearer (AING_API_KEY 已设置)' : '本机信任模式（未设 AING_API_KEY，仅监听 127.0.0.1）'}`);
-    console.log(`   端点: /health /api/status /api/entities /api/entity/<id> /api/query /api/context /api/ingest /api/entity /api/delta /api/tags/<tag>`);
+    console.log('   意识神经: /api/consciousness /api/consciousness/briefing /api/consciousness/event /api/consciousness/sense /api/consciousness/assess /api/consciousness/lineage');
+    console.log('   知识检索: /api/query /api/entities /api/entity/<id> /api/context');
+    console.log('   入库写入: /api/ingest /api/entity(PATCH) /api/delta /api/tags/<tag>');
   });
 }
 
