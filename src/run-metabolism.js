@@ -115,7 +115,6 @@ const STEPS = [
   { name: 'compress', desc: '芥子压缩 (低频归档)', script: 'compress.js', args: [] },
   { name: 'kespi', desc: 'KESPI 八维自检', script: 'kespi-check.js', args: [] },
 { name: 'prune', desc: '剪枝清理 (过期归档)', script: 'prune.js', args: [] },
-{ name: 'sync-opt', desc: 'OPT 副本对齐 (marker 启用，非关键步骤)', script: 'sync-opt.js', args: [] }
 ];
 
 // P0: 关键步骤 —— 失败必须中断流水线，不允许「成功 8 失败 1」冒充成功
@@ -285,6 +284,28 @@ function printFinalStats() {
 /**
  * 智能决策模式：让生长决策器决定执行哪些步骤
  */
+// ── 治理出口（L1, 2026-09-08）：sync-opt 副本对齐挂 main() 出口，smart/observe/step/full 殊途同归。──
+// 背景：此前 sync-opt 是 full 链第 11 步，--smart 的 observe 分支提前 return 时永远到不了（T1 陷阱：
+// OPT 永远是 aing 的副本，在智能模式下退化为运气）。摘出 STEPS 后由出口统一执行；
+// marker 门在 sync-opt.js 内部（无 data/opt-root.json 时零操作，其他 clone 不受影响）。
+async function runGovernanceExit() {
+  if (process.argv.includes('--step=')) {
+    // 单步模式（--step=compile）多为调试/CI 精确重放，不代跑副本对齐（避免调试动作触发换血副作用）
+    console.log('⏭️  [治理出口] --step 单步模式跳过 sync-opt');
+    return;
+  }
+  try {
+    // 直接 execSync（executeStep 绑定 STEPS 索引与状态机；出口执行不伪装成链上步骤、不进代谢日志）
+    execSync(`node "${path.join(__dirname, 'sync-opt.js')}"`, {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit',
+      timeout: 10 * 60 * 1000
+    });
+  } catch (e) {
+    console.log('⚠️  [治理出口] sync-opt 失败（非关键，不改变代谢退出码）: ' + e.message);
+  }
+}
+
 async function smartMode(enableFeedback = false) {
   console.log('🧬 aing 知识代谢流水线 — 智能决策模式\n / smart-decision mode');
   
@@ -323,6 +344,15 @@ async function smartMode(enableFeedback = false) {
     // 4. 执行
     if (decision.action === 'observe') {
       console.log('\n👁️  系统判断无需操作，继续观察 / System decides no action, keep observing');
+      // L1c: observe 也是一次可学习的决策——照拍反馈快照，让 feedback 知道'判断为不动作'的系统当时长什么样
+      if (enableFeedback) {
+        try {
+          const snap = await feedback.takeSnapshot();
+          await feedback.logFeedback({ observe: true, decision: decision.action, snap }, []);
+        } catch (e) {
+          console.log('⚠️  observe 快照失败（不影响决策）: ' + e.message);
+        }
+      }
       return;
     }
     
@@ -383,6 +413,7 @@ async function main() {
   // 智能决策模式
   if (smart) {
     await smartMode(feedback);
+    await runGovernanceExit(); // L1: 治理出口（含 observe 路径）
     return;
   }
   
@@ -478,6 +509,9 @@ async function main() {
     console.log('\n🟢 代谢成功：所有关键步骤均已完成。 / Metabolism success: all critical steps done');
     process.exitCode = 0;
   }
+
+  // L1: 治理出口——full 链同样汇入（sync-opt 从 STEPS 摘出后的统一执行点）
+  await runGovernanceExit();
 
   // 打印统计
   printFinalStats();
