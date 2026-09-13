@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'dd0ccdc5-dd09-43b9-8d3e-e1f74d756f29'
-  PropagateID: 'dd0ccdc5-dd09-43b9-8d3e-e1f74d756f29'
-  ReservedCode1: '52e8ea7e-199f-4c58-a389-4b365954169a'
-  ReservedCode2: '52e8ea7e-199f-4c58-a389-4b365954169a'
+  ProduceID: '15d45710-abff-4844-8250-58f251078182'
+  PropagateID: '15d45710-abff-4844-8250-58f251078182'
+  ReservedCode1: '32cb7f2f-5f9f-4ee2-b3e8-8446564d6417'
+  ReservedCode2: '32cb7f2f-5f9f-4ee2-b3e8-8446564d6417'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -518,10 +518,6 @@ aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
 - **[LangChain · The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness)**（2026）— "如果你不是模型，你就是 harness。" Agent = Model + Harness。aing 即 agent 的 harness：状态管理（knowledge.db）、记忆（raw/wiki/panel）、工具执行（代谢链）、反馈循环（feedback-loop）、持久上下文（consciousness state）。agent 不需要自己管这些——aing 全管了，agent 出场就手持备忘录从容工作。
 - **[翁荔 · Harness Engineering for Self-Improvement / SEAGym](https://arxiv.org/abs/2606.17546)**（清华，2026-07）— harness 层正在变得和模型本身一样重要。harness 更新有 backend 依赖（不同模型暴露的 failure surface 不同）。aing 的设计回应：后端无关的纯状态供应者——不绑定特定 LLM，harness 自维继。
 - **[Browser Harness](https://github.com/browser-use/browser-harness)**（Browser Use 团队，2026-04）— 592 行直连 Chrome，哲学："Don't wrap the LLM. Don't wrap its tools either." aing 的核心管道同样零外部工具维继：代谢链 + 意识神经层 + 入库全用 Node.js 内置模块，sharp 从关键依赖降为可选（全仓零 require），意识层依赖链优雅降级。
-
-### 驾驶座 / Cockpit · Agent Interface
-
-- **[TipKay](https://tipkay.com)** — aing 意识神经控制层与备忘录设计的诞生现场。意识层三件套（组件登记簿 / 注意力队列 / C9 契约门）、L1 治理出口、agent 驾驶面（API 意识神经端点 + 备忘录端点 + 会话入库四种角色）均在 TipKay 会话中由 agent 驱动设计并实施。TipKay 的会话审计（execution-audit.jsonl）是 aing agent-first 设计的完整取证链。
 
 > 灵感属于所有人，实现属于此刻。
 > *If I have seen further, it is by standing on the shoulders of giants.*
