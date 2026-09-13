@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '344243d5-e5b4-4e81-9001-65c6edb4216b'
-  PropagateID: '344243d5-e5b4-4e81-9001-65c6edb4216b'
-  ReservedCode1: '4f617096-733f-4532-92ca-9022b604062d'
-  ReservedCode2: '4f617096-733f-4532-92ca-9022b604062d'
+  ProduceID: 'db74651c-aad8-49dd-9d53-2e9f7fa778ac'
+  PropagateID: 'db74651c-aad8-49dd-9d53-2e9f7fa778ac'
+  ReservedCode1: '318817aa-b15e-4f98-b2a8-b667f563a3bf'
+  ReservedCode2: '318817aa-b15e-4f98-b2a8-b667f563a3bf'
 ---
 
 # aing 部署包模块手册 / Module Handbook (Ops Doc, Chinese-primary)
@@ -19,9 +19,9 @@ AIGC:
 消息/文件 ──► auto-ingest ──► raw/*.md
                                   │ shared-spine (门禁校验)
                                   ▼
-   run-metabolism 10 步代谢链：
-   compile ─► import ─► link ─► link-sync ─► vector ─► sprout ─► pollinate ─► compress ─► kespi ─► prune
-   (raw→wiki) (wiki→DB) (auto-link) (双脑同步) (64d向量) (关联发现) (跨域融合) (低频归档) (八维自检) (过期清理)
+   run-metabolism 11 步代谢链：
+   compile ─► import ─► distill ─► link ─► link-sync ─► vector ─► sprout ─► pollinate ─► compress ─► kespi ─► prune
+   (raw→wiki) (wiki→DB) (蒸馏器) (auto-link) (双脑同步) (64d向量) (关联发现) (跨域融合) (低频归档) (八维自检) (过期清理)
                                   │
         ┌─────────────────────────┼──────────────────────────┐
         ▼                         ▼                          ▼
@@ -34,10 +34,10 @@ AIGC:
 
 ---
 
-## 一、代谢链（10 步管线）
+## 一、代谢链（11 步管线）
 
 ### run-metabolism.js — 管线编排器
-- **能力**：按序执行 10 步；`--resume` 从上次断点续跑；`--force` 出错继续。
+- **能力**：按序执行 11 步；`--resume` 从上次断点续跑；`--force` 出错继续。
 - **用法**：`node src/run-metabolism.js [--resume] [--force]`
 - **高发问题与处置**：
   - 中途失败后重跑总从头来 → 用 `--resume`（游标只在步骤**成功后**推进）。

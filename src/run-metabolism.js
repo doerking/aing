@@ -5,7 +5,7 @@
  * 功能：串联所有代谢引擎，执行完整的双脑代谢流程
  * 
  * 三种模式：
- * 1. 完整模式（默认）: 按固定顺序执行全部 10 步
+ * 1. 完整模式（默认）: 按固定顺序执行全部 11 步
  * 2. 智能模式 (--smart): 生长决策器判断该做什么，按需执行
  * 3. 单步模式 (--step xxx): 只执行指定步骤
  * 
@@ -36,7 +36,7 @@ const path = require('path');
 
 // ── N1: 跨进程原子锁（范式同 distill.js D4：wx 原子创建 + finally 释放 + 陈旧锁按 age/pid 回收）──
 const LOCK_PATH = path.join(__dirname, '..', 'data', 'metabolism.lock');
-const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十步全流程宽裕上限
+const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十一步全流程宽裕上限
 let heldLock = null; // 持锁句柄，main 结束时保证释放
 
 function pidAlive(pid) {

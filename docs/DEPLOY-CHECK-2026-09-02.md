@@ -1,3 +1,14 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'd58bea82-a5a6-4d34-9d25-d540faa2b093'
+  PropagateID: 'd58bea82-a5a6-4d34-9d25-d540faa2b093'
+  ReservedCode1: '85878497-967f-4edb-ad2d-dc80da17a392'
+  ReservedCode2: '85878497-967f-4edb-ad2d-dc80da17a392'
+---
+
 # 部署验证清单与常见问题处理（2026-09-02） / Deploy Checklist & Troubleshooting (Chinese-primary)
 
 > 本包包含双脑同步修复。部署完成后请按第二节顺序验证；遇到问题查第三节对症处理。 / English readers: section 2 is the ordered verification; section 3 is symptom → fix. Commands and table keys are language-neutral.
@@ -5,7 +16,7 @@
 ## 一、本版变化
 
 1. 新增 `src/sync-links-to-fs.js`：把 knowledge.db 里的链接表镜像落盘到 wiki/links/（双格式：`A__B.md` 边文件 + `index.md` 汇总索引）。修复的问题：此前 auto-link 只写数据库不写文件系统，而 neural-guide-chain / consciousness-layer 依赖 wiki/links/index.md 读取邻居关系，导致两层数据脱节、邻居关系恒为空。
-2. `src/run-metabolism.js` 代谢管线在 link 步后新增 `link-sync` 步（现共 10 步），每轮代谢自动保持数据库与文件系统一致。
+2. `src/run-metabolism.js` 代谢管线在 link 步后新增 `link-sync` 步，后新增 `distill` 蒸馏器步（现共 11 步），每轮代谢自动保持数据库与文件系统一致。
 
 ## 二、部署验证清单（依次执行，全部通过即部署成功）
 
@@ -16,7 +27,7 @@ npm install
 # 2. 部署自检
 node verify-deploy.js
 
-# 3. 完整代谢（预期 10/10 步成功，KESPI 分数正常输出）
+# 3. 完整代谢（预期 11/11 步成功，KESPI 分数正常输出）
 node src/run-metabolism.js
 
 # 4. 双脑一致性（预期：index.md 非空，边文件数 = 数据库链接数）

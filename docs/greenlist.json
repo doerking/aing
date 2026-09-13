@@ -8,8 +8,8 @@
   "green": [
     {
       "id": "metabolism-pipeline",
-      "cap": "完整代谢（10 步）+ --resume/--step/--smart",
-      "evidence": "影子回归 10 步全过 3.28s",
+      "cap": "完整代谢（11 步，含 distill）+ --resume/--step/--smart",
+      "evidence": "影子回归 11 步全过 7.6s（2026-09-13 M4 验证）",
       "date": "2026-09-03"
     },
     {
