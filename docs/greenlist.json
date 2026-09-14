@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 1,
-    "updated": "2026-09-13",
+    "updated": "2026-09-14",
     "rule": "Single source of truth for capability claims. Agents render panels from this JSON; green items require dated evidence; never promise items in locked.",
     "syncNote": "docs/GREEN-LIST.md 是本 JSON 的人类视图；改动先改 JSON 再重生成 md。"
   },
@@ -50,9 +50,9 @@
     },
     {
       "id": "http-api",
-      "cap": "HTTP API（3789）/health 公开，其余 Bearer 认证，租户隔离",
-      "evidence": "5 端点实测 200；401/400 实测",
-      "date": "2026-09-03"
+      "cap": "HTTP API（3789）/health 公开，其余 Bearer 认证（单用户产品，无多租户）",
+      "evidence": "本会话实测：无键 /health 200、受保护端点 401、带键 200；X-Tenant-ID 会话前缀已于 2026-09-14 已砍除，砍除后 /api/ingest 复验 200 且会话键即 sessionId",
+      "date": "2026-09-14"
     },
     {
       "id": "ingest-dedup",
@@ -77,6 +77,30 @@
       "cap": "意识层三件套（组件登记簿 + 注意力队列 panel + C9 契约门）",
       "evidence": "代谢尾步生成 panel 实测 0.87；负向测试：鬼步登记→C9a 红、panel 缺失→C9c 红，恢复→绿",
       "date": "2026-09-13"
+    },
+    {
+      "id": "distill-write-path",
+      "cap": "蒸馏写路径可用（distill_meta 迁移 + 蒸馏债兑付，含 CRLF 语料）",
+      "evidence": "影子 A/B：CRLF 探针 pending→active、distill_meta 落库、debt 1→0；同探针在未修复代码上报 no such column",
+      "date": "2026-09-14"
+    },
+    {
+      "id": "db-fk-integrity",
+      "cap": "库内引用完整性（foreign_keys 每次落盘重断言 + ON DELETE CASCADE 生效）",
+      "evidence": "影子实测：删父级联各表 -1、悬空写被 FOREIGN KEY 拦、11 步代谢零失败、self-test 跑后零探针残留",
+      "date": "2026-09-14"
+    },
+    {
+      "id": "tag-loading-api",
+      "cap": "按标签加载检索 /api/tags/<tag>（裸标签与 9 段 name:N 兼容 + 强度下限过滤）",
+      "evidence": "影子起服务实测：混格式命中 5/0 对比、:6/:9 下限生效、大小写不敏感；旧实现整串全等致 9 段格式静默零命中",
+      "date": "2026-09-14"
+    },
+    {
+      "id": "c10-consistency-gates",
+      "cap": "院际一致性与写路径门禁 C10a–C10e（视图/面板读数/写路径/配置模板/引用完整性）",
+      "evidence": "verify-deploy 19 项全绿；负向注入四项各自转红、复原后转绿（Pitfall 8 负向测试）",
+      "date": "2026-09-14"
     }
   ],
   "locked": [
@@ -87,8 +111,8 @@
     },
     {
       "id": "enterprise-tenant",
-      "item": "企业级多租户（独立库/配额/权限）",
-      "note": "现有隔离仅为会话级"
+      "item": "多租户 / 企业级租户隔离（已砍除，非待解锁项）",
+      "note": "2026-09-14 用户决定砍除：旧 X-Tenant-ID 仅给会话键加前缀、共库共表不构成隔离，却撑虚能力声明。本包定位单用户知识代谢引擎；门禁 C10f 扫到 tenant 残留即红，禁止死代码复活"
     },
     {
       "id": "b5-self-modify",

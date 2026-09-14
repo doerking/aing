@@ -219,6 +219,176 @@ async function main() {
     return `${required.length} 块完整（fresh @${p._meta.generatedAt}）`;
   });
 
+  // ── C10. 院际一致性与写路径可用（2026-09-14 实践场混代事故复盘新增）──────
+  // 事故：实践场 src 落后真源 4 个文件——distill.js 已写 distill_meta，而 knowledge-store.js 无该列迁移，
+  // 真实待蒸馏实体一进 distill 即报 no such column 崩溃；同时 verify-deploy 14 项全绿、面板照发 ALL GREEN。
+  // 同批暴露：绿名单视图被手改漂移、data/panel.json 读数过期仍被当现状引用、配置模板缺段让新部署即崩。
+  // C10 全部只读或只写系统临时文件，不修改本包任何数据。/ read-only or temp-only; never mutates this package.
+  await check('C10a 绿名单视图同步 (GREEN-LIST.md ↔ greenlist.json)', () => {
+    const { render, loadGreenlist, compose } = require('./tools/gen-greenlist');
+    const mdPath = path.join(PKG_DIR, 'docs', 'GREEN-LIST.md');
+    if (!fs.existsSync(mdPath)) throw new Error('缺 docs/GREEN-LIST.md → node tools/gen-greenlist.js');
+    const G = loadGreenlist();
+    const norm = s => s.replace(/\r\n/g, '\n');
+    const want = norm(compose(render(G), fs.readFileSync(mdPath, 'utf8')));   // 视图允许带合规水印，生成器透传不换行
+    const have = norm(fs.readFileSync(mdPath, 'utf8'));
+    if (want === have) return `视图与真源一致（green ${G.green.length} / locked ${G.locked.length}）`;
+    const caps = s => s.split('\n').filter(l => /^\s*- [✅⬜]/.test(l))
+      .map(l => l.replace(/^\s*- [✅⬜]\s*\**/, '').replace(/\**\s*$/, '').trim().slice(0, 18));
+    const hv = caps(have), wv = caps(want);
+    const phantom = hv.filter(x => !wv.includes(x));
+    const omitted = wv.filter(x => !hv.includes(x));
+    throw new Error('GREEN-LIST.md 与 greenlist.json 不一致（视图被手改）→ node tools/gen-greenlist.js'
+      + (phantom.length ? '｜视图虚报: ' + phantom.join(' / ') : '')
+      + (omitted.length ? '｜视图漏报: ' + omitted.join(' / ') : ''));
+  });
+
+  await check('C10b 意识层面板读数一致 (panel.json ↔ 库 + 新鲜度)', async () => {
+    if (!store) throw new Error('C4 未通过，跳过');
+    const panelPath = path.join(PKG_DIR, 'data', 'panel.json');
+    if (!fs.existsSync(panelPath)) throw new Error('缺 data/panel.json → node src/metabolism-panel.js');
+    const p = JSON.parse(fs.readFileSync(panelPath, 'utf8'));
+    const cfg = require('./src/growth.config');
+    const maxAgeH = cfg.gates && Number.isFinite(cfg.gates.panelMaxAgeHours) ? cfg.gates.panelMaxAgeHours : 6;
+    const gen = Date.parse((p._meta || {}).generatedAt || '');
+    if (!Number.isFinite(gen)) throw new Error('panel._meta.generatedAt 缺失或不可解析 → node src/metabolism-panel.js');
+    const ageH = (Date.now() - gen) / 3.6e6;
+    if (ageH > maxAgeH) throw new Error(`面板已过期 ${ageH.toFixed(1)}h > 上限 ${maxAgeH}h（阈值 growth.config.gates.panelMaxAgeHours）→ 代谢链尾步未跑，跑 node src/run-metabolism.js 或 node src/metabolism-panel.js`);
+    const h = p.health || {};
+    const liveEnt = store.all('SELECT COUNT(*) AS n FROM entities')[0].n;
+    const liveLink = store.all('SELECT COUNT(*) AS n FROM links')[0].n;
+    const drift = [];
+    if (h.entity_count !== liveEnt) drift.push(`entity_count ${h.entity_count} ≠ 库内 ${liveEnt}`);
+    if (h.link_count !== liveLink) drift.push(`link_count ${h.link_count} ≠ 库内 ${liveLink}`);
+    if (drift.length) throw new Error('面板读数与库不符（过期面板易被当现状引用）: ' + drift.join('；') + ' → node src/metabolism-panel.js 重生成');
+    return `读数一致（${liveEnt} 实体 / ${liveLink} 链接），新鲜度 ${ageH.toFixed(1)}h ≤ ${maxAgeH}h`;
+  });
+
+  await check('C10c distill 写路径可用 (混代指纹 + 临时库真写)', async () => {
+    const distillSrc = fs.readFileSync(path.join(PKG_DIR, 'src', 'distill.js'), 'utf8');
+    const storeSrc = fs.readFileSync(path.join(PKG_DIR, 'src', 'knowledge-store.js'), 'utf8');
+    const uses = /\bdistill_meta\b/.test(distillSrc);
+    if (uses && !/\bdistill_meta\b/.test(storeSrc)) {
+      throw new Error('混代：distill.js 写 distill_meta，但 knowledge-store.js 无该列定义/迁移 → 真实待蒸馏实体一进 distill 即 no such column；从真源同步 knowledge-store.js（勿在本包热改）');
+    }
+    const cols = store ? store.all('PRAGMA table_info(entities)').map(r => r.name) : [];
+    if (uses && cols.length && !cols.includes('distill_meta')) {
+      throw new Error('实库 entities 缺 distill_meta 列（代码新、库旧）→ 跑任意 store.init() 触发迁移，或 node src/run-metabolism.js');
+    }
+    // 真写回读：跑与 distill.js 完全相同的 UPDATE，落在系统临时库，跑完即删 / same UPDATE, temp db only
+    const os = require('os');
+    const KnowledgeStore = require('./src/knowledge-store');
+    const tmp = path.join(os.tmpdir(), `aing-c10c-${process.pid}.db`);
+    fs.rmSync(tmp, { force: true });
+    try {
+      const s = new KnowledgeStore(tmp);
+      await s.init();
+      s.run('INSERT INTO entities (id, name, type, content, tags, status, confidence) VALUES (?,?,?,?,?,?,?)',
+        ['c10c-probe', 'c10c-probe', 'Concept', 'probe', '[]', 'pending-distillation', 0.7]);
+      const meta = JSON.stringify({ digest: 'c10c', by: 'verify-deploy.js', at: new Date().toISOString() });
+      s.run("UPDATE entities SET status='active', tags=?, content=?, distill_meta=? WHERE id=?", ['[]', 'probe', meta, 'c10c-probe']);
+      const back = s.all("SELECT distill_meta, status FROM entities WHERE id='c10c-probe'");
+      if (!back.length) throw new Error('临时库探针丢失（写后读为空）');
+      if (back[0].distill_meta !== meta) throw new Error('distill_meta 写回读不一致 → 蒸馏债无法兑付');
+      if (back[0].status !== 'active') throw new Error('status 未从 pending-distillation 翻转为 active');
+      s.close();
+    } finally {
+      fs.rmSync(tmp, { force: true });
+    }
+    return `列在位（${cols.length || '?'} 列）+ 临时库真写回读一致`;
+  });
+
+  await check('C10d 配置模板同构 (example ↔ 运行配置 + 代码引用段)', () => {
+    const exPath = path.join(PKG_DIR, 'growth.config.example.js');
+    const rtPath = path.join(PKG_DIR, 'src', 'growth.config.js');
+    if (!fs.existsSync(exPath)) throw new Error('缺 growth.config.example.js → 新部署无模板可复制');
+    if (!fs.existsSync(rtPath)) throw new Error('缺 src/growth.config.js → cp growth.config.example.js src/growth.config.js');
+    const ex = require(path.resolve(exPath));
+    const rt = require(path.resolve(rtPath));
+    // (1) 代码里引用的配置段必须模板里都有：缺段曾让新部署包 npm run tripath 直接 TypeError
+    const srcDir = path.join(PKG_DIR, 'src');
+    const refs = new Map();
+    for (const f of fs.readdirSync(srcDir).filter(f => f.endsWith('.js') && !/^growth\.config\./.test(f))) {
+      const t = fs.readFileSync(path.join(srcDir, f), 'utf8');
+      const ids = new Set([...t.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*require\(['"]\.\/growth\.config['"]\)/g)].map(m => m[1]));
+      for (const id of ids) for (const m of t.matchAll(new RegExp('\\b' + id + '\\.([A-Za-z_]\\w*)', 'g'))) {
+        const seen = refs.get(m[1]) || [];
+        if (!seen.includes(f)) refs.set(m[1], [...seen, f]);
+      }
+    }
+    const missing = [...refs.keys()].filter(k => !(k in ex)).sort();
+    if (missing.length) throw new Error('模板缺段（按模板新部署即崩）: '
+      + missing.map(k => `${k}←${(refs.get(k) || []).join(',')}`).join('；') + ' → 同步进 growth.config.example.js');
+    // (2) 模板与运行配置键值同构一致 / structural + value equality
+    if (JSON.stringify(rt) !== JSON.stringify(ex)) {
+      const keys = new Set([...Object.keys(rt), ...Object.keys(ex)]);
+      const diff = [...keys].filter(k => JSON.stringify(rt[k]) !== JSON.stringify(ex[k]));
+      throw new Error('模板与运行配置漂移，段: ' + (diff.join('/') || '嵌套差异') + ' → 两处同步（模板为运行配置的同构镜像）');
+    }
+    return `${refs.size} 个被引用配置段齐备（${[...refs.keys()].sort().join(',')}），模板与运行配置一致`;
+  });
+
+  await check('C10e 库内引用完整性（孤儿行零残留）', async () => {
+    if (!store) throw new Error('C4 未通过，跳过');
+    // 本包连接上 PRAGMA foreign_keys 为关闭（sql.js 默认），DELETE 不级联清子表：
+    // 探针/测试实体删除后会在子表留下孤儿行，污染 KESPI 均分、孤岛率与元认知 selfCheck 读数。
+    // 2026-09-13 实测残留 7 行（selftest-probe / sensitivity-probe / poison-probe 身后件）。
+    const childCols = [
+      ['entity_embeddings', 'entity_id'],
+      ['entity_metadata', 'entity_id'],
+      ['type_index', 'entity_id'],
+      ['kespi_history', 'entity_id'],
+      ['error_log', 'entity_id'],
+      ['links', 'source_id'],
+      ['links', 'target_id']
+    ];
+    const found = [];
+    for (const [tbl, col] of childCols) {
+      let rows;
+      try {
+        rows = store.all(`SELECT ${col} AS k FROM ${tbl} WHERE ${col} IS NOT NULL AND ${col} NOT IN (SELECT id FROM entities) GROUP BY ${col}`);
+      } catch (e) { continue; }   // 表不存在（新库尚未建表）→ 视为零残留
+      if (rows && rows.length) found.push(`${tbl}.${col} ${rows.length} 个悬空键（${rows.slice(0, 3).map(r => r.k).join(', ')}${rows.length > 3 ? ' …' : ''}）`);
+    }
+    if (found.length) {
+      throw new Error('孤儿行残留：' + found.join('；')
+        + ` → 清理前先备份 knowledge.db，再执行 DELETE FROM <表> WHERE <键> NOT IN (SELECT id FROM entities)；根治是在 knowledge-store.init() 开启 PRAGMA foreign_keys=1（源码侧）`);
+    }
+    const fk = store.all('PRAGMA foreign_keys');
+    return `零悬空引用（7 类子表/链接端点已核，FK=${fk && fk.length ? fk[0].foreign_keys : '?'}）`;
+  });
+
+  await check('C10f 已砍组件防复活（多租户 tenant）', () => {
+    // 2026-09-14 用户决定砍掉多租户组件：旧实现只给会话键拼 `tenant::` 前缀，共库共表，
+    // 不构成任何数据隔离，却把「租户隔离」撑成对外能力声明（README/手册/绿名单都曾这么写）。
+    // 砍除后必须由门禁守住——否则死代码会从任何一院的复制粘贴里复活。
+    // 扫描面 = 代码 + 对外声称面；历史决策文档（DESIGN-*/releases/*/Engineering/* 与 raw/wiki 语料）
+    // 属决策史与用户知识内容，不改写也不计入违规（本包纪律：评审文档是历史，不当现状引用）。
+    const CODE = /* gate-self */[/x-tenant-id/i, /\btenant\b\s*[=:]/, /\$\{\s*tenant\s*\}/, /tenant::/, /['"]tenant['"]/i, /\.tenant\b/];
+    const CLAIM = /* gate-self *//租户|[Tt]enant/;
+    const EXEMPT = /(已砍除|砍除|砍掉|防复活|死代码|无多租户|单用户|removed|不再|禁止|历史|决策史|~~)/i;
+    const hits = [];
+    const scan = (rel, patterns) => {
+      const abs = path.join(PKG_DIR, rel);
+      if (!fs.existsSync(abs)) return;
+      fs.readFileSync(abs, 'utf8').split(/\r?\n/).forEach((line, i) => {
+        if (/gate-self/.test(line)) return; // 门禁自身的模式定义行豁免（否则模式表自匹配）        if (!patterns.some(re => re.test(line))) return;
+        if (EXEMPT.test(line)) return;                 // 显式标注"已砍除"的说明行放行
+        if (!patterns.some(re => re.test(line))) return; // 未命中模式的行不记
+        hits.push(`${rel}:${i + 1} ${line.trim().slice(0, 56)}`);
+      });
+    };
+    for (const f of fs.readdirSync(path.join(PKG_DIR, 'src')).filter(f => f.endsWith('.js'))) scan('src/' + f, CODE);
+    for (const f of ['verify-deploy.js', 'tools/self-test.js']) scan(f, CODE);
+    for (const f of ['README.md', 'AGENTS.md', 'docs/GREEN-LIST.md', 'docs/module-handbook.md', 'docs/DEPLOY-PLAYBOOK.md', 'docs/AGENT-ONBOARDING.md']) scan(f, [CLAIM]);
+    if (hits.length) {
+      throw new Error('多租户残留 ' + hits.length + ' 处（组件已于 2026-09-14 砍除，本包定位单用户）: '
+        + hits.slice(0, 3).join(' ｜ ') + (hits.length > 3 ? ` …另 ${hits.length - 3} 处` : '')
+        + ' → 删除 tenant 代码与对外声称；确需保留说明必须在同行标注「已砍除」');
+    }
+    return 'tenant 零残留（代码 + 5 个声称面已扫，历史决策文档按纪律豁免）';
+  });
+
   // ── 报告 ─────────────────────────────────────────────────────
   console.log('\n═══ aing 部署验收报告 / Deployment Acceptance Report ═══');
   for (const r of results) {
@@ -227,6 +397,26 @@ async function main() {
   const failed = results.filter(r => !r.ok);
   if (failed.length === 0) {
     console.log('\n🟢 ALL GREEN —— 部署验收通过（deploy verified）');
+    // 验收登记自动化：data/last-verify.json 曾由验收 agent 手抄，长期残留旧 hash 与旧项数，
+    // 而面板 health.gates 直接引用它（纪律第 6 条：状态单一来源）→ 全绿时由脚本自写。
+    try {
+      const { spawnSync } = require('child_process');
+      const g = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: PKG_DIR, encoding: 'utf8' });
+      const hash = (g && g.status === 0 && String(g.stdout || '').trim()) ? String(g.stdout).trim() : 'n/a';
+      const maxC = Math.max(...results.map(r => { const mm = String(r.name).match(/^C(\d+)/); return mm ? Number(mm[1]) : 0; }));
+      const reg = {
+        result: `C0-C${maxC} ALL GREEN`,
+        date: new Date().toISOString().slice(0, 10),
+        hash,
+        checks: results.length,
+        note: '由 verify-deploy.js 全绿时自动登记；面板 health.gates 以此为据。'
+      };
+      fs.mkdirSync(path.join(PKG_DIR, 'data'), { recursive: true });
+      fs.writeFileSync(path.join(PKG_DIR, 'data', 'last-verify.json'), JSON.stringify(reg, null, 2) + '\n', 'utf8');
+      console.log(`📝 验收登记已刷新 data/last-verify.json（${reg.result} @${reg.hash}，${reg.checks} 项 / registry refreshed）`);
+    } catch (e) {
+      console.log('⚠️  验收登记写入失败（不影响全绿结论）:', e && e.message);
+    }
     process.exit(0);
   } else {
     console.log(`\n🔴 ${failed.length} check(s) failed —— 部署未完成 / deployment NOT complete，按上方 ↳ 指引修复后重跑 / fix per hints above and re-run`);

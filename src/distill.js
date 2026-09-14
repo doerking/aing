@@ -26,6 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const KnowledgeStore = require('./knowledge-store');
+const growthConfig = require('./growth.config');   // 阈值唯一来源（纪律第 5 条）
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -70,9 +71,12 @@ function sha16(obj) {
 
 /** 从 content 的"## 原始消息"节机械提取原话行 */
 function extractRawMessages(content) {
-  const m = content.match(/## 原始消息\n([\s\S]*?)(\n## |$)/);
+  // 行尾无关 / EOL-agnostic：本仓库 core.autocrlf=true，wiki/raw 检出后常为 CRLF。
+  // 旧写法只匹配 \n，会把带原始消息的会话误判为「no raw messages」而拒蒸，
+  // 且错误信息把排障方向带偏到「探针残留」。实测：CRLF 探针在旧正则下 fail。
+  const m = content.match(/## 原始消息\r?\n([\s\S]*?)(?:\r?\n## |$)/);
   if (!m) return [];
-  return m[1].split(/\n+/).map(s => s.trim()).filter(s => s.length > 0);
+  return m[1].split(/\r?\n+/).map(s => s.trim()).filter(s => s.length > 0);
 }
 
 /** 机械蒸馏：无 LLM、确定性、可追溯 */
@@ -93,15 +97,27 @@ function distillContent(content) {
     .slice(0, 5)
     .sort((a, b) => a.i - b.i)
     .map(x => x.s);
-  // 确定性标签：高频词（≥4 字符，去停用词）取前 3
+  // 确定性标签：高频关键词（去停用词），形状 + 频次双重过滤
+  // 缺陷修复（2026-09-14 影子实测）：旧写法以 /[^\p{L}\p{N}-]+/ 切词后只看长度，
+  // 中文无空格→整段从句成为一个超长 token 并被当成「高频词」追参加 entities.tags，
+  // 污染标签命名空间、虚高自动建链置信、拖累 KA 评分（纪律 #7 类目容量）。
+  // 中文分词未接→本步只收拉丁字母关键词，并要求词频达 config.distill.tagMinFreq。
+  const DC = growthConfig.distill || {};
+  const minFreq = Number.isFinite(DC.tagMinFreq) ? DC.tagMinFreq : 2;
+  const maxCount = Number.isFinite(DC.tagMaxCount) ? DC.tagMaxCount : 3;
+  const maxLen = Number.isFinite(DC.tagMaxLen) ? DC.tagMaxLen : 24;
+  const TAG_SHAPE = new RegExp('^[A-Za-z][A-Za-z0-9-]{3,' + Math.max(4, maxLen - 1) + '}$');
   const STOP = new Set(['this', 'that', 'with', 'from', 'test', 'message', 'goes', 'via', 'and', 'the']);
   const freq = {};
   for (const line of lines) {
     for (const w of line.split(/[^\p{L}\p{N}-]+/u)) {
-      if (w.length >= 4 && !STOP.has(w.toLowerCase())) freq[w] = (freq[w] || 0) + 1;
+      if (TAG_SHAPE.test(w) && !STOP.has(w.toLowerCase())) freq[w] = (freq[w] || 0) + 1;
     }
   }
-  const tags = Object.entries(freq).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3).map(e => e[0]);
+  const tags = Object.entries(freq)
+    .filter(([, n]) => n >= minFreq)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, maxCount).map(e => e[0]);
   const digest = sha16(raw.join('\n'));
   return { points, tags, digest, rawCount: raw.length, lineCount: lines.length };
 }
@@ -114,7 +130,7 @@ function rewriteWikiFile(filePath, dist) {
     '> contentDigest: ' + dist.digest,
     '> 原话保留于「原始消息」节，共 ' + dist.rawCount + ' 条', ''].join('\n');
   // 替换蒸馏摘要节（到下一个 ## 为止）
-  text = text.replace(/## 蒸馏摘要[\s\S]*?(?=\n## |$)/, summaryBlock + '\n');
+  text = text.replace(/## 蒸馏摘要[\s\S]*?(?=(?:\r?\n## )|$)/, summaryBlock + '\n');
   // frontmatter：status / distillationStatus(以 modified 标记形式不存在——用 tags 追加蒸馏标记) / modified
   text = text.replace(/^status: pending-distillation$/m, 'status: active');
   text = text.replace(/^(modified: .*)$/m, '$1');
@@ -184,7 +200,7 @@ async function main() {
       const newText = rewriteWikiFile(wikiPath, dist);
       fs.writeFileSync(wikiPath, newText, 'utf8');
       const mergedTags = [...new Set([...JSON.parse(row.tags || '[]'), ...dist.tags])].slice(0, 20);
-      const newContent = newText.replace(/^---[\s\S]*?---\n/, '');
+      const newContent = newText.replace(/^---[\s\S]*?---[ \t]*(?:\r?\n|$)/, '');
       store.run("UPDATE entities SET status='active', tags=?, content=?, distill_meta=? WHERE id=?", [
         JSON.stringify(mergedTags), newContent, JSON.stringify({ digest: dist.digest, by: 'distill.js-v1', at: new Date().toISOString() }), row.id
       ]);

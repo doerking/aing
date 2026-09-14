@@ -121,7 +121,7 @@ AIGC:
 - **降级**：isReady=false 时自动退关键词搜索，不会崩但语义精度下降——日志里看到 fallback 要检查模型目录。
 
 ### auto-ingest.js — 自动入库入口
-- **能力**：消息→raw 档→触发 compile→import→向量链（chained，失败即断）；**内容指纹去重**（批次 SHA-1 账本落盘 `data/ingest-hashes.json`，同内容重发直接跳过）；会话 ID 入文件名前自动净化非法字符（租户前缀冒号等致 Windows ENOENT）。
+- **能力**：消息→raw 档→触发 compile→import→向量链（chained，失败即断）；**内容指纹去重**（批次 SHA-1 账本落盘 `data/ingest-hashes.json`，同内容重发直接跳过）；会话 ID 入文件名前自动净化非法字符（客户端自定义 ID 可含冒号等，Windows 下会 ENOENT）。
 - **高发问题**：kbRoot 必须相对 `__dirname` 解析（历史上硬编码路径导致换目录部署全链路失效）；被 api-server 等外部进程 require 时，批冲洗定时器需宿主自备（主模块 10s 轮询不会启动）。
 
 ---
@@ -199,7 +199,7 @@ AIGC:
 ### api-server.js — HTTP API 服务（零依赖）
 - **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`；端口 3789（`AING_API_PORT` 可调）。
 - **认证**：设 `AING_API_KEY` 后除 /health 外全部要求 `Authorization: Bearer`，且监听改 `0.0.0.0`；未设则仅监听 `127.0.0.1`（本机信任模式）。缺凭据返回 401。
-- **多租户**：写入端点按 `X-Tenant-ID` 头隔离会话（缺省 default），租户前缀进会话 ID，文件名自动净化。
+- ~~多租户~~（**已砍除 2026-09-14**）：原 `X-Tenant-ID` 只给会话键加 `tenant::` 前缀，共库共表不构成任何隔离，反而让「租户隔离」进入能力声明。现按单用户产品定位：会话键即 `sessionId`，文件名净化保留（客户端 ID 仍可能含非法字符）。门禁 C10f 防复活。
 - **输入防护**：实体 ID 白名单字符校验（阻断路径穿越）；请求体 1MB 上限。
 - **高发问题**：宿主进程必须自备会话批冲洗定时器（10s 轮询 checkAndIngest），否则消息滞留内存永不出库。
 
