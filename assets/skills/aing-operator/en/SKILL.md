@@ -57,7 +57,7 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 | Training / skill-doc optimization / SkillOpt | Training [tag:训练] | SkillOpt loop + degraded path without trainer | [training-group.md](../references/training-group.md) |
 | Architecture design / health check / adversarial review | Review [tag:评审] | 4-role evolution team dispatch & gates | [evolution-team.md](../references/evolution-team.md) |
 
-**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Inline tags support 9-segment numeric values `[tag:xxx:N]` (N=1-9 relevance strength, default 5 without `:N`). Convention: `AGENTS.md` discipline rule 7. **9-segment capacity**: healthy up to 50 categories / usable to 100 / degrading at 150 / breaking at 200+; 50 categories is the recommended point to install database software. Analysis: [TAG-CAPACITY-ANALYSIS.md](../../../docs/Engineering/TAG-CAPACITY-ANALYSIS.md).
+**Tag loading (Tolaria format, load-on-demand)**: every file in this skill carries frontmatter `tags`; tags are the unit of loading. Inline tags support 9-segment numeric values `[tag:xxx:N]` (N=1-9 relevance strength, default 5 without `:N`). Convention: `AGENTS.md` discipline rule 7. **9-segment capacity**: healthy up to 50 categories / usable to 100 / degrading at 150 / breaking at 200+; 50 categories is the recommended point to install database software. Analysis: [TAG-CAPACITY-ANALYSIS.md](../../../../docs/Engineering/TAG-CAPACITY-ANALYSIS.md).
 
 Routing principle: when unsure, read governance.md first — know what you must not do before deciding how; it counts as your one L2 pull. Multi-group tasks (e.g. "fix bug and report") load serially Repair→Governance, still ≤2.
 

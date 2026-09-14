@@ -4,10 +4,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '95f66d2c-5e4e-47af-8111-d31733def3f7'
-  PropagateID: '95f66d2c-5e4e-47af-8111-d31733def3f7'
-  ReservedCode1: '9a75f005-a974-4c92-ac1a-a5d9909750d1'
-  ReservedCode2: '9a75f005-a974-4c92-ac1a-a5d9909750d1'
+  ProduceID: '0b627a2b-8ee1-45cb-ad69-dee2e9c6e740'
+  PropagateID: '0b627a2b-8ee1-45cb-ad69-dee2e9c6e740'
+  ReservedCode1: '2dd29c80-70f6-4990-a405-566f33f5c308'
+  ReservedCode2: '2dd29c80-70f6-4990-a405-566f33f5c308'
 ---
 
 # Tolaria 9 段标签容量推演 / 9-Segment Tag Capacity Analysis

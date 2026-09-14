@@ -127,18 +127,22 @@ function runMetabolism(trigger) {
 }
 
 function snapshotRawDir(dir) {
-  try {
-    return fs.readdirSync(dir)
-      .filter(f => f.endsWith('.md'))
-      .map(f => {
-        const st = fs.statSync(path.join(dir, f));
-        return `${f}:${st.mtimeMs}`;
-      })
-      .sort()
-      .join('|');
-  } catch (e) {
-    return '';
+  // 递归：入库产物落在 raw/inbox/ 子目录（运行态与版本化知识源分离），
+  // 旧实现只 readdirSync 顶层 → 会话档再多也不会触发轮询。
+  const out = [];
+  const stack = [dir];
+  while (stack.length) {
+    const cur = stack.pop();
+    let items;
+    try { items = fs.readdirSync(cur, { withFileTypes: true }); } catch (e) { continue; }
+    for (const it of items) {
+      const full = path.join(cur, it.name);
+      if (it.isDirectory()) { stack.push(full); continue; }
+      if (!it.name.endsWith('.md')) continue;
+      try { out.push(`${it.name}:${fs.statSync(full).mtimeMs}`); } catch (e) { /* 竞态删除忽略 */ }
+    }
   }
+  return out.sort().join('|');
 }
 
 function startWatcher() {

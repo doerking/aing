@@ -4,10 +4,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '70d4aa8f-2d57-4971-9838-f0b8fe829767'
-  PropagateID: '70d4aa8f-2d57-4971-9838-f0b8fe829767'
-  ReservedCode1: '4f7569b9-2575-434d-a02b-0ed43b13b0d6'
-  ReservedCode2: '4f7569b9-2575-434d-a02b-0ed43b13b0d6'
+  ProduceID: 'd9dfe66c-9aac-4c13-a285-e85cba915ccb'
+  PropagateID: 'd9dfe66c-9aac-4c13-a285-e85cba915ccb'
+  ReservedCode1: 'f8673910-e4d1-4b28-a99a-10575d0e8353'
+  ReservedCode2: 'f8673910-e4d1-4b28-a99a-10575d0e8353'
 ---
 
 # Agent Onboarding — 新 agent 上手引导

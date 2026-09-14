@@ -5,10 +5,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '33642f0c-a56a-4d41-a59e-8dce6dc5ec25'
-  PropagateID: '33642f0c-a56a-4d41-a59e-8dce6dc5ec25'
-  ReservedCode1: 'e9922f97-caac-462e-8bf3-0169ea4cdf00'
-  ReservedCode2: 'e9922f97-caac-462e-8bf3-0169ea4cdf00'
+  ProduceID: '959ff15d-d5ee-4c19-bf51-0a1471670f3d'
+  PropagateID: '959ff15d-d5ee-4c19-bf51-0a1471670f3d'
+  ReservedCode1: '6a4859da-d3d0-467f-94f3-671541dbf87d'
+  ReservedCode2: '6a4859da-d3d0-467f-94f3-671541dbf87d'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -126,6 +126,8 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 │ Tri-Path Orchestrator / 三路突击                               │
 │ • Explore / Verify / Optimize + Circuit Breaker              │
 ├──────────────────────────────────────────────────────────────┤
+│ Assets: assets/skills/aing-operator + neural-evolution-swarm │
+│          (bundled specs; packaged != installed in runtime)   │
 │ Storage: fs-based (wiki/entities/*.md, wiki/links/*.md)      │
 │          + sql.js (in-memory SQLite via knowledge-store.js)  │
 │ Runtime: Node.js CommonJS (.js), no TypeScript, no build     │
@@ -164,7 +166,7 @@ Content here...
 
 # 6. Run full metabolism pipeline (11 steps: compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（11 步）
 node src/run-metabolism.js
-
+# 代谢默认不替用户提交：compile 步的 git add -A + commit 已被 AING_NO_AUTOCOMMIT 关掉（确需时 AING_AUTOCOMMIT=1，门禁 C13 钉住）
 # 7. Smart mode (GrowthDirector decides what to do)
 node src/run-metabolism.js --smart
 
@@ -227,6 +229,25 @@ npm run scheduler            # env AING_SCHEDULER_INTERVAL_MS to tune interval /
 npm run server               # without AING_API_KEY: listens on 127.0.0.1 (local-trust mode) / 未设密钥仅监听本机
 AING_API_KEY=my-key npm run server   # with key: 0.0.0.0 + Bearer auth on all but /health / 设密钥后全端点认证
 
+# 备忘录与入库 CLI / memo + ingest CLI（不起服务也能用，这就是“最后一米”那两条）
+node src/memo.js --summary        # 仪表台：意识层 + 组件链接 + 告警 + 待办 + 健康判定 + 派单 / dashboard
+node src/memo.js --peek           # 只读快拍（纯 JSON：health + todos + dispatch）/ machine-readable glance
+node src/memo.js --dispatch       # 只问要不要派神经进化团队 / should we dispatch the swarm
+node src/memo.js todo add "<用户挂着的事>" [--due YYYY-MM-DD] [--agent]   # 把待办记进备忘录（面板与仪表台同一张表）
+node src/memo.js todo list        # 看活跃待办；--all 含已销（留痕不删行）
+node src/memo.js todo done <id>    # 销办
+node src/memo.js --actions        # 只要下一步命令 / derived next actions only
+node src/auto-ingest.js <session-id> "<json|文本>"    # 一次性入库（投完退出；--keep 才转常驻批处理）
+
+# 意识层写端 CLI / control surface（读靠 memo，动手靠 neural；二者都不必起服务）
+node src/neural.js status           # 只读：kernel 状态 + 在效抑制清单 / read-only
+node src/neural.js event '{"channel":"anomaly","target":"<目标>","intensity":0.9}'   # 投一条意识事件
+node src/neural.js inhibit <目标> [--reason r] [--hours N]   # 抑制误报源（到期自动失效，kernel 无撤销 API）
+node src/neural.js assess '[{"channel":"structure","target":"wiki/x.md"}]'          # 评估（走 controller → 同一个 kernel）
+node src/neural.js verify '{"checks":[{"name":"复验全绿","passed":true}]}'          # 补记校验到 decision lineage
+node src/neural.js record '{"result":"...","lesson":"..."}' # 补记结果与教训
+node src/neural.js deliberate high  # 蜂群协商维护（只出共识不执行；需本院 knowledge.db）
+
 # 查询 CLI / query CLI
 node src/query.js "三路突击" --limit 5
 
@@ -245,7 +266,7 @@ node src/query.js "三路突击" --limit 5
 # GET  /api/entity/<id>              entity detail + latest KESPI / 实体详情+最新 KESPI
 # GET  /api/query?q=<词>&limit=<N>   full-chain search (answer-pack: snippet/kespi/neighbors/tags) / 全链检索
 # ── 入库写入 ──
-# POST /api/ingest                   session ingest (role: user/assistant/analysis/research) / 会话入库（四种角色）
+# POST /api/ingest                   session ingest (role: user/assistant/analysis/research) / 会话入库（四种角色；只入贴出来的详情，纯采集过程回 422）
 # POST /api/entity                  create entity (Todo/Skill/Output) / 创建实体
 # PATCH /api/entity/<id>            update entity status/content / 更新实体
 # GET  /api/delta?since=<ISO>        incremental awareness / 增量感知
@@ -262,7 +283,9 @@ node src/query.js "三路突击" --limit 5
 
 1. **关键步骤熔断 / Critical-step breaker (P0)**：`run-metabolism` 将 compile / import / vector / kespi 设为关键步骤，任一失败立即中止并把退出码置 1；`node src/run-metabolism.js --force` 仅继续非关键步骤。/ Any critical-step failure aborts with exit code 1; `--force` continues non-critical steps only.
 2. **KESPI 写实 / Real KESPI lifecycle (P1b)**：`compile.js` 产出实体 `kespi_status: pending`，由 `kespi-check.js` 首次真实评估翻转；不再有编译期随机分数。/ `kespi_status` starts `pending`; `kespi-check.js` flips it on first real evaluation. No random scores.
-3. **入库写实 / Faithful ingest (P1a)**：`auto-ingest.js` 正文含 `## 蒸馏摘要 / Distilled Summary` 模板；`POST /api/ingest` 可带可选 `body.distillation`（summary/entities）透传入库。/ Optional `body.distillation` passthrough on ingest.
+3. **入库写实 / Faithful ingest (P1a)**：`auto-ingest.js` 写角色节（用户提问 / Agent 回复 / Agent 分析 / 收集资料）+ 蒸馏摘要占位；`POST /api/ingest` 可选带 `body.distillation`，但**只作提议**入「Agent 提议（未核验）」节，档身份仍 `pending-distillation` / `confidence: 0`，由 `distill.js` 兑付后才转 active（服务端定身份，纪律 4）。契约由 `verify-deploy.js` C10g 双向守。 / Optional `body.distillation` is stored as an **unverified proposal only**; the server alone sets status/confidence, and `distill.js` redeems it.
+   - 会话入库产物落 `raw/inbox/`（运行态，gitignore），人工知识源仍在 `raw/` 顶层；每条 accepted 消息先落 WAL `data/ingest-buffer.jsonl`，进程重启自动重放。 / Runtime session docs land in `raw/inbox/` and every accepted message is WAL-journaled before the response.
+   - **只入贴出来的详情 / Detail-only ingest**：正文里属于「贴出来之前的 HTTP 采集步骤」的行（命令行/请求行/响应头/报文）由 `src/ingest-scrub.js` 在入口剥除，不留原文、不写旁路，档内只记 `traceScrubbed` 计数；纯过程内容整条 `422` 拒收；`metadata` 采集元数据自 2026-09-14 停收。 / Collection-trace lines (commands, request/response headers, raw payloads) are stripped at the entry point and never stored.
 4. **双语输出 / Bilingual console**：人读输出为 `中文 / English` 对照；机器令牌（`kespi_status` 等）恒为英文。/ Human-facing logs are bilingual; machine tokens stay English-only.
 
 ### Troubleshooting / 故障引导
@@ -272,7 +295,10 @@ node src/query.js "三路突击" --limit 5
 | 代谢中途停止、退出码 1、日志 `❌ 失败 / Failed: <step>` | 关键步骤失败（P0 熔断） | 看该步 stderr 修复后重跑；确需跳过：`node src/run-metabolism.js --force`（仅续非关键步骤） |
 | 实体 KESPI 显示 `pending` | 编译后尚未首评（P1b 流转） | 跑 `node src/kespi-check.js` 或全量代谢；**非故障 / not a fault** |
 | 日志出现「中文 / English」双语文 | 本迭代双语输出（预期） | 无需处理；勿当乱码「修复」，勿改机器令牌 |
-| `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段；缺省落「待生成 / pending」占位，非错误 |
+| `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段，缺省落「待生成 / pending」占位，非错误；带自报也只进提议节 |
+| `distill.js` 报 `no raw messages` | 档里没有可识别的原话节（角色节白名单没对齐） | 看 C10g 是否红；改任一节名必须同步 `auto-ingest.PRODUCED_SECTIONS` ↔ `distill.RAW_SECTIONS` |
+| `accepted:true` 但 `raw/inbox/` 没档 | 正常：消息在 WAL 挂起，未触发 flush | 攒够批次 / 会话静默 / 定时器任一触发才落档；进程重启会从 WAL 重放 |
+| `POST /api/ingest` 回 `422 collection-trace-only` | 正文全部是采集过程行 | 预期行为（只入贴出来的详情）；把要保存的详情正文单独贴一条 |
 | 代谢提示「already running (pid=…)」且退出码 0 | 并发保护：跨进程原子锁（2026-09-08 起），第二实例自动让位 | 非故障 / not a fault：等当前代谢结束，或交给 scheduler 排程 |
 | 重复执行双语补丁 | 幂等设计 | 重复运行自动跳过已双语行，不会重复插入 / idempotent by design |
 
@@ -372,6 +398,10 @@ node src/setup-db.js --backup     # 手动备份
 | `show-kespi.js` | 显示 KESPI 分数 | 数据库 → 报告 |
 | `recalc-kespi.js` | 批量重算 KESPI | 修复后历史数据修正 |
 | `setup-db.js` | 数据库管理 | 创建/重置/验证/备份 |
+| `tools/verify-sibling-roots.js` | 院际全量同源核验（只读，不改任何文件/库）：src/tools/根文件逐字节比对 + 库结构核对，退出码机器判定 | 各院 `knowledge.db` + `git ls-files` → 代差台账（`npm run verify:siblings`） |
+| `node tools/gate-counts.js` | 门禁计数真值（AGENTS/README/greenlist 里那句「N 项（C0–CMAX）」以它为准，抄错即 C19 红） |
+| `tools/gen-greenlist.js` | 由 `docs/greenlist.json`（真源）重生成 `docs/GREEN-LIST.md`（视图），保留 frontmatter 水印 | 真源 JSON → 视图 MD（C10a 校验一致） |
+| `tools/self-test.js` | 发布包自测（探针自回收、`AING_NO_AUTOCOMMIT` 禁自动提交） | 临时实体/WAL → ALL GREEN + 零残留 |
 
 ### Repair & Maintenance / 修复与维护
 
@@ -398,6 +428,7 @@ node src/setup-db.js --backup     # 手动备份
 | `consciousness-kernel.js` | 意识核（coordination-only 硬约束） | 事件 → 聚合/抑制/持久化（data/consciousness/state.json） |
 | `consciousness-controller.js` | Agent 侧模式控制器 | 三模式 + 决策血缘（不执行、不自动批准） |
 | `hermes-aing-adapter.js` | 宿主接入适配器（IF-001 参考实现） | ingest / search / briefing / deliberate |
+| `neural.js` | 意识层**写端** CLI（W2，2026-09-14） | status / event / inhibit / assess / verify / record / deliberate；只做转发，不写阈值与默认值；`--kb <院>` 可指向别院探针 |
 | `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十一步成功/失败 → 9 通道事件（source=metabolism） |
 
 ### Resident Services & Retrieval / 常驻服务与检索
@@ -456,23 +487,25 @@ node src/setup-db.js --backup     # 手动备份
 
 ## 🔬 Verification Evidence / 验证证据
 
-> aing 的每个声称都附带可复现的验收脚本——14 项部署门禁（`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
+> aing 的每个声称都附带可复现的验收脚本——32 项部署门禁（C0–C20，`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
 >
-> *Every claim carries a reproducible verification script — 14-gate deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison. 6 architectural proofs independently verified, M4 fully unlocked.*
+> *Every claim carries a reproducible verification script — 32-item (C0–C20) deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison (caliber-dependent, see M4 §I4/§J). 6 architectural proofs independently verified; M4 record now spans A–K (incl. OPT sandbox re-run §J and closeout §K).*
 
 ### 报告与数据集 / Reports & Data
 
-> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`last-run.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。（注：`simulation/task-package.json`、`skillopt-task-package.json`、`training-sim.js` 为入库文件，可直接访问。）
+> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。**例外（2026-09-14 复查）**：`simulation/proof-search-ab.json` 包内**没有对应生成脚本**＝不可复现证据，其「语义 > 关键词 2 倍」属人工提词口径，禁止当无条件既成事实引用（分口径实测见 M4 §I4 与 §J 第 9 链）。
 > *The proof files below are locally reproducible artifacts (gitignored, not committed) — regenerate them locally by running the corresponding verification scripts.*
 
 | 文档 | 说明 |
 |------|------|
-| [📋 M4 数据采集表](./docs/M4-DATA-COLLECTION-2026-09-13.md) | A-H 逐项 + I 部分 6 项架构证明，含核验意见（五层全部解锁） |
-| [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 明确未解锁清单 |
+| [📋 M4 数据采集表](./docs/M4-DATA-COLLECTION-2026-09-13.md) | A–K 逐项：A–H 基础链 + I 6 项架构证明 + **J OPT 部署沙盒换血复跑（十一链逐条读数）** + **K 存盘 / 复原 L1 / 再对齐（收工段）**，含核验意见（五层全部解锁） |
+| [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 按需接入项清单（视图由 `tools/gen-greenlist.js` 生成，C10a 钉住与 `docs/greenlist.json` 一致） |
+| [🚚 部署实操手册 DEPLOY-PLAYBOOK](./docs/DEPLOY-PLAYBOOK.md) | 从开箱到 ALL GREEN 的手怎么动：阶段 0–N、换血/复原、故障表 |
+| [🧭 Agent 五步引导 AGENT-ONBOARDING](./docs/AGENT-ONBOARDING.md) | 第一次接触 aing 的入口：纪律 → 院子地图 → 部署 → 日常 → 汇报格式 |
 | [🧪 KESPI 敏感性验证](./simulation/proof-kespi-sensitivity.json) | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
 | [🧠 意识层闭环实测](./simulation/proof-consciousness-loop.json) | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
 | [📊 步级贡献度](./simulation/proof-step-contribution.json) | 11 步管线每步 before/after 快照对比 |
-| [🔍 检索质量 A/B](./simulation/proof-search-ab.json) | 语义 0.838 vs 关键词 0.428，21 任务逐条对比 |
+| [🔍 检索质量 A/B](./simulation/proof-search-ab.json) | 语义 0.838 vs 关键词 0.428（21 任务，**人工提词口径、无随包生成脚本**）。2026-09-14 OPT 三臂实测：整句原样提问时 LIKE 0%／语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8／语义 top3 37.5%＝8 实体随机底（语义不占优） |
 | [📈 代谢 Delta](./simulation/proof-metabolism-delta.json) | 无新知识 delta=0 / 投入新知识 entities+1 links+21 kespi+0.005 |
 | [🧬 实体生命周期](./simulation/proof-entity-lifecycle.json) | kespi-system 9 维度全追踪（raw→wiki→DB→向量→KESPI→意识层→决策链） |
 | [🏋️ SkillOpt 训练证据](./simulation/skillopt-evidence.json) | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
@@ -482,7 +515,9 @@ node src/setup-db.js --backup     # 手动备份
 ## Vision & Operations / 愿景与运行
 
 > 想知道 aing 的愿景如何实现、部署后如何跑代谢、训练与真执行器怎么接入？读这一篇：
-> **[愿景与运行手册 · Vision & Operations Playbook](./raw/vision-and-operations.md)**（中英双语 · bilingual）
+> **愿景与运行手册 · Vision & Operations Playbook**（`raw/vision-and-operations.md`，中英双语 · bilingual）
+>
+> ⚠️ **该手册不在发布包内**：`raw/` 被 `.gitignore` 排除，本包 `git ls-files raw` 为 **0 篇**（aing/OPT 各跟踪 8 篇，系规则生效前播种）→ 走 git 分发时这个路径不可点，别按链接找文件。装机后 C3「raw/ 有知识文档」需自行放入至少一篇 `raw/*.md`（见 DEPLOY-PLAYBOOK 阶段 0）。/ *Absent from a git-cloned package (`raw/` is gitignored): provision ≥1 `raw/*.md` before C3.*
 
 ## 🧬 Architecture Lineage / 架构谱系与验证锚点
 

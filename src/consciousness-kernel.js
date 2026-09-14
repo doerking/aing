@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ConsciousnessEvent, CHANNELS, clamp } = require('./consciousness-event');
+const { consciousnessTuning } = require('./config-runtime');   // 熔断轮数等离散旋钮的唯一入口（纪律 5）
 
 // Harness 自维继原则：依赖链优雅降级——核心管道不因可选模块缺失而崩溃
 let GrowthDocs = null, MetacognitionLayer = null;
@@ -39,8 +40,13 @@ class ConsciousnessKernel {
     this.baseDir = options.baseDir || path.resolve(__dirname, '..');
     this.rawDir = options.rawDir || path.join(this.baseDir, 'raw');
     this.stateFile = options.stateFile || path.join(this.baseDir, 'data', 'consciousness', 'state.json');
-    this.dedupeWindowMs = Math.max(1000, Number(options.dedupeWindowMs) || 300000);
-    this.maxEvents = Math.max(10, Number(options.maxEvents) || 200);
+    // 旋钮来源：growth.config.js 的 consciousness 段（缺配置时由 config-runtime 兜底）。
+    // 以前这三行是 `|| 300000` / `|| 200` / 下面熔断的 `>= 3` 各自写死 → 与读者脱节。
+    const tuning = consciousnessTuning();
+    this.dedupeWindowMs = Math.max(1000, Number(options.dedupeWindowMs ?? tuning.dedupeWindowSeconds * 1000));
+    this.maxEvents = Math.max(10, Number(options.maxEvents ?? tuning.maxRetainedEvents));
+    this.stagnationBreakerCycles = Math.max(1, Number(options.stagnationBreakerCycles ?? tuning.stagnationBreakerCycles));
+    this.inhibitDefaultMs = Math.max(1000, Number(options.inhibitDefaultHours ?? tuning.inhibitDefaultHours) * 3600000);
     this.weights = {
       intensity: 0.35,
       confidence: 0.2,
@@ -241,8 +247,8 @@ class ConsciousnessKernel {
     return { growth, metacognition };
   }
 
-  inhibit(target, reason = 'manual', durationMs = 3600000) {
-    const until = Date.now() + Math.max(1000, Number(durationMs) || 3600000);
+  inhibit(target, reason = 'manual', durationMs = this.inhibitDefaultMs) {
+    const until = Date.now() + Math.max(1000, Number(durationMs) || this.inhibitDefaultMs);
     this.state.suppressedEvents.push({ target, reason, until, status: 'inhibited', createdAt: new Date().toISOString() });
     this.state.suppressedEvents = this.state.suppressedEvents.slice(-this.maxEvents);
     this.saveState();
@@ -261,12 +267,17 @@ class ConsciousnessKernel {
 
   recordCycleResult(hasValidOutput, cause = '', context = {}) {
     this.state.stagnationCount = hasValidOutput ? 0 : Number(this.state.stagnationCount || 0) + 1;
-    const broken = this.state.stagnationCount >= 3;
+    const broken = this.state.stagnationCount >= this.stagnationBreakerCycles;   // 轮数取 config（旧版此处写死 3）
     let metaKnowledge = null;
     if (broken) {
       this.state.state = 'stagnant';
       this.state.lastReflectionAt = new Date().toISOString();
       metaKnowledge = this._writeMetaKnowledge({ cause, context });
+    } else if (hasValidOutput && this.state.state === 'stagnant') {
+      // 解锁（2026-09-14 W3）：停滞必须是可释放的闩。此前 'stagnant' 只在上面赋值、
+      // 全仓无人清除 → 一次停滞就永久误报：src/memo.js 的健康判定与 nextActions 都读它，
+      // 仪表台会一直建议派工程师去修一个早就修好的问题。有效产出即回到默认态。
+      this.state.state = DEFAULT_STATE.state;
     }
     this.saveState();
     return { hasValidOutput: Boolean(hasValidOutput), stagnationCount: this.state.stagnationCount, broken, cause, metaKnowledge };
@@ -324,6 +335,7 @@ class ConsciousnessKernel {
       activeEventCount: this.state.activeEvents.length,
       suppressedEventCount: this.state.suppressedEvents.length,
       stagnationCount: this.state.stagnationCount,
+      breakerCycles: this.stagnationBreakerCycles,   // 回报当前生效的熔断轮数（C17 行为证明靠它）
       channelHealth: this.state.channelHealth,
       channelWeights: this.state.channelWeights || {},
       attentionRevision: this.state.attentionRevision,

@@ -16,7 +16,7 @@
 | 要素 | 实况 | 位置 |
 |---|---|---|
 | 何时 | ISO 时间戳文件名 `session-<id>-<timestamp>.md` | auto-ingest.js:190 |
-| 何地/何人 | frontmatter source/session/tenant 租户前缀 | auto-ingest.js:186 |
+| 何地/何人 | frontmatter source/session（**租户前缀已于 2026-09-14 砍除**：仅给会话键加前缀、共库共表不构成隔离，门禁 C10f 防复活；见文末现状标注）| auto-ingest.js:186 |
 | 全文 | 原始消息全量拼接（非只存最新一条）+ 蒸馏摘要 | auto-ingest.js:153 |
 
 **关键词还原时间线的最小查询**（本轮确认已可用，无需新开发）：

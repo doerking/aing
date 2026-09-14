@@ -1,5 +1,8 @@
 # GROWTH-FEEDBACK-SWITCHES：成长与反馈开关核对记录
 
+> **占位符图例**：`<repo-root>` = 主包发布仓库根目录（本 aing 院），`<exp-yard>` = 实验场副本（Tip），`<opt-copy>` = 训练副本（OPT），`<dd-root>` = SkillOpt 检出所在根目录。**文档一律不写盘符字面量**（门禁 C8）。
+>
+
 > 日期：2026-09-13 ｜ 作者：Loomy（hana，审核岗）｜ 范围：代码只读核对 + 试跑发现，未改任何代码
 > 相关提交：7218c28（第 3 号推送 HEAD）
 
@@ -55,21 +58,21 @@ B5 红线（禁直写 growth.config.js）**未违反**。此开关可放心启�
 
 | 检查项 | 结果 |
 |---|---|
-| `E:\aing\data\growth-loop.json` | ❌ **不存在** |
+| `<repo-root>\data\growth-loop.json` | ❌ **不存在** |
 | `task_trajectories` 表 | ❌ **不存在**（knowledge.db 只有 11 张表：entities/entity_embeddings/entity_metadata/error_log/kespi_history/links/metabolism_log/schema_migrations/sqlite_sequence/system_log/type_index） |
 | data/ 目录 | 仅 5 个 json（component-registry/ingest-hashes/opt-root/panel/tri-path-state） |
 
 ### 与 M4 数据采集表的对照
 
-| 项目 | M4 采集表声称 | 主包 E:\aing 实际 |
+| 项目 | M4 采集表声称 | 主包 <repo-root> 实际 |
 |---|---|---|
 | task_trajectories | 124 条真实轨迹（B2） | 表不存在 |
 | growth-loop.json | episodes/memoryDecisions/improvements | 文件不存在 |
 
 ### 结论：这是"主包=代码、实验场=数据"的架构设计
 
-- M4 的 124 条轨迹、growth-loop 数据是在 **E:\Tip 实验场**跑出来的
-- 主包 E:\aing 是**干净发布态**——运行时产物（轨迹表/growth-loop.json/proof 文件）按设计**不入库**（.gitignore 已排除）
+- M4 的 124 条轨迹、growth-loop 数据是在 **<exp-yard> 实验场**跑出来的
+- 主包 <repo-root> 是**干净发布态**——运行时产物（轨迹表/growth-loop.json/proof 文件）按设计**不入库**（.gitignore 已排除）
 - 因此主包试跑 `--import-growth-loop` **自然无数据可导入**——**不是 bug，是预期行为**
 
 ### 需要留意的点
@@ -86,3 +89,12 @@ B5 红线（禁直写 growth.config.js）**未违反**。此开关可放心启�
    - `--import-growth-loop` 可挂入代谢尾步或 scheduler，让 growth-loop 学习自动进轨迹表
    - `--feedback` 可设为 scheduler 触发时默认开，让代谢效果持续留痕（支撑架构证明长期数据）
    - 两者均为"增强"，非"修复"；当前手动按需使用正确无误
+
+---
+
+> **跟进旁注（2026-09-13 复核）**：
+> 截至复核时，两个开关**仍为手动、默认关**，未做自动挂接：
+> - `--import-growth-loop`：仅 `trajectory-store.js` 命令行参数触发，scheduler/代谢管线无自动调用
+> - `--feedback`：仅 `run-metabolism.js --feedback` 显式参数启用（smartMode 默认 `enableFeedback=false`），scheduler 未传该参数
+> 
+> 当前状态符合"部署包干净、数据运行时产生"的设计——开关保持手动不等于缺失，是"按需启用"的既定姿态。自动挂接与否待所有者拍板，本文档结论不因此变化。

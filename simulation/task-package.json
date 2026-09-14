@@ -23,9 +23,9 @@
       "id": "task-03",
       "factId": "F03",
       "domain": "contract",
-      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
-      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
-      "answerB": "(扭曲表述) 未知数 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "question": "关于「10 步代谢顺序：compile→i…」哪种说法成立？",
+      "answerA": "10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
+      "answerB": "(扭曲表述) 未知数 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
       "correct": "A"
     },
     {
@@ -113,8 +113,8 @@
       "id": "task-13",
       "factId": "F03",
       "domain": "threshold",
-      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
-      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "question": "关于「10 步代谢顺序：compile→i…」哪种说法成立？",
+      "answerA": "10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
       "answerB": "红灯阈值是 0.75（错误：应为 0.65）",
       "correct": "A"
     },
@@ -203,8 +203,8 @@
       "id": "task-23",
       "factId": "F03",
       "domain": "contract",
-      "question": "关于「9 步代谢顺序：compile→im…」哪种说法成立？",
-      "answerA": "9 步代谢顺序：compile→import→link→vector→sprout→pollinate→compress→kespi→prune",
+      "question": "关于「10 步代谢顺序：compile→i…」哪种说法成立？",
+      "answerA": "10 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
       "answerB": "prune 只归档文件即可，DB 无需清理（错误：违反双脑契约）",
       "correct": "A"
     },

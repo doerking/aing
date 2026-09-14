@@ -286,7 +286,6 @@ function compile(dryRun = false, force = false) {
   
   for (const filePath of rawFiles) {
     const relativePath = path.relative(CONFIG.rawDir, filePath);
-    const entityId = generateEntityId(relativePath);
     
     console.log(`📄 处理: ${relativePath} / Processing:`);
     
@@ -296,6 +295,22 @@ function compile(dryRun = false, force = false) {
       
       // 解析 frontmatter
       const { metadata, content: body } = parseFrontmatter(content);
+      
+      // 实体 id 归属规则（2026-09-14 影子实测定，两次踩坑换来的）：
+      // · 会话档（sourceType: conversation）尊重档内声明 id —— 入库产物挪到 raw/inbox/ 后，
+      //   按路径推导会给 id 平白加 inbox- 前缀，与 raw 文件名干脱钩，consciousness-layer 拿 raw 名
+      //   去 wiki/entities 找实体必然找不到，刷出成片「原始资料尚未编译到 wiki/」假告警。
+      // · 人工档仍按路径推导 —— 实测本包 19/20 篇人工档根本没有声明 id，若一并"尊重声明值"，
+      //   String(undefined) 会得到真值 "undefined"，19 篇当场并成一个 undefined 实体互相覆盖。
+      // · 声明值必须是像样的字符串：空串、undefined、null 字样一律视为没声明。
+      const declaredId = metadata && typeof metadata.id === 'string' ? metadata.id.trim() : '';
+      const usableId = declaredId && declaredId !== 'undefined' && declaredId !== 'null';
+      const isConversation = metadata && String(metadata.sourceType || '').trim() === 'conversation';
+      // 入库产物一律落在 raw 的子目录（默认 raw/inbox/），人工知识源在 raw 顶层——用这个位置
+      // 事实把"尊重声明 id"限定到最小面：影子实测仅按 sourceType 分流时，raw 顶层一条声明 id
+      // 与文件名干不一致的历史会话档会在重编译时多造一个重复实体（22 vs 期望 21）。
+      const inIngestSubdir = /[\\/]/.test(relativePath.replace(/\.md$/, ''));
+      const entityId = (isConversation && inIngestSubdir && usableId) ? declaredId : generateEntityId(relativePath);
       
       // 跳过已编译且非强制模式
       const entityPath = path.join(CONFIG.entitiesDir, `${entityId}.md`);

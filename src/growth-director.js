@@ -27,6 +27,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { consciousnessTuning } = require('./config-runtime');
+// 熔断轮数不在本文件写死（以前 150/235 两处各自 `>= 3`）： lazy 取 config，改配置不必重启
+const breakerCycles = () => consciousnessTuning().stagnationBreakerCycles;
 
 // 支持 --base-dir 参数覆盖默认路径
 function resolvePath(segment) {
@@ -147,7 +150,7 @@ class GrowthDirector {
 
     // 意识层信号：kernel 停滞或高唤醒提升紧急度
     if (signals.consciousness) {
-      if (signals.consciousness.stagnationCount >= 3) {
+      if (signals.consciousness.stagnationCount >= breakerCycles()) {
         urgency += 3;
         reasons.push(`意识层连续 ${signals.consciousness.stagnationCount} 次空产出`);
       }
@@ -232,7 +235,7 @@ class GrowthDirector {
     }
     
     // 意识层停滞 → 完整代谢（优先于连续停滞判断，因为 kernel 停滞比代谢停滞更严重）
-    if (signals.consciousness && signals.consciousness.stagnationCount >= 3) {
+    if (signals.consciousness && signals.consciousness.stagnationCount >= breakerCycles()) {
       return 'full_metabolism';
     }
 

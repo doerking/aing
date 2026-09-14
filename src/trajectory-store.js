@@ -88,6 +88,41 @@ class TrajectoryStore {
   }
 
   /**
+   * 从代谢决策因果链日志导入（2026-09-14 修）
+   * 旧 --import-metabolism 读 logs/metabolism-last-run.json，可 run-metabolism 从不写这个文件
+   * （它写 logs/metabolism/*.md 人读报告 + logs/metabolism-decision-lineage.jsonl 机读因果链），
+   * 于是发布包侧「轨迹导入」永远打印「未找到代谢日志」、表恒为 0——M4 的轨迹数字只能来自
+   * 手工导入过的院子。现改为吃真实产物，每步一条，含 outcome/evidence/causalChain。
+   */
+  logFromLineage(rows) {
+    let count = 0;
+    for (const r of rows || []) {
+      if (!r || !r.step) continue;
+      const ok = String(r.outcome || '').toLowerCase() === 'success';
+      const ev = r.evidence && typeof r.evidence === 'object' ? r.evidence : {};
+      this.log({
+        id: `metabolism-${r.step}-${r.timestamp || Date.now()}`,
+        task_type: 'metabolism',
+        route: [String(r.step)],
+        step_sequence: [String(r.step)],
+        success: ok ? 1 : 0,
+        duration_ms: Number(ev.durationMs || ev.duration || 0) || 0,
+        score_hard: ok ? 1 : 0,
+        evidence: {
+          action: r.action || null,
+          target: r.target || null,
+          reason: r.reason || null,
+          alternatives: r.alternatives || null,
+          causalChain: r.causalChain || null,
+        },
+        source: 'metabolism-decision-lineage',
+      });
+      count++;
+    }
+    return { imported: count };
+  }
+
+  /**
    * 批量记录（从 growth-loop episodes 导入）
    */
   logFromGrowthLoop(episodes) {
@@ -193,18 +228,30 @@ async function main() {
       console.log(`  evidence: ${JSON.stringify(s.evidence).slice(0, 120)}`);
     }
   } else if (args.includes('--import-growth-loop')) {
-    const GrowthLoop = require('./growth-loop');
+    // growth-loop 导出的是 { GrowthLoop, STATE_FILE }，整包不是构造函数（旧写法必抛 not a constructor）
+    const { GrowthLoop } = require('./growth-loop');
     const loop = new GrowthLoop();
     const result = ts.logFromGrowthLoop(loop.state.episodes);
     console.log(`从 growth-loop 导入: ${result.imported} 条轨迹`);
   } else if (args.includes('--import-metabolism')) {
-    const lastRun = path.join(__dirname, '..', 'logs', 'metabolism-last-run.json');
-    if (fs.existsSync(lastRun)) {
+    // 首选真实产物：代谢决策因果链 JSONL（每步一条）
+    const lineage = path.join(__dirname, '..', 'logs', 'metabolism-decision-lineage.jsonl');
+    const lastRun = path.join(__dirname, '..', 'logs', 'metabolism-last-run.json'); // 兼容历史格式
+    if (fs.existsSync(lineage)) {
+      const rows = fs.readFileSync(lineage, 'utf8').split(/\r?\n/).filter(Boolean).map(l => {
+        try { return JSON.parse(l); } catch (e) { return null; }
+      }).filter(Boolean);
+      if (!rows.length) { console.log('因果链日志为空，未导入 / lineage empty'); }
+      else {
+        const result = ts.logFromLineage(rows);
+        console.log(`从代谢决策因果链导入: ${result.imported} 条轨迹（源 logs/metabolism-decision-lineage.jsonl）`);
+      }
+    } else if (fs.existsSync(lastRun)) {
       const data = JSON.parse(fs.readFileSync(lastRun, 'utf8'));
       const result = ts.logFromMetabolism(data.steps || {});
-      console.log(`从代谢日志导入: ${result.imported} 条轨迹`);
+      console.log(`从代谢日志（历史格式）导入: ${result.imported} 条轨迹`);
     } else {
-      console.log('未找到代谢日志');
+      console.log('未找到代谢日志 / no metabolism log: 期望 logs/metabolism-decision-lineage.jsonl（由 run-metabolism 写出）');
     }
   } else {
     console.log('用法:');
