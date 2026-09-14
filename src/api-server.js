@@ -6,8 +6,11 @@
  * 1. 只读查询端点：实体列表 / 实体详情 / 语义检索
  * 2. 写入端点：会话消息入库（复用 auto-ingest 批处理链）
  * 3. 认证：设置 AING_API_KEY 后，除 /health 外全部要求 Bearer 认证
- * 4. 多租户：写入端点按 X-Tenant-ID 隔离会话（无该头时默认 tenant=default）
- * 5. 输入防护：实体 ID 白名单字符校验（阻断路径穿越）、请求体 1MB 上限
+ * 4. 输入防护：实体 ID 白名单字符校验（阻断路径穿越）、请求体 1MB 上限
+ *
+ * ❌ 已砍除组件：多租户 / X-Tenant-ID 会话隔离（2026-09-14 用户决定）。本包定位为单用户个人知识代谢引擎：
+ * 租户前缀从未真正隔离数据（共库共表，仅会话键加前缀），却使能力声明虚高并引入文件名净化负担。
+ * 门禁 C10f 扫到 tenant 残留即红，防止死代码复活。
  *
  * 用法：
  *   node src/api-server.js
@@ -211,22 +214,21 @@ async function handle(req, res) {
     });
   }
 
-  // 会话消息入库（按租户隔离会话）
+  // 会话消息入库（单用户：会话键就是 sessionId，不再拼租户前缀）
   // role: user（用户提问）/ assistant（agent回复）/ analysis（agent分析）/ research（收集资料）
   if (p === '/api/ingest' && req.method === 'POST') {
-    const tenant = String(req.headers['x-tenant-id'] || 'default').replace(/[^a-zA-Z0-9\-_]/g, '-');
     const body = await readBody(req);
     if (!body.sessionId || !body.content) {
       return json(res, 400, { error: '需要 {sessionId, content} 字段' });
     }
-    sessions.addMessage(`${tenant}::${String(body.sessionId)}`, {
+    sessions.addMessage(String(body.sessionId), {
       role: String(body.role || 'user'),
       content: String(body.content),
       distillation: body.distillation,
       source: body.source || null,
       metadata: body.metadata || null
     });
-    return json(res, 200, { accepted: true, tenant, role: body.role || 'user' });
+    return json(res, 200, { accepted: true, session: String(body.sessionId), role: body.role || 'user' });
   }
 
   // ── 意识神经控制 + 备忘录（agent ↔ aing 的主界面）──
@@ -238,9 +240,15 @@ async function handle(req, res) {
     const kernelStatus = consciousnessKernel.status();
 
     // 组件链接状态：检测各组件是否在线
+    // 向量通道口径统一：VectorSearch.mode 是 'semantic'|'hash'，仪表台约定值是
+    // 'semantic-384'|'hash-64'（AGENTS.md 运维表）。旧写法拿 'semantic' 与 'semantic-384'
+    // 比较，semantic 布尔恒为 false——即使语义模型在线，仪表台也显示检索通道未语义化。
+    const vsMode = !vectorSearch ? 'offline'
+      : vectorSearch.mode === 'semantic' ? 'semantic-384'
+      : vectorSearch.mode === 'hash' ? 'hash-64' : String(vectorSearch.mode);
     const componentLinks = {
       consciousnessKernel: { status: kernelStatus.state, events: kernelStatus.activeEventCount, focus: kernelStatus.focusTargets?.slice(0, 3) || [] },
-      vectorSearch: { status: vectorSearch?.mode || 'offline', semantic: vectorSearch?.mode === 'semantic-384' },
+      vectorSearch: { status: vsMode, semantic: vsMode === 'semantic-384' },
       knowledgeStore: { status: 'online', entities: store.getStats().entities },
       metabolism: { status: 'available', lastRun: null }, // 代谢链非常驻，标记可用即可
       autoIngest: { status: 'online', pendingSessions: [...sessions.sessions.values()].filter(s => s.messages.length > 0).length },
@@ -543,14 +551,34 @@ async function handle(req, res) {
   // ── 标签驱动加载（AGENTS.md 纪律 #7：标签是加载单位）──
   const tagMatch = p.match(/^\/api\/tags\/([^/]+)$/);
   if (tagMatch && req.method === 'GET') {
-    const tag = decodeURIComponent(tagMatch[1]);
+    // 标签是加载单位（纪律 #7）：本端点必须同时吃裸标签 "x" 与 9 段数值标签 "x:N"。
+    // 旧写法用整串全等比较，一旦语料按 compile 的 9 段格式规范化（存为 "x:5"），
+    // /api/tags/x 会静默返回 0 命中——查询侧与写入侧格式不一致。/ (parse name + optional strength)
+    const parseTag = (raw) => {
+      const s = String(raw).trim().toLowerCase();
+      const m = s.match(/^(.+):([1-9])$/);
+      // 裸标签缺省强度 = 5（纪律 #7：不带 :N 默认中位值），与 auto-link / kespi-check / sprout 同一约定。
+      // 不可写 null：Math.max(null, …) 会被强制成 0，让裸标签实体在强度排序里假归零。
+      return m ? { name: m[1], strength: parseInt(m[2], 10) } : { name: s, strength: 5 };
+    };
+    const wantRaw = decodeURIComponent(tagMatch[1]).trim();
+    const want = parseTag(wantRaw);
+    // 仅当请求串显式带 :N 才作下限过滤；裸名查询 = 挂过即命中。
+    // （若把缺省强度 5 当前置下限，弱关联文档 [x:1-4] 会被静默过滤，查询侧比写入侧更严）
+    const wantFloor = /:[1-9]$/.test(wantRaw.toLowerCase()) ? want.strength : null;
     const all = store.getEntities({ status: 'active' });
-    const matched = all.filter(e => {
+    const matched = all.reduce((acc, e) => {
       let tags = [];
-      try { tags = JSON.parse(e.tags || '[]'); } catch (err) {}
-      return tags.some(t => String(t).toLowerCase() === tag.toLowerCase());
-    }).map(e => ({ id: e.id, name: e.name, type: e.type, tags: (() => { try { return JSON.parse(e.tags || '[]'); } catch (err) { return []; } })() }));
-    return json(res, 200, { tag, count: matched.length, entities: matched });
+      try { tags = JSON.parse(e.tags || '[]'); } catch (err) { tags = []; }
+      const hits = tags.map(parseTag).filter(t => t.name === want.name);
+      if (!hits.length) return acc;
+      // 请求带强度（/api/tags/x:7）= 下限过滤；不带 = 只要挂过该标签即命中 / strength acts as a floor
+      const strength = Math.max(...hits.map(h => h.strength));
+      if (wantFloor !== null && strength < wantFloor) return acc;
+      acc.push({ id: e.id, name: e.name, type: e.type, strength, tags });
+      return acc;
+    }, []).sort((a, b) => b.strength - a.strength);
+    return json(res, 200, { tag: want.name, minStrength: wantFloor, count: matched.length, entities: matched });
   }
 
   return json(res, 404, { error: `未知端点: ${req.method} ${p}` });

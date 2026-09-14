@@ -35,6 +35,8 @@ class KnowledgeStore {
     } else {
       this.db = new SQL.Database();
     }
+
+    this._applyConnectionPragmas();
     
     this._initTables();
     // 蒸馏器迁移：旧库补 distill_meta 列（幂等）
@@ -164,9 +166,25 @@ class KnowledgeStore {
   /**
    * 保存数据库到文件
    */
+  /**
+   * 连接级设置必须可重复断言 / re-assertable connection settings
+   * 建表语句早就写了 FOREIGN KEY ... ON DELETE CASCADE，但 SQLite 默认 PRAGMA foreign_keys=OFF，
+   * 约束与级联全部失效：删除实体后子表残留孤儿行（实测 7 行），污染 KESPI 均分/孤岛率/selfCheck 读数。
+   * 更阴的是：sql.js 的 db.export() 会关闭并重开内存库，连接级 PRAGMA 会在第一次落盘后静默丢失，
+   * 故仅在 init() 里设一次是不够的——init() 与 _save() 都必须调用本方法。
+   */
+  _applyConnectionPragmas() {
+    try {
+      this.db.run('PRAGMA foreign_keys = ON');
+    } catch (e) {
+      console.warn('⚠️  PRAGMA foreign_keys 无法开启，外键约束与级联不生效:', e && e.message);
+    }
+  }
+
   _save() {
     // 原子写：先写临时文件再 rename，避免进程崩溃在写入中途产生截断的损坏库文件
     const data = this.db.export();
+    this._applyConnectionPragmas();   // export() 重开了连接，此处立即补回 PRAGMA
     const buffer = Buffer.from(data);
     const tmpPath = `${this.dbPath}.tmp`;
     try {

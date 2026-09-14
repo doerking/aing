@@ -27,7 +27,8 @@
     "bootstrap": "node src/bootstrap.js",
     "seed:demo": "node src/seed-demo.js",
     "unseed:demo": "node src/unseed-demo.js",
-    "sync:opt": "node src/sync-opt.js"
+    "sync:opt": "node src/sync-opt.js",
+    "verify:siblings": "node tools/verify-sibling-roots.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,

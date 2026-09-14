@@ -405,7 +405,7 @@ node src/setup-db.js --backup     # 手动备份
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
 | `scheduler.js` | 常驻调度器（定时代谢 + raw/ 轮询触发 + `--once`） | 时间/文件变化 → 代谢链 |
-| `api-server.js` | HTTP API 服务（零依赖，Bearer 认证，租户隔离） | HTTP 请求 → JSON |
+| `api-server.js` | HTTP API 服务（零依赖，Bearer 认证，单用户；多租户已砍除） | HTTP 请求 → JSON |
 | `query.js` | 查询 CLI（语义/关键词 + KESPI 附分） | 关键词 → 命中实体 |
 | `shared-spine.js` | 编译门禁（真实 KESPI 评分版） | raw 档 + 库实体 → 接受/拒收/待入库 |
 | `auto-ingest.js` | 会话自动入库（链路起点，听指纹去重）；正文含 `## 蒸馏摘要 / Distilled Summary` 模板 / renders distilled-summary section | 消息 → raw 档 → 代谢链 |
@@ -451,7 +451,7 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 2.6 — Metacognition Layer (self-check reads real metrics: confidence=KESPI avg, errorRate=metabolism fail rate; reviewConsciousness wired to kernel; decision lineage logged / 自我认知读真实指标，元认知审查接通 kernel，决策因果链落盘)
 - [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
 - [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode + hot config via data/scheduler-config.json, delete-to-revert, min interval 60s / 定时代谢+raw 轮询触发+配置热重载，删除即回退，最小间隔 60s；2026-09-08)
-- [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
+- [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + semantic search endpoint; multi-tenancy removed 2026-09-14 / 零依赖 HTTP+Bearer 认证+语义检索端点；多租户组件已砍除（2026-09-14，不再列路线图）)
 - [x] Phase 5 — Consciousness upgrade integration (13 modules per original design; G1-G8 gates green; metabolism→kernel events wired 2026-09-08; N1 cross-process atomic lock / N2 timing-safe auth / N3 self-test exit discipline; consciousness-neural docs realigned to code truth — evidence: `e847d15`, verify-deploy + self-test ALL GREEN)
 
 ## 🔬 Verification Evidence / 验证证据

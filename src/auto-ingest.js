@@ -181,7 +181,8 @@ class SessionStore {
       return;
     }
     
-    // 生成文件名（会话 ID 可能带租户前缀等非法字符，先净化再入文件名）
+    // 生成文件名（会话 ID 由客户端自，可能含冒号/空格/路径分隔等非法字符，先净化再入文件名；
+    // 否则 Windows 下写 raw/ 直接 ENOENT。旧版本的租户前缀 "default::" 已砍除，本净化保留。）
     const safeSessionId = String(sessionId).replace(/[^a-zA-Z0-9\-_\u4e00-\u9fff]/g, '-');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `${safeSessionId}-${timestamp}.md`;
