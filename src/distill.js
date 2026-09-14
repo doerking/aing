@@ -69,19 +69,69 @@ function sha16(obj) {
   return crypto.createHash('sha1').update(JSON.stringify(obj), 'utf8').digest('hex').slice(0, 16);
 }
 
-/** 从 content 的"## 原始消息"节机械提取原话行 */
-function extractRawMessages(content) {
+/**
+ * 入库契约（2026-09-14 实测修正）：消费端认的消息节白名单。
+ * 生产端 auto-ingest.js 早前把「## 原始消息」换成角色分区节（## 用户提问 / ## Agent 回复 /
+ * ## Agent 分析 / ## 收集资料），本文件没跟着改——真实入库会话 100% 被判
+ * 「no raw messages」拒蒸（影子实测 3/3 FAIL、蒸馏债永久还不上）。
+ * 现两侧名单都由代码导出，门禁 C10g 静态比对「生产端 ⊆ 消费端」并做端到端实测。
+ * 人工档与历史档的「## 原始消息」继续兼容。
+ */
+const RAW_SECTIONS = ['原始消息', '用户提问', 'Agent 回复', 'Agent 分析', '收集资料'];
+
+function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/** 从档正文机械提取原话行：按节白名单取，引用行（> 时间戳/来源）不算原话 */
+function extractRawMessages(text) {
   // 行尾无关 / EOL-agnostic：本仓库 core.autocrlf=true，wiki/raw 检出后常为 CRLF。
   // 旧写法只匹配 \n，会把带原始消息的会话误判为「no raw messages」而拒蒸，
   // 且错误信息把排障方向带偏到「探针残留」。实测：CRLF 探针在旧正则下 fail。
-  const m = content.match(/## 原始消息\r?\n([\s\S]*?)(?:\r?\n## |$)/);
-  if (!m) return [];
-  return m[1].split(/\r?\n+/).map(s => s.trim()).filter(s => s.length > 0);
+  const body = String(text || '');
+  const out = [];
+  for (const sec of RAW_SECTIONS) {
+    const re = new RegExp('##\\s*' + escRe(sec) + '\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n##\\s|$)');
+    const m = body.match(re);
+    if (!m) continue;
+    for (const rawLine of m[1].split(/\r?\n+/)) {
+      const line = rawLine.trim();
+      if (!line || line === '...' || line === '…' || line.startsWith('>') || line.startsWith('（')) continue;  // compile 的 500 字截断标记不算原话
+      out.push(line);
+    }
+  }
+  return out;
+}
+
+/**
+ * 找回原话全文：entities.content 是 compile 生成的摘要视图（正文被截到 500 字符），
+ * 长会话的原话只有入库档里才完整。先按实体 id 与「## 来源」行在 raw/ 下递归定位，
+ * 找不到才退回 content（旧实现只吃截断视图，等于拿残缺证据做"确定性蒸馏"）。
+ */
+function resolveEntitySourceText(row) {
+  const candidates = [];
+  if (row && row.id) candidates.push(String(row.id) + '.md');
+  const m = String((row && row.content) || '').match(/原始资料[：:]\s*(\S+?)(?:\.md)?\s*$/m);
+  if (m) candidates.push(m[1] + '.md');
+  for (const want of candidates) {
+    const stack = [path.join(ROOT, 'raw')];
+    while (stack.length) {
+      const dir = stack.pop();
+      let items;
+      try { items = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { continue; }
+      for (const it of items) {
+        const full = path.join(dir, it.name);
+        if (it.isDirectory()) { stack.push(full); continue; }
+        if (it.name === want) {
+          try { return fs.readFileSync(full, 'utf8'); } catch (e) { return null; }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 /** 机械蒸馏：无 LLM、确定性、可追溯 */
-function distillContent(content) {
-  const raw = extractRawMessages(content);
+function distillContent(content, sourceText) {
+  const raw = extractRawMessages(sourceText || content);
   const lines = [];
   for (const msg of raw) {
     // 长句按句切，短句整行收
@@ -106,12 +156,13 @@ function distillContent(content) {
   const minFreq = Number.isFinite(DC.tagMinFreq) ? DC.tagMinFreq : 2;
   const maxCount = Number.isFinite(DC.tagMaxCount) ? DC.tagMaxCount : 3;
   const maxLen = Number.isFinite(DC.tagMaxLen) ? DC.tagMaxLen : 24;
+  const { isTraceToken } = require('./ingest-scrub'); // 出处/手段词不成标签（标签是加载单位，纪律 7）
   const TAG_SHAPE = new RegExp('^[A-Za-z][A-Za-z0-9-]{3,' + Math.max(4, maxLen - 1) + '}$');
   const STOP = new Set(['this', 'that', 'with', 'from', 'test', 'message', 'goes', 'via', 'and', 'the']);
   const freq = {};
   for (const line of lines) {
     for (const w of line.split(/[^\p{L}\p{N}-]+/u)) {
-      if (TAG_SHAPE.test(w) && !STOP.has(w.toLowerCase())) freq[w] = (freq[w] || 0) + 1;
+      if (TAG_SHAPE.test(w) && !STOP.has(w.toLowerCase()) && !isTraceToken(w)) freq[w] = (freq[w] || 0) + 1;
     }
   }
   const tags = Object.entries(freq)
@@ -128,7 +179,7 @@ function rewriteWikiFile(filePath, dist) {
   const summaryBlock = ['## 蒸馏摘要', '', ...dist.points.map(p => '- ' + p), '',
     '> 蒸馏方式：机械确定性提取（distill.js v1，无 LLM）',
     '> contentDigest: ' + dist.digest,
-    '> 原话保留于「原始消息」节，共 ' + dist.rawCount + ' 条', ''].join('\n');
+    '\u003e 原话保留于本档消息节（' + RAW_SECTIONS.join('/') + '），共 ' + dist.rawCount + ' 条', ''].join('\n');
   // 替换蒸馏摘要节（到下一个 ## 为止）
   text = text.replace(/## 蒸馏摘要[\s\S]*?(?=(?:\r?\n## )|$)/, summaryBlock + '\n');
   // frontmatter：status / distillationStatus(以 modified 标记形式不存在——用 tags 追加蒸馏标记) / modified
@@ -188,7 +239,7 @@ async function main() {
         console.error('[distill] FAIL ' + row.id + ': wiki missing (' + row.source_file + ')');
         fail++; process.exitCode = 1; continue;
       }
-      const dist = distillContent(row.content);
+      const dist = distillContent(row.content, resolveEntitySourceText(row));
       if (!dist.points.length) {
         console.error('[distill] FAIL ' + row.id + ': no raw messages, refuse to distill without evidence');
         fail++; process.exitCode = 1; continue;
@@ -221,4 +272,9 @@ async function main() {
   }
 }
 
-main().catch(e => { console.error('[distill] FATAL:', e.message); process.exitCode = 1; return; });
+if (require.main === module) {
+  main().catch(e => { console.error('[distill] FATAL:', e.message); process.exitCode = 1; return; });
+}
+
+// 导出供门禁 C10g 复用同一份解析逻辑（不另抄一份正则，否则门禁会与实现各自漂移）
+module.exports = { RAW_SECTIONS, extractRawMessages, distillContent, resolveEntitySourceText };

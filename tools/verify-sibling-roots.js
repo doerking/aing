@@ -39,19 +39,43 @@ for (let i = 0; i < process.argv.length - 1; i++) {
   }
 }
 
-// ── 比对文件集：全部 src js + 关键根文件 ──
+// ── 比对文件集：src/ 与 tools/ 的 js + 关键根文件 + **assets/ 全量**（2026-09-14 W5 扩面）──
+// ── 比对面 = 整包面（2026-09-15 第三次扩面）
+//    前两次教训同形：只取 git ls-files → 漏 src/neural.js；面不含 assets → 漏 20 件资产；
+//    面不含 docs/包根必读档 → 「同源 0 漂移」其实只证了码面。这次直接把面定义成「除依赖与
+//    运行态之外的全部文件」，宁可慢，不再让代差藏在面外。
+const NOISE_SEGMENTS = new Set(['node_modules', '.git', '.temp', 'models', 'dist', 'build', '__pycache__']);
+const RUNTIME_DIRS = new Set(['logs', 'raw', 'wiki', 'data']);                       // 院属语料与日志，跟包走即污染
+const RUNTIME_FILES = new Set([
+  'tri-path-state.json',            // 三路突击运行态（tasks/stats）
+  'src/package.json',               // src/ 里嵌套的第二个包清单 → src/node_modules 的根因
+  'growth.config.example.ts',       // 与 .js 版内容已分叉的陈旧 .ts 双胞胎（本包口径 no TypeScript）
+  'docs/index.html',                // 12KB 手搓文档页，仅 M4 提及
+  'package-lock.json', 'knowledge.db',
+]);
+
 function trackedSurface(dir) {
-  const out = [];
-  const srcDir = path.join(dir, 'src');
-  if (fs.existsSync(srcDir)) for (const f of fs.readdirSync(srcDir)) if (f.endsWith('.js')) out.push(`src/${f}`);
-  const toolsDir = path.join(dir, 'tools');
-  if (fs.existsSync(toolsDir)) for (const f of fs.readdirSync(toolsDir)) if (f.endsWith('.js')) out.push(`tools/${f}`);
-  for (const f of ['verify-deploy.js', 'growth.config.example.js', 'package.json']) {
-    if (fs.existsSync(path.join(dir, f))) out.push(f);
-  }
-  // 运行配置单独处理：它是机器本地运行时态（环境变可覆盖），差异只作信息报告、不计代差
-  if (fs.existsSync(path.join(dir, 'src', 'growth.config.js'))) out.push('src/growth.config.js');
-  return out.sort();
+  const out = new Set();
+  const walk = rel => {
+    let ents;
+    try { ents = fs.readdirSync(path.join(dir, rel || '.'), { withFileTypes: true }); } catch (e) { return; }
+    for (const ent of ents) {
+      if (NOISE_SEGMENTS.has(ent.name)) continue;
+      const rel2 = rel ? rel + '/' + ent.name : ent.name;
+      if (ent.isDirectory()) {
+        if (!rel && RUNTIME_DIRS.has(ent.name)) continue;
+        walk(rel2);
+      } else if (!RUNTIME_FILES.has(rel2) && !/\.db(-wal|-shm)?$/i.test(ent.name) && !/^-lock\.json$/.test(ent.name) && ent.name !== 'package-lock.json') {
+        out.add(rel2);
+      }
+    }
+  };
+  walk('');
+  // 组件登记簿在 data/ 下但属包内容（C9a/C9b 的账）→ 显式请回面内
+  if (fs.existsSync(path.join(dir, 'data', 'component-registry.json'))) out.add('data/component-registry.json');
+  // 运行配置单独处理：机器本地运行时态，差异只进信息栏不计代差
+  if (fs.existsSync(path.join(dir, 'src', 'growth.config.js'))) out.add('src/growth.config.js');
+  return [...out].sort();
 }
 
 const crlfStrippedHash = p => {
@@ -61,18 +85,25 @@ const crlfStrippedHash = p => {
 const rawHash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);
 
 const selfSurface = trackedSurface(REPO);
+// --print-face：把比对面单独打到 stdout（供跨院复制器消费，避免各方自写一份面定义）
+if (process.argv.includes('--print-face')) { console.log(selfSurface.join('\n')); process.exit(0); }
 const RUNTIME_CONFIG = 'src/growth.config.js';
 if (!selfSurface.length) { console.error('❌ 本包无可比对文件（应在包根运行）'); process.exitCode = 2; return; }
 
 let driftTotal = 0, eolTotal = 0, missingTotal = 0;
 console.log(`🔎 院际全量同源核验 / cross-yard same-origin: 本包 ${SELF}（${selfSurface.length} 个比对文件）`);
+console.log('   ℹ️  刻意不跨院携带（本包跟踪但判定为运行态/垃圾，不计对方缺失）: ' + [...RUNTIME_FILES].filter(f => fs.existsSync(path.join(REPO, f))).join(', '));
 
 for (const [name, dir] of roots) {
   const theirs = new Set(trackedSurface(dir));
   const drift = [], eol = [], missing = [], extra = [], runtime = [];
   for (const rel of selfSurface) {
     const a = path.join(REPO, rel), b = path.join(dir, rel);
-    if (!theirs.has(rel)) { missing.push(rel); continue; }
+    if (!theirs.has(rel)) {
+      // 未部署院本来就没有运行配置（C0 要求部署时 cp example）→ 归信息项，不得计进代差/缺失
+      if (rel === RUNTIME_CONFIG) { runtime.push(rel); continue; }
+      missing.push(rel); continue;
+    }
     if (rawHash(a) === rawHash(b)) continue;
     if (rel === RUNTIME_CONFIG) { runtime.push(rel); continue; }   // 运行配置归入信息项
     if (crlfStrippedHash(a) === crlfStrippedHash(b)) eol.push(rel);
@@ -83,13 +114,18 @@ for (const [name, dir] of roots) {
   const status = drift.length || missing.length ? '❌ 有真实代差' : (eol.length ? '🟡 仅行尾差异' : '✅ 全量同源');
   console.log(`\n${status}  对比 ${name}（${path.relative(PARENT, dir)}）  真实漂移 ${drift.length} · 仅行尾 ${eol.length} · 对方缺失 ${missing.length} · 对方独有 ${extra.length}`);
   if (runtime.length) {
+    const aP = path.join(REPO, RUNTIME_CONFIG), bP = path.join(dir, RUNTIME_CONFIG);
+    if (!fs.existsSync(aP) || !fs.existsSync(bP)) {
+      console.log(`   ℹ️  运行配置：${!fs.existsSync(bP) ? '对方无（未部署院属正常，部署时 cp example 即可）' : '本包无'} → 不计代差`);
+    } else {
     // 阈值唯一来源是运行配置，院际差异直接影响跑分口径 → 逐项列出 differing 段供人判断
     try {
-      const A = require(path.join(REPO, RUNTIME_CONFIG)), B = require(path.join(dir, RUNTIME_CONFIG));
+      const A = require(aP), B = require(bP);
       const keys = new Set([...Object.keys(A), ...Object.keys(B)]);
       const dd = [...keys].filter(k => JSON.stringify(A[k]) !== JSON.stringify(B[k]));
       console.log(`   ℹ️  运行配置差异（不计代差）: ${dd.length ? dd.map(k => `${k}${!(k in B) ? '(对方无此段)' : !(k in A) ? '(本包无此段)' : ''}`).join(', ') : '无'}`);
     } catch (e) { console.log(`   ⚪ 运行配置无法解析比较: ${e.message.slice(0, 40)}`); }
+    }
   }
   const show = (label, arr) => {
     if (!arr.length) return;

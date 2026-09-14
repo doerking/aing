@@ -41,7 +41,7 @@ function render(G = loadGreenlist()) {
     lines.push(`  - 证据：${g.evidence}（${g.date}）`);
   }
   lines.push('');
-  lines.push(`## 明确未解锁（${G.locked.length} 项，禁止承诺）`);
+  lines.push(`## 按需接入（${G.locked.length} 项 · 未接管线/未解锁，禁止当既成能力承诺）`);
   lines.push('');
   for (const l of G.locked) {
     lines.push(`- ⬜ ${l.item} — ${l.note}`);

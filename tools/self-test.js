@@ -2,6 +2,9 @@
 // 覆盖今天验证过的三条哨兵：生命周期翻转、入库存活、全管线产物一致
 const fs = require('fs'), path = require('path'), { execSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
+// 自测绝不替用户提交工作树：compile 的 gitCommit() 会 `git add -A` + `commit --no-verify`，
+// 2026-09-14 实测一条 self-test 探针就把 26 个未获批改动打包成 "chore: compile knowledge base"。
+process.env.AING_NO_AUTOCOMMIT = '1';
 let fail = 0;
 const log = (ok, name, detail) => console.log(`${ok ? '✅' : '❌'} ${name}${detail ? '  ' + detail : ''}`) || (ok || fail++);
 
@@ -25,9 +28,25 @@ try {
     try {
       const { SessionStore } = require(path.join(ROOT, 'src', 'auto-ingest'));
       const store = new SessionStore();
-      store.addMessage('selftest-probe', { role: 'user', content: 'selftest probe message long enough to pass threshold. ' .repeat(3) });
+      const nonce = new Date().toISOString(); // 每轮内容唯一，否则必然撞上批次去重，断言退化成空转
+      store.addMessage('selftest-probe', { role: 'user', content: ('selftest probe message long enough to pass threshold. ').repeat(3) + ' [run ' + nonce + ']' });
       store.ingestSession('selftest-probe');
       log(true, '入库路径存活', '无蒸馏优雅降级');
+
+      // 2b. 回收探针产物：库行（FK 级联）+ wiki 实体档 + raw/inbox 入库档
+      const docs = [];
+      for (const dir of [path.join(ROOT, 'raw', 'inbox'), path.join(ROOT, 'wiki', 'entities')]) {
+        if (!fs.existsSync(dir)) continue;
+        for (const f of fs.readdirSync(dir)) if (/^selftest-probe/.test(f)) { fs.rmSync(path.join(dir, f), { force: true }); docs.push(f); }
+      }
+      const db2 = new SQL.Database(fs.readFileSync(path.join(ROOT, 'knowledge.db')));
+      db2.run('PRAGMA foreign_keys = ON');
+      const found = db2.exec("SELECT id FROM entities WHERE id LIKE 'selftest-probe%'");
+      const ids = found.length ? found[0].values.map(v => v[0]) : [];
+      for (const id of ids) db2.run('DELETE FROM entities WHERE id = ?', [id]);
+      fs.writeFileSync(path.join(ROOT, 'knowledge.db'), Buffer.from(db2.export()));
+      db2.close();
+      log(true, '自测残留清理', `实体 ${ids.length} / 文档 ${docs.length} 已回收`);
     } catch (e) {
       log(false, '入库路径存活', e.message);
     }

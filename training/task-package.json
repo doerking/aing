@@ -33,7 +33,7 @@
     { "id": "task-27", "task_type": "consciousness", "question": "多 Agent 蜂群支持哪些裁决模式？", "correct_answer": "best / merge / council 三种", "wrong_answer": "仅支持 best 单一模式", "source": "raw/consciousness-neural.md" },
     { "id": "task-28", "task_type": "consciousness", "question": "意识层的状态输出取值？", "correct_answer": "healthy / warning / critical 三档", "wrong_answer": "只有正常/异常布尔两值", "source": "raw/consciousness-neural.md" },
     { "id": "task-29", "task_type": "training", "question": "SkillOpt Gate 的通过条件是什么？", "correct_answer": "候选总体分 > 基线 + margin，且评估准确率不降；失败候选只留档不应用", "wrong_answer": "只要候选总体分比基线高哪怕 0.001 就直接应用", "source": "raw/training-simulation.md + SkillOpt gate 语义" },
-    { "id": "task-30", "task_type": "training", "question": "EnvAdapter.rollout 的返回契约？", "correct_answer": "list[dict]，每项必含 id / hard(0|1) / soft(0.0~1.0)", "wrong_answer": "list[dict]，每项只含 question 和 answer 文本", "source": "SkillOpt docs/reference/api.md" },
+    { "id": "task-30", "task_type": "training", "question": "EnvAdapter.rollout 的返回契约？", "correct_answer": "list[dict]，每项必含 id / hard(0|1) / soft(0.0~1.0)", "wrong_answer": "list[dict]，每项只含 question 和 answer 文本", "source": "SkillOpt 检出内 docs/reference/api.md（**外部检出文档，非本包路径**）" },
     { "id": "task-31", "task_type": "training", "question": "SkillOpt 六阶段循环的完整顺序？", "correct_answer": "Rollout→Reflect→Aggregate→Select→Update→Gate", "wrong_answer": "Rollout→Reflect→Select→Gate（无 Aggregate 与 Update）", "source": "raw/training-simulation.md" },
     { "id": "task-32", "task_type": "training", "question": "影子训练（shadow mode）的原则是什么？", "correct_answer": "训练在副本上进行，绝不触碰真实知识库；候选过 Gate 才晋升", "wrong_answer": "为节省磁盘直接在真实库上试跑，出错再回滚", "source": "raw/vision-and-operations.md" }
   ]

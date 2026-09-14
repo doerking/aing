@@ -16,7 +16,8 @@ AIGC:
 ## 总体架构与数据流
 
 ```
-消息/文件 ──► auto-ingest ──► raw/*.md
+会话消息 ──► auto-ingest ──► raw/inbox/*.md（运行态，gitignore）┐
+人工知识源 ─────────────────► raw/*.md（语料，入库跟踪）┴─► wiki/ ─► knowledge.db
                                   │ shared-spine (门禁校验)
                                   ▼
    run-metabolism 11 步代谢链：
@@ -45,7 +46,10 @@ AIGC:
   - 某步失败但想跳过 → `--force`（慎用， kespi 会基于脏数据打分）。
 
 ### compile.js — 秩序脑编译
-- **能力**：`raw/*.md` → `wiki/entities/*.md`，抽取 frontmatter（title/tags/type）。
+- **能力**：`raw/**/*.md`（递归，含 `raw/inbox/`）→ `wiki/entities/*.md`，抽取 frontmatter（title/tags/type）。
+- **实体 id 归属（2026-09-14 实测两次踩坑后定）**：人工档按 raw 相对路径推导；只有「会话档（`sourceType: conversation`）且位于 raw 子目录」才尊重档内声明 id。
+  反例已验证：只按 sourceType 分流 → raw 顶层一条声明 id ≠ 文件名干的历史会话档重编译时多造重复实体（影子 22 vs 期望 21）；
+  无条件 `String(metadata.id)` → 19 篇无 id 人工档全变 `"undefined"` 并互相覆盖（`String(undefined)` 是真值）。
 - **高发问题**：raw 文件缺 frontmatter 时会生成无 tags 实体，导致后续 KESPI 扣分（MISSING_TAGS）。编译前保证 raw 档有 `tags: a, b` 或 JSON 数组 `["a","b"]`（两种格式 import 侧都兼容）。
 
 ### import-from-wiki.js — wiki→数据库
@@ -121,7 +125,14 @@ AIGC:
 - **降级**：isReady=false 时自动退关键词搜索，不会崩但语义精度下降——日志里看到 fallback 要检查模型目录。
 
 ### auto-ingest.js — 自动入库入口
-- **能力**：消息→raw 档→触发 compile→import→向量链（chained，失败即断）；**内容指纹去重**（批次 SHA-1 账本落盘 `data/ingest-hashes.json`，同内容重发直接跳过）；会话 ID 入文件名前自动净化非法字符（客户端自定义 ID 可含冒号等，Windows 下会 ENOENT）。
+- **能力**：会话消息 → `raw/inbox/*.md` → compile → import → 向量链（chained，失败即断）。四个关键约束（2026-09-14 重做，见 C10g）：
+  1. **导出契约**：`PRODUCED_SECTIONS` / `ROLE_SECTION` / `renderConversationDoc`（纯函数）——蒸馏端 `RAW_SECTIONS` 必须全覆盖，改任一侧必须同步，C10g 双向校验。
+  2. **身份由服务端定**：一律 `status: pending-distillation`、`confidence: 0`；客户端自报 `distillation` 只进「Agent 提议（未核验）」节，等 `distill.js` 兑付，绝不直接 active。
+  3. **accepted 之前先落 WAL**：每条消息 append 到 `data/ingest-buffer.jsonl`，启动时重放；flush 后压缩。响应诚实回报 `buffered` / `flushed`，不假装已入库。
+  4. **去重键含 sessionId**：同会话重复批丢挂起并留痕 `data/ingest-duplicates.jsonl`；跨会话同文本各自落档（旧实现只哈希正文，会静默吞掉第二个会话）。
+  5. **只入贴出来的详情**（`src/ingest-scrub.js`，2026-09-14 用户口径）：正文里属于「贴出来之前的采集步骤」的行（命令行 / 请求行 / 响应头 / 报文 / 计时统计）在 `addMessage` 入口按行首锚定剥除，**不留原文、不写旁路、不进 WAL**，只在档内记 `traceScrubbed` 计数；纯过程内容整条 `422` 拒收；自然语言里提到 curl/URL 的正文保留（不误伤）。`metadata` 采集元数据字段已停止接收。
+- **触发**：单会话攒够 `config.ingest.maxMessagesPerBatch` / 会话静默 `sessionIdleMs` / 全局 `batchIntervalMs` 三者任一。
+- **参数源**：`config.ingest.*`（阈值不写死，纪律 5），产物目录 `config.ingest.rawDir` 默认 `raw/inbox`。
 - **高发问题**：kbRoot 必须相对 `__dirname` 解析（历史上硬编码路径导致换目录部署全链路失效）；被 api-server 等外部进程 require 时，批冲洗定时器需宿主自备（主模块 10s 轮询不会启动）。
 
 ---
@@ -197,7 +208,7 @@ AIGC:
 - **日志**：`logs/scheduler.log`，代谢输出内嵌 `[metabolism]` 前缀。
 
 ### api-server.js — HTTP API 服务（零依赖）
-- **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`；端口 3789（`AING_API_PORT` 可调）。
+- **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`（字段 `sessionId`/`content`/`role`/`source`/可选 `distillation`；`metadata` 自 2026-09-14 停收；纯采集过程内容回 `422`）；端口 3789（`AING_API_PORT` 可调）。
 - **认证**：设 `AING_API_KEY` 后除 /health 外全部要求 `Authorization: Bearer`，且监听改 `0.0.0.0`；未设则仅监听 `127.0.0.1`（本机信任模式）。缺凭据返回 401。
 - ~~多租户~~（**已砍除 2026-09-14**）：原 `X-Tenant-ID` 只给会话键加 `tenant::` 前缀，共库共表不构成任何隔离，反而让「租户隔离」进入能力声明。现按单用户产品定位：会话键即 `sessionId`，文件名净化保留（客户端 ID 仍可能含非法字符）。门禁 C10f 防复活。
 - **输入防护**：实体 ID 白名单字符校验（阻断路径穿越）；请求体 1MB 上限。
@@ -212,7 +223,7 @@ AIGC:
 
 ## 六、运维速查
 
-- **本地 LSP 服务**（可选组件，见 tools/lsp-server.js）：端口 4317；若本机配置了 HTTP 代理，调用前必须设置 `$env:NO_PROXY="localhost,127.0.0.1"`，否则代理会拦截 localhost 致 502。TypeScript 需完整发行版（含 tsserver.js），全局 npm 安装的是阉割版，缺失时服务会回退扫描项目的 node_modules。
+- **本地 LSP 服务**：⚠️ **本包未实现也未携带**（`tools/lsp-server.js` 与 `src/lsp-server.js` 在 Tip/OPT/aing 三院全不存在，2026-09-15 全仓 `git ls-files` 实测）——此段是历史设计意图，**别按它排障**；端口 4317 上若真有服务，那是机器上其它工具的，与 aing 无关。
 - **数据库损坏恢复**：库文件是单文件 knowledge.db；写路径已原子化（tmp+rename），若仍损坏从最近快照 + 重跑代谢链重建（raw→wiki→DB 全程幂等可重放）。
 - **首次部署顺序**：`setup-db.js` → 放 raw 档 → `run-metabolism.js` → `setup-db.js --verify`。
 - **改动守则**：动 schema 两处同步；动阈值先查公式上限；动链接写入必带双向查重；动向量编码必用 Float32Array。

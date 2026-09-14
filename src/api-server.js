@@ -33,6 +33,10 @@
  *   GET  /api/consciousness/lineage     最近决策谱系（sense→assess→deliberate→verify→record）
  *   POST /api/consciousness/sense       agent 感知（经 adapter.search 检索 → controller.sense 记录）
  *   POST /api/consciousness/assess      agent 评估（投递事件 → kernel.ingest → controller.assess 记录）
+ *   POST /api/consciousness/inhibit     抑制某目标（kernel.inhibit；唯一清除路径 = 到期，见 src/neural.js）
+ *   POST /api/consciousness/deliberate  协商维护（controller.deliberate → adapter.deliberateMaintenance，只出共识不执行）
+ *   POST /api/consciousness/verify      记录校验（controller.verify → decision lineage，不需外部 adapter）
+ *   POST /api/consciousness/record      记录结果与教训（controller.record → decision lineage）
  */
 
 const http = require('http');
@@ -46,6 +50,7 @@ const { searchCandidates } = require('./query');
 const { ConsciousnessKernel } = require('./consciousness-kernel');
 const { ConsciousnessController, MODES } = require('./consciousness-controller');
 const { HermesAingAdapter } = require('./hermes-aing-adapter');
+const { buildMemo } = require('./memo');
 
 const PORT = parseInt(process.env.AING_API_PORT, 10) || 3789;
 const API_KEY = process.env.AING_API_KEY || null;
@@ -221,14 +226,44 @@ async function handle(req, res) {
     if (!body.sessionId || !body.content) {
       return json(res, 400, { error: '需要 {sessionId, content} 字段' });
     }
-    sessions.addMessage(String(body.sessionId), {
+    const r = sessions.addMessage(String(body.sessionId), {
       role: String(body.role || 'user'),
       content: String(body.content),
       distillation: body.distillation,
       source: body.source || null,
-      metadata: body.metadata || null
+      // metadata（搜索词/rank/请求对象等采集元数据）自 2026-09-14 起不接收：只入贴出来的详情
     });
-    return json(res, 200, { accepted: true, session: String(body.sessionId), role: body.role || 'user' });
+    // accepted 只代表"已收进持久缓冲"，不代表已入库。旧响应只回 accepted:true，
+    // 实测两条消息后进程退出 → raw 新增 0，调用方却被告知成功（2026-09-14）。
+    // 真实落盘看 flushed（本批已写 raw/ 并触发编译链）。自报 distillation 只作提议，
+    // 入库档一律 status:pending-distillation，等 distill.js 兑付。
+    if (r.rejected === 'unknown-role') {
+      // 说话人无法确定时不猜：400 把合法值报回去，避免 Agent 的话被记成用户提问
+      return json(res, 400, {
+        accepted: false,
+        session: String(body.sessionId),
+        rejected: 'unknown-role',
+        role: r.role,
+        allowedRoles: r.allowedRoles,
+        aliases: { agent: 'assistant', bot: 'assistant', tool: 'research' },
+      });
+    }
+    if (r.accepted === false) {
+      // 采集过程行剥完就空了：如实告知拒收，不假装已缓冲
+      return json(res, 422, {
+        accepted: false,
+        session: String(body.sessionId),
+        rejected: r.rejected,
+        reason: '正文全部是贴出来之前的采集步骤（命令行/请求行/响应头/报文），按「只入贴出来的详情」口径拒收，未缓冲未入库' 
+      });
+    }
+    return json(res, 200, {
+      accepted: true,
+      session: String(body.sessionId),
+      role: body.role || 'user',
+      buffered: r.buffered,
+      flushed: r.flushed
+    });
   }
 
   // ── 意识神经控制 + 备忘录（agent ↔ aing 的主界面）──
@@ -236,160 +271,8 @@ async function handle(req, res) {
   // 备忘录（agent 仪表台）：aing 状态 + 组件链接状态 + 待办 + 会话交接
   // agent 出场手持这份备忘录，用户只看其中的待办和会话交接
   if (p === '/api/consciousness/briefing' && req.method === 'GET') {
-    const briefing = aingAdapter.generateBriefing();
-    const kernelStatus = consciousnessKernel.status();
-
-    // 组件链接状态：检测各组件是否在线
-    // 向量通道口径统一：VectorSearch.mode 是 'semantic'|'hash'，仪表台约定值是
-    // 'semantic-384'|'hash-64'（AGENTS.md 运维表）。旧写法拿 'semantic' 与 'semantic-384'
-    // 比较，semantic 布尔恒为 false——即使语义模型在线，仪表台也显示检索通道未语义化。
-    const vsMode = !vectorSearch ? 'offline'
-      : vectorSearch.mode === 'semantic' ? 'semantic-384'
-      : vectorSearch.mode === 'hash' ? 'hash-64' : String(vectorSearch.mode);
-    const componentLinks = {
-      consciousnessKernel: { status: kernelStatus.state, events: kernelStatus.activeEventCount, focus: kernelStatus.focusTargets?.slice(0, 3) || [] },
-      vectorSearch: { status: vsMode, semantic: vsMode === 'semantic-384' },
-      knowledgeStore: { status: 'online', entities: store.getStats().entities },
-      metabolism: { status: 'available', lastRun: null }, // 代谢链非常驻，标记可用即可
-      autoIngest: { status: 'online', pendingSessions: [...sessions.sessions.values()].filter(s => s.messages.length > 0).length },
-      metacognition: { status: briefing.metacognition ? 'online' : 'degraded', reviewed: briefing.metacognition?.reviewed || false }
-    };
-
-    // 会话交接：最近 3 条会话的时间线（上次聊到哪）
-    let sessionHandoff = [];
-    try {
-      sessionHandoff = store.all("SELECT id, name, type, created_at FROM entities WHERE type='Conversation' ORDER BY created_at DESC LIMIT 3");
-    } catch (e) {}
-
-    // 待办事项：agent 和用户的待办
-    let todos = [];
-    try {
-      todos = store.all("SELECT id, name, tags, status FROM entities WHERE type='Todo' AND status='active' ORDER BY created_at");
-    } catch (e) {}
-
-    // 蒸馏债务：pending-distillation 实体数量
-    let distillDebt = 0;
-    try {
-      const debt = store.all("SELECT COUNT(*) as n FROM entities WHERE status = 'pending-distillation'");
-      distillDebt = debt.length ? debt[0].n : 0;
-    } catch (e) {}
-
-    // 意识层告警：合并 consciousness-layer alerts + metacognition alerts + distill debt
-    const consciousnessAlerts = [
-      ...(briefing.metacognition?.alerts || []),
-      ...(distillDebt > 0 ? [{ type: 'distill-debt', severity: 0.5, message: `${distillDebt} 个实体待蒸馏（pending-distillation）`, targets: [] }] : []),
-      ...(kernelStatus.stagnationCount >= 3 ? [{ type: 'consciousness-stagnant', severity: 0.8, message: `连续 ${kernelStatus.stagnationCount} 次空产出，意识层已进入停滞态`, targets: [] }] : []),
-    ];
-
-    // 意识层反应：从 kernel state 提取高注意力反应摘要
-    const kernelReactions = (consciousnessKernel.state?.activeEvents || [])
-      .sort((a, b) => (b.attention || 0) - (a.attention || 0))
-      .slice(0, 5)
-      .map(r => ({
-        target: r.target,
-        arousal: r.arousal,
-        attention: Number(r.attention || 0).toFixed(3),
-        channels: r.channels || [],
-        suggestedActions: r.suggestedActions || [],
-        createdAt: r.createdAt,
-      }));
-
-    // 用户面（对用户负责的部分）：只有待办 + 会话交接
-    const userFacing = {
-      todos: todos.map(t => ({ id: t.id, name: t.name, tags: (() => { try { return JSON.parse(t.tags || '[]'); } catch (e) { return []; } })() })),
-      sessionHandoff: sessionHandoff.map(s => ({ id: s.id, name: s.name, created_at: s.created_at }))
-    };
-
-    // agent 仪表台（完整）
-    return json(res, 200, {
-      generatedAt: new Date().toISOString(),
-      // ── agent 仪表台 ──
-      consciousness: kernelStatus,
-      componentLinks,
-      alerts: briefing.briefing.alerts,
-      consciousnessAlerts,
-      kernelReactions,
-      metacognitionAdjustments: briefing.metacognition?.adjustments || [],
-      hotspots: briefing.briefing.hotspots?.slice(0, 5) || [],
-      recommendations: briefing.briefing.recommendations || [],
-      priority: briefing.priority,
-      distillDebt,
-      // ── M4 自我报告：六属性自评 ──
-      selfAssessment: (() => {
-        try {
-          // 读取最新自我认知状态
-          const selfStateFile = path.join(KB_ROOT, 'data', 'metacognition', 'self-state.json');
-          let selfState = null;
-          if (fs.existsSync(selfStateFile)) {
-            selfState = JSON.parse(fs.readFileSync(selfStateFile, 'utf8'));
-          }
-          const awareness = selfState?.selfAwareness || {};
-          const stats = selfState?.stats || {};
-          const measured = awareness.measured === true;
-
-          // 读取训练提升证据（优先 SkillOpt adapter 真实 rollout，降级到 training-sim 推演）
-          let improvement = null;
-          try {
-            const skilloptEvidence = path.join(KB_ROOT, 'simulation', 'skillopt-evidence.json');
-            if (fs.existsSync(skilloptEvidence)) {
-              improvement = JSON.parse(fs.readFileSync(skilloptEvidence, 'utf8'));
-            } else {
-              const lastRun = path.join(KB_ROOT, 'simulation', 'last-run.json');
-              if (fs.existsSync(lastRun)) {
-                const run = JSON.parse(fs.readFileSync(lastRun, 'utf8'));
-                improvement = run.improvementEvidence || null;
-              }
-            }
-          } catch (e) {}
-
-          // 读取决策因果链条数
-          let decisionCount = 0;
-          try {
-            const dlFile = path.join(KB_ROOT, 'logs', 'metabolism-decision-lineage.jsonl');
-            if (fs.existsSync(dlFile)) {
-              decisionCount = fs.readFileSync(dlFile, 'utf8').trim().split('\n').length;
-            }
-          } catch (e) {}
-
-          // 六属性打分（理论家 Gate2 标准对照）
-          return {
-            memory: { score: '✓', evidence: `${store.getStats().entities} 实体 / ${store.getStats().links} 链接 / 三层记忆架构` },
-            attention: { score: '✓', evidence: `五因子注意力公式 / kernel state=${kernelStatus.state} / ${kernelStatus.activeEventCount} 活跃事件` },
-            selfModeling: {
-              score: measured ? '✓' : '△',
-              evidence: measured
-                ? `真实测量: confidence=${(awareness.confidence*100).toFixed(0)}% errorRate=${(awareness.errorRate*100).toFixed(1)}% coverage=${(awareness.knowledgeCoverage*100).toFixed(0)}%`
-                : '硬编码默认值（未测量）',
-              metrics: awareness,
-            },
-            selfExplanation: {
-              score: decisionCount > 0 ? '✓' : '△',
-              evidence: decisionCount > 0
-                ? `${decisionCount} 条决策因果链记录 / metabolism-decision-lineage.jsonl`
-                : '决策因果链未建立',
-              decisionCount,
-            },
-            selfImprovement: {
-              score: improvement ? '✓' : '△',
-              evidence: improvement
-                ? improvement.source === 'SkillOpt aing adapter (Python, offline rollout)'
-                  ? `SkillOpt adapter 真实 rollout: ${improvement.baseline.hardCorrect}/${improvement.taskCount} → ${improvement.corrected.hardCorrect}/${improvement.taskCount} (soft ${improvement.baseline.softScore} → ${improvement.corrected.softScore}), Gate ${improvement.improvement.gatePassed ? 'PASS' : 'FAIL'}, delta=${improvement.improvement.deltaSoft}`
-                  : `训练推演: ${improvement.improvementPercent}% 改进 / Gate ${improvement.gatePassed ? 'PASS' : 'FAIL'} / ${improvement.falseBeliefsRemoved} 个错误信念修正`
-                : '训练循环未产出证据',
-              improvement,
-            },
-            selfReport: {
-              score: '✓',
-              evidence: 'briefing 结构化输出 / KESPI 八维可查 / consciousness alerts 可消费',
-            },
-          };
-        } catch (e) {
-          return { error: e.message };
-        }
-      })(),
-      // ── 对用户负责的部分 ──
-      userFacing
-    });
+    // 备忘录组装面已抽至 src/memo.js：HTTP 与 CLI 共用同一函数（单一口径，防双脑脱节）
+    return json(res, 200, buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAdapter, KB_ROOT }));
   }
 
   // 意识神经状态
@@ -439,6 +322,44 @@ async function handle(req, res) {
       taskId: body.taskId || null
     });
     return json(res, 200, lineage);
+  }
+
+  // ── W2 控制面（2026-09-14）：inhibit / deliberate / verify / record ──
+  // 与 src/neural.js 同一组转发：这里不写任何阈值与默认值（纪律 5），默认值归 kernel / event 自己那处。
+  if (p === '/api/consciousness/inhibit' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.target || !String(body.target).trim()) return json(res, 400, { error: '需要 {target} 字段；可选 {reason, hours}' });
+    const target = String(body.target).trim();
+    const reason = body.reason ? String(body.reason) : 'agent-api';
+    let rec;
+    if (body.hours !== undefined && body.hours !== null && body.hours !== '') {
+      const h = Number(body.hours);
+      if (!Number.isFinite(h) || h <= 0) return json(res, 400, { error: `hours 必须是正数小时，收到 "${body.hours}"` });
+      rec = consciousnessKernel.inhibit(target, reason, h * 3600000);   // 仅单位换算；缺省时长归 kernel.inhibit 默认值
+    } else {
+      rec = consciousnessKernel.inhibit(target, reason);
+    }
+    return json(res, 200, { ...rec, isInhibited: consciousnessKernel.isInhibited(target), note: 'kernel 无撤销 API：到期自动失效是唯一清除路径' });
+  }
+
+  if (p === '/api/consciousness/deliberate' && req.method === 'POST') {
+    const body = await readBody(req);
+    const lineage = await consciousnessController.deliberate({
+      urgency: body.urgency || undefined,
+      signals: body.signals,
+      taskId: body.taskId || null,
+    });
+    return json(res, 200, lineage);
+  }
+
+  if (p === '/api/consciousness/verify' && req.method === 'POST') {
+    const body = await readBody(req);
+    return json(res, 200, consciousnessController.verify(body));
+  }
+
+  if (p === '/api/consciousness/record' && req.method === 'POST') {
+    const body = await readBody(req);
+    return json(res, 200, consciousnessController.record(body));
   }
 
   // 最近决策谱系（sense→assess→deliberate→verify→record 链路）

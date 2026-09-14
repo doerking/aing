@@ -9,7 +9,9 @@
     "sql.js": "^1.13.0"
   },
   "scripts": {
-    "verify": "node verify-deploy.js",
+    "memo": "node src/memo.js",
+    "neural": "node src/neural.js",
+  "verify": "node verify-deploy.js",
     "setup:db": "node src/setup-db.js",
     "metabolism": "node src/run-metabolism.js --smart",
     "reindex:semantic": "node src/index-vectors.js --semantic --reindex",
@@ -28,7 +30,8 @@
     "seed:demo": "node src/seed-demo.js",
     "unseed:demo": "node src/unseed-demo.js",
     "sync:opt": "node src/sync-opt.js",
-    "verify:siblings": "node tools/verify-sibling-roots.js"
+    "verify:siblings": "node tools/verify-sibling-roots.js",
+    "gate-counts": "node tools/gate-counts.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,

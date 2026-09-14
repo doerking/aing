@@ -13,7 +13,7 @@
  * 1. 秩序脑编译（raw → wiki）
  * 2. 导入数据库（wiki → SQLite）
  * 3. 自动链接发现（实体关联）
- * 4. 向量索引（64-dim embedding）
+ * 4. 向量索引（默认 384 维本地语义向量；语义模型缺失才回退 64 维哈希）
  * 5. 发芽引擎（新关联发现）
  * 6. 授粉引擎（跨域融合）
  * 7. 芥子压缩（低频归档）
@@ -23,7 +23,7 @@
  * 使用：
  *   node run-metabolism.js              # 执行完整流程
  *   node run-metabolism.js --smart      # 智能决策模式
- *   node run-metabolism.js --step compile    # 只执行编译
+ *   node run-metabolism.js --step=compile    # 只执行编译（必须等号形；空格形会被当成整链跑，2026-09-14 实测）
  *   node run-metabolism.js --force            # 强制模式
  *   node run-metabolism.js --resume           # 断点续传
  *   node run-metabolism.js --feedback         # 执行后反馈分析
@@ -32,6 +32,16 @@
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+// ── 铁律守卫：代谢不得替用户提交工作树 / metabolism must never commit on the user's behalf ──
+// 实测事故（2026-09-14，OPT）：本文件第 1 步 compile 走到底会调 src/compile.js 的 gitCommit()，
+// 那里面是 `git add -A` + `git commit --no-verify`（身份取该院 local git config），
+// 一步代谢就把当时 38 个文件提成了 `1a3382b`——绕过用户「未经允许不得 commit」铁律，
+// 而当时 24 项验收全绿（旧门只查入库链与自测链，没人查这个入口）。
+// 因此默认注入 AING_NO_AUTOCOMMIT=1（下面 executeStep 用 execSync 继承 process.env → 子进程可见）；
+// 确需自动提交时必须显式 opt-in：AING_AUTOCOMMIT=1。seed-demo / sync-opt / auto-ingest 本来就传
+// NO_AUTOCOMMIT=1，同向不受影响。由 verify-deploy C13 钉住（在隔离假院里真跑：带守卫无提交、删守卫出提交）。
+if (process.env.AING_AUTOCOMMIT !== '1') process.env.AING_NO_AUTOCOMMIT = '1';
 
 
 // ── N1: 跨进程原子锁（范式同 distill.js D4：wx 原子创建 + finally 释放 + 陈旧锁按 age/pid 回收）──
@@ -134,7 +144,7 @@ const STEPS = [
   { name: 'distill', desc: '蒸馏器 (pending-distillation → active)', script: 'distill.js', args: [] },
   { name: 'link', desc: '自动链接发现 (实体关联)', script: 'auto-link.js', args: [] },
 { name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
-  { name: 'vector', desc: '向量索引 (64-dim embedding)', script: 'index-vectors.js', args: [] },
+  { name: 'vector', desc: '向量索引 (语义 384 维；模型缺失回退 64 维哈希)', script: 'index-vectors.js', args: [] },
   { name: 'sprout', desc: '发芽引擎 (新关联发现)', script: 'sprout.js', args: [] },
   { name: 'pollinate', desc: '授粉引擎 (跨域融合)', script: 'pollinate.js', args: [] },
   { name: 'compress', desc: '芥子压缩 (低频归档)', script: 'compress.js', args: [] },
@@ -569,6 +579,40 @@ async function main() {
   } else {
     console.log('\n🟢 代谢成功：所有关键步骤均已完成。 / Metabolism success: all critical steps done');
     process.exitCode = 0;
+  }
+
+  // ── W3（2026-09-14）：意识层闭环的写端 / consciousness cycle bookkeeping ──
+  // kernel.recordCycleResult() 此前**全仓零调用点** → stagnationCount 恒 0 →
+  // growth-director.js:150/235 与 metacognition-layer.js:459 三个读者永远等不到值，
+  // 「意识层连续空产出 ≥ 3 → 触发完整代谢」这条自主路径从未成立
+  //（M4 表原先靠人手改 data/consciousness/state.json 才能演示，那是假闭环）。
+  // 判据只用离散存在性，不新增数值阀值（纪律 5）：本轮无失败且未中止 + 库里有活跃实体
+  // + 意识层当前持有活跃事件。任一不成立→记一次空产出；连续 3 次 kernel 自行转
+  // stagnant 并往 raw/ 写 MetaKnowledge，下一次 growth-director 就会选 full_metabolism。
+  // 由门禁 C14 在隔离假院里连跑 3 趟空代谢，证明这个计数会自己爬到 3（不靠改 state.json）。
+  try {
+    let liveEntities = 0;
+    try {
+      const KS = require('./knowledge-store');
+      const KStore = KS.KnowledgeStore || KS;
+      const cycStore = new KStore();
+      await cycStore.init();
+      const row = cycStore.all("SELECT COUNT(*) AS n FROM entities WHERE status='active'")[0];
+      liveEntities = Number((row && row.n) || 0);
+      if (typeof cycStore.close === 'function') cycStore.close();
+    } catch (eStore) { liveEntities = 0; }
+    if (!_kernel) {
+      const { ConsciousnessKernel } = require('./consciousness-kernel');
+      _kernel = new ConsciousnessKernel({ baseDir: path.join(__dirname, '..') });
+    }
+    const activeEvents = (_kernel.state && Array.isArray(_kernel.state.activeEvents)) ? _kernel.state.activeEvents.length : 0;
+    const hasValidOutput = failedSteps.length === 0 && !state.aborted && liveEntities > 0 && activeEvents > 0;
+    const cycle = _kernel.recordCycleResult(hasValidOutput, hasValidOutput ? '' : 'metabolism-cycle-empty-output', {
+      liveEntities, activeEvents, attemptedPaths: Object.keys(state.steps || {})
+    });
+    console.log(`\n🧠 意识层本轮记账 / cycle bookkeeping: ${hasValidOutput ? '有效产出 / valid output' : '空产出 / empty'}（活跃实体 ${liveEntities} / 活跃事件 ${activeEvents}）→ stagnationCount=${cycle.stagnationCount}${cycle.broken ? ' ⚠️ 已连续 3 次空产出：转 stagnant 并写 MetaKnowledge' : ''}`);
+  } catch (e) {
+    console.log(`\n⚠️  意识层记账失败（不影响代谢结果）/ cycle bookkeeping failed: ${e.message}`);
   }
 
   // L1: 治理出口——full 链同样汇入（sync-opt 从 STEPS 摘出后的统一执行点）

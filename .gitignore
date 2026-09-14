@@ -36,3 +36,9 @@ simulation/proof-*.json
 simulation/skillopt-evidence.json
 simulation/skillopt-online-evidence.json
 simulation/last-run.json
+
+# 会话入库运行态（2026-09-14 与版本化知识源分离）：入库产物 + WAL 缓冲 + 重复批次记录
+# 不放进来每次入库都会让工作树变脏，sync-opt 换血会被「不 clean」拒绝
+raw/inbox/
+data/ingest-buffer.jsonl
+data/ingest-duplicates.jsonl
