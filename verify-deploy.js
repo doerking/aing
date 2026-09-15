@@ -1684,6 +1684,7 @@ async function main() {
     // 但 AGENTS 坑 9 里那句「实测量 170 个比对文件 / measured 170 compared files」仍写着 170 —— 门数有 C19 钉，
     // 面数过去没人钉，等于给"改一次面、全仓静默失真"留了口子。真值直接吃本门刚跑过的 --print-face 行数。
     // 真值来源：本门已跑过的 --print-face 行数（faceCount）
+    let faceStated = '';
     {
       const agp = path.join(PKG_DIR, 'AGENTS.md');
       if (fs.existsSync(agp)) {
@@ -1692,11 +1693,21 @@ async function main() {
           .map(m => Number(m[1] || m[2]));
         if (!nums.length) problems.push('AGENTS 里找不到「N 个比对文件 / measured N compared files」锚点 —— 面数门静默失效');
         else if (!faceCount) problems.push('--print-face 没跑出行数，无法核对 AGENTS 抄的面数 ' + nums.join('/') + '（面数门静默失效）');
-        else nums.forEach(n => { if (n !== faceCount) problems.push('AGENTS 抄的院际比对面 ' + n + ' 与实测 ' + faceCount + ' 不符（面数漂移，改 AGENTS 坑 9 的抄件，别改实测）'); });
+        else {
+          // 主包基线是「发起部署的那个包」的面；各院本地面**只许 ≥ 基线**。
+          // 小于＝有档不在本院（漏带/删了没改抄件）→ 真漂移，红。
+          // 大于＝院属档（有档只长在某一院里），合法，但文档必须已声明「院属档另计」，否则读者会以为各院必须相等 → 红。
+          const yardOwned = /\*\*院属档另计\*\*/.test(at);   // 记号必须加粗：坑 19 那种普通引用不算声明
+          nums.forEach(n => {
+            if (n > faceCount) problems.push('AGENTS 抄的院际比对面 ' + n + ' 大于本院实测 ' + faceCount + '（有档不在本院：漏带或已删未改抄件——这才是面数漂移）');
+            else if (n < faceCount && !yardOwned) problems.push('本院实测 ' + faceCount + ' 高于 AGENTS 抄件 ' + n + '，但坑 9 未声明「院属档另计」→ 补记号，别让读者拿单院数当全仓基线（2026-09-15 aing 假红就是这么来的）');
+          });
+          faceStated = nums.join('/') + (faceCount > Math.min(...nums) ? '（本院多 ' + (faceCount - Math.min(...nums)) + ' 项院属档）' : '');
+        }
       }
     }
     if (problems.length) throw new Error(problems.length + ' 项文档命令不可执行：\n      ' + problems.slice(0, 8).join('\n      ') + (problems.length > 8 ? '\n      …另 ' + (problems.length - 8) + ' 项' : ''));
-    return '院际面 ' + faceCount + '（与 AGENTS 抄件一致）· 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
+    return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
   });
 
   // ── 报告 ─────────────────────────────────────────────────────
