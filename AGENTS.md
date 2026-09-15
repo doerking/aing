@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 19 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 20 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -206,6 +206,16 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | 检索结果全是同一类型实体 | 语义向量未加载 → 确认 `models/` 目录存在；跑 `node src/index-vectors.js --semantic --reindex` |
 | KESPI 全库均分突降 | 检查是否有探针/测试实体未清理 → `SELECT id FROM entities WHERE id LIKE '%probe%' OR id LIKE '%selftest%'` → 删除后重跑 `kespi-check.js` |
 
+
+**20. 双引号里的反引号会被 shell 当命令替换执行——文档内容会被静默吃掉（2026-09-15 第 6 次踩中，本轮实证）。**
+写 `node -e "…"` 且字符串里含反引号（Markdown 行内代码最常见的写法）时，bash 先做命令替换：
+反引号之间的文字被当成**命令去执行**，执行失败只在 stderr 留一行 `No such file or directory`，
+而写进文件的那段文字**已经变成空白**。本轮因此把备稿里的仓库名整段吞掉，措辞变成"留在  #34 的正文里"，
+若我只看"追加成功、原行保留 67/67"就收工，这条静默损坏就会跟着提交进三院。
+**对策（三条硬规矩）**：① 凡含反引号、`$()`、引号嵌套或中文标点的文档改动，一律先用文件写入能力落成 `.temp/*.js` 脚本再 `node` 跑，不用 `node -e` 内联；
+② 写后必做**定向回读**：不能只比"原行是否还在"（旧内容当然还在），必须断言**本轮新增的关键句存在**且**受损模式不存在**（如 `留在\s+#`、连续两个空格、空代码对 `` `` ）；
+③ 回读命令本身的退出码也要看——管道 `| tail` 会把上游退出码换成 tail 的（本轮"退出码 127"即是管道假象，非脚本失败）。
+/ **Backticks inside double-quoted `node -e` are eaten by shell command substitution** — the text between them is *executed* and silently replaced by nothing; write such edits to a script file, and read back the newly added sentences (not just the old ones) plus an explicit anti-corruption pattern.
 ## Daily Operation / 日常运行（部署完成后）
 
 ```bash
