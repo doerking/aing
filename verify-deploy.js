@@ -1588,7 +1588,7 @@ async function main() {
     };
     for (const f of ['AGENTS.md', 'README.md']) if (fs.existsSync(path.join(PKG_DIR, f))) docs.push(path.join(PKG_DIR, f));
     for (const d of ['docs', 'training', 'simulation', 'demo']) walk(path.join(PKG_DIR, d));
-    // 边界（写在门里，免得后人以为面更大）：assets/skills/** 是宿主技能安装件的**逐字副本**（C18 要求字节一致），
+    // 边界（写在门里，免得后人以为面更大）：assets/skills/** 是**本包自撰的技能资产**（2026-09-15 实测：宿主三个技能根里均无同名目录，故不是副本；其示例命令指外部工具链）（C18 要求字节一致），
     // 其中的 python / SkillOpt 命令指向外部工具链，改它就破坏同源 → 本规则不覆盖，也不假装覆盖。
     const BUNDLED = [path.join(PKG_DIR, 'assets', 'skills', 'aing-operator', 'SKILL.md'), path.join(PKG_DIR, 'assets', 'skills', 'aing-operator', 'en', 'SKILL.md')];
     for (const f of BUNDLED) if (fs.existsSync(f)) docs.push(f);   // 只把自写文档纳入引用路径核，python 位置规则跳过
