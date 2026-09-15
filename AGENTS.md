@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 20 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 21 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -91,7 +91,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C17 | 意识层离散旋钮单源（改 config 必须真改变行为） | 熔断轮数不得再在代码里写死：`src/` 内不得出现 `stagnationCount >= 3`，kernel 必须从 `consciousnessTuning()`（config-runtime 叶子模块）取旋钮，`growth-director.js` 与 `memo.js` 必须走同一入口，`growth.config.example.js` 与 `src/growth.config.js` 必须都有 `consciousness` 段。**行为证明**：假院把轮数改成 2 → 第 1 趟不熔、第 2 趟必熔，且 `neural.js status` 的 `breakerCycles` 与 `growth-director --dry-run` 同步按 2 判；`inhibitDefaultHours: 5` 必须让不传 `--hours` 的 `inhibit` 缺省就到 5 小时；改回 3 → 第 3 趟才熔、读者立即报 3 |
 | C18 | 技能资产随包（`assets/skills/`）+ 派单不虚报：包内有 ≠ 本运行时装了 | 包内必须真带 `neural-evolution-swarm` 四角色说明书（`roles/*.md` 四份 + SKILL/workflow）与 `aing-operator`（中英两份 SKILL）；`memo` 的派单读数必须把三种「有」分开报（`swarmInstalled` 机器上有 / `inRuntimeSurface` 本运行时加载 / `bundledInPackage` 包内自带），且**只有 `inRuntimeSurface` 为真才许写 `mode: swarm-skill`**（过去拿 `installed` 判 → 宿主装过就虚报能派）；资产面扫描必须用包根 `path.resolve(__dirname, '..')`，用 `process.cwd()` 即红（换目录跑结果就变卦）。院际比对工具 `tools/verify-sibling-roots.js` 的比对面必须含 `walk('assets'`，并必须有 `node_modules` 目录黑名单（递归扩面后不设黑名单会造出 88 条假「对方独有」）。**行为证明**：① 真跑 `memo --dispatch` 断言两个布尔存在、`bundledInPackage` 为真、`inRuntimeSurface=false ⇒ mode≠swarm-skill`、`inRuntimeSurface=true ⇒ mode=swarm-skill`、搜索目录必须带 `[runtime|host|bundled]` 标签；② 在 `.temp/gate-c18-yard` 造一对迷你院（pkg/sib），把 `assets/skills/probe-skill/SKILL.md` 写成内容不同，台账的「真实漂移」行必须出现该路径 |
 | C19 | 门禁计数单源：文档抄的「N 项（C0–CMAX）」必须等于验收器真值 | `node tools/gate-counts.js`（`--json` 机器读 / `--print` 只印标准文案）从 `verify-deploy.js` 数出真实项数与编号集合，核对 AGENTS frontmatter、README 部署段、`docs/greenlist.json` 三处抄写 + AGENTS 清单表行集合（**缺行=那道门没人知道，陈行=账没销**）。加/删门禁后先跑它再抄。C19 还会在副本里故意把 README 抄成 9 项并要求工具判红（防橡皮章工具） |
-| C20 | 文档命令可执行性：写在文档里的命令必须真跑得通，或明确交代不在本包跑 | 门禁自己扫 `AGENTS.md`/`README.md`/`docs/**`/`training`/`simulation`/`demo` 里所有 `src/… tools/… docs/…` 形式的路径引用（**逐条核在位**；确需提不存在的档必须在**同行**标反例/历史/外部/院属等记号）、所有 `npm run X` 的名字必须真在 `package.json` scripts 里、所有 `python`/`PYTHONPATH` 命令必须自带执行位置（`cd …` 或 `<x-root>` 占位符，禁止裸 `PYTHONPATH=.`）。**行为证明**：一份只读命令清单（`memo --summary/--peek/--actions/todo list`、`neural status`、`gate-counts`、`verify-sibling-roots --print-face`）逐条真跑且退出码 0，并且清单里每条命令都必须能在文档里回指到（防清单变空头账）。边界：`docs/releases/**` 历史发布说明与 `assets/skills/**`（本包自撰技能资产（宿主根内无同名，实测 2026-09-15），其命令指外部工具链）不套本规则 **追加（2026-09-15 README 换图）**：同一页不许自相矛盾——README 内嵌 mindmap 的一级分支必须覆盖谱系表每一层（缺层即红点名层名）、图段若不再是 mindmap 立即红（防检查静默失效）、已退役的 `docs/lineage.svg` 既不得被引用也不得留悬档（引用与留档各一条红）。负向自证四式全过（删一支/塞回引用/放回旧文件/改 flowchart），见 `.temp/c20-negative3.js`。 **追加（2026-09-15 实测病）**：带 YAML frontmatter 的档（`AGENTS.md`/`README.md`/`docs/**` 中含 `tags:`/`description:`/`AIGC:` 者）**第一行必须是 `---`**——本轮 `AGENTS.md` 第 1 行曾被一条游离表格行压住，tags/描述全失效而既有门禁一声不响，且已随 `8cb01b1` 上线；负向自证：顶一行进文件头即红并点名档名，还原后复绿。 |
+| C20 | 文档命令可执行性：写在文档里的命令必须真跑得通，或明确交代不在本包跑 | 门禁自己扫 `AGENTS.md`/`README.md`/`docs/**`/`training`/`simulation`/`demo` 里所有 `src/… tools/… docs/…` 形式的路径引用（**逐条核在位**；确需提不存在的档必须在**同行**标反例/历史/外部/院属等记号）、所有 `npm run X` 的名字必须真在 `package.json` scripts 里、所有 `python`/`PYTHONPATH` 命令必须自带执行位置（`cd …` 或 `<x-root>` 占位符，禁止裸 `PYTHONPATH=.`）。**行为证明**：一份只读命令清单（`memo --summary/--peek/--actions/todo list`、`neural status`、`gate-counts`、`verify-sibling-roots --print-face`）逐条真跑且退出码 0，并且清单里每条命令都必须能在文档里回指到（防清单变空头账）。边界：`docs/releases/**` 历史发布说明与 `assets/skills/**`（本包自撰技能资产（宿主根内无同名，实测 2026-09-15），其命令指外部工具链）不套本规则 **追加（2026-09-15 README 换图）**：同一页不许自相矛盾——README 内嵌 mindmap 的一级分支必须覆盖谱系表每一层（缺层即红点名层名）、图段若不再是 mindmap 立即红（防检查静默失效）、已退役的 `docs/lineage.svg` 既不得被引用也不得留悬档（引用与留档各一条红）。负向自证四式全过（删一支/塞回引用/放回旧文件/改 flowchart），见 `.temp/c20-negative3.js`。 **追加（2026-09-15 实测病）**：带 YAML frontmatter 的档（`AGENTS.md`/`README.md`/`docs/**` 中含 `tags:`/`description:`/`AIGC:` 者）**第一行必须是 `---`**——本轮 `AGENTS.md` 第 1 行曾被一条游离表格行压住，tags/描述全失效而既有门禁一声不响，且已随 `8cb01b1` 上线；负向自证：顶一行进文件头即红并点名档名，还原后复绿。**追加（2026-09-15 步数口径）**：与代谢绑定的步数——任务包题干与**答案权威位**、文档正文、以及**已入库**语料的现在时陈述——必须等于 `run-metabolism.js` 的 STEPS 实数；序数（形如"代谢第 N 步"）、干扰位（`wrong`、非 `correct` 所指的那一项、含 A/B/C 选项的题干）、`docs/releases/**` 按设计豁免但**必须计数上报**；确为史实须在同一行加 `**历史实录**` 记号，或在该档文件头整档声明；`raw/` 只扫 git 已跟踪的顶层语料，git 取不到时在文案里点名"语料面未核"而不算通过；一处也没核到即红（防锚点全失）。负向自证五例（基线绿／注入必红／记号必绿／正解位注入必红且还原字节一致／收尾复绿且门数不变）见 `.temp/step11-negative.js`。  |
 
 ## M4 Component Chain / M4 组件链引导（部署后检查）
 
@@ -216,6 +216,17 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 ② 写后必做**定向回读**：不能只比"原行是否还在"（旧内容当然还在），必须断言**本轮新增的关键句存在**且**受损模式不存在**（如 `留在\s+#`、连续两个空格、空代码对 `` `` ）；
 ③ 回读命令本身的退出码也要看——管道 `| tail` 会把上游退出码换成 tail 的（本轮"退出码 127"即是管道假象，非脚本失败）。
 / **Backticks inside double-quoted `node -e` are eaten by shell command substitution** — the text between them is *executed* and silently replaced by nothing; write such edits to a script file, and read back the newly added sentences (not just the old ones) plus an explicit anti-corruption pattern.
+**21. 豁免面不是安全面；口径判定要看"数字前面的字"，不是看匹配起点（2026-09-15 自伤 21）。**
+给 C20 加"步数必须等于实现真值"这条子检查时，一次跑出 9 条红，其中**三条是门自己的错**：
+① 排除序数时去看匹配起点之前的文字——那是整个匹配的起点（"代谢"两字），"第"字其实落在**数字前面**、却在起点之后，
+   于是坑 12 的正文被判成缺陷 ⇒ 断言位置必须取数字自身的位置（匹配内偏移 + 首个数字下标）。
+② 用目录枚举扫语料，把**未入库的本机临时档**当包内容：Tip 的 `raw/` 在 git 里零跟踪，里面还有别家院的历史审计档（连盘符字面量都有），
+   逐行扫它们等于拿别人院子的陈账给本院定罪 ⇒ 只扫 `git ls-files` 已跟踪者，且 git 不可用要在文案**明说"未核"**，不许静默当通过。
+③ 语料快照的豁免粒度应是**文件头整档声明**，不是逐行加记号：一份审计记录里旧口径能出现十几处，逐行加注既毁原文又迟早漏。
+另记一条**事实修正**（同坑 18/19 的病）：我原打算把语料里"全绿（9 步 / 9 成功）"一并升级，查 `metabolism_log` 才发现
+2026-09-07 那一轮**确实只落 9 行**、近几轮才是 11 行——**那是实录不是错**，改它就是伪造历史。动数字前先测，别把"我以为的现在"写进过去的句子。
+/ **Exempted surfaces are not safe surfaces**, and a numeric-claim check must test the character before the *digit*, not before the match; scan only git-tracked corpus, and say so when git is unavailable.
+
 ## Daily Operation / 日常运行（部署完成后）
 
 ```bash

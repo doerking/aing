@@ -5,7 +5,7 @@
 
 ## 推演基线
 
-真实代谢一轮全绿（9 步 / 9 成功 / 1.83s），证明 Tier-1 循环机制可用。推演基线策略为"带缺陷的技能文档"替身：10 条部署包口径事实中持有 8 条真信念 + 2 条错误信念（X01 假红灯阈值、X02 违反双脑契约的 prune 误解），模拟真实文档必然带病的现状。
+真实代谢一轮全绿（9 步 / 9 成功 / 1.83s，**历史实录**：2026-09-07 那轮查 metabolism_log 恰落 9 行，当时管线尚无 distill 与 link-sync 两步；现行 11 步），证明 Tier-1 循环机制可用。推演基线策略为"带缺陷的技能文档"替身：10 条部署包口径事实中持有 8 条真信念 + 2 条错误信念（X01 假红灯阈值、X02 违反双脑契约的 prune 误解），模拟真实文档必然带病的现状。
 
 ## 六阶段循环结果（Tier-2）
 
@@ -64,7 +64,7 @@
 |---|---|---|
 | 环境适配器 | `training/adapter.py`：实现 SkillOpt `EnvAdapter` 四抽象接口（build_train_env / build_eval_env / rollout / get_task_types），离线确定性 docfaithful 评分（拉丁整词+中文 bigram 覆盖，错误口径扣分），未装 skillopt 自动降级本地等价 ABC | 双环境冒烟：系统 Python（降级模式）与 SkillOpt venv（真接口）均通过；基线蓝图 soft 0.488 vs 污染技能 0.449，hard 0.444→0.333，Gate 有区分度 |
 | 矛盾任务包 | `training/task-package.json`：32 条真实口径任务（取材 raw/*.md 与 src 实现，非合成模板），六域分层（threshold/pipeline/data-contract/recycle/consciousness/training） | eval split 9 条按 task_type 分层，JSON 可直接被 dataloader 消费 |
-| 反馈信号 | `src/metabolism-log.js` + schema `metabolism_log` 表：run-metabolism 每次落库 9 步 status/duration + kespi_before/after；adapter 读该表最近两次运行斜率作为环境健康系数（代谢恶化→奖励打折） | 全量代谢实测 9 行落库（kespi 0.93→0.93），幂等建表 |
+| 反馈信号 | `src/metabolism-log.js` + schema `metabolism_log` 表：run-metabolism 每次落库 11 步 status/duration + kespi_before/after；adapter 读该表最近两次运行斜率作为环境健康系数（代谢恶化→奖励打折） | 全量代谢实测 9 行落库（kespi 0.93→0.93），幂等建表 |
 
 结论：M2 影子训练的三件套从"缺失"变为"就位且冒烟通过"。剩余工作仅剩把 SkillOpt 主循环（optimizer 调度）指到本 adapter 正式跑轮次。
 

@@ -1706,8 +1706,92 @@ async function main() {
         }
       }
     }
+
+    // ⑥ 代谢步数口径必须等于实现真值（2026-09-15 实测病）：training 包把「9 步代谢」当标准答案、
+    //    simulation 三题 correct=A 而 answerA 写 10 步链、aing/OPT 语料以现在时写「9 步代谢流水线」，
+    //    而 run-metabolism 的 STEPS 实为 11 步（metabolism_log 近轮实测每轮 11 行，2026-09-07 那轮才是 9 行）。
+    //    旧 C20 的 walk 不扫 raw/ ⇒ **豁免面不是安全面**：以现在时陈述的陈账可以长期无人点名。
+    //    只查「与代谢绑定的步数」；序数（代谢第 N 步）、干扰位（wrong / 非 correct 的 answerX / 含选项题干）、
+    //    docs/releases/** 按设计豁免但**计数上报**；史实须同行加 **历史实录** 记号。负向自证 .temp/step11-negative.js。
+    let stepChecked = 0, stepWaived = 0, stepFace0 = '';
+    const STEP_BOUND = [
+      /(\d{1,2})\s*步\s*(?:代谢|流水线)/g,
+      /代谢[^。\n|]{0,10}?(\d{1,2})\s*步/g,
+      /(\d{1,2})[-\s]?step\s*metabolism/gi,
+      /metabolism[^a-z\n]{0,4}?(\d{1,2})[-\s]?step/gi,
+      /落库\s*(\d{1,2})\s*步/g,
+    ];
+    const HIST_MARK = /\*\*(历史实录|旧版口径|陈档快照)\*\*/;
+    const stSrc = fs.readFileSync(path.join(PKG_DIR, 'src/run-metabolism.js'), 'utf8').replace(/\r/g, '');
+    const stBlk = stSrc.slice(stSrc.indexOf('STEPS'));
+    const stepNames = [...stBlk.slice(0, stBlk.indexOf('];')).matchAll(/^\s*\{\s*name:\s*'([^']+)'/gm)].map(m => m[1]);
+    if (stepNames.length < 5) throw new Error('读不到 src/run-metabolism.js 的 STEPS 步名 → 步数口径门无法工作（防静默失效）');
+    const STEP_TRUTH = stepNames.length;
+    const claimIn = (txt, where, fileWaived) => {
+      String(txt).split('\n').forEach((line, idx) => {
+        for (const re of STEP_BOUND) {
+          re.lastIndex = 0;
+          let m;
+          while ((m = re.exec(line))) {
+            if (/第\s*$/.test(line.slice(0, m.index + m[0].search(/\d/)))) continue;   // 「代谢第 1 步」是序数：看**数字前缀**，不是 match 起点（2026-09-15 自伤 21）
+            const n = +m[1];
+            stepChecked++;
+            if (n === STEP_TRUTH) continue;
+            if (HIST_MARK.test(line) || fileWaived) { stepWaived++; continue; }   // 行内记号或整档声明均豁免
+            if (/^docs\/releases\//.test(where)) { stepWaived++; continue; }
+            problems.push(where + ':' + (idx + 1) + ' 处「' + n + ' 步」与实现真值 ' + STEP_TRUTH + ' 步不符（确为史实请同行加 **历史实录** 记号）→ ' + line.trim().slice(0, 72));
+          }
+        }
+      });
+    };
+    for (const f of docs) {
+      const rel = path.relative(PKG_DIR, f).split(path.sep).join('/');
+      if (/^(training|simulation)\//.test(rel) && /\.json$/i.test(rel)) continue;   // 任务包走下面的结构化核，避免把干扰项当口径
+      let txt; try { txt = fs.readFileSync(f, 'utf8').replace(/\r/g, ''); } catch (e) { continue; }
+      claimIn(txt, rel);
+    }
+    // 只扫 **git 已跟踪** 的 raw/*.md：未跟踪的是本地临时语料，不属于包（2026-09-15 自伤 21：Tip 的 raw/ 全部未跟踪，
+    // 逐行扫它们会把别家院的历史审计档打成本院缺陷，还会连带点名档内盘符）。
+    const trackedRaw = (() => {
+      const g = spawnSync('git', ['ls-files', '--', 'raw'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 });
+      if (g.status !== 0) return null;
+      return new Set(String(g.stdout).replace(/\r/g, '').split('\n').map(x => x.trim()).filter(Boolean));
+    })();
+    if (trackedRaw === null) stepFace0 = '（git ls-files 失败 ⇒ raw/ 语料面未核，已在文案点名）';
+    else if (trackedRaw.size === 0) stepFace0 = '（本院 raw/ 无入库语料）';
+    else {
+      // 自伤 22 修正：git ls-files 输出的路径天然带 raw/ 前缀，拿「不含斜杠」当顶层判据会把全部语料滤光，
+      // 于是门禁一条没扫却照报绿（aing 八档与 Tip 的 21 处读数一模一样才暴露）。判据改为 ^raw/[^/]+\.md$，
+      // 并把「已入库语料 N 档」印进文案——扫到几档必须可见，不许静默。
+      const rawTop = [...trackedRaw].filter(x => /^raw\/[^/]+\.md$/i.test(x)).sort();
+      stepFace0 = '已入库语料 ' + rawTop.length + ' 档';
+      for (const rel of rawTop) {
+        let txt; try { txt = fs.readFileSync(path.join(PKG_DIR, rel), 'utf8').replace(/\r/g, ''); } catch (e) { continue; }
+        const head = txt.split('\n').slice(0, 5).join('\n');   // 整档声明只认前 5 行：正文里的行内记号不算整档声明
+        const fileWaived = /\*\*(历史实录|旧版口径|陈档快照)\*\*|本档为.*快照|属历史快照|historical snapshot/i.test(head);
+        claimIn(txt, rel, fileWaived);
+      }
+    }
+    [['training/task-package.json', 'correct_answer'], ['simulation/task-package.json', null], ['simulation/skillopt-task-package.json', 'reference_text']].forEach(([rel, ansKey]) => {
+      const p = path.join(PKG_DIR, rel);
+      if (!fs.existsSync(p)) return;
+      let j; try { j = JSON.parse(fs.readFileSync(p, 'utf8').replace(/\r/g, '')); } catch (e) { problems.push(rel + ' 解析失败，步数口径无从核对'); return; }
+      (j.tasks || j.items || []).forEach(item => {
+        const letter = item.correct ? String(item.correct).trim().charAt(0).toUpperCase() : null;
+        const auth = [ansKey, letter ? 'answer' + letter : null, 'fact', 'reference_text'].filter(Boolean);
+        Object.entries(item).forEach(([k, v]) => {
+          if (typeof v !== 'string') return;
+          if (auth.includes(k)) claimIn(v, rel + '#' + (item.id || '?') + '.' + k);
+          else if (k === 'question' && !/\n\s*[A-D]\./.test(v)) claimIn(v, rel + '#' + (item.id || '?') + '.question');
+          else if (/\d{1,2}\s*步/.test(v)) stepWaived++;                            // 干扰位/含选项题干：豁免但计数
+        });
+      });
+    });
+    if (stepChecked === 0) problems.push('步数口径门一处也没核到（锚点全失）→ 不能算通过');
+    const stepFace = '代谢步数 ' + stepChecked + ' 处对真值 ' + STEP_TRUTH + '（干扰/史记豁免 ' + stepWaived + '）' + (stepFace0 ? ' · ' + stepFace0 : '');
+
     if (problems.length) throw new Error(problems.length + ' 项文档命令不可执行：\n      ' + problems.slice(0, 8).join('\n      ') + (problems.length > 8 ? '\n      …另 ' + (problems.length - 8) + ' 项' : ''));
-    return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
+    return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · ' + stepFace + ' · 扫 ' + docs.length + ' 档';
   });
 
   // ── 报告 ─────────────────────────────────────────────────────

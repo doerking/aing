@@ -28,7 +28,7 @@ aing is a brain that *digests* knowledge: it does not merely store information, 
 | 闭环 Loop | 内容 Content | 状态 Status |
 |---|---|---|
 | 设计环 Design | 六份蓝图（架构/意识神经/KESPI/代谢/自成长/进化回路） | ✅ 成文 Documented |
-| 代码环 Code | 9 步代谢流水线 + 回炉闭环 + 检红灯 | ✅ 可运行 Runnable |
+| 代码环 Code | 11 步代谢流水线 + 回炉闭环 + 检红灯 | ✅ 可运行 Runnable |
 | 进化环 Evolution | 技能训练（SkillOpt）+ 真执行器接入 | 🔶 预埋/影子阶段 Pre-wired / shadow |
 
 哲学只有一条（One philosophy only）：**没有失败，只有待回炉**。
@@ -45,7 +45,7 @@ After deployment, the metabolism system works out of the box; training and the r
 
 | 能力 Capability | 开箱即用 Out-of-box | 说明 Note |
 |---|---|---|
-| 9 步代谢 9-step metabolism | ✅ | compile→import→link→vector→sprout→pollinate→compress→kespi→prune |
+| 11 步代谢 11-step metabolism | ✅ | compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune |
 | 回炉闭环 Recycle loop | ✅ | `node src/recycle-seeds.js`，幂等 idempotent |
 | 红灯检测 Red-light check | ✅ | KESPI 维度分 < 0.65 即红灯 dimension score below 0.65 |
 | 剪枝归档 Prune & archive | ✅ | 文件归档 + 数据库同步清理 file archive + DB sync |
@@ -59,8 +59,8 @@ After deployment, the metabolism system works out of the box; training and the r
 日常运行只需两条命令（Daily operation takes two commands）：
 
 ```bash
-# 1) 跑完整代谢（9 步流水线；退出码非 0 表示有红灯）
-#    Run full metabolism (9-step pipeline; non-zero exit code means red lights)
+# 1) 跑完整代谢（11 步流水线；退出码非 0 表示有红灯）
+#    Run full metabolism (11-step pipeline; non-zero exit code means red lights)
 node src/run-metabolism.js --force
 
 # 2) 芥子回炉（把未消费的芥子转成回炉微粒，再归档残壳）
