@@ -493,3 +493,12 @@ J 节记完 OPT 十一链复跑之后，本段把三院怎么收尾落成数字�
 | L15-⑤ FadeMem / RAKG 命名 | 二者是**院档内部命名**（本报告 §D/§E），**外部原始出处未经核实** ⇒ README 明写"不作任何来源或背书声明"。**我没有替它们编 arXiv 号**——编造出处正是 C20 一路在杀的那类病。 |
 | L15-⑥ 一个假前提被证伪（本轮最该记的账） | 我原计划为 `assets/skills/**` 写一份「宿主技能逐字副本，许可待宿主确认」的 NOTICE，依据是**我自己几轮前写进交接文档的定性**。落笔前复核：宿主三个技能根（`.sclaw/agent/skills` 35 项、`scnet-client/resources/agent-skills` 7 项、`.sclaw/agent/plugins` 8 项）**均无同名目录**，运行时技能清单同样没有；而包内两份技能通篇是 aing 专属内容 ⇒ 它们是**本包自撰资产**，`dependencies.yaml` 的 `source: local` 指"依赖本地解析"、不是原创性声明。**NOTICE 取消**：给假前提建文件等于把假账装订成正式凭证。顺带改掉 AGENTS C20 行与 `verify-deploy.js` 边界注释里的旧措辞（2 处），并新增坑 18（旧结论不是证据）。 |
 | L15-⑦ 门禁与读数 | 未新增门禁（**仍 32 项 C0–C20**，`gate-counts` 🟢）；C20 单跑 ✅（引用 381 处逐条在位）——新文案里所有 `src/…`、`docs/…` 路径都真在位，靠的就是这条门每轮复扫。本院全量与本条落档后的终读见 README／AGENTS 同行改动；真源院另起一张提交。 |
+### L16 OPT 按 aing 对齐 + 抓到一处"面数抄件漂移"并补上门（用户授权直接落实）
+
+| 项 | 实测与处置 |
+|---|---|
+| L16-① 对齐不靠推断 | 用户令"根据 aing 把 OPT 对齐"。**没有拿"Tip 两边都比过"当结论**，而是直接对拍 OPT↔aing 两棵树（`git ls-files` 跟踪∪未跟踪 + 逐档 MD5）：共有 **170 档逐字节全等**，真实漂移 0 · 仅行尾 0 · 读不了 0 ⇒ 内容层本就一致，唯一不对齐处在 **git 层**（OPT 58 项悬在工作区，aing 是提交干净的）。 |
+| L16-② 差点把"院属档"当缺口补 | 对拍报出"仅 aing 有 1 档"`docs/Engineering/GROWTH-FEEDBACK-SWITCHES.md`，我当场判成"真缺口"——**随即收回**：M4 第 363 行明写该档「只在 aing 侧，Tip/OPT 无此档」，属**带院属记号的跨院引用**（C20 允许的那类标注）。把它复制进 OPT 会让那句实测陈述变成假话 ⇒ 对齐**不含互抄院属档**（同例：`tools/verify-baseline.ps1` 只在 OPT 侧，见坑 9）。 |
+| L16-③ OPT 快照 | `3288cbb → 728d5eb`，**56 档 / +5324 −714**（`docs/lineage.svg` 的删除入历史）。**未用 `git add -A`**：4 个垃圾档（`docs/index.html`/`growth.config.example.ts`/`src/package.json`/`tri-path-state.json`）刻意留未跟踪，等统一 `git rm` 裁定。**未跑 `verify-deploy.js`**（会开库造面板，属部署动作），只读跑 `tools/gate-counts.js` 得 **32 项 C0–C20** 🟢。本院**无 remote**，推送物理不可能；`knowledge.db`/`logs`/`wiki`/`data/last-verify.json` 全无，纯未部署保持。 |
+| L16-④ 执行中两处真相 | ① 我的读回辅助函数**吞了退出码**：第一批 `git add` 还握着 `index.lock` 时 `git diff --cached` 返回空 stdout，被我读成"0 项暂存"（**本会话第三次读回不严格**）；② 暂存数 62→56 的差额是 **CRLF 幻影差异**——`demo/*.md` 等在 `git add` 归一后与索引无内容差、自然退出暂存面，正是坑纪律"看内容层别看 `git status`"的活例。 |
+| L16-⑤ 抓出新漂移并补门 | 对齐后顺手扫"哪里抄了面数"：三院 `AGENTS.md` 坑 9 同写「实测量 **170** 个比对文件 / measured **170** compared files」，而 `--print-face` 实测 **169**（旧 SVG 退役后 −1）⇒ **面数漂移且无人钉**（门数有 C19，面数没有）。处置：抄件改 169 并注明来历；C20 内**追加第⑤条**（不新增门禁，总数仍 32）——用本门已跑过的 `--print-face` 行数做真值，核对 AGENTS 抄件，**且锚点找不到也红**（防检查静默失效）。负向自证：把抄件改回 170 → 门红并点名「170 与实测 169 不符」→ 字节还原 → 复绿（`.temp/face-number-gate.js`）。 |
