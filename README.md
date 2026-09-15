@@ -72,8 +72,8 @@ AIGC:
 
 > The release is the **plain-Markdown edition** — MD + Git + Node alone run the full metabolism loop. No extra software required.
 > 底层渊源：aing 两脑的底层架构正是 **LLM Wiki + Tolaria** 这两款数据库软件——因当时原版装不上，作者以纯 Markdown + Node 把这一底层重写成了 MD 版（即本发布包）。
-> 项目时间线：立项 **2026-06** ｜ MD 版底座成形 **2026-07** ｜ 仓库 **2026-08** 起陆续上线（最早归档 2026-08-29）。鸣谢区全部为**独立收敛的同构引证**，非依赖背书；唯一承认为概念源头的是 LLM Wiki（上文「源自」）。
-> Timeline: founded **2026-06**; MD substrate shaped **2026-07**; on public repo since **2026-08** (earliest archive 2026-08-29). The credits section documents **independent convergence** (isomorphic citations), not endorsement-derived lineage; the only acknowledged conceptual origin is LLM Wiki ("derived from" above).
+> 项目时间线：立项 **2026-06** ｜ MD 版底座成形 **2026-07** ｜ 仓库 **2026-08** 起陆续上线（最早归档 2026-08-29）。**鸣谢区分三类账，且明确反对混记**：① **软件蓝本**——`Tolaria` 与 `LLM Wiki` 类数据库软件，当年原版装不上，故以纯 Markdown + Node 把那一层能力重写成 MD 版（即本发布包）；② **真实使用的底座依赖**——SQLite/WASM、ONNX Runtime、Hugging Face 生态、Mermaid、Node + Git；③ **同构引证**——别人独立做出来、与本包思路相合的工作。三者都不是背书关系。**特别注意：aing 与 Karpathy 的 LLM Wiki 范式是相反路线**（那边是"摄入→编译→查询"的线性静止资产，这边给知识加上发芽/授粉/芥子/再生/过期的代谢），所以**只认它的社区工具作数据层蓝本，不认它作概念源头**（详见 `docs/User-Guide/03-FAQ.md` §10）。
+> Timeline: founded **2026-06**; MD substrate shaped **2026-07**; on the public repo since **2026-08** (earliest archive 2026-08-29). **The credits split three ways and must not be conflated**: (1) **software blueprints** — Tolaria and LLM-Wiki-family database tools, re-implemented in plain Markdown + Node because the originals could not be installed then; (2) **foundational dependencies actually used** — SQLite/WASM, ONNX Runtime, the Hugging Face ecosystem, Mermaid, Node + Git; (3) **isomorphic citations** — independent convergence, not lineage. **Note: aing runs contrary to Karpathy's LLM Wiki paradigm** (compile once into a static asset, versus metabolism: sprout / pollinate / mustard-seed / regenerate / expire), so its community tools are credited as a data-layer blueprint only, never as a conceptual origin (see `docs/User-Guide/03-FAQ.md` §10).
 > Origin note: aing's two-brain substrate re-implements two database tools — **LLM Wiki + Tolaria** — in plain Markdown, because the originals could not be installed at the time.
 > 有条件的用户，可以把两脑各自的实体软件挂上，让秩序脑与生长脑各得其所：
 
@@ -540,7 +540,7 @@ mindmap
       arXiv:2512.13564 · Paper-List
       状态：双脑落地 / 双时态迭代
     🧬 结构层
-      左右脑单交叉 × 双时态
+      左右脑单交叉 × 双时态（编译 × 代谢两期）
       主 agent 自收敛，非编排手写
       状态：迭代中
     🔌 生态层
@@ -566,65 +566,51 @@ mindmap
 | 🧠 思想层 | GWT → Jacobian Lens (2026-07) | [Baars/Dehaene](https://www.transformer-circuits.pub/) · Anthropic 实证 | 已对齐 |
 | 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 血统 | [MSR SkillOpt (arXiv:2605.23904)](https://arxiv.org/abs/2605.23904) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
-| 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
+| 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 （本包的双时态＝**编译时态 × 代谢时态**，不是数据库 valid-time/transaction-time 双列） | 主 agent 自收敛，非编排手写 | 迭代中 |
 | 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
 | 🏗️ 工程层 | Harness Engineering：aing 即 agent 的 harness | [LangChain Harness Anatomy 2026](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) · [翁荔 SEAGym 2026](https://arxiv.org/abs/2606.17546) · [Browser Harness 592 行](https://github.com/browser-use/browser-harness) | 已对齐 |
 
 ## 🙏 Acknowledgments / 致谢
 
-aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
+> aing 站在这些肩膀上。下面**逐块标明账目性质**：软件蓝本 ／ 真实依赖 ／ 同构引证——不混记，也不构成背书。
+> Each block states what kind of credit it is: software blueprint / actually-used dependency / isomorphic citation.
 
 ### 思想源头 / Intellectual Origins
 
 - **认知科学的思想源头** — Baars / Dehaene 的全局工作空间理论（意识层的 GWT 映射）、赫布可塑性（生长与剪枝的学习律）、Richard Sutton 的 "Era of Experience"（经验时代的自进化方向）。aing 的意识神经蓝图从中取火。
 - **[Anthropic · Jacobian Lens](https://www.transformer-circuits.pub/)** — 《Verbalizable Representations Form a Global Workspace in Language Models》（2026-07）在 LLM 内部首次实证全局工作空间：可读出、可干预、容量极小、只服务灵活推理。aing 的 GWT 映射自此从理论隐喻升级为工程对标。
 
-### 进化环 / Evolution Loop · Training & Implementation
+### 两脑底座 · 软件蓝本与一条路线分歧 / Substrate Blueprints & a Route Disagreement
 
-- **[Microsoft SkillOpt](https://github.com/microsoft/SkillOpt)**（arXiv:2605.23904，MSR 与上海交大等）— “技能文档即可训练参数”的思想与六阶段训练循环（ReflACT：Rollout→Reflect→Aggregate→Select→Update→Validate）。aing 的进化环（`training/adapter.py`）基于其 EnvAdapter 接口构建；其 SkillOpt-Sleep（夜间回放失败任务写入技能文档）与 aing 的代谢回炉互为同构印证。
-- **[DeepMind AlphaEvolve 及开源生态](https://github.com/topics/alpha-evolve)**（OpenEvolve / CodeEvolve / GigaEvo）— LLM×进化算法的程序空间优化，双向血统追踪让每个后代可溯源，与 aing 回炉微粒沿 `recycled_from` 血统链可溯源的 KPI 殊途同归。
-- **OPT 实现历程** — aing 的训练副本与实现现场。影子目录隔离、EnvAdapter 按源码签名逐条核对、32 条取自部署包真实口径的矛盾任务包、KESPI 斜率天然挂钩训练奖励，三项核心组件一次冒烟即“已就位”。aing 不需要为被训练而改造自己：它活着的方式就是被训练的方式。
+- **Tolaria**（数据库软件）— **生长脑的实体外壳候选**：人读视图、双向链接浏览、每日笔记。本包既不随附也不依赖它；要挂实体外壳见 `docs/Engineering/TWO-BRAIN-BODIES.md`（含挂载图与回流约定）。
+- **LLM Wiki 类社区实现**（数据库软件）— **秩序脑的编译前端候选**：摄入 → 编译 → 查询。当年**原版装不上**，作者把这一层能力用纯 Markdown + Node **重写**成了 MD 版（即本发布包）——是重写，不是插件，所以二者都不是运行时依赖。
+- **路线分歧（这条最要紧）** — **aing 与 Karpathy 的 LLM Wiki 范式是相反方向**：范式本身把知识当"编译完即静止的资产"（线性、一次性）；aing 在 raw/wiki/schema 三层之上**再压一层代谢**（发芽／授粉／芥子／再生／过期），让库自己生长、衰减、回炉。故这里**只认社区工具为数据层蓝本，不认其概念为源头**，完整对比见 `docs/User-Guide/03-FAQ.md` §10。
 
-### 数据层 / Data Layer · The Cross-Temporal Dual-Brain Foundation
+### 真实使用的底座依赖 / Foundational Dependencies Actually Used
 
-- **[sql.js](https://github.com/sql-js/sql.js)** 与 **Node.js**（内置 `node:sqlite`）— 交叉时态双脑数据层的零原生编译底座。
-- **[@xenova/transformers](https://github.com/xenova/transformers.js)** 与 **[all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2)** — 纯本地、零外呼的语义向量能力（384 维混合检索）。
-- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564v1)**（Hu et al., 2025，arXiv:2512.13564，NUS、人大、复旦、北大等 12 家机构；官方配套论文列表与资源索引：[Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List)）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为交叉时态双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
+- **SQLite + Emscripten/WASM** — `sql.js` 的真身与编译工具链：交叉时态数据层实际跑的引擎（换来零原生编译）。
+- **ONNX Runtime（`onnxruntime-web` / `onnxruntime-node` 1.14.0）** — `@xenova/transformers` 之下的推理引擎，**语义检索真正的执行者是它**；此前只谢了上层壳。
+- **Hugging Face 生态** — 模型仓库 `Xenova/all-MiniLM-L6-v2`（随包 4 件：config / tokenizer / tokenizer_config / 量化 ONNX；**许可证以上游仓库为准，本包未随附条款文本**）、chat 模板引擎 `@huggingface/jinja`，以及国内网络下**必经**的镜像 `hf-mirror.com`（见「已知坑」第 2 条）。
+- **Mermaid** — 本页架构图（`mindmap`）由托管平台内建渲染器绘制，**本包不含渲染器**；图只作总览，可点击锚点全在下方谱系表。
+- **Node.js ≥ 18 + Git** — 除一条 `npm install` 之外的全部运行时要求：MD + Git + Node 即可跑完整代谢环。
 
-### 记忆与检索优化研究 / Memory & Retrieval Research
+### 检索与记忆 · 已在包内落地 / Retrieval & Memory Research (shipped)
 
-> 2026-09 外部调研吸收（约束：不动四层架构、不换存储引擎、不新增重依赖）。
-> 状态标注守绿灯解锁制：✅ 已吸收并影子验证 ｜ 🔬 候选（设计中，未接线）｜ 📖 同构印证（叙事引用）。
+- **OpenClaw 混合检索实践**（SQLite FTS5 70/30 加权、中文 unicode61 分词坑对策）— ✅ 已落地：`src/query.js` 三路加权融合（语义 0.6 / 关键词 0.25 / 名称 0.15），阈值全在 `src/growth.config.js` 的 `query` 段（纪律第 5 条）。
+- **RF-Mem**（Familiarity–Recollection 双加工检索）— ✅ 已落地：快/慢双路径，候选整体置信低于阈值时沿 wiki 链接邻居做二跳慢回忆（`--slow` 可强制）。
+- **Qwen3 Reranker 等 cross-encoder 精排** — ✅ 以替代形态落地：不引 0.6B 重依赖，改为 KESPI + 30 天半衰期的 recency 伪精排（`rerank` 段）。
+- **MemoryBank 遗忘曲线 / 访问频次淘汰** — ✅ **已落地（此前被误标成"候选"）**：`src/growth-loop.js` 的 `factorUsage` 因子就是"access_count 越高越抗衰减"。
+- 📖 **同构印证（未落地，仅叙事，不当能力宣传）**：LightMem 的睡眠期离线巩固 ↔ `src/scheduler.js` 常驻代谢调度器；Forms–Functions–Dynamics 三维框架（arXiv:2512.13564）↔ 下方谱系表"记忆层"锚点。
+- **机制命名说明** — `FadeMem`（三因子衰减）与 `RAKG`（参照建链）是**本院院档的内部命名**（见 `docs/M4-DATA-COLLECTION-2026-09-13.md` §D / §E），**不是对外部论文的引用**；其外部原始出处未经核实，故此处不作任何来源或背书声明。
 
-- **OpenClaw 混合检索实践**（SQLite FTS5 70/30 加权，含中文 unicode61 分词坑对策）— ✅ query.js 加权融合排序（语义 0.6 + 关键词 0.25 + 名称 0.15，阈值入 `growth.config.js`）。
-- **RF-Mem**（ICLR 2026，Familiarity-Recollection 双加工检索）— ✅ 快/慢双路径：候选平均相似度低于阈值时自动触发二跳邻居慢回忆。
-- **Qwen3 Reranker 等 cross-encoder 精排思路** — ✅ 以替代形态吸收：不引 0.6B 重依赖，改为 KESPI + 30 天半衰期 recency 伪精排。
-- **[LightMem](https://arxiv.org/abs/2510.18866)**（ICLR 2026，zjunlp）— 🔬 感官过滤（入库前"值得记"判定）为候选；📖 其睡眠期离线巩固与 aing scheduler 定时代谢天然同构。
-- **MemoryBank 遗忘曲线 / 访问频次淘汰** — 🔬 候选：`access_count` 访问强化 + KESPI 衰减对高频实体减速（Wave 2）。
-- **mem0 Agent 记忆横评**（准确率×成本×延迟三维 Pareto）— 🔬 候选：32 任务包评测拟升级为三维记录（Wave 3）。
-- **Externalization in LLM Agents**（上交大/中科院，2026）— 📖 "检索质量比存储容量更重要"与"技能=程序性记忆外化"，为代谢链与芥子回炉提供同构印证。
+### 工程实践 · 理念同构 / Engineering Practice (isomorphic, not a code dependency)
 
-**记忆研究论文（B组定向调研，2026-09）**：
+- **[LangChain · The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness)**（2026）— "讲不清 harness，模型就成了你的架构"，与本包"门禁即架构"的立场相合。
+- **[翁荔 · Harness Engineering for Self-Improvement / SEAGym](https://arxiv.org/abs/2606.17546)**（清华，2026-07）— harness 层才是自我改进的真瓶颈；本包把验收器与绿名单当 harness 治理。
+- **[Browser Harness](https://github.com/browser-use/browser-harness)**（Browser Use 团队，2026-04）— 极简直连、少抽象的工程口味与本包脚本面相近。
+- 以上三件**均为理念同构，本包不含其任何代码**；谱系表"工程层＝已对齐"就是这个口径（别去找一个叫 harness 的模块）。
 
-- **Agent Memory Survey**（arXiv:2602.06052）— 📖 记忆是自进化基底：短期门控→长期固化→技能复用，即 aing "自己养自己"的他证。
-- **Agent-Native Memory**（arXiv:2606.24775）— 📖 "局部维护优于全局重组"，代谢式剪枝/压缩/回炉路线的实证背书。
-- **TMA-NM 记忆投毒防御**（arXiv:2606.24322）— 🔬 写时来源绑定（trust-on-birth）启发了 origin-trust 设计（`entities.origin_trust` 血统信任 + ≥2 可信源佐证门 + 隔离区），保卫进化闭环的血统诚实；设计中。
-- **AgeMem**（arXiv:2601.01885）— 📖 agent 自主管理记忆与 SkillOpt "技能文档即可训练参数"同向；RL 手段不同法，aing 走文档自进化。
-- **Oracle Agent Memory**（arXiv:2607.13157）— 📖 DB-native 记忆生命周期管理，与 11 步代谢链形结构同构。
-- **MRMMIA 隐私攻击**（arXiv:2605.27825）— 📖 反证：攻击面在可远程查询的记忆，aing 纯本地架构天然免疫，本地孤岛的安全溢价。
-
-### 运行后端 / Runtime Backend
-
-- **[DeepSeek](https://www.deepseek.com/)** — M2 影子训练联调的 LLM 后端（openai_compatible 模式）。
-
-### 工程实践 / Engineering Practice · Harness & Self-Sustaining
-
-- **[LangChain · The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness)**（2026）— "如果你不是模型，你就是 harness。" Agent = Model + Harness。aing 即 agent 的 harness：状态管理（knowledge.db）、记忆（raw/wiki/panel）、工具执行（代谢链）、反馈循环（feedback-loop）、持久上下文（consciousness state）。agent 不需要自己管这些——aing 全管了，agent 出场就手持备忘录从容工作。
-- **[翁荔 · Harness Engineering for Self-Improvement / SEAGym](https://arxiv.org/abs/2606.17546)**（清华，2026-07）— harness 层正在变得和模型本身一样重要。harness 更新有 backend 依赖（不同模型暴露的 failure surface 不同）。aing 的设计回应：后端无关的纯状态供应者——不绑定特定 LLM，harness 自维继。
-- **[Browser Harness](https://github.com/browser-use/browser-harness)**（Browser Use 团队，2026-04）— 592 行直连 Chrome，哲学："Don't wrap the LLM. Don't wrap its tools either." aing 的核心管道同样零外部工具维继：代谢链 + 意识神经层 + 入库全用 Node.js 内置模块，sharp 从关键依赖降为可选（全仓零 require），意识层依赖链优雅降级。
-
-> 灵感属于所有人，实现属于此刻。
-> *If I have seen further, it is by standing on the shoulders of giants.*
+> 灵感属于所有人，实现属于此刻。/ *If I have seen further, it is by standing on the shoulders of giants.*
 
 ## License
 MIT — see [LICENSE](./LICENSE) for the full license text.

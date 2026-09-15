@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 17 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 18 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -91,7 +91,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C17 | 意识层离散旋钮单源（改 config 必须真改变行为） | 熔断轮数不得再在代码里写死：`src/` 内不得出现 `stagnationCount >= 3`，kernel 必须从 `consciousnessTuning()`（config-runtime 叶子模块）取旋钮，`growth-director.js` 与 `memo.js` 必须走同一入口，`growth.config.example.js` 与 `src/growth.config.js` 必须都有 `consciousness` 段。**行为证明**：假院把轮数改成 2 → 第 1 趟不熔、第 2 趟必熔，且 `neural.js status` 的 `breakerCycles` 与 `growth-director --dry-run` 同步按 2 判；`inhibitDefaultHours: 5` 必须让不传 `--hours` 的 `inhibit` 缺省就到 5 小时；改回 3 → 第 3 趟才熔、读者立即报 3 |
 | C18 | 技能资产随包（`assets/skills/`）+ 派单不虚报：包内有 ≠ 本运行时装了 | 包内必须真带 `neural-evolution-swarm` 四角色说明书（`roles/*.md` 四份 + SKILL/workflow）与 `aing-operator`（中英两份 SKILL）；`memo` 的派单读数必须把三种「有」分开报（`swarmInstalled` 机器上有 / `inRuntimeSurface` 本运行时加载 / `bundledInPackage` 包内自带），且**只有 `inRuntimeSurface` 为真才许写 `mode: swarm-skill`**（过去拿 `installed` 判 → 宿主装过就虚报能派）；资产面扫描必须用包根 `path.resolve(__dirname, '..')`，用 `process.cwd()` 即红（换目录跑结果就变卦）。院际比对工具 `tools/verify-sibling-roots.js` 的比对面必须含 `walk('assets'`，并必须有 `node_modules` 目录黑名单（递归扩面后不设黑名单会造出 88 条假「对方独有」）。**行为证明**：① 真跑 `memo --dispatch` 断言两个布尔存在、`bundledInPackage` 为真、`inRuntimeSurface=false ⇒ mode≠swarm-skill`、`inRuntimeSurface=true ⇒ mode=swarm-skill`、搜索目录必须带 `[runtime|host|bundled]` 标签；② 在 `.temp/gate-c18-yard` 造一对迷你院（pkg/sib），把 `assets/skills/probe-skill/SKILL.md` 写成内容不同，台账的「真实漂移」行必须出现该路径 |
 | C19 | 门禁计数单源：文档抄的「N 项（C0–CMAX）」必须等于验收器真值 | `node tools/gate-counts.js`（`--json` 机器读 / `--print` 只印标准文案）从 `verify-deploy.js` 数出真实项数与编号集合，核对 AGENTS frontmatter、README 部署段、`docs/greenlist.json` 三处抄写 + AGENTS 清单表行集合（**缺行=那道门没人知道，陈行=账没销**）。加/删门禁后先跑它再抄。C19 还会在副本里故意把 README 抄成 9 项并要求工具判红（防橡皮章工具） |
-| C20 | 文档命令可执行性：写在文档里的命令必须真跑得通，或明确交代不在本包跑 | 门禁自己扫 `AGENTS.md`/`README.md`/`docs/**`/`training`/`simulation`/`demo` 里所有 `src/… tools/… docs/…` 形式的路径引用（**逐条核在位**；确需提不存在的档必须在**同行**标反例/历史/外部/院属等记号）、所有 `npm run X` 的名字必须真在 `package.json` scripts 里、所有 `python`/`PYTHONPATH` 命令必须自带执行位置（`cd …` 或 `<x-root>` 占位符，禁止裸 `PYTHONPATH=.`）。**行为证明**：一份只读命令清单（`memo --summary/--peek/--actions/todo list`、`neural status`、`gate-counts`、`verify-sibling-roots --print-face`）逐条真跑且退出码 0，并且清单里每条命令都必须能在文档里回指到（防清单变空头账）。边界：`docs/releases/**` 历史发布说明与 `assets/skills/**`（宿主技能安装件逐字副本，其命令指外部工具链）不套本规则 **追加（2026-09-15 README 换图）**：同一页不许自相矛盾——README 内嵌 mindmap 的一级分支必须覆盖谱系表每一层（缺层即红点名层名）、图段若不再是 mindmap 立即红（防检查静默失效）、已退役的 `docs/lineage.svg` 既不得被引用也不得留悬档（引用与留档各一条红）。负向自证四式全过（删一支/塞回引用/放回旧文件/改 flowchart），见 `.temp/c20-negative3.js`。 **追加（2026-09-15 实测病）**：带 YAML frontmatter 的档（`AGENTS.md`/`README.md`/`docs/**` 中含 `tags:`/`description:`/`AIGC:` 者）**第一行必须是 `---`**——本轮 `AGENTS.md` 第 1 行曾被一条游离表格行压住，tags/描述全失效而既有门禁一声不响，且已随 `8cb01b1` 上线；负向自证：顶一行进文件头即红并点名档名，还原后复绿。 |
+| C20 | 文档命令可执行性：写在文档里的命令必须真跑得通，或明确交代不在本包跑 | 门禁自己扫 `AGENTS.md`/`README.md`/`docs/**`/`training`/`simulation`/`demo` 里所有 `src/… tools/… docs/…` 形式的路径引用（**逐条核在位**；确需提不存在的档必须在**同行**标反例/历史/外部/院属等记号）、所有 `npm run X` 的名字必须真在 `package.json` scripts 里、所有 `python`/`PYTHONPATH` 命令必须自带执行位置（`cd …` 或 `<x-root>` 占位符，禁止裸 `PYTHONPATH=.`）。**行为证明**：一份只读命令清单（`memo --summary/--peek/--actions/todo list`、`neural status`、`gate-counts`、`verify-sibling-roots --print-face`）逐条真跑且退出码 0，并且清单里每条命令都必须能在文档里回指到（防清单变空头账）。边界：`docs/releases/**` 历史发布说明与 `assets/skills/**`（本包自撰技能资产（宿主根内无同名，实测 2026-09-15），其命令指外部工具链）不套本规则 **追加（2026-09-15 README 换图）**：同一页不许自相矛盾——README 内嵌 mindmap 的一级分支必须覆盖谱系表每一层（缺层即红点名层名）、图段若不再是 mindmap 立即红（防检查静默失效）、已退役的 `docs/lineage.svg` 既不得被引用也不得留悬档（引用与留档各一条红）。负向自证四式全过（删一支/塞回引用/放回旧文件/改 flowchart），见 `.temp/c20-negative3.js`。 **追加（2026-09-15 实测病）**：带 YAML frontmatter 的档（`AGENTS.md`/`README.md`/`docs/**` 中含 `tags:`/`description:`/`AIGC:` 者）**第一行必须是 `---`**——本轮 `AGENTS.md` 第 1 行曾被一条游离表格行压住，tags/描述全失效而既有门禁一声不响，且已随 `8cb01b1` 上线；负向自证：顶一行进文件头即红并点名档名，还原后复绿。 |
 
 ## M4 Component Chain / M4 组件链引导（部署后检查）
 
@@ -173,6 +173,14 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 / **Verification commands in docs must state WHERE they run** — `tools/lsp-server.js` exists in no yard, and the SkillOpt import only works inside the checkout that actually has `skillopt/envs/aing/` (two same-named checkouts on this box, one without it). Every documented command must carry its cwd/prerequisites, and never infer a dependency location from a directory name.
 17. **别把"文档里的命令"当只读跑，白名单必须用显式数组而不是正则。** 本轮写全仓命令清点脚本时用 `/^(node (src\/memo\.js (--summary\|--peek\|--todos\|)…)/` 之类的"只读正则"放行——那个分支末尾的 **空选择 `()`** 等于放行任意 `node src/memo.js …`，于是把 AGENTS/README 里的**示例命令行**（含 `<用户挂着的事>` 这种占位符）真跑成 4 条 `todo add` 写进了 knowledge.db，C10b 立刻红（面板 32 ≠ 库内 36）。修法：①按"留痕不删"把 4 条改 `status=voided` 并在正文写明来路；②C20 的门禁清单改成**显式数组 + 防呆**（`WRONG_WORDS` 一命中就红，验收器绝不自持写命令）。教训：**"看起来只读"的正则不是证据，枚举出来的命令数组才是**；同一坑第 15 次是我自己踩的。
 ## 当前迭代故障引导（P0–P2 + 双语） / Current-iteration failure guide
+
+**18. 自己上几轮写过的叙述，不是本轮的证据 —— 假前提差点进包（2026-09-15 实测）。**
+本轮准备给 `assets/skills/**` 写一份「宿主技能逐字副本，许可待宿主确认」的 NOTICE，依据是几轮前我自己写进交接文档的定性。
+落笔前照例复核：**宿主三个技能根**（`.sclaw/agent/skills` 35 项、`scnet-client/resources/agent-skills` 7 项、`.sclaw/agent/plugins` 8 项）**里根本没有 `neural-evolution-swarm` / `aing-operator` 同名目录**，
+而这两个目录通篇是 aing 专属内容（GWT 映射、GREEN-LIST、growth.config、KESPI）——它们是**本包自撰的技能资产**，不是副本；`dependencies.yaml` 里的 `source: local` 讲的是「依赖在本地解析」，也不是原创性声明。
+顺带实测：swarm 声明依赖的 `consciousness-neural-methodology` / `senior-developer` / `neural-consciousness-architect` 在本机宿主根里同样**一个都没有** ⇒ 与 C18 量到的 `inRuntimeSurface=false` 对得上。
+**对策**：凡"准备写进包的来历 / 许可 / 归属"类断言，必须当场用目录清单或 `grep` 重取证据，旧文档里的同类句子要一并改口（本轮改了 `AGENTS.md` C20 行与 `verify-deploy.js` 边界注释两处）。
+**结论：NOTICE 不写了**——为一个假前提建一份文件，等于把假账装订成正式凭证。假前提被证伪时，正确动作是删掉计划，不是给文件找个说法。
 
 | 症状 / Symptom | 处置 / Fix |
 |---|---|
