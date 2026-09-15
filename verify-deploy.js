@@ -1649,8 +1649,38 @@ async function main() {
       ran++;
       if (res.status !== 0) problems.push('文档承诺的只读命令真跑失败: node ' + r.args.join(' ') + ' → 退出码 ' + res.status + ' / ' + String(res.stderr || res.error || '').split('\n').filter(Boolean)[0] || '');
     }
+    // C20 追加：同一页不许自相矛盾（图与表）+ 已退役资产防复活。
+    // 为什么钉：2026-09-15 复检实测 README 谱系表有 🏗️ 工程层，而 docs/lineage.svg 只有 6 块、缺它；
+    // 旧图已换成 README 内嵌 mindmap，故顺手钉住「不得再引用、也不得留悬档」。负向自证 .temp/c20-negative3.js。
+    const README_P = path.join(PKG_DIR, 'README.md');
+    if (fs.existsSync(README_P)) {
+      const rl = fs.readFileSync(README_P, 'utf8').replace(/\r/g, '').split('\n');
+      const plain = t => t.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '').trim();
+      const tI = rl.findIndex(l => /^\| 层 \| 锚点 \| 出处 \| 状态 \|/.test(l.trim()));
+      const mI = rl.findIndex(l => l.trim() === '```mermaid');
+      const mE = rl.findIndex((l, i) => i > mI && l.trim() === '```');
+      const map = mI >= 0 && mE > mI ? rl.slice(mI + 1, mE) : [];
+      if (/docs\/lineage\.svg/.test(rl.join('\n'))) problems.push('已退役的 docs/lineage.svg 又被 README 引用（架构图已改思维导图，勿复活旧资产）');
+      if (fs.existsSync(path.join(PKG_DIR, 'docs', 'lineage.svg'))) problems.push('docs/lineage.svg 仍在包内但已无人引用（退役要连文件一起下线，勿留悬档）');
+    // 带 YAML frontmatter 的文档，`---` 必须是第 1 行：本轮实测 AGENTS.md 第 1 行被一条游离表格行压住，
+    // tags/description 全部失效（工具与人都读不到元信息），而既有门禁一声不响 —— 属"文档自我不一致"同类账。
+    for (const f of docs.concat([path.join(PKG_DIR, 'AGENTS.md'), path.join(PKG_DIR, 'README.md')])) {
+      let txt = ''; try { txt = fs.readFileSync(f, 'utf8').replace(/\r/g, ''); } catch (e) { continue; }
+      const head = txt.split('\n').slice(0, 16);
+      const hasFm = head.some(l => /^(tags|description|AIGC):/.test(l));
+      if (hasFm && head[0] !== '---') problems.push('frontmatter 不在第 1 行（YAML 元信息失效，第 1 行是: ' + JSON.stringify(String(head[0]).slice(0, 40)) + '）: ' + path.relative(PKG_DIR, f));
+    }
+      if (tI >= 0) {
+        const tbl = [];
+        for (let i = tI + 2; i < rl.length && /^\|/.test(rl[i]); i++) { const c = rl[i].split('|').map(x => x.trim()); if (c[1]) tbl.push(plain(c[1])); }
+        const branches = map.filter(l => /^ {4}\S/.test(l)).map(plain);
+        if (map.length && map[0].trim() !== 'mindmap') problems.push('README 谱系段不再是 mindmap（图↔表一致性检查会静默失效，改图请同步本门）');
+        if (!map.length) problems.push('README 谱系表在位但找不到内嵌 mermaid 图（图被删了？要么连表一起删，要么补图）');
+        else { const miss = tbl.filter(x => !branches.some(b => b === x)); if (miss.length) problems.push('README 架构图与谱系表脱节，图里缺层: ' + miss.join('、') + '（表 ' + tbl.length + ' 层 / 图 ' + branches.length + ' 支）'); }
+      }
+    }
     if (problems.length) throw new Error(problems.length + ' 项文档命令不可执行：\n      ' + problems.slice(0, 8).join('\n      ') + (problems.length > 8 ? '\n      …另 ' + (problems.length - 8) + ' 项' : ''));
-    return '引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · 扫 ' + docs.length + ' 档';
+    return '引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
   });
 
   // ── 报告 ─────────────────────────────────────────────────────

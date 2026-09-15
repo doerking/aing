@@ -523,7 +523,43 @@ node src/setup-db.js --backup     # 手动备份
 
 > Every anchor in the table below is clickable and independently verifiable. 表内每一格都可点击核查，欢迎逐格翻验。
 
-![Architecture Lineage](docs/lineage.svg)
+```mermaid
+mindmap
+  root((aing 架构谱系))
+    🧠 思想层
+      GWT → Jacobian Lens 2026-07
+      Baars / Dehaene · Anthropic 实证
+      状态：已对齐
+    🏋️ 训练层
+      SkillOpt 六阶段 ReflACT
+      AlphaEvolve 血统 · OpenEvolve
+      arXiv:2605.23904
+      状态：adapter 就位
+    🗄️ 记忆层
+      Forms–Functions–Dynamics 三维框架
+      arXiv:2512.13564 · Paper-List
+      状态：双脑落地 / 双时态迭代
+    🧬 结构层
+      左右脑单交叉 × 双时态
+      主 agent 自收敛，非编排手写
+      状态：迭代中
+    🔌 生态层
+      SkillOpt 源码签名核对，零 wrapper
+      microsoft.github.io/SkillOpt
+      状态：EnvAdapter 就位 · 冒烟全绿
+    🏗️ 工程层
+      Harness Engineering：aing 即 agent 的 harness
+      LangChain Harness Anatomy 2026
+      SEAGym · Browser Harness
+      状态：已对齐
+    🚀 aing 本体
+      引擎就绪
+      机甲按需挂载 — the chassis is swappable
+      MIT · doerking.github.io/aing
+```
+
+> 上图只作视觉总览；**每一层的可点击锚点与出处在下面的表里**，图中任何一层若与表格不一致，以表格为准（门禁 C20 每轮核一次集合包含关系）。
+> The map is an overview only; clickable anchors stay in the table below, and C20 checks each round that every layer named in the table also appears in the map.
 
 | 层 | 锚点 | 出处 | 状态 |
 |---|---|---|---|
