@@ -1642,11 +1642,12 @@ async function main() {
     const WRONG_WORDS = /\b(add|done|new|set|create|feed|dispatch|record|inhibit|uninhibit|archive|compile|init|migrate|purge|reindex|start|stop)\b/i;
     for (const r of RUNNERS) if (WRONG_WORDS.test(r.args.join(' '))) problems.push('C20 只读清单里出现疑似写命令（门禁不许改院子）: node ' + r.args.join(' '));
     const allDocText = docs.filter(x => /\.md$/i.test(x)).map(x => { try { return fs.readFileSync(x, 'utf8'); } catch (e) { return ''; } }).join('\n').replace(/\r/g, '');
-    let ran = 0;
+    let ran = 0, faceCount = 0;
     for (const r of RUNNERS) {
       if (!allDocText.includes(r.needle)) { problems.push('C20 清单里的命令在文档中查无（清单与现实脱节）: ' + r.needle); continue; }
       const res = spawnSync(process.execPath, r.args, { cwd: PKG_DIR, encoding: 'utf8', timeout: 180000 });
       ran++;
+      if (r.args.includes('--print-face') && res.status === 0) faceCount = String(res.stdout).replace(/\r/g, '').split('\n').filter(Boolean).length;
       if (res.status !== 0) problems.push('文档承诺的只读命令真跑失败: node ' + r.args.join(' ') + ' → 退出码 ' + res.status + ' / ' + String(res.stderr || res.error || '').split('\n').filter(Boolean)[0] || '');
     }
     // C20 追加：同一页不许自相矛盾（图与表）+ 已退役资产防复活。
@@ -1679,8 +1680,23 @@ async function main() {
         else { const miss = tbl.filter(x => !branches.some(b => b === x)); if (miss.length) problems.push('README 架构图与谱系表脱节，图里缺层: ' + miss.join('、') + '（表 ' + tbl.length + ' 层 / 图 ' + branches.length + ' 支）'); }
       }
     }
+    // ⑤ 院际比对面数不许抄漂移（2026-09-15 实测病）：README 换图把旧 SVG 退役后，整包面由 170 变 169，
+    // 但 AGENTS 坑 9 里那句「实测量 170 个比对文件 / measured 170 compared files」仍写着 170 —— 门数有 C19 钉，
+    // 面数过去没人钉，等于给"改一次面、全仓静默失真"留了口子。真值直接吃本门刚跑过的 --print-face 行数。
+    // 真值来源：本门已跑过的 --print-face 行数（faceCount）
+    {
+      const agp = path.join(PKG_DIR, 'AGENTS.md');
+      if (fs.existsSync(agp)) {
+        const at = fs.readFileSync(agp, 'utf8').replace(/\r/g, '');
+        const nums = [...at.matchAll(/实测(?:量)?\s*\**([0-9]{2,4})\**\s*个比对文件|measured\s+\**([0-9]{2,4})\**\s+compared files/g)]
+          .map(m => Number(m[1] || m[2]));
+        if (!nums.length) problems.push('AGENTS 里找不到「N 个比对文件 / measured N compared files」锚点 —— 面数门静默失效');
+        else if (!faceCount) problems.push('--print-face 没跑出行数，无法核对 AGENTS 抄的面数 ' + nums.join('/') + '（面数门静默失效）');
+        else nums.forEach(n => { if (n !== faceCount) problems.push('AGENTS 抄的院际比对面 ' + n + ' 与实测 ' + faceCount + ' 不符（面数漂移，改 AGENTS 坑 9 的抄件，别改实测）'); });
+      }
+    }
     if (problems.length) throw new Error(problems.length + ' 项文档命令不可执行：\n      ' + problems.slice(0, 8).join('\n      ') + (problems.length > 8 ? '\n      …另 ' + (problems.length - 8) + ' 项' : ''));
-    return '引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
+    return '院际面 ' + faceCount + '（与 AGENTS 抄件一致）· 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · 扫 ' + docs.length + ' 档';
   });
 
   // ── 报告 ─────────────────────────────────────────────────────
