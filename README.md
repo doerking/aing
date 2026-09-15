@@ -555,7 +555,7 @@ mindmap
     🚀 aing 本体
       引擎就绪
       机甲按需挂载 — the chassis is swappable
-      MIT · doerking.github.io/aing
+      MIT · github.com/doerking/aing
 ```
 
 > 上图只作视觉总览；**每一层的可点击锚点与出处在下面的表里**，图中任何一层若与表格不一致，以表格为准（门禁 C20 每轮核一次集合包含关系）。
