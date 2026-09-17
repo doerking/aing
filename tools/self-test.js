@@ -60,6 +60,25 @@ try {
       log(okK && okG, '补丁层指纹', 'v1 defs present');
     } catch (e) { log(false, '补丁层指纹', e.message); }
 
+    // 2026-09-17 深度检查 F7：director 动作映射 ↔ STEPS 同源真跑断言（文字里的步数 C20 管，
+    // 代码里的数组从前没人管——旧 10 脚本私拼清单漏 link-sync 且绕锁，就是这片盲区拖出来的）。
+    try {
+      const gd = require(path.join(ROOT, 'src', 'growth-director.js'));
+      const Cls = gd.GrowthDirector || gd;
+      const d = Object.create(Cls.prototype); // 不过构造函数，只验纯映射
+      const full = d._getCommandSequence('full_metabolism');
+      const sched = d._getCommandSequence('scheduled_metabolism');
+      const delegated = Array.isArray(full) && full.length === 1 && full[0] === 'run-metabolism'
+                     && Array.isArray(sched) && sched.length === 1 && sched[0] === 'run-metabolism';
+      let allExist = true;
+      for (const act of ['emergency_fix', 'compile', 'boost_growth', 'pollinate', 'maintain', 'targeted_pollinate']) {
+        for (const c of (d._getCommandSequence(act) || [])) {
+          if (!fs.existsSync(path.join(ROOT, 'src', c + '.js'))) { allExist = false; console.log('   缺脚本: ' + act + ' → ' + c); }
+        }
+      }
+      log(delegated && allExist, 'director↔STEPS 同源(F7)', delegated ? (allExist ? '整链委托 + 定向脚本全在位' : '有脚本缺失') : '仍在私拼清单');
+    } catch (e) { log(false, 'director↔STEPS 同源(F7)', e.message); }
+
     console.log(fail === 0 ? '\n🟢 SELF-TEST ALL GREEN' : `\n🔴 ${fail} failed`);
     process.exitCode = fail === 0 ? 0 : 1; // N3: 自然排空异步句柄后带码退出，不在回调里硬杀（0xC0000409 同族，同 distill v1.1 教训）
   });

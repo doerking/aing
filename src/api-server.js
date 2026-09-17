@@ -412,6 +412,10 @@ async function handle(req, res) {
 
   // ── agent 自管理：创建实体（Todo/Skill/Output，type 自由字符串零迁移）──
   if (p === '/api/entity' && req.method === 'POST') {
+    // 2026-09-17 F3：代谢持库时 503 拒写（常驻服务不能拿旧快照盖新盘），客户端重试即可
+    if (require('./metabolism-lock.js').metabolismBusy()) {
+      return json(res, 503, { error: 'metabolism-busy', hint: '代谢持库中，本轮跑完重试 / retry after the current cycle' });
+    }
     const body = await readBody(req);
     if (!body.name || !body.type) {
       return json(res, 400, { error: '需要 {name, type} 字段；type 自由字符串（Todo/Skill/Output/Concept/...）' });
@@ -435,6 +439,9 @@ async function handle(req, res) {
   // ── agent 自管理：状态翻转（pending→active→archived 等）──
   const patchMatch = p.match(/^\/api\/entity\/([^/]+)$/);
   if (patchMatch && req.method === 'PATCH') {
+    if (require('./metabolism-lock.js').metabolismBusy()) {
+      return json(res, 503, { error: 'metabolism-busy', hint: '代谢持库中，本轮跑完重试 / retry after the current cycle' });
+    }
     const id = decodeURIComponent(patchMatch[1]);
     if (!ID_PATTERN.test(id)) {
       return json(res, 400, { error: '非法实体 ID' });

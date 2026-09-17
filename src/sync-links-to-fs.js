@@ -24,6 +24,11 @@ const root = process.cwd();
 const linksDir = path.join(root, 'wiki', 'links');
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写；子步（link-sync）凭 AING_METABOLISM_CHILD 豁免
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('sync-links-to-fs'));
+    process.exit(3);
+  }
   const dryRun = process.argv.includes('--dry-run');
 
   const store = new KnowledgeStore();

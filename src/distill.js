@@ -264,7 +264,7 @@ async function main() {
     const result = fail === 0 ? (ok > 0 ? 'completed' : 'clean') : (ok > 0 ? 'partial' : 'failed');
     console.log(JSON.stringify({ mode, result, ok, fail, distillDebtRemaining: after[0].n }));
     if (!dryRun && ok > 0) {
-      console.log('[distill] note: wiki is source-of-truth; run compile --force next metabolism to sync DB content');
+      console.log('[distill] 双脑已同步（wiki 蒸馏摘要节 + DB）；无需也禁止随手 compile --force——那会从 raw 重写 wiki 抹掉蒸馏节（现 compile 对已蒸馏档已有保护跳过，2026-09-17 命令面冲突批）');
     }
     process.exitCode = fail === 0 ? 0 : (ok > 0 ? 2 : 1); return;   // 0=clean/completed, 2=partial, 1=failed
   } finally {

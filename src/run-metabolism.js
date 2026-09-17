@@ -42,6 +42,10 @@ const path = require('path');
 // 确需自动提交时必须显式 opt-in：AING_AUTOCOMMIT=1。seed-demo / sync-opt / auto-ingest 本来就传
 // NO_AUTOCOMMIT=1，同向不受影响。由 verify-deploy C13 钉住（在隔离假院里真跑：带守卫无提交、删守卫出提交）。
 if (process.env.AING_AUTOCOMMIT !== '1') process.env.AING_NO_AUTOCOMMIT = '1';
+// 2026-09-17 深度检查 F3：持锁后子进程豁免标记——import/kespi/vector/link 等子步自身也是写者，
+// 若让它们也查 metabolism.lock 会「代谢自己把自己锁死」（原链路事故）；子步凭此标记通行。
+// 共享判据见 src/metabolism-lock.js；execSync 继承 process.env → 子进程自动可见。
+if (!process.env.AING_METABOLISM_CHILD) process.env.AING_METABOLISM_CHILD = '1';
 
 
 // ── N1: 跨进程原子锁（范式同 distill.js D4：wx 原子创建 + finally 释放 + 陈旧锁按 age/pid 回收）──

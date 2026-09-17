@@ -18,6 +18,12 @@ const KnowledgeStore = require('./knowledge-store');
 const VectorSearch = require('./vector-search');
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写（reindex 整表写 embeddings，与在跑链叠盘必互吞）；
+  // 作为 STEPS 第 6 步子进程凭 AING_METABOLISM_CHILD 豁免照跑。
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('index-vectors'));
+    process.exit(3);
+  }
   const reindex = process.argv.includes('--reindex');
   const forceHash = process.argv.includes('--hash');
   const wantSemantic = process.argv.includes('--semantic') || !forceHash;

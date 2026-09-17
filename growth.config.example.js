@@ -226,6 +226,10 @@ config.query = {
 
 };
 
+// 剪枝步（代谢第 11 步）旋钮（2026-09-17 F2 显式化，顶层段与 src/growth.config.js 同构——C10d）：
+// 默认 false=恒 dry-run 预览（只报不删，即原链路现状）；true=随整链自动归档删除。
+config.prune = { autoForce: process.env.AING_PRUNE_AUTO_FORCE === '1' };
+
 
 
 // 验收门禁阈值（verify-deploy.js C10 系列唯一读取处；纪律第 5 条：组件内不硬编码阈值）

@@ -279,8 +279,11 @@ class GrowthDirector {
   }
 
   _getCommandSequence(action) {
-    // 步名 → 实际脚本文件名（CLI --execute 直接拼 node <script>.js，
-    // 步名与文件名不一致的在此映射，与 run-metabolism 的 STEPS 保持同源）
+    // 步名 → 实际脚本文件名（CLI --execute 直接拼 node <script>.js）。
+    // 2026-09-17 深度检查 F1：full/scheduled 不再私拼脚本清单（旧 10 项漏 link-sync，
+    // 且逐脚本 execSync 绕开 metabolism.lock、不走尾部意识记账，stagnant 闩解不开）——
+    // 整链委托 run-metabolism.js：11 步单源、锁/关键步熔断/记账/防自动提交全继承，
+    // 「与 STEPS 保持同源」从此由构造保证而非注释声称。
     const SCRIPT_MAP = {
       import: 'import-from-wiki',
       link: 'auto-link',
@@ -292,7 +295,7 @@ class GrowthDirector {
       case 'emergency_fix':
         return ['kespi-check', 'fix-kespi', 'recalc-kespi', 'kespi-check'].map(toScript);
       case 'full_metabolism':
-        return ['compile', 'import', 'distill', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
+        return ['run-metabolism'];
       case 'targeted_pollinate':
         return ['kespi-check', 'pollinate', 'kespi-check'].map(toScript);
       case 'compile':
@@ -302,7 +305,7 @@ class GrowthDirector {
       case 'pollinate':
         return ['pollinate', 'compress'];
       case 'scheduled_metabolism':
-        return ['compile', 'import', 'distill', 'link', 'vector', 'sprout', 'pollinate', 'compress', 'kespi', 'prune'].map(toScript);
+        return ['run-metabolism'];
       case 'maintain':
         return ['kespi-check', 'prune'];
       case 'observe':

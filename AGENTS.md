@@ -112,6 +112,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | SkillOpt adapter | **在 SkillOpt 检出根目录跑，不在本包内跑**：`cd <dd-root>\321\SkillOpt && PYTHONPATH=. python -c "from skillopt.envs.aing.adapter import AingEnvAdapter"` | 导入成功 | 适配器属**外部 SkillOpt 检出**，本包只有 `training/adapter.py`（两者不同物）。2026-09-15 本机实测：`<dd-root>\321\SkillOpt` 内 `IMPORT_OK`；在 Tip 包内与 `<sqa-root>\SkillOpt` 里同命令均 `ModuleNotFoundError`（同名检出有两份，一份有 `envs/aing` 一份没有 → 别按目录名猜） |
 | 检索 A/B | 自然语言问句 vs SQL LIKE（无现成命令，按口径实测） | **分口径**：整句原样提问时 LIKE 命中 0%、语义 top3 38%（此时语义完胜）；人工提词后 LIKE 8 题中 8、语义 top3 37.5%＝8 实体随机底（此时语义不占优）。「语义 > 关键词 2 倍」只在整句口径成立，禁止当无条件既成事实引用 | `models/` 是 **Xenova/all-MiniLM-L6-v2 英文模型**，中文查询近 OOV、小语料上塌到 3 个枢纽实体；要涨必须先换多语模型或扩语料（2026-09-14 OPT 三臂实测） |
 | FadeMem 衰减 | 先 `node src/growth-loop.js episode '{"taskType":"metabolism","route":["compile"],"success":true,"durationMs":165}'`（若干条）→ `node src/growth-loop.js decay` | weight < 1.0 且 `factors` 三因子齐（OPT 实测 weight≈0.35，time/usage/quality=1/0.5/1） | 全新沙盒无 `data/growth-loop.json` → patterns 空、decay 返回 `[]` 属正常，先喂 episode 再判 |
+| 成长层文档桥（growth-docs） | `node src/growth-docs.js episode '{"taskType":"probe","route":["compile"],"success":true}'`（写 `raw/growth/` 文档档，compile 主循环 `getAllFiles` 递归消费（现码 :282/:380 实证 2026-09-17），下轮代谢自然消化） | 档落 `raw/growth/`；不碰 knowledge.db、不自执行候选（头注契约） | 零 npm 名零文档登记即本行补的「悬空能力」面（2026-09-17）；候选改动照旧只提案不落地，四门回滚链验收 |
 | 四门回滚 | propose → evaluate `<id>` → promote `<id> true` → rollback `<geneId>` | rolledBack=true 且状态还原 tested（gene 从 `state.genes` 摘除） | rollback 收的是 **geneId**（`state.genes[].geneId`），不是 improvement id；OPT 实测 Gate-1/3/4 负向都能红 |
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
@@ -127,6 +128,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 
 5. **双语输出是预期，不是乱码** — 人读日志为 `中文 / English` 对照；机器令牌（`kespi_status` 等）恒为英文。不要「修复」双语行，也不要给令牌加翻译。/ **Bilingual logs are expected, not mojibake** — human-facing lines are `Chinese / English`; machine tokens stay English. Never "fix" bilingual lines or translate tokens.
 6. **`kespi_status` 生命周期与关键步骤熔断** — `kespi_status` 由 compile 置 `pending`、kespi-check 首评翻转，`pending` 非故障；compile/import/vector/kespi 为关键步骤，失败即中止、退出码 1，`--force` 仅继续非关键步骤。/ **`kespi_status` lifecycle & critical-step breaker** — compile sets `pending`, kespi-check flips it on first evaluation; `pending` is not an error. Critical steps (compile/import/vector/kespi) abort with exit code 1 on failure; `--force` continues non-critical only.
+   **注意 `--force` 三义（2026-09-17 命令面审计登记，同日深度检查补第三义）**：`run-metabolism --force` = 非关键失败续行（不透传给子步）；`compile --force` = 无视 mtime 用 raw **全量重写 wiki**（已蒸档现受保护：跳过不覆盖且源文更新时提示重蒸路径，实测 3 份逐字节不动）；`prune --force` = **真执行归档删除**（默认恒 dry-run 预览；自动链放开只走 `growth.config` 的 `prune.autoForce` 单源旋钮（纪律 5），默认 false 即原链路现状不变）。手工单跑 compile **勿随手 --force**，整链重刷用 `run-metabolism --force`。另：growth-director `--execute` 的 full/scheduled 动作已于同日改为**整链委托 run-metabolism**（旧私拼 10 脚本清单漏 link-sync、绕锁、不解停滞闩），tools/self-test 现有「director↔STEPS 同源」真跑断言钉住。
 
 7. **补丁必须整层重放（定义层先于调用层）** — 09-07 事故：v3 座舱带调用行、v1 座舱带函数定义，只重放 v3 导致 `markEntityKespiComputed`/`hasDistillation` 引用悬空；又被 `try/catch` 吞成静默腐坏，面板照样 ALL GREEN。重放任何补丁座舱前，必须枚举**全部**座舱层的 patch 清单并按 v1→v3 顺序执行；提取正则零匹配视为异常，不许当空集。/ **Replay patch layers completely, definitions before call-sites** — replaying only v3 left v1 definitions missing; call-sites survived `node --check` and the try/catch turned ReferenceError into silent divergence with green panels. Enumerate ALL cockpit layers (v1 first) before any replay; zero regex matches is an anomaly, not an empty set.
 8. **同源性≠安全性，绿灯必须配产品断言** — 「<repo-root> 与上游逐字节一致」只证明输入血缘，对补丁层完整性零证明力；C1-C6 全是环境/结构检查，DB 与 wiki 静默分叉时照样全绿。任何 ALL GREEN 汇报必须包含 C7 运行时产品断言（生命周期一致性 + 补丁层指纹）；改造门禁后必须做负向测试（注入腐坏样本，确认门禁会红）。/ **Same-origin ≠ safe; green requires product assertions** — byte-identity with upstream proves lineage only. C1-C6 are env/structure checks that stayed green through silent divergence. Every ALL GREEN must include C7 runtime assertions; every gate change must pass a negative test (inject corruption, gate must turn red).
@@ -273,8 +275,8 @@ npm run verify:siblings                     # 院际代差台账（只读）：T
 | 块 | 出口 | 数据来源 | agent 怎么用 |
 |---|---|---|---|
 | ① 用户待办 | `memo.todos.user`（`--summary` 的【用户待办】） | `entities(type='Todo', status='active')` 且 tags 含 `user`——**与 `metabolism-panel.js` 的 `queues.user_todos` 同一张表同一规则**，不另立待办源 | 进场先读这一块的条数与到期（`due:YYYY-MM-DD` 标签）；会话里出现“用户挂着的事”，**当场** `todo add`，不等提醒 |
-| ② 健康判定 | `memo.health.verdict` = ok / degraded / broken + `reasons[]`（每条带 code/say/evidence） | 只用离散读数：实体数、向量通道、元认知状态、kernel state、蒸馏债、`panel.gaps`、`selfAssessment`、告警。**不新增阀值**（纪律 5） | broken 先修链路再谈维护；degraded 按 reasons 逐项清；理由不可追溯就算装饰 |
-| ③ 派单建议 | `memo.swarmDispatch`（`--dispatch`；`--peek` 里给完整 roles） | 由 health.reasons 的 code 映射到下面「半拉起角色与触发条件」四个角色 | `needed=true` 时按 `roles[].how`（交什么材料）与 `gate`（过什么门槛）执行；`mode=inline-degraded` 表示本运行时未装团队技能，只能 inline 扮演，**禁止假称能派** |
+| ② 健康判定 | `memo.health.verdict` = ok / degraded / broken + `reasons[]`（每条带 code/say/evidence） | 只用离散读数：实体数、向量通道、元认知状态、kernel state、蒸馏债、`panel.gaps`（2026-09-17 起面板直接聚合 gap-detector 巡检引擎，与活扫同名同口径，不再双制）、KESPI 均分跌破位（`kespi-yellow`/`kespi-red`，常量单源 config.kespi）、`selfAssessment`、告警。**不新增阀值**（纪律 5） | broken 先修链路再谈维护；degraded 按 reasons 逐项清；理由不可追溯就算装饰 |
+| ③ 派单建议 | `memo.swarmDispatch`（`--dispatch`；`--peek` 里给完整 roles 与在场三布尔；`--summary` 常显进化团明标线，2026-09-17） | 由 health.reasons 的 code 映射到下面「半拉起角色与触发条件」四个角色 | `needed=true` 时按 `roles[].how`（交什么材料）与 `gate`（过什么门槛）执行；`mode=inline-degraded` 表示本运行时未装团队技能，只能 inline 扮演，**禁止假称能派** |
 
 ```bash
 node src/memo.js --summary                 # 三块一次看全（人读）
@@ -289,7 +291,7 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
 
 > 备忘录不是给用户看的文档——它是 aing 给 agent 的**驾驶仪表台**。agent 出场第一步永远是读备忘录，拿到三样东西后才开始工作。
 > 读取面（2026-09-14 起两条等价路径，同一组装函数 `src/memo.js` 的 `buildMemo()`）：**CLI `node src/memo.js`／`npm run memo`（首选，无需常驻服务）** 或 HTTP `GET /api/consciousness/briefing`。
-> ⚠ 已知副作用（实测）：每读一次备忘录，意识层 `suppressedEventCount` +8 且会重写 `logs/consciousness/briefing-<date>.md` → 读表即扰表；判断异常时以 `state`/`alerts`/`componentLinks` 为准，别把 suppressed 计数增量当业务事件。真修在源码侧（`generateBriefing` 不该往 kernel 投事件），待所有者点单。
+> ⚠ 已知副作用（**已修，门禁 C16 钉住；2026-09-17 哨兵法复测销账**）：历史上每读一次备忘录会意识层 `suppressedEventCount` +8 并重写 `logs/consciousness/briefing-<date>.md`（读表即扰表）；自 2026-09-14 起读端默认纯读（`--feed`/`--archive` 显式开启才恢复旧副作用），复测证实连读两轮后 state.json 字节一致且无 briefing 落盘。suppressed 计数此后只随写面动作增长，仅供诊断，不作健康判据；判断异常仍以 `state`/`alerts`/`componentLinks` 为准。
 >
 > 1. **aing 当前状态**：意识层 state（idle/integrating/focused/aroused/stagnant）、通道健康度（structure/semantic/kespi/anomaly/feedback/temporal 六通道 EMA）、活跃事件数、停滞计数
 > 2. **组件链接状态**：知识库在线？向量模型就绪（384 维语义 vs 64 维哈希）？代谢上次跑完？蒸馏债多少？元认知在线？
@@ -305,6 +307,7 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
 > | componentLinks.vectorSearch.status | semantic-384（`semantic` 时对外即报 `semantic-384`，2026-09-14 修正恒 false 的判定） | offline/hash → `node src/index-vectors.js --semantic --reindex` |
 > | componentLinks.metacognition.status | online | degraded → `node src/metacognition-layer.js self-check` 刷新 |
 > | distillDebt | 0 | >0 → 跑代谢或单独 distill |
+> | reflowPending（芥子已产未回炉） | 0 | >0 → 跑 `node src/recycle-seeds.js`（回炉线无守护驱动，本行即其驱动位；幂等，每粒至多回炉一次） |
 > | kernelReactions 高注意力 | <5 | >=5 → 检查 alert targets, 优先处理 |
 > | selfAssessment 六属性 | 全 ✓ | 有 ✗/△ → 按 M4 组件链引导逐项修复 |
 >
@@ -323,7 +326,7 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
 | **理论家** | selfAssessment 有 ✗/△；六属性评分需要复审 | SQA 报告 + briefing selfAssessment → 理论家过堂 | 六属性打分表 + 缺口清单 |
 | **工程师** | 代谢步骤失败；C8/C9 门禁红灯；组件链断裂 | 失败步 stderr + verify-deploy 输出 → 工程师审计 | P0-P3 修复清单 |
 | **训练师** | SkillOpt rollout 需要跑；任务包需要扩充 | adapter + task-package → 训练师就绪度评估 | 训练环境就绪/缺口报告 |
-| **分析师** | KESPI 均分突降；链接拓扑异常；孤岛率上升 | gap-detector + topology scan → 分析师体检 | 拓扑健康报告 + 工单 |
+| **分析师** | KESPI 均分跌破黄/红线（reason code `kespi-yellow`/`kespi-red`，常量单源 config.kespi，2026-09-17 接上）；面板 gaps 非零（同日起面板与巡检引擎同源，无双口径）；孤岛率上升 | gap-detector + topology scan → 分析师体检 | 拓扑健康报告 + 工单 |
 
 ### 按数据指标自动维护流程
 
@@ -335,7 +338,7 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
                                    │
                     ┌──────────────▼──────────────────────┐
                     │   备忘录数据指标检查                  │
-                    │   (上表 8 项指标)                    │
+                    │   (上表 9 项指标，2026-09-17 加 reflowPending)│
                     └──────────────┬──────────────────────┘
                                    │
               ┌────────────────────┼────────────────────┐
