@@ -19,7 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { consciousnessTuning } = require('./config-runtime');
+const { consciousnessTuning, getConfigState } = require('./config-runtime');
 
 /**
  * 组装备忘录全量结构。
@@ -73,6 +73,17 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
     distillDebt = debt.length ? debt[0].n : 0;
   } catch (e) {}
 
+  // 回炉欠（2026-09-17 命令面冲突批④）：芥子已压缩但无人回炉的粒数——recycle-seeds 不在 STEPS/无守护，
+  // 本读数就是它的驱动位（只读计数，解析失败按 0 不装债；真重炉走 node src/recycle-seeds.js，幂等）。
+  let reflowPending = 0;
+  try {
+    const si = path.join(KB_ROOT, 'mustard-seeds', 'compressed', 'index.json');
+    if (fs.existsSync(si)) {
+      const seeds = JSON.parse(fs.readFileSync(si, 'utf8'));
+      if (Array.isArray(seeds)) reflowPending = seeds.filter(s => !s || s.recycled !== true).length;
+    }
+  } catch (e) { reflowPending = 0; }
+
   // 意识层告警：合并 consciousness-layer alerts + metacognition alerts + distill debt
   const consciousnessAlerts = [
     ...(briefing.metacognition?.alerts || []),
@@ -113,6 +124,7 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
     recommendations: briefing.briefing.recommendations || [],
     priority: briefing.priority,
     distillDebt,
+    reflowPending,
     // ── M4 自我报告：六属性自评 ──
     selfAssessment: (() => {
       try {
@@ -203,7 +215,11 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
   };
   memo.todos = todoSplit;
   memo.health = assessHealth(memo, panelRead);
-  memo.swarmDispatch = deriveSwarmDispatch(memo.health, memo, panelRead, swarmRolesReady());
+  // 进化团在场面（2026-09-17 所有者点单「明标」）：三种「有」常显，不能只在要派单时才说；
+  // HTTP briefing 与 CLI 共用 buildMemo，故两面同得。
+  const swarmFace = swarmRolesReady();
+  memo.swarmFace = swarmFace;
+  memo.swarmDispatch = deriveSwarmDispatch(memo.health, memo, panelRead, swarmFace);
   return memo;
 }
 
@@ -356,6 +372,17 @@ function assessHealth(memo, panel, opts = {}) {
   if (cl.metacognition && cl.metacognition.status === 'degraded') push('metacognition-degraded', 'degraded', '元认知未刷新：自我建模读数是旧的', 'metacognition=degraded');
   if (memo.consciousness && memo.consciousness.state === 'stagnant') push('stagnant', 'broken', '意识层判定连续空产出（停滞）：代谢在跑但没产出，须查失败原因而不是再跑一遍', 'stagnationCount=' + (memo.consciousness.stagnationCount !== undefined ? memo.consciousness.stagnationCount : '?'));
   if (Number(memo.distillDebt || 0) > 0) push('distill-debt', 'degraded', '有蒸馏债未兑付：待蒸实体挂着，wiki 落后于 raw', 'distillDebt=' + memo.distillDebt);
+  if (Number(memo.reflowPending || 0) > 0) push('reflow-pending', 'degraded', '芥子已产未回炉：recycle-seeds 无守护驱动，挂久了就是单向泄漏（物质循环断在半路）', 'reflowPending=' + memo.reflowPending);
+  // KESPI 均分跌破——把 AGENTS 半拉起表承诺的「KESPI 均分突降→分析师」接上地气（2026-09-17 实测旧版无任何 code，0.84→0.78 无人应，陈诺悬空）。
+  // 纪律 5：不新设阈值——复用 config.kespi 既有单源常量 yellowLight/redLight；读数用面板现成聚合值 health.kespi_avg。
+  const kespiAvg = (panel && panel.ok && panel.data.health && panel.data.health.kespi_avg != null) ? Number(panel.data.health.kespi_avg) : NaN;
+  if (Number.isFinite(kespiAvg)) {
+    let kt = {};
+    try { kt = ((getConfigState() || {}).config || {}).kespi || {}; } catch (e) { kt = {}; }
+    const red = Number(kt.redLight), yellow = Number(kt.yellowLight);
+    if (Number.isFinite(red) && kespiAvg < red) push('kespi-red', 'degraded', 'KESPI 均分跌破红线（config.kespi.redLight 单源）：健康度整体恶化，需查拓扑与回炉', 'kespiAvg=' + kespiAvg + '<red=' + red);
+    else if (Number.isFinite(yellow) && kespiAvg < yellow) push('kespi-yellow', 'degraded', 'KESPI 均分跌破黄灯（config.kespi.yellowLight 单源）', 'kespiAvg=' + kespiAvg + '<yellow=' + yellow);
+  }
   if (panel && panel.ok && panel.data && panel.data.gaps) {
     const g = panel.data.gaps;
     const bad = Object.entries(g).filter(([, n]) => Number(n) > 0);
@@ -379,10 +406,12 @@ function assessHealth(memo, panel, opts = {}) {
       entitiesAll, links: (panel && panel.ok && panel.data.health ? panel.data.health.link_count : undefined),
       kernelState: memo.consciousness ? memo.consciousness.state : null,
       activeEvents: memo.consciousness ? memo.consciousness.activeEventCount : null,
-      // 读表即扰表：suppressed 计数会被"读"这个动作推高，不代表业务事件，故单列标注
+      // 读端自 C16（2026-09-14）起默认纯读，不再推高该计数（2026-09-17 哨兵法复测：两轮读后 state.json 字节一致且无 briefing 落盘）；
+      // suppressed 只随写面动作（--feed / ingest / 代谢）累积，单列标注仅供诊断，不作健康判据。
       suppressedEvents: memo.consciousness ? memo.consciousness.suppressedEventCount : null,
-      suppressedNote: '每次读备忘录会往 kernel 投 alerts+hotspots 信号（同指纹被抑制）→ 该计数只用于诊断，不作健康判据',
+      suppressedNote: '读表默认不投事件（C16）；该计数只随 --feed / ingest / 代谢等写面动作增长，仅供诊断，不作健康判据',
       kespiAvg: panel && panel.ok ? panel.data.health.kespi_avg : null,
+      reflowPending: memo.reflowPending ?? 0,
       panelFresh: panel && panel.ok ? new Date(panel.mtime).toISOString() : null
     }
   };
@@ -432,18 +461,23 @@ function deriveSwarmDispatch(health, memo, panel, ready) {
   const g = (panel && panel.ok && panel.data.gaps) ? panel.data.gaps : null;
   if (g && Object.values(g).some(n => Number(n) > 0)) want.analyst = 'gaps ' + Object.entries(g).filter(([, n]) => Number(n) > 0).map(([k, n]) => k + '=' + n).join(' ');
   if (r.includes('distill-debt')) want.analyst = (want.analyst ? want.analyst + '; ' : '') + 'distillDebt=' + memo.distillDebt;
+  if (r.includes('reflow-pending')) want.analyst = (want.analyst ? want.analyst + '; ' : '') + 'reflowPending=' + (memo.reflowPending ?? 0);
+  if (r.includes('kespi-red') || r.includes('kespi-yellow')) {
+    const ev = health.reasons.find(x => x.code === 'kespi-red' || x.code === 'kespi-yellow');
+    want.analyst = (want.analyst ? want.analyst + '; ' : '') + (ev ? ev.evidence : 'kespiAvg 跌破');
+  }
 
   const GATE = {
     theorist: '六属性 ✓ ≥4 且无关键 ✗（转述 AGENTS 约定，仅供人看，不参与判定）',
     engineer: '回归全过、无新增 lint 错误',
-    trainer: '候选分 > 当前基线',
+    trainer: '候选分 > 当前基线（须可复现真 rollout；影子模式产物只留档不判分）',
     analyst: '守恒比 0.8~1.5 且回炉闭环成立'
   };
   const ROLE_ID = { theorist: 'neuro-theorist', engineer: 'senior-engineer', trainer: 'skill-trainer', analyst: 'plasticity-analyst' };
   const HOW = {
     theorist: '把 memo.selfAssessment 六属性 + 待审设计稿交给它过堂',
     engineer: '把 verify-deploy 红行 + 组件链接读数 + 失败步 stderr 交给它做最小修复',
-    trainer: '把 adapter + 任务包交给它跑 SkillOpt 六阶段；本机无 Python 依赖时先报缺口',
+    trainer: '把 adapter + 任务包交给它跑 SkillOpt 六阶段闭环；真闭环需**外部 SkillOpt 检出+python**（见依赖档 dependencies.yaml），本包 training/adapter.py 非同一物，同名检出有两份仅一份含 envs/aing（勿按目录名猜）；环境不可用时只出就绪度/缺口报告+影子稿，禁报「候选分>基线」',
     analyst: '把 panel.gaps + gap-detector/topology 输出交给它出拓扑健康报告与工单'
   };
   const roles = Object.keys(want).filter(k => want[k]).map(k => ({ role: ROLE_ID[k], key: k, why: want[k], gate: GATE[k], how: HOW[k] }));
@@ -474,8 +508,9 @@ function deriveNextActions(memo) {
   const cl = memo.componentLinks || {};
   const alerts = memo.consciousnessAlerts || [];
   if ((memo.distillDebt || 0) > 0 || alerts.some(x => x && x.type === 'distill-debt')) acts.push('node src/distill.js');
+  if ((memo.reflowPending || 0) > 0) acts.push('node src/recycle-seeds.js');
   if (memo.consciousness && memo.consciousness.state === 'stagnant') acts.push('node src/growth-director.js --execute');
-  if (cl.vectorSearch && cl.vectorSearch.status !== 'semantic-384') acts.push('node src/index-vectors.js --semantic --reindex');
+  if (cl.vectorSearch && cl.vectorSearch.status !== 'semantic-384' && !(memo.health && memo.health.probeNoSemantic)) acts.push('node src/index-vectors.js --semantic --reindex');
   if (cl.metacognition && cl.metacognition.status === 'degraded') acts.push('node src/metacognition-layer.js self-check');
   if (cl.autoIngest && cl.autoIngest.pendingSessions > 0) {
     acts.push('# 有 ' + cl.autoIngest.pendingSessions + ' 个会话缓冲未落盘 → 等 30 秒批次，或 node src/auto-ingest.js <session-id> "<json|文本>"');
@@ -538,9 +573,14 @@ if (require.main === module) {
     (h.reasons || []).forEach(x => emit('    ' + (x.level === 'broken' ? '🔴' : '🟡') + ' ' + x.say + '  ← ' + x.evidence));
     if (h.snapshot) emit('    读数: 活跃 ' + h.snapshot.entities + ' / 全库 ' + (h.snapshot.entitiesAll ?? h.snapshot.entities) + ' 实体 / kernel=' + h.snapshot.kernelState + ' / 活跃事件 ' + h.snapshot.activeEvents + ' / KESPI 均 ' + (h.snapshot.kespiAvg || '?') + ' / 面板 ' + (h.snapshot.panelFresh ? h.snapshot.panelFresh.slice(0, 16) + 'Z' : '缺'));
     emit('  【神经进化团队】' + (d.say || '?'));
+    // 明标线（2026-09-17）：needed=false 时也要一眼看得见团队挂在哪、本场能不能派，不靠翻 --dispatch
+    const face = memo.swarmFace || d.swarmSearch || {};
+    emit('    · 明标: runtime=' + (face.inRuntimeSurface ? '✓' : '✗') + ' | host=' + ((face.where || []).some(w => String(w).includes('[host]')) ? '✓' : '✗') + ' | bundled=' + (face.bundledInPackage ? '✓' : '✗')
+      + ' → 本运行时' + (face.inRuntimeSurface ? '可派单（swarm-skill）' : '不可派单，按需用角色档 inline 自办（禁假称能派）'));
+    if ((face.where || []).length) emit('      团队在: ' + face.where.join(' / '));
     (d.roles || []).forEach(x => { emit('    · ' + x.role + ' — 因由: ' + x.why); emit('      交什么: ' + x.how); emit('      过什么 Gate: ' + x.gate); });
     emit('  意识层: ' + (cs.state || '?') + ' / 组件链接: ' + Object.entries(cl).map(([k, v]) => k + '=' + ((v && v.status) || '?')).join(' | '));
-    emit('  蒸馏债: ' + (memo.distillDebt || 0) + '  | 告警: ' + (memo.consciousnessAlerts || []).length + '  | 优先级: ' + (memo.priority || '-') + '  | 待办(旧字段) ' + (uf.todos || []).length + ' / 会话交接 ' + (uf.sessionHandoff || []).length + ' 条');
+    emit('  蒸馏债: ' + (memo.distillDebt || 0) + '  | 回炉欠: ' + (memo.reflowPending ?? 0) + '  | 告警: ' + (memo.consciousnessAlerts || []).length + '  | 优先级: ' + (memo.priority || '-') + '  | 待办(旧字段) ' + (uf.todos || []).length + ' / 会话交接 ' + (uf.sessionHandoff || []).length + ' 条');
     emit('  自我报告: ' + Object.entries(memo.selfAssessment || {}).map(([k, v]) => k + '=' + ((v && v.score) || '?')).join(' '));
     emit('  下一步:');
     const na = memo.nextActions || [];
@@ -551,6 +591,11 @@ if (require.main === module) {
   (async () => {
     const sub = pos[0] === 'todo' ? pos[1] : null;
     const dbPath = flagVal('--db');
+    // 2026-09-17 F3：todo 写面在默认院且代谢持库时拒写（单行丢写也是事故）；--db 隔离探针自管不拦。
+    if ((sub === 'add' || sub === 'done') && !dbPath && require('./metabolism-lock.js').metabolismBusy()) {
+      console.log(require('./metabolism-lock.js').refuseLine('memo todo 写面'));
+      process.exit(3);
+    }
     const { deps, close } = await openMemoContext({ semantic: !argvAll.includes('--no-semantic'), dbPath: dbPath || null });
     try {
       // —— 写面：待办增删（沿用 entities type=Todo 单一来源）——
@@ -578,7 +623,8 @@ if (require.main === module) {
       if (argvAll.includes('--no-semantic')) {
         const panelRead = readPanel(deps.KB_ROOT);
         memo.health = assessHealth(memo, panelRead, { probeNoSemantic: true });
-        memo.swarmDispatch = deriveSwarmDispatch(memo.health, memo, panelRead, swarmRolesReady());
+        memo.swarmFace = swarmRolesReady();
+        memo.swarmDispatch = deriveSwarmDispatch(memo.health, memo, panelRead, memo.swarmFace);
       }
       memo.nextActions = deriveNextActions(memo);
       if (argvAll.includes('--actions')) { emit(memo.nextActions.length ? memo.nextActions.join('\n') : '（仪表台指标均在正常区间，无待执行项）'); return; }
@@ -596,6 +642,9 @@ if (require.main === module) {
             mode: memo.swarmDispatch.mode,
             say: memo.swarmDispatch.say,
             swarmInstalled: memo.swarmDispatch.swarmInstalled,
+            inRuntimeSurface: memo.swarmDispatch.inRuntimeSurface,
+            bundledInPackage: memo.swarmDispatch.bundledInPackage,
+            where: (memo.swarmFace || memo.swarmDispatch.swarmSearch || {}).where || [],
             roles: memo.swarmDispatch.roles,
             nextActions: memo.nextActions || []
           }

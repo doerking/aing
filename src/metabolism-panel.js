@@ -23,7 +23,7 @@ const ROOT = path.join(__dirname, '..');
 const DB_PATH = path.join(ROOT, 'knowledge.db');
 const PANEL_PATH = path.join(ROOT, 'data', 'panel.json');
 const PANEL_MD_PATH = path.join(ROOT, 'wiki', 'panel.md');
-const STALE_MS = 14 * 24 * 60 * 60 * 1000; // 超两周未更新 = 过期
+const STALE_MS = 14 * 24 * 60 * 60 * 1000; // 超两周未更新 = 过期（2026-09-17 起仅用于 queues 文件位清单，不再充当 gaps.stale）
 
 // git 调用失败静默降级（git 不可用不阻塞面板）
 function git(args) {
@@ -44,22 +44,31 @@ async function main() {
   await store.init();
 
   // ── health：KESPI 平均 / 规模 ──────────────────────────────
-  const kespiRow = store.all('SELECT AVG(kespi_score) AS v FROM entity_metadata WHERE kespi_score > 0');
+  // KESPI 均值口径：只算**活跃实体**（2026-09-17，所有者点单全修 #11）——旧法吃 entity_metadata 全行，
+  // done/voided 的残留分数行会随留痕累积把均值拖离现值；面板/kespi 跌破触发器/README 引用位都吃此数。
+  const kespiRow = store.all('SELECT AVG(m.kespi_score) AS v FROM entity_metadata m JOIN entities e ON e.id = m.entity_id WHERE m.kespi_score > 0 AND e.status = \'active\'');
   const kespiAvg = kespiRow.length && kespiRow[0].v != null ? Number(kespiRow[0].v).toFixed(2) : null;
   const entityCount = num(store.all("SELECT COUNT(*) AS n FROM entities WHERE status='active'"));
   const linkCount = num(store.all('SELECT COUNT(*) AS n FROM links'));
 
-  // ── gaps：缺口 5 维 ─────────────────────────────────────────
-  const orphan = num(store.all(`SELECT COUNT(*) AS n FROM entities e WHERE e.status='active'
-    AND NOT EXISTS (SELECT 1 FROM links l WHERE l.source_id=e.id OR l.target_id=e.id)`));
-  const thin = num(store.all(`SELECT COUNT(*) AS n FROM entities e WHERE e.status='active'
-    AND (SELECT COUNT(*) FROM links l WHERE l.source_id=e.id OR l.target_id=e.id) <= 1`));
-  const unindexed = num(store.all(`SELECT COUNT(*) AS n FROM entities e WHERE e.status='active'
-    AND NOT EXISTS (SELECT 1 FROM entity_embeddings v WHERE v.entity_id=e.id)`));
-  const empty = num(store.all(`SELECT COUNT(*) AS n FROM entities e WHERE e.status='active'
-    AND (e.content IS NULL OR LENGTH(TRIM(e.content)) = 0)`));
+  // ── gaps：缺口 5 维——单一真源 = gap-detector.js 的 GapDetector ────────
+  // 2026-09-17 缺陷修复（半拉起巡检）：旧版在此手写 SQL 自定口径（thin=链接数≤1、
+  // stale=wiki 文件 mtime>14d），与巡检器（thin=正文<100 字、stagnant=updated_at>30d）
+  // 同名异义，实测同库同分钟 panel.thin=0 vs detector.thin=7 静默分叉；
+  // memo 健康/派单只吃 panel.gaps → 假痊愈。面板头纪律「零新计算引擎」要求下，
+  // 面板改为直接聚合既有巡检引擎，不再另算一套。
+  // 键名沿用 orphan/thin/stale/unindexed/empty（stale ← detector 的 stagnant）。
+  const { GapDetector } = require('./gap-detector.js');
+  const detector = new GapDetector(DB_PATH);
+  const scan = await detector.scan();
+  const g = scan.gaps || {};
+  const orphan = (g.orphan || []).length;
+  const thin = (g.thin || []).length;
+  const stale = (g.stagnant || []).length;
+  const unindexed = (g.unindexed || []).length;
+  const empty = (g.empty || []).length;
 
-  let stale = 0;
+  // queues 用的两周未动文件位清单（mtime 口径，只作队列展示，不再是 gaps）
   const staleNames = [];
   const entitiesDir = path.join(ROOT, 'wiki', 'entities');
   if (fs.existsSync(entitiesDir)) {
@@ -68,7 +77,6 @@ async function main() {
       if (!f.endsWith('.md')) continue;
       const st = fs.statSync(path.join(entitiesDir, f));
       if (now - st.mtimeMs > STALE_MS) {
-        stale++;
         staleNames.push(f.replace(/\.md$/, ''));
       }
     }
