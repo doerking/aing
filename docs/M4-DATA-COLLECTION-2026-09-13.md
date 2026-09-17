@@ -554,3 +554,12 @@ J 节记完 OPT 十一链复跑之后，本段把三院怎么收尾落成数字�
 | 换锚教训 | 首跑 face-number-negative 3/5——[2][4] 门其实红了，但我的 why 只截 `↳` 头一行、判词明细在后面数行 → 断言正则没匹配上。**负向脚本自己犯了「零匹配当异常」的老规矩没做到的反面**：断言失败先查捕获面再查门。修捕获后 5/5 全过。 |
 | Tip 实测 | 五件全跑：c20-negative3 4/4、step11-negative 五例全过（收尾门数仍 32）、face-number-negative 5/5、c10d-missing-key 咬住并点名还原字节一致、inventory-commands2 清点 54 档 326 条命令（其为钝器盘点，判定权威仍是 C20）。跑后 `git status` 跟踪面零脏。 |
 | 面数联动 | 面 +6（tools/negatives/ 五脚本+README）⇒ 164→**170**，坑 9 宣称数与 C20 指令锚（两处 `.temp` → `tools/negatives`）同批改；历史读数串成 169→170→173→165→164→170。 |
+
+### L21 推送后第 1 批：负向脚本崩溃兜底 + aing 轨迹表/schema parity 现场闭环（2026-09-17，院主「看着办」授权；第 7 号单 §6-2 欠账清偿）
+
+| 项 | 事实 |
+|---|---|
+| 崩溃兜底 | `c20-negative3.js`/`step11-negative.js` 装上与新版同构的 exit 兜底（快照还原+探针必删）。装机当场又踩中一次 EOL 陷阱：原件是 CRLF，`\n` 锚替换静默落空——**装钩子后必须回读断言在位**（第一步就报 ✗ 就是这条断言救的）。 |
+| aing 轨迹表 | 走 M4 链的授权命令 `trajectory-store --import-metabolism && --count`：48 条轨迹入表（≥12 预期），`task_trajectories` 13 列在位。 |
+| schema parity | 列级全对照：**10 张共享表两院完全一致**，此前交接单里唯一实测差（aing 缺 task_trajectories）闭合；`schema_migrations` 为 aing 侧 sql-migrate 记账表（Tip 早于该机制），属账本产物非代差。第 7 号单 §4-2 的「schema parity 未授权」项就此由院主「看着办」授权 + 授权面上的 M4 链命令完成，无越权动作。 |
+| 维持不动 | EOL/.gitattributes（院主「不影响别人拉取部署」约束未解除，票继续挂）；OPT（已拍不换）；悬空旋钮与写端点收尾两票在 agent 面排队，与下次内容批并走，避免为单文件再攒推送。 |
