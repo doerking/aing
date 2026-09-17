@@ -51,6 +51,7 @@ const RUNTIME_FILES = new Set([
   'src/package.json',               // src/ 里嵌套的第二个包清单 → src/node_modules 的根因
   'growth.config.example.ts',       // 与 .js 版内容已分叉的陈旧 .ts 双胞胎（本包口径 no TypeScript）
   'docs/index.html',                // 12KB 手搓文档页，仅 M4 提及
+  'SELF-GROWTH-REPORT.md',          // 分析报表工具带时间戳的运行产物（2026-09-17 实测本包盘上自产），非包内容
   'package-lock.json', 'knowledge.db',
 ]);
 
@@ -75,7 +76,23 @@ function trackedSurface(dir) {
   if (fs.existsSync(path.join(dir, 'data', 'component-registry.json'))) out.add('data/component-registry.json');
   // 运行配置单独处理：机器本地运行时态，差异只进信息栏不计代差
   if (fs.existsSync(path.join(dir, 'src', 'growth.config.js'))) out.add('src/growth.config.js');
-  return [...out].sort();
+  // §7.9 修法（2026-09-17 sqa 交接单）：walk 面会把 gitignored 运行态算进面（实测 mustard-seeds/
+  // compressed/index.json 占一档、把「对方独有」掩胖）。面只算**可交付档**：与
+  // `git ls-files -co --exclude-standard`（跟踪 + 未跟踪但未忽略）取交集；新源码未入库也算得进，
+  // 被 ignore 的运行态不再占面。git 不可用＝**明说未核**，不静默当已核（与 C20 语料面同一口径）。
+  let gitNote = '';
+  try {
+    const { execFileSync } = require('child_process');
+    // 必须 -z（NUL 分隔，不过 quotepath）：默认输出会把中文档名转义成八进制串，
+    // 实测本改动首跑就误删 10 个中文名可交付档（面数 175→165）——负向自证见下。
+    const raw = execFileSync('git', ['-C', dir, 'ls-files', '-z', '-co', '--exclude-standard'],
+      { encoding: 'utf8', windowsHide: true, maxBuffer: 33554432 });
+    const deliv = new Set(raw.split('\0').filter(Boolean));
+    if (!deliv.has('AGENTS.md')) throw new Error('git 输出解析异常（AGENTS.md 不在交付集）');
+    deliv.add('src/growth.config.js'); // 运行配置豁免：本来就靠信息栏单独处理，不按 ignored 掉面
+    for (const rel of [...out]) if (!deliv.has(rel)) out.delete(rel);
+  } catch (e) { gitNote = '（未核 ignored：git 不可用或解析异常）'; }
+  return { files: [...out].sort(), gitNote };
 }
 
 const crlfStrippedHash = p => {
@@ -84,7 +101,8 @@ const crlfStrippedHash = p => {
 };
 const rawHash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);
 
-const selfSurface = trackedSurface(REPO);
+const selfSurf = trackedSurface(REPO);
+const selfSurface = selfSurf.files;
 // --print-face：把比对面单独打到 stdout（供跨院复制器消费，避免各方自写一份面定义）
 if (process.argv.includes('--print-face')) { console.log(selfSurface.join('\n')); process.exit(0); }
 const RUNTIME_CONFIG = 'src/growth.config.js';
@@ -95,7 +113,9 @@ console.log(`🔎 院际全量同源核验 / cross-yard same-origin: 本包 ${SE
 console.log('   ℹ️  刻意不跨院携带（本包跟踪但判定为运行态/垃圾，不计对方缺失）: ' + [...RUNTIME_FILES].filter(f => fs.existsSync(path.join(REPO, f))).join(', '));
 
 for (const [name, dir] of roots) {
-  const theirs = new Set(trackedSurface(dir));
+  const theirSurf = trackedSurface(dir);
+  if (theirSurf.gitNote || selfSurf.gitNote) console.log('   ⚠️ ' + name + ' 面未经 git 交集全部核过' + (selfSurf.gitNote ? '（本包）' : '') + (theirSurf.gitNote ? '（' + name + '）' : '') + ' —— ignored 态未证，读数只作下限');
+  const theirs = new Set(theirSurf.files);
   const drift = [], eol = [], missing = [], extra = [], runtime = [];
   for (const rel of selfSurface) {
     const a = path.join(REPO, rel), b = path.join(dir, rel);

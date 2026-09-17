@@ -1543,6 +1543,29 @@ async function main() {
       if (!agents.includes('gate-counts') || !readme.includes('gate-counts')) throw new Error(f + ' 未同时登记进 AGENTS 与 README → 下一个人照样手抄');
     }
 
+    // ── 坑数钉（2026-09-17 sqa 交接单 N6）：frontmatter「已知坑 N 条」此前是纯手抄（与门数同病，
+    // L17-⑤ 登记过待办）。并入 C19，**不新增门禁**：同一份 AGENTS 里把宣称数与实数条目比对。
+    const pitFacts = (txt) => {
+      // 坑节边界：到 `## Daily Operation` 为止（2026-09-17 首跑教训：`^## [^#]` 会在
+      // `## 当前迭代故障引导` 处提前断节，把坑 18–21 吞出面外 → 假报「实数到坑 17」）。
+      const sec = (txt.split(/^## Known Pitfalls/m)[1] || '').split(/^## Daily Operation/m)[0];
+      const nums = [...sec.matchAll(/^(?:\*\*)?(\d+)\.(?:\*\*)?[ \u3000*]/gm)].map(m => Number(m[1]));
+      const uniq = [...new Set(nums)];
+      const top = uniq.length ? Math.max(...uniq) : 0;
+      const gaps = []; for (let i = 1; i <= top; i++) if (!uniq.includes(i)) gaps.push(i);
+      const declared = (txt.match(/已知坑 (\d+) 条/) || [])[1];
+      return { declared, top, gaps, count: uniq.length };
+    };
+    const pf = pitFacts(agents);
+    if (!pf.declared) throw new Error('AGENTS frontmatter 找不到「已知坑 N 条」宣称 → 坑数权威位丢失');
+    if (!pf.count) throw new Error('坑节解析不到任何编号条目 → 正文格式变了，必须连这条坑数钉一起改，不许静默放行（坑 7 教训：零匹配是异常不是空集）');
+    if (pf.gaps.length) throw new Error('已知坑编号断号：' + pf.gaps.join(','));
+    if (Number(pf.declared) !== pf.top) throw new Error('「已知坑 ' + pf.declared + ' 条」手抄漂移：实数到坑 ' + pf.top);
+    { // 负向自证（防橡皮图章）：篡改宣称数必须让同一判据开火
+      const bad = pitFacts(agents.replace(/已知坑 \d+ 条/, '已知坑 99 条'));
+      if (Number(bad.declared) === bad.top) throw new Error('C19 坑数钉自身失效：篡改到 99 仍判一致');
+    }
+
     // ── 行为证明：拿副本真跑工具，**故意把 README 抄错**必须被它抓到（防橡皮章工具）──
     const probe = path.join(PKG_DIR, '.temp', 'gate-c19-probe');
     fs.rmSync(probe, { recursive: true, force: true });

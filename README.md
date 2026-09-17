@@ -1,5 +1,5 @@
 ---
-tags: [aing, overview, quickstart, architecture]
+tags: [aing, overview, quickstart, architecture, knowledge-metabolism, dual-brain, cross-temporal, consciousness, memo, self-growing, local-first, markdown, nodejs]
 description: aing 知识代谢引擎总览：快速开始、脚本一览、数据库与常驻服务
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
