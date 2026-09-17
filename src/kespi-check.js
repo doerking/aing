@@ -383,6 +383,11 @@ class KespiChecker {
 
 // CLI 入口
 if (require.main === module) {
+  // 2026-09-17 F3：代谢持库时拒写（库整体落盘互吞）；子步凭 AING_METABOLISM_CHILD 豁免照跑
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('kespi-check'));
+    process.exit(3);
+  }
   const checker = new KespiChecker();
   checker.run().catch(err => {
     console.error('❌ KESPI 评估失败:', err.message);

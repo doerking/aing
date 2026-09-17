@@ -90,6 +90,10 @@ const ROLE_ALIASES = {
   researcher: 'research', tool: 'research', '工具': 'research', '检索': 'research',
 };
 const ROLES = Object.keys(ROLE_SECTION);
+/** 代谢持库判定改吃单源模块（2026-09-17 深度检查 F3：本函数曾有局部副本，现收敛到
+ *  src/metabolism-lock.js，带 AING_METABOLISM_CHILD 子进程豁免；行为与局副本一致）。 */
+const { metabolismBusy } = require('./metabolism-lock.js');
+
 function normalizeRole(raw) {
   const key = String(raw == null ? '' : raw).trim().toLowerCase();
   if (!key) return 'user'; // 缺省仍是 user（旧调用方兼容）
@@ -394,6 +398,13 @@ class SessionStore {
   ingestSession(sessionId) {
     const session = this.getSession(sessionId);
     if (!session.messages.length) return false;
+    // 2026-09-17 命令面冲突批③（X3 机制化收尾）：代谢持库时让位——run-metabolism 自带跨进程锁
+    // （N1，:48），入库侧此前未接入，代谢中途 store 整体写回会吞掉新会话档（last-writer-wins）。
+    // 现在见新鲜锁即推迟本批：消息留内存缓冲 + WAL 双保险，idle/aged/flushAll 下一轮重推，不丢数据。
+    if (metabolismBusy(CONFIG.kbRoot)) {
+      console.log('⏸️ 代谢持库中，本批入库推迟（WAL 不丢，下轮重推）/ metabolism holds the db, batch deferred');
+      return false;
+    }
     const bodyText = session.messages.map(m => m.content).join('\n\n');
 
     if (bodyText.length < CONFIG.minMessageLength) {

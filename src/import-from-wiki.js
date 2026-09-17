@@ -122,6 +122,11 @@ async function importEntities(baseDir) {
 // 主逻辑
 const args = process.argv.slice(2);
 const baseDir = args.includes('--base-dir') ? args[args.indexOf('--base-dir') + 1] : '.';
+// 2026-09-17 F3：默认院（baseDir==='.'）且代谢持库时拒写；--base-dir 隔离面自管不拦。
+if (baseDir === '.' && require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('import-from-wiki'));
+  process.exit(3);
+}
 
 importEntities(baseDir).catch(err => {
   console.error('❌ 导入失败: / Import failed:', err.message);

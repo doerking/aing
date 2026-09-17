@@ -40,6 +40,11 @@ function listMigrations() {
 }
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写（DDL 更不能与在跑链的 store 落盘叠盘）
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('sql-migrate'));
+    process.exit(3);
+  }
   const args = process.argv.slice(2);
   const statusOnly = args.includes('--status');
 

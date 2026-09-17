@@ -364,6 +364,12 @@ method: sprouting
 
 // CLI 入口
 const args = process.argv.slice(2);
+// 2026-09-17 F3：代谢持库时拒写；子步凭 AING_METABOLISM_CHILD 豁免。另记：--threshold= 为悬空旋钮（未入 config 单源），
+// 已挂账待归一，本批不动语义只加锁面守卫（纪律 5 违例登记，不新增阈值）。
+if (require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('sprout'));
+  process.exit(3);
+}
 const apply = args.includes('--apply');
 const threshold = parseFloat((args.find(a => a.startsWith('--threshold=')) || '').slice(12));
 

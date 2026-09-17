@@ -15,7 +15,7 @@
  * 使用：
  *   node compile.js                  # 编译所有新文件
  *   node compile.js --dry-run        # 预览编译结果
- *   node compile.js --force          # 强制重新编译所有文件
+ *   node compile.js --force          # 强制重新编译所有文件（已蒸馏档会被保护跳过，防蒸馏摘要蒸发；两义注意：run-metabolism 的 --force 是「非关键失败继续」，不向下透传）
  */
 
 const fs = require('fs');
@@ -314,6 +314,28 @@ function compile(dryRun = false, force = false) {
       
       // 跳过已编译且非强制模式
       const entityPath = path.join(CONFIG.entitiesDir, `${entityId}.md`);
+      // 2026-09-17 命令面冲突批①：--force 不得默默删蒸馏产物——distill 已双脑写回（档内 distilledBy/
+      // contentDigest 标记），而 force 从 raw 无条件重写 wiki 会抹掉「## 蒸馏摘要」节再被 import 写回库。
+      // 见标记即跳过并点名；确需重铸先删档内 distilledBy 行（或走 recycle/回炉流程）再 force。
+      if (force && fs.existsSync(entityPath)) {
+        try {
+          const wHead = fs.readFileSync(entityPath, 'utf8').slice(0, 3000);
+          if (/distilledBy:/.test(wHead)) {
+            console.log(`   🛡️ 已蒸馏档，force 保护跳过（防蒸馏摘要蒸发）/ distilled doc protected: ${relativePath}`);
+            // 2026-09-17 深度检查 F4：保护的另一面可能是冻结——raw 在蒸后又被改过（如 shared-spine fix
+            // 或人工订正）时 wiki/DB 会停在旧摘要。检出滞后就明说重蒸路径；只提示，不自动改（纪律 4）。
+            const dm = wHead.match(/distilledAt:\s*([^\s"']+)/);
+            if (dm) {
+              const dAt = new Date(dm[1]).getTime();
+              if (!isNaN(dAt) && fs.statSync(filePath).mtimeMs > dAt + 60000) {
+                console.log('      ⏳ 源文比蒸馏时刻更新：wiki/DB 停在旧摘要。重蒸：先置该实体 status=\'pending-distillation\' 再跑 node src/distill.js（勿删 distilledBy 硬覆盖）');
+              }
+            }
+            stats.skippedFiles++;
+            continue;
+          }
+        } catch (e) { /* 读不到交给正常路径，不在此处炸 */ }
+      }
       if (!force && fs.existsSync(entityPath)) {
         const entityStats = fs.statSync(entityPath);
         const sourceStats = fs.statSync(filePath);

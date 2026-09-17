@@ -47,6 +47,11 @@ function extractKeywords(content) {
 }
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写；作为 STEPS 第 4 步子进程凭 AING_METABOLISM_CHILD 豁免照跑
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('auto-link'));
+    process.exit(3);
+  }
   const dryRun = process.argv.includes('--dry-run');
   
   const store = new KnowledgeStore();

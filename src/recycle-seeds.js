@@ -130,6 +130,11 @@ async function archiveHusks(seeds) {
 }
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写（回炉幂等，稍后重跑即可）
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('recycle-seeds'));
+    process.exit(3);
+  }
   console.log('♻️  芥子回炉（进化回路）\n');
 
   const seeds = loadSeeds();

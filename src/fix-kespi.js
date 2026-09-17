@@ -310,6 +310,11 @@ class KESPIFixer {
 }
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写（单源判定见 metabolism-lock.js；子步豁免）
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('fix-kespi'));
+    process.exit(3);
+  }
   const store = new KnowledgeStore();
   await store.init();
   

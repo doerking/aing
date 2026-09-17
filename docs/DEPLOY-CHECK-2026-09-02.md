@@ -56,7 +56,7 @@ node -e "const c=require('./src/neural-guide-chain'); const g=new c({wikiDir:'wi
 
 **4. 代谢某步失败 / 中途中断**
 
-处理：`node src/run-metabolism.js --resume` 断点续传；或单步重跑 `node src/run-metabolism.js --step <step名>`（如 `--step link-sync`）。
+处理：`node src/run-metabolism.js --resume` 断点续传；或单步重跑 `node src/run-metabolism.js --step=<step名>`（如 `--step=link-sync`；**必须等号形**，空格形会被当成整链跑，2026-09-14 实测，旧文本此处写的是空格形已正）。
 
 **5. 数据库锁死或 knowledge.db 损坏**
 
