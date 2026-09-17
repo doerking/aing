@@ -15,6 +15,10 @@ const run = () => {
   return { code: r.status, green, red, clause, why };
 };
 const snap = {}, restore = f => { fs.writeFileSync(P(f), snap[f]); };
+// 崩溃兜底（2026-09-17 第7号单§6-2 承诺批）：探针档残留会把注入态留给下一位读者
+const __restoreOnBreak = () => { try { process.emit('exit', 0); } catch (e) {} };
+for (const sig of ['SIGINT','SIGTERM']) process.on(sig, () => { __restoreOnBreak(); process.exit(130); });
+process.on('exit', () => { try { if (fs.existsSync(P(PROBE))) fs.unlinkSync(P(PROBE)); } catch (e) {} try { if (snap['training/task-package.json'] && fs.existsSync(P('training/task-package.json')) && !fs.readFileSync(P('training/task-package.json')).equals(snap['training/task-package.json'])) fs.writeFileSync(P('training/task-package.json'), snap['training/task-package.json']); } catch (e) {} });
 const snapIt = f => { snap[f] = fs.readFileSync(P(f)); };
 
 console.log('【例1】基线：现行包必须绿，且序数/干扰位不误伤');

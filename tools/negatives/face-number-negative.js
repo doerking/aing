@@ -16,6 +16,8 @@ const runC20 = () => {
 };
 if (!fs.existsSync(AG)) { console.log('❌ 不在包根（AGENTS.md 缺失）'); process.exit(2); }
 const snap = fs.readFileSync(AG);
+const __restoreOnBreak = () => { try { process.emit('exit', 0); } catch (e) {} };
+for (const sig of ['SIGINT','SIGTERM']) process.on(sig, () => { __restoreOnBreak(); process.exit(130); });
 process.on('exit', () => { try { if (!fs.readFileSync(AG).equals(snap)) fs.writeFileSync(AG, snap); } catch (e) { } try { if (fs.existsSync(PROBE)) fs.unlinkSync(PROBE); } catch (e) { } });
 const F = faceCount();
 const cur = snap.toString('utf8').replace(/\r/g, '');

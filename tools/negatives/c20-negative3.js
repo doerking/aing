@@ -28,6 +28,10 @@ const cases = [
 ];
 let pass = 0, fail = 0;
 keep(README); keep(SVG);
+// 崩溃兜底（2026-09-17 第7号单§6-2 承诺批）：中断也必须按快照还原，与 face-number-negative 同构
+const __restoreOnBreak = () => { try { process.emit('exit', 0); } catch (e) {} };
+for (const sig of ['SIGINT','SIGTERM']) process.on(sig, () => { __restoreOnBreak(); process.exit(130); });
+process.on('exit', () => { try { if (snap[README] && !fs.readFileSync(README).equals(snap[README])) fs.writeFileSync(README, snap[README]); } catch (e2) {} try { if (snap[SVG] === null) { if (fs.existsSync(SVG)) fs.unlinkSync(SVG); } else if (snap[SVG] && !fs.readFileSync(SVG).equals(snap[SVG])) fs.writeFileSync(SVG, snap[SVG]); } catch (e2) {} });
 for (const c of cases) {
   try { c.inject(); } catch (e) { console.log('  ✗ ' + c.name + ' → 注入本身失败: ' + e.message); fail++; restore(README); restore(SVG); continue; }
   const took = c.verify();
