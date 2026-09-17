@@ -47,3 +47,5 @@ data/ingest-duplicates.jsonl
 # 删/入库的终裁在院主；先挂 ignore 止血。src/package.json 系历史误装产物（main:self-growth.js），docs/index.html 来历未声明。
 src/package.json
 docs/index.html
+# 2026-09-17 sqa 交接单§七/§九批：分析报表工具带时间戳的运行产物，非包内容
+SELF-GROWTH-REPORT.md
