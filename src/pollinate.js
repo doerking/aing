@@ -320,6 +320,11 @@ tags:
 
 // CLI 入口
 const args = process.argv.slice(2);
+// 2026-09-17 F3：代谢持库时拒写；子步凭 AING_METABOLISM_CHILD 豁免。另记：--creative= 悬空旋钮（未入 config 单源），已挂账待归一。
+if (require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('pollinate'));
+  process.exit(3);
+}
 const apply = args.includes('--apply');
 const creative = parseFloat((args.find(a => a.startsWith('--creative=')) || '').slice(11));
 

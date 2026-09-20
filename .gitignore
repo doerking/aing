@@ -6,22 +6,16 @@ package-lock.json
 *.db
 *.db.tmp
 knowledge.db
+raw/
 wiki/
 logs/
 snapshots/
-data/
+data/*
+!data/component-registry.json
 mustard-seeds/
 metabolism-state.json
 
-# 模型权重（setup-vectors.ps1 下载产物，约 22MB，可重建）
-models/
-
-# raw/：运行产物与用户文档不入库，但种子知识源 .md 随仓库分发（验收 C3 依赖）
-raw/*
-!raw/*.md
-!raw/.gitkeep
-
-# 本地配置（用 growth.config.example.js 作为模板）
+# 本地配置（用 growth.config.example.ts 作为模板）
 src/growth.config.js
 
 # 环境与密钥
@@ -32,3 +26,26 @@ src/growth.config.js
 .DS_Store
 Thumbs.db
 desktop.ini
+models/
+
+# Agent 中间产物（不入库）
+.temp/
+
+# M4 验证产物（可复现，不入库）
+simulation/proof-*.json
+simulation/skillopt-evidence.json
+simulation/skillopt-online-evidence.json
+simulation/last-run.json
+
+# 会话入库运行态（2026-09-14 与版本化知识源分离）：入库产物 + WAL 缓冲 + 重复批次记录
+# 不放进来每次入库都会让工作树变脏，sync-opt 换血会被「不 clean」拒绝
+raw/inbox/
+data/ingest-buffer.jsonl
+data/ingest-duplicates.jsonl
+
+# 2026-09-17 深度检查 F6：院面野文件（未跟踪也不被 ignore，换血第2步会将其复制进沙盒）。
+# 删/入库的终裁在院主；先挂 ignore 止血。src/package.json 系历史误装产物（main:self-growth.js），docs/index.html 来历未声明。
+src/package.json
+docs/index.html
+# 2026-09-17 sqa 交接单§七/§九批：分析报表工具带时间戳的运行产物，非包内容
+SELF-GROWTH-REPORT.md

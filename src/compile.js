@@ -15,7 +15,7 @@
  * 使用：
  *   node compile.js                  # 编译所有新文件
  *   node compile.js --dry-run        # 预览编译结果
- *   node compile.js --force          # 强制重新编译所有文件
+ *   node compile.js --force          # 强制重新编译所有文件（已蒸馏档会被保护跳过，防蒸馏摘要蒸发；两义注意：run-metabolism 的 --force 是「非关键失败继续」，不向下透传）
  */
 
 const fs = require('fs');
@@ -116,18 +116,34 @@ function formatKespiPending() {
  * 生成实体文件
  */
 function createEntityFile(entityId, metadata, content, links) {
-  // 解析正文中的 [tag:xxx] 标记 → 合并进 tags 并从正文剥离
-  // （蓝图尾部 tag 约定此前从未被编译器解析，tags 列恒空）
+  // 解析正文中的 [tag:xxx] 或 [tag:xxx:N] 标记 → 合并进 tags 并从正文剥离
+  // N 为 1-9 的九段数值，表示该标签对实体的关联强度（1 最弱 → 9 最强）
+  // 不带 :N 的 [tag:xxx] 默认中位值 5（向后兼容）
   const bodyTags = [];
-  const tagRegex = /\[tag:([^\]]+)\]/g;
+  const tagRegex = /\[tag:([^\]]+?)(?::([1-9]))?\]/g;
   let tm;
   while ((tm = tagRegex.exec(content)) !== null) {
-    bodyTags.push(tm[1].trim());
+    const tagName = tm[1].trim();
+    const tagVal = tm[2] ? parseInt(tm[2], 10) : 5;
+    bodyTags.push(`${tagName}:${tagVal}`);
   }
   if (bodyTags.length > 0) {
     content = content.replace(/\s*\[tag:[^\]]+\]/g, '');
+  }
+  // 始终 normalize tags：frontmatter + body 合并，纯字符串标签默认 5
+  {
     const baseTags = Array.isArray(metadata.tags) ? metadata.tags : [];
-    metadata.tags = [...new Set([...baseTags, ...bodyTags])];
+    const tagMap = new Map();
+    for (const t of [...baseTags, ...bodyTags]) {
+      const m = String(t).match(/^(.+):([1-9])$/);
+      if (m) {
+        const name = m[1], val = parseInt(m[2], 10);
+        tagMap.set(name, Math.max(tagMap.get(name) || 0, val));
+      } else {
+        tagMap.set(String(t), Math.max(tagMap.get(String(t)) || 0, 5));
+      }
+    }
+    metadata.tags = [...tagMap.entries()].map(([name, val]) => `${name}:${val}`);
   }
 
   const entityPath = path.join(CONFIG.entitiesDir, `${entityId}.md`);
@@ -244,7 +260,6 @@ function compile(dryRun = false, force = false) {
   
   for (const filePath of rawFiles) {
     const relativePath = path.relative(CONFIG.rawDir, filePath);
-    const entityId = generateEntityId(relativePath);
     
     console.log(`📄 处理: ${relativePath} / Processing:`);
     
@@ -255,8 +270,46 @@ function compile(dryRun = false, force = false) {
       // 解析 frontmatter
       const { metadata, content: body } = parseFrontmatter(content);
       
+      // 实体 id 归属规则（2026-09-14 影子实测定，两次踩坑换来的）：
+      // · 会话档（sourceType: conversation）尊重档内声明 id —— 入库产物挪到 raw/inbox/ 后，
+      //   按路径推导会给 id 平白加 inbox- 前缀，与 raw 文件名干脱钩，consciousness-layer 拿 raw 名
+      //   去 wiki/entities 找实体必然找不到，刷出成片「原始资料尚未编译到 wiki/」假告警。
+      // · 人工档仍按路径推导 —— 实测本包 19/20 篇人工档根本没有声明 id，若一并"尊重声明值"，
+      //   String(undefined) 会得到真值 "undefined"，19 篇当场并成一个 undefined 实体互相覆盖。
+      // · 声明值必须是像样的字符串：空串、undefined、null 字样一律视为没声明。
+      const declaredId = metadata && typeof metadata.id === 'string' ? metadata.id.trim() : '';
+      const usableId = declaredId && declaredId !== 'undefined' && declaredId !== 'null';
+      const isConversation = metadata && String(metadata.sourceType || '').trim() === 'conversation';
+      // 入库产物一律落在 raw 的子目录（默认 raw/inbox/），人工知识源在 raw 顶层——用这个位置
+      // 事实把"尊重声明 id"限定到最小面：影子实测仅按 sourceType 分流时，raw 顶层一条声明 id
+      // 与文件名干不一致的历史会话档会在重编译时多造一个重复实体（22 vs 期望 21）。
+      const inIngestSubdir = /[\\/]/.test(relativePath.replace(/\.md$/, ''));
+      const entityId = (isConversation && inIngestSubdir && usableId) ? declaredId : generateEntityId(relativePath);
+      
       // 跳过已编译且非强制模式
       const entityPath = path.join(CONFIG.entitiesDir, `${entityId}.md`);
+      // 2026-09-17 命令面冲突批①：--force 不得默默删蒸馏产物——distill 已双脑写回（档内 distilledBy/
+      // contentDigest 标记），而 force 从 raw 无条件重写 wiki 会抹掉「## 蒸馏摘要」节再被 import 写回库。
+      // 见标记即跳过并点名；确需重铸先删档内 distilledBy 行（或走 recycle/回炉流程）再 force。
+      if (force && fs.existsSync(entityPath)) {
+        try {
+          const wHead = fs.readFileSync(entityPath, 'utf8').slice(0, 3000);
+          if (/distilledBy:/.test(wHead)) {
+            console.log(`   🛡️ 已蒸馏档，force 保护跳过（防蒸馏摘要蒸发）/ distilled doc protected: ${relativePath}`);
+            // 2026-09-17 深度检查 F4：保护的另一面可能是冻结——raw 在蒸后又被改过（如 shared-spine fix
+            // 或人工订正）时 wiki/DB 会停在旧摘要。检出滞后就明说重蒸路径；只提示，不自动改（纪律 4）。
+            const dm = wHead.match(/distilledAt:\s*([^\s"']+)/);
+            if (dm) {
+              const dAt = new Date(dm[1]).getTime();
+              if (!isNaN(dAt) && fs.statSync(filePath).mtimeMs > dAt + 60000) {
+                console.log('      ⏳ 源文比蒸馏时刻更新：wiki/DB 停在旧摘要。重蒸：先置该实体 status=\'pending-distillation\' 再跑 node src/distill.js（勿删 distilledBy 硬覆盖）');
+              }
+            }
+            stats.skippedFiles++;
+            continue;
+          }
+        } catch (e) { /* 读不到交给正常路径，不在此处炸 */ }
+      }
       if (!force && fs.existsSync(entityPath)) {
         const entityStats = fs.statSync(entityPath);
         const sourceStats = fs.statSync(filePath);
@@ -396,6 +449,10 @@ function printStats() {
  * Git commit
  */
 function gitCommit() {
+  if (process.env.AING_NO_AUTOCOMMIT === '1') {
+    console.log('\n⏭️  Git commit 跳过（AING_NO_AUTOCOMMIT=1，供 seed-demo 等临时数据往返使用）');
+    return;
+  }
   try {
     if (!fs.existsSync(path.join(CONFIG.rootDir, '.git'))) {
       console.log('\n⚠️  Git commit 跳过（非 git 仓库） / Git commit skipped (not a git repo)');

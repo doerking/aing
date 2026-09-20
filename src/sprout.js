@@ -20,6 +20,16 @@
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * 标签条目解析（与 auto-link.js 的 parseTagVals、kespi-check._calcKA 同一约定）
+ * "metabolism:8" → { name: 'metabolism', strength: 8 }；裸标签 "metabolism" → strength 9 段中位 5
+ */
+function parseTagEntry(raw) {
+  const s = String(raw).trim().toLowerCase();
+  const m = s.match(/^(.+):([1-9])$/);
+  return m ? { name: m[1], strength: parseInt(m[2], 10) } : { name: s, strength: 5 };
+}
+
 // 支持 --base-dir 参数覆盖默认路径
 function resolvePath(segment) {
   const args = process.argv;
@@ -62,9 +72,9 @@ function extractKeywords(entityContent) {
   const titleMatch = content.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1].toLowerCase() : '';
   
-  // 提取标签
+  // 提取标签（兼容 9 段数值格式 "name:N" / strip strength for name-level matching）
   const tagMatch = entityContent.match(/tags:\s*\[([^\]]+)\]/);
-  const tags = tagMatch ? tagMatch[1].split(',').map(t => t.trim().toLowerCase()) : [];
+  const tags = tagMatch ? tagMatch[1].split(',').map(t => parseTagEntry(t).name) : [];
   
   // 提取 wikilinks
   const linkMatches = content.match(/\[\[([^\]]+)\]\]/g) || [];
@@ -96,11 +106,15 @@ function calculateSimilarity(entity1, entity2) {
   const overlap = k1.filter(w => k2.includes(w));
   const wordScore = overlap.length / Math.max(k1.length, k2.length, 1);
   
-  // 标签重叠度
-  const tags1 = new Set(entity1.tags);
-  const tags2 = new Set(entity2.tags);
-  const tagOverlap = [...tags1].filter(t => tags2.has(t));
-  const tagScore = tagOverlap.length / Math.max(tags1.size, tags2.size, 1);
+  // 标签重叠度 / tag overlap
+  // 修复：entities.tags 可能混格（旧数据裸名 "x"、新数据 9 段 "x:8"）。
+  // 旧写法拿整串做集合交集，混格时同一标签永不重合 → 标签维评分静默归零。
+  // 此处只按标签名比对（保持原语义与量纲），强度数值不参与本步，
+  // 自动建链加权走 auto-link.parseTagVals，KESPI 资产化评分走 kespi-check._calcKA。
+  const names1 = [...new Set((entity1.tags || []).map(t => parseTagEntry(t).name))];
+  const names2 = new Set((entity2.tags || []).map(t => parseTagEntry(t).name));
+  const tagOverlap = names1.filter(t => names2.has(t));
+  const tagScore = tagOverlap.length / Math.max(names1.length, names2.size, 1);
   
   // 标题相关度
   const title1 = entity1.title;
@@ -350,6 +364,12 @@ method: sprouting
 
 // CLI 入口
 const args = process.argv.slice(2);
+// 2026-09-17 F3：代谢持库时拒写；子步凭 AING_METABOLISM_CHILD 豁免。另记：--threshold= 为悬空旋钮（未入 config 单源），
+// 已挂账待归一，本批不动语义只加锁面守卫（纪律 5 违例登记，不新增阈值）。
+if (require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('sprout'));
+  process.exit(3);
+}
 const apply = args.includes('--apply');
 const threshold = parseFloat((args.find(a => a.startsWith('--threshold=')) || '').slice(12));
 
