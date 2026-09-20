@@ -349,12 +349,13 @@ async function autoFix() {
       }
       
       // 更新内容
+      // 2026-09-17 深度检查 F5：模板不再代盖 status/confidence——import 尊重档内 status（:77），
+      // 修复工具自盖 `active` + 拍脑袋 0.7 等于替库自发毕业证（坑 10①同形，纪律 4）；
+      // 身份与置信由服务端/代谢链定，fix 只补缺失的 name/type/tags/source。
       const newContent = `---
 name: ${metadata.name || relativePath}
 type: ${metadata.type || 'Concept'}
 tags: ${JSON.stringify(metadata.tags)}
-status: active
-confidence: 0.7
 source: ${relativePath}
 ---
 
@@ -402,7 +403,9 @@ const args = process.argv.slice(2);
 const action = args[0];
 
 switch (action) {
+  case 'spine-check': // 2026-09-17 F5：正名——与代谢步 compile 无关，防撞名误读
   case 'compile':
+    if (action === 'compile') console.log('（提示：子命令 compile 已改名 spine-check，此处是同函数别名，指「编译一致性验证」不是代谢第 1 步）');
     compileVerify().catch(e => { console.error('致命错误:', e.message); process.exit(1); });
     break;
   case 'audit':

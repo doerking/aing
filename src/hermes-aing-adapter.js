@@ -146,8 +146,19 @@ class HermesAingAdapter {
     };
   }
 
-  generateBriefing() {
-    const briefing = this.consciousness.generateBriefing();
+  /**
+   * 生成仪表台简报。读端纯净化（2026-09-14 真修「读表即扰表」）：
+   * 旧版每生成一次就把 alerts/hotspots 当意识事件投进 kernel，而 kernel.processReactions 在高唤醒时
+   * 会写 growth 记忆/episode/improvement 提案并改 channelWeights 与 attentionRevision，低唤醒时也至少
+   * 推 suppressedEvents 计数并重写 briefing 存档——**读一次仪表台就改一次被读的表**，于是面板复跑
+   * 与读数永远不可复核（C12 探针当初看到的计数扰动就是这条链）。
+   * 现在默认不投事件、不写档。要喂信号必须走显式写端：`node src/neural.js event|assess` 或
+   * `POST /api/consciousness/event|assess`；代谢尾部的 emitMetabolismEvent 与 deliberate 本就是写端，不受影响。
+   */
+  generateBriefing(options = {}) {
+    const ingestSignals = options.ingestSignals === true;
+    const saveBriefing = options.saveBriefing === true;
+    const briefing = this.consciousness.generateBriefing({ save: saveBriefing });
     const signals = [
       ...briefing.alerts.map(alert => ({
         channel: alert.type === 'broken-links' ? 'structure' : 'anomaly',
@@ -170,15 +181,18 @@ class HermesAingAdapter {
         tags: ['consciousness', 'hotspot'],
       })),
     ];
-    const neural = this.consciousnessKernel.ingest(signals);
+    const neural = ingestSignals ? this.consciousnessKernel.ingest(signals) : null;
+    const reactions = neural ? neural.reactions : [];
     return {
       event: 'knowledge.maintenance_suggested',
       source: 'aing.consciousness',
-      priority: neural.reactions.some(r => r.arousal === 'aroused') || briefing.alerts.some(a => Number(a.severity) >= 0.8) ? 'high' : 'normal',
+      priority: reactions.some(r => r.arousal === 'aroused') || briefing.alerts.some(a => Number(a.severity) >= 0.8) ? 'high' : 'normal',
       briefing,
-      consciousness: neural,
-      growth: neural.growth || [],
-      metacognition: neural.metacognition || null,
+      // 不投事件时给的是**诚实的空读数**（而不是伪装的 reactions）：signalsPrepared 说明
+      // 「本轮本会产生几条信号」，ingested:false 说明「没有写进 kernel」。
+      consciousness: neural || { ingested: false, signalsPrepared: signals.length, reactions: [], accepted: [], suppressed: [], note: '读端不投事件（2026-09-14）；要喂信号走 src/neural.js event|assess 或 POST /api/consciousness/event|assess' },
+      growth: neural ? (neural.growth || []) : [],
+      metacognition: neural ? (neural.metacognition || null) : null,
       requiresApproval: briefing.recommendations.some(r => ['fix-links', 'compile'].includes(r.type)),
     };
   }

@@ -1,0 +1,33 @@
+# dependencies.yaml — 神经进化团队启动依赖检查
+#
+# 由 Stage 2 自动匹配结果填充：
+# - consciousness-neural-methodology 来自已安装专家 neural-consciousness-architect@local
+# - senior-developer 为已安装用户技能
+# - node / python / git 均在本机 PATH 探测通过（node v24, python3.10+, git）
+
+skills:
+  - name: consciousness-neural-methodology
+    source: local
+    required: false
+    purpose: 提供计算意识六属性标尺、GWT/赫布理论映射与 aing 模块地图（缺失时理论评审与拓扑体检降级为通用分析）
+
+  - name: senior-developer
+    source: local
+    required: false
+    purpose: 提供语义级代码编辑、导航与诊断方法论（缺失时工程师降级为普通编码模式）
+
+tools:
+  - name: node
+    source: local
+    required: true
+    purpose: 运行 aing 管线、SQL 统计查询与回归验证（缺失时工程实现与拓扑体检无法执行）
+
+  - name: python
+    source: local
+    required: false
+    purpose: 运行 SkillOpt 训练循环与任务包准备（缺失时训练环节降级为影子推导）
+
+  - name: git
+    source: local
+    required: false
+    purpose: 变更管理与回归对照（缺失时工程师以文件级备份替代）

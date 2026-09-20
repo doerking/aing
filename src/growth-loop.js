@@ -156,23 +156,46 @@ class GrowthLoop {
     if (proposal.successfulExecutions >= 3) proposal.eliteEligible = true;
   }
 
-  /** Choose a memory action without loading the whole memory into context. */
+  /** Choose a memory action without loading the whole memory into context.
+   *  M4 层 5: 五路动作 + ℰ(证据集)/𝒢(缺口集) 记账 */
   routeMemory(input = {}) {
     const query = String(input.query || '').trim();
     const hasHistory = Boolean(input.hasHistory);
     const evidenceGap = Boolean(input.evidenceGap);
     const ambiguity = clamp(input.ambiguity);
     const failureSignal = Boolean(input.failureSignal);
+
+    // ℰ 证据集：当前已有的证据片段（来自输入或历史检索）
+    const evidenceSet = Array.isArray(input.evidenceSet)
+      ? input.evidenceSet.map(e => String(e).slice(0, 500))
+      : [];
+    // 𝒢 缺口集：已知缺什么（来自输入或 gap-detector）
+    const gapSet = Array.isArray(input.gapSet)
+      ? input.gapSet.map(g => String(g).slice(0, 500))
+      : [];
+
     let action = 'answer';
     if (!query) action = 'ask';
-    else if (evidenceGap) action = 'verify';
+    else if (evidenceGap || gapSet.length > 0) action = 'verify';
     else if (failureSignal) action = 'reflect';
-    else if (hasHistory || ambiguity >= 0.45) action = 'retrieve';
+    else if (hasHistory || ambiguity >= 0.45 || evidenceSet.length > 3) action = 'retrieve';
+
     const decision = {
       id: `memory-${Date.now()}-${hash(`${query}:${action}:${Math.random()}`)}`,
       action,
-      query,
+      query: query.slice(0, 500),
       reason: { hasHistory, evidenceGap, ambiguity, failureSignal },
+      // M4 层 5: ℰ/𝒢 记账
+      evidenceSet,
+      gapSet,
+      evidenceCount: evidenceSet.length,
+      gapCount: gapSet.length,
+      // 决策链：从输入到动作选择的完整路径
+      decisionChain: [
+        `input: query="${query.slice(0, 80)}" hasHistory=${hasHistory} evidenceGap=${evidenceGap} ambiguity=${ambiguity.toFixed(2)} failureSignal=${failureSignal}`,
+        `ℰ evidence=${evidenceSet.length} items / 𝒢 gap=${gapSet.length} items`,
+        `route → ${action} (via: ${!query ? 'no query' : evidenceGap || gapSet.length ? 'evidence gap' : failureSignal ? 'failure signal' : hasHistory || ambiguity >= 0.45 || evidenceSet.length > 3 ? 'history/ambiguity' : 'default'})`,
+      ],
       outcome: null,
       createdAt: now(),
     };
@@ -244,11 +267,67 @@ class GrowthLoop {
     return proposal;
   }
 
+  /**
+   * M4 层 6: 四门重设计（受控自改进）
+   *
+   * Gate-1 Test:     候选必须通过测试（score >= threshold）
+   * Gate-2 Evaluation: 候选必须通过五维评估（feasibility/impact/safety/repeatability/rollback）
+   * Gate-3 Baseline:  候选分数必须严格 > 基线分数 + margin（不接受持平或下降）
+   * Gate-4 Rollback:  保留回滚能力（parent gene 可恢复）
+   */
   promoteImprovement(id, confirmation = false) {
     const proposal = this.state.improvements.find(item => item.id === id);
-    if (!proposal) throw new Error(`improvement not found: ${id}`);
-    if (proposal.status !== 'tested') throw new Error('only tested improvements can be promoted');
-    if (confirmation !== true) throw new Error('promotion requires explicit confirmation=true');
+    if (!proposal) throw new Error('improvement not found: ' + id);
+
+    // Gate-1: Test gate
+    if (proposal.status !== 'tested') {
+      throw new Error('Gate-1 (Test) FAILED: improvement has not been tested');
+    }
+
+    // Gate-2: Evaluation gate（五维评估已在 evaluateImprovement 中完成）
+    if (!proposal.scores || proposal.scores.overall < 0.7) {
+      throw new Error('Gate-2 (Evaluation) FAILED: overall score < 0.7');
+    }
+    if (proposal.scores.safety < 0.7) {
+      throw new Error('Gate-2 (Evaluation) FAILED: safety score < 0.7');
+    }
+
+    // Gate-3: Baseline gate（候选必须严格 > 基线 + margin）
+    const baseline = this._findBaseline(proposal);
+    if (baseline && baseline.scores) {
+      const margin = 0.02; // 与 SkillOpt Gate 一致
+      const delta = (proposal.scores.overall || 0) - (baseline.scores.overall || 0);
+      if (delta <= margin) {
+        proposal.status = 'rejected-baseline';
+        proposal.gateResult = {
+          gate: 'baseline',
+          baselineScore: baseline.scores.overall,
+          candidateScore: proposal.scores.overall,
+          delta,
+          margin,
+          passed: false,
+        };
+        this.save();
+        throw new Error(`Gate-3 (Baseline) FAILED: delta ${delta.toFixed(3)} <= margin ${margin}`);
+      }
+      proposal.gateResult = {
+        gate: 'baseline',
+        baselineScore: baseline.scores.overall,
+        candidateScore: proposal.scores.overall,
+        delta,
+        margin,
+        passed: true,
+      };
+    }
+
+    // Gate-4: Rollback gate（保留回滚能力）
+    if (!proposal.parentId && !confirmation) {
+      throw new Error('Gate-4 (Rollback): explicit confirmation required for promotion');
+    }
+    if (confirmation !== true) {
+      throw new Error('promotion requires explicit confirmation=true');
+    }
+
     proposal.status = 'promoted';
     proposal.promotedAt = now();
     const gene = {
@@ -258,6 +337,13 @@ class GrowthLoop {
       kind: proposal.kind,
       fitness: proposal.scores?.overall || 0,
       generation: proposal.generation,
+      // M4 层 6: 回滚锚点——promote 时记录 parent gene，可回滚
+      parentId: proposal.parentId || null,
+      rollbackSnapshot: {
+        previousStatus: 'tested',
+        previousScores: baseline?.scores || null,
+        rollbackAt: now(),
+      },
       createdAt: now(),
     };
     if (!this.state.genes.some(item => item.geneId === gene.geneId)) this.state.genes.push(gene);
@@ -268,18 +354,88 @@ class GrowthLoop {
     return proposal;
   }
 
+  /**
+   * M4 层 6: 回滚——撤销最近一次 promote，恢复 baseline 状态
+   */
+  rollback(geneId) {
+    const gene = this.state.genes.find(g => g.geneId === geneId);
+    if (!gene) throw new Error('gene not found: ' + geneId);
+    const proposal = this.state.improvements.find(p => p.id === gene.sourceImprovementId);
+    if (!proposal) throw new Error('source improvement not found');
+
+    // 恢复 proposal 状态
+    proposal.status = gene.rollbackSnapshot?.previousStatus || 'tested';
+    proposal.rollbackAt = now();
+    proposal.rolledBack = true;
+
+    // 从 genes 移除
+    this.state.genes = this.state.genes.filter(g => g.geneId !== geneId);
+    // 从 elitePatterns 移除
+    this.state.elitePatterns = this.state.elitePatterns.filter(p => p.sourceImprovementId !== proposal.id);
+
+    this.save();
+    return { rolledBack: true, geneId, restoredStatus: proposal.status };
+  }
+
+  /**
+   * 找基线候选（同 kind 的上一代或原始版本）
+   */
+  _findBaseline(proposal) {
+    if (proposal.parentId) {
+      return this.state.improvements.find(p => p.id === proposal.parentId);
+    }
+    // 找同 kind 的第一个 generation=1
+    return this.state.improvements
+      .filter(p => p.kind === proposal.kind && p.id !== proposal.id && p.scores)
+      .sort((a, b) => (a.generation || 1) - (b.generation || 1))[0] || null;
+  }
+
+  /**
+   * M4 FadeMem: 三因子衰减（时间 + 使用度 + 质量）
+   *
+   * factorTime:   1 - days/90（90天线性衰减，与之前一致）
+   * factorUsage:  access_count 越高越保鲜（log2 归一化）
+   * factorQuality: KESPI score 越高越抗衰减
+   * combinedWeight = (baseWeight + recurrence×0.1) × factorTime × factorUsage × factorQuality
+   *
+   * 此前只有 factorTime（单因子），现在三因子联合。
+   */
   decay(asOf = new Date()) {
     const current = asOf instanceof Date ? asOf.getTime() : new Date(asOf).getTime();
+    const results = [];
     for (const pattern of Object.values(this.state.patterns)) {
       const last = new Date(pattern.lastSeen || pattern.firstSeen || 0).getTime();
       const days = Math.max(0, (current - last) / 86400000);
-      const decay = Math.max(0.1, 1 - days / 90);
-      pattern.weight = clamp((pattern.baseWeight + Math.min(0.3, pattern.recurrenceCount * 0.1)) * decay);
+
+      // 因子 1: 时间衰减
+      const factorTime = Math.max(0.1, 1 - days / 90);
+
+      // 因子 2: 使用度保鲜（access_count / recallCount 越高越抗衰减）
+      const usage = (pattern.recallCount || 0) + (pattern.recurrenceCount || 0);
+      const factorUsage = Math.min(1.0, 0.5 + Math.log2(usage + 1) / 4);
+
+      // 因子 3: 质量抗衰减（successRate 越高越抗衰减）
+      const totalAttempts = (pattern.successes || 0) + (pattern.failures || 0);
+      const successRate = totalAttempts > 0 ? (pattern.successes || 0) / totalAttempts : 0.5;
+      const factorQuality = 0.5 + successRate * 0.5; // 0.5~1.0
+
+      // 三因子联合
+      const baseAdjusted = (pattern.baseWeight + Math.min(0.3, (pattern.recurrenceCount || 0) * 0.1));
+      pattern.weight = clamp(baseAdjusted * factorTime * factorUsage * factorQuality);
+      pattern.factors = {
+        factorTime: Number(factorTime.toFixed(3)),
+        factorUsage: Number(factorUsage.toFixed(3)),
+        factorQuality: Number(factorQuality.toFixed(3)),
+        daysSinceLast: Math.round(days),
+        successRate: Number(successRate.toFixed(3)),
+      };
       if (pattern.weight < 0.2) pattern.status = 'archived';
       else if (pattern.weight < 0.5) pattern.status = 'decaying';
+      else pattern.status = 'active';
+      results.push(pattern);
     }
     this.save();
-    return Object.values(this.state.patterns);
+    return results;
   }
 
   status() {
@@ -315,6 +471,7 @@ async function main() {
   else if (command === 'propose') result = loop.proposeImprovement(parseJson(payload, 'propose'));
   else if (command === 'evaluate') result = loop.evaluateImprovement(payload, parseJson(extra, 'evaluate'));
   else if (command === 'promote') result = loop.promoteImprovement(payload, extra === 'true');
+  else if (command === 'rollback') result = loop.rollback(payload);
   else if (command === 'routes') result = loop.routeSummary(payload);
   else if (command === 'status') result = loop.status();
   else throw new Error('用法: episode <json> | memory <json> | propose <json> | evaluate <id> <json> | promote <id> true | routes [taskType] | status');

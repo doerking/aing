@@ -18,13 +18,14 @@ async function main() {
   const report = {
   timestamp: new Date().toISOString(),
   stats: store.getStats(),
-  kespiScores: store.db.prepare(`
+  // 2026-09-17 修（陈账：sql.js 无 better-sqlite3 的 prepare().all()/.get()，旧写法必报错）：改走 KnowledgeStore 真 API
+  kespiScores: store.all(`
     SELECT e.name, e.type, m.kespi_score, m.originality, m.relevance, m.consistency, m.provability, m.utility
     FROM entities e
     LEFT JOIN entity_metadata m ON e.id = m.entity_id
     ORDER BY m.kespi_score DESC
-  `).all(),
-  links: store.db.prepare('SELECT COUNT(*) as count FROM links').get().count,
+  `),
+  links: (store.all('SELECT COUNT(*) AS count FROM links')[0] || {}).count ?? 0,
     pendingErrors: store.getPendingErrors(5)
   };
 
@@ -36,7 +37,7 @@ async function main() {
   console.log('\n📈 知识库统计:');
   console.log(`   实体总数: ${report.stats.entities}`);
   console.log(`   链接总数: ${report.links}`);
-  console.log(`   平均 KESPI: ${report.stats.avgKespi.toFixed(2)}`);
+  console.log(`   平均 KESPI: ${(report.stats.avgKespi ?? 0).toFixed(2)}`);
   console.log(`   待处理错误: ${report.pendingErrors.length}`);
 
   console.log('\n📊 KESPI 评分分布:');

@@ -190,23 +190,34 @@ function initGit(baseDir) {
     execSync('git init', { cwd: baseDir, stdio: 'ignore' });
     console.log('   ✓ Git 仓库已初始化');
     
-    // 创建 .gitignore
-    const gitignore = `node_modules/
+    // 创建 .gitignore —— 仅当院子还没有时新建；已有则绝不覆写。
+    //（Tip 自带的 .gitignore 有 44 行，含 knowledge.db 与 .temp/；被下面这份 4 行桩
+    //  覆盖后，紧接着的 git add -A 会把库与一次性探针一起提进历史）
+    const giPath = path.join(baseDir, '.gitignore');
+    if (!fs.existsSync(giPath)) {
+      const gitignore = `node_modules/
 *.log
 .DS_Store
 Thumbs.db
 `;
-    fs.writeFileSync(path.join(baseDir, '.gitignore'), gitignore, 'utf8');
-    console.log('   ✓ .gitignore 已创建');
+      fs.writeFileSync(giPath, gitignore, 'utf8');
+      console.log('   ✓ .gitignore 已创建（原先不存在）');
+    } else {
+      console.log('   ✓ 保留院子已有的 .gitignore（不覆写，避免把库/探针纳入 git 面）');
+    }
     
-    // 首次 commit
-    execSync('git add -A', { cwd: baseDir, stdio: 'ignore' });
-    execSync('git commit -m "chore: initial knowledge base setup" --no-verify', {
-      cwd: baseDir,
-      stdio: 'ignore'
-    });
-    console.log('   ✓ 首次提交完成\n');
+    // 首次 commit —— 铁律：不替用户提交（与 compile.js 同一开关口径，必须显式 opt-in）
+    if (process.env.AING_AUTOCOMMIT !== '1') {
+      console.log('   ⏭️  首次提交已跳过（默认不替用户 commit；确需时显式 AING_AUTOCOMMIT=1）\n');
+    } else {
     
+      execSync('git add -A', { cwd: baseDir, stdio: 'ignore' });
+      execSync('git commit -m "chore: initial knowledge base setup" --no-verify', {
+        cwd: baseDir,
+        stdio: 'ignore'
+      });
+      console.log('   ✓ 首次提交完成\n');
+    }
   } catch (e) {
     console.log('   ⚠️  Git 初始化跳过（可能不是 git 仓库）\n');
   }

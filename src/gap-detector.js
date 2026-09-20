@@ -9,6 +9,11 @@
  *   4. 未索引实体 (unindexed): 缺少向量嵌入
  *   5. 空内容实体 (empty)    : body 为空或仅 frontmatter
  * 
+ * 2026-09-17 所有者裁定（Todo-as-entity 待办的「排」分支）：
+ *   type='Todo' 实体退出拓扑缺口扫描——待办是队列项，自有出口面（面板 queues.*_todos /
+ *   memo 待办三块）；混进缺口扫描等于把「待办数」当「缺口数」报，仪表台长红挂在队列长度上。
+ *   面板 gaps 自同日起聚合本引擎，两面同步此口径，不再各定各的。
+ *
  * 输出：缺口报告 + 修复建议
  * 
  * 用法：
@@ -75,7 +80,7 @@ class GapDetector {
       SELECT e.*, em.consistency, em.originality, em.relevance, em.provability, em.utility
       FROM entities e
       LEFT JOIN entity_metadata em ON e.id = em.entity_id
-      WHERE e.status = 'active'
+      WHERE e.status = 'active' AND e.type <> 'Todo'
     `);
 
     this.stats.totalEntities = entities.length;

@@ -236,4 +236,9 @@ function printStats(newSeeds) {
 }
 
 // CLI 入口
+// 2026-09-17 F3：代谢持库时拒写；子步凭 AING_METABOLISM_CHILD 豁免
+if (require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('compress'));
+  process.exit(3);
+}
 compress();

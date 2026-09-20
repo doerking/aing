@@ -12,8 +12,8 @@
  * 
  * 使用：
  *   node prune.js                    # 预览剪枝
- *   node prune.js --dry-run          # 只显示不执行
- *   node prune.js --force            # 强制执行
+ *   node prune.js --dry-run          # 只显示不执行（默认态）
+ *   node prune.js --force            # 强制执行；亦可由 growth.config 的 prune.autoForce 在代谢链内开闸（F2）
  *   node prune.js --days 60          # 60天未更新
  */
 
@@ -288,8 +288,13 @@ async function purgePrunedFromDB() {
 
 // CLI 入口
 const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run') || !args.includes('--force');
-const force = args.includes('--force');
+// 2026-09-17 深度检查 F2 显式化：以前自动链里本步永远停在 dry-run（STEPS 不传 --force），
+// 「过期归档」能力纸面存在、实链空转。现接入 config.prune.autoForce 单源旋钮（纪律 5）：
+// 默认 false —— 原链路行为一字不改（只预览不动盘）；要自动剪才在 growth.config 里开。
+let pruneAutoForce = false;
+try { pruneAutoForce = require('./growth.config.js').prune && require('./growth.config.js').prune.autoForce === true; } catch (e) { /* 配置缺失按默认保守 dry */ }
+const dryRun = args.includes('--dry-run') || !(args.includes('--force') || pruneAutoForce);
+const force = args.includes('--force') || pruneAutoForce;
 const daysMatch = args.find(a => a.startsWith('--days='));
 
 if (daysMatch) {

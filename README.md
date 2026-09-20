@@ -1,6 +1,14 @@
 ---
-tags: [aing, overview, quickstart, architecture]
+tags: [aing, overview, quickstart, architecture, knowledge-metabolism, dual-brain, cross-temporal, consciousness, memo, self-growing, local-first, markdown, nodejs]
 description: aing 知识代谢引擎总览：快速开始、脚本一览、数据库与常驻服务
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '959ff15d-d5ee-4c19-bf51-0a1471670f3d'
+  PropagateID: '959ff15d-d5ee-4c19-bf51-0a1471670f3d'
+  ReservedCode1: '6a4859da-d3d0-467f-94f3-671541dbf87d'
+  ReservedCode2: '6a4859da-d3d0-467f-94f3-671541dbf87d'
 ---
 
 # aing · Knowledge Metabolism Engine
@@ -29,7 +37,7 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 |---|---|---|
 | Shell-agnostic | Front-end / storage / runtime | ✅ |
 | Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented — coordination-only kernel; metabolism→kernel events wired 2026-09-08 (`e847d15`)
-| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only (adjustments/candidates, never auto-executes); pipeline wiring under evaluation (Phase 2.6)
+| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only; selfCheck reads real KESPI/errorRate (M4); reviewConsciousness wired to kernel; decision lineage logged (Phase 2.6 complete)
 | Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented — real scoring, no mock (docs realigned 2026-09-08)
 
 **Zero LLM calls in the core loop: plain MD + Node runs the full metabolism; semantic vectors are local & optional. LLMs are optional host shells (session memory, compile aid) — not engine parts. / 核心代谢环零 LLM 调用：MD + Node 跑完全程，语义向量本地可选；LLM 是可选宿主外壳（会话记忆/编译辅助），不是引擎零件。**
@@ -46,9 +54,13 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 
 **给 Agent / For your agent:**
 
-> 你负责想，aing 负责记：召回你的不是散落片段，而是带关系、带评分、带血统的知识图谱——这次会话的结论，下次会话还有依据。
+> aing 为你准备好一切——资料、思维导链、备忘录，你出场就手持备忘录从容工作。你负责分析用户、给用户策划方向，其余的 aing 管。
 >
-> *You think; aing remembers. It recalls a knowledge graph with relations, scores and lineage — not loose fragments. This session's conclusions are next session's evidence.*
+> *aing prepares everything for you — materials, thinking chains, and a memo. You walk in holding the memo, calm and ready. You focus on analyzing the user and planning their direction; aing handles the rest.*
+
+> **备忘录的意义 / Why the memo matters**：备忘录是 agent 的驾驶仪表台——它不是给用户看的文档，是 aing 给 agent 的"出场包"。每次会话开始，agent 先读 `GET /api/consciousness/briefing`，拿到三样东西：**aing 当前状态**（意识层 state / 通道健康 / 活跃事件）、**组件链接状态**（知识库在线？向量就绪？代谢上次跑完？蒸馏债多少？）、**待办与会话交接**（上次聊到哪、有什么挂起的 Todo）。读完备忘录，agent 不用问"知识库里有什么"——它已经知道了。备忘录让 agent 从"翻文件找线索"变成"手持仪表台做判断"。
+>
+> *The memo is the agent's dashboard — not a user-facing document, but aing's "walk-in package." Before each session, the agent reads the briefing and gets: aing's current state (consciousness kernel, channel health, active events), component link status (KB online? vectors ready? metabolism last run? distill debt?), and session handoff (where we left off, pending Todos). The memo turns the agent from "scavenging files for clues" into "reading a dashboard and making decisions."*
 
 **诚实的边界 / The honest edge:**
 
@@ -60,8 +72,8 @@ description: aing 知识代谢引擎总览：快速开始、脚本一览、数�
 
 > The release is the **plain-Markdown edition** — MD + Git + Node alone run the full metabolism loop. No extra software required.
 > 底层渊源：aing 两脑的底层架构正是 **LLM Wiki + Tolaria** 这两款数据库软件——因当时原版装不上，作者以纯 Markdown + Node 把这一底层重写成了 MD 版（即本发布包）。
-> 项目时间线：立项 **2026-06** ｜ MD 版底座成形 **2026-07** ｜ 仓库 **2026-08** 起陆续上线（最早归档 2026-08-29）。鸣谢区全部为**独立收敛的同构引证**，非依赖背书；唯一承认为概念源头的是 LLM Wiki（上文「源自」）。
-> Timeline: founded **2026-06**; MD substrate shaped **2026-07**; on public repo since **2026-08** (earliest archive 2026-08-29). The credits section documents **independent convergence** (isomorphic citations), not endorsement-derived lineage; the only acknowledged conceptual origin is LLM Wiki ("derived from" above).
+> 项目时间线：立项 **2026-06** ｜ MD 版底座成形 **2026-07** ｜ 仓库 **2026-08** 起陆续上线（最早归档 2026-08-29）。**鸣谢区分三类账，且明确反对混记**：① **软件蓝本**——`Tolaria` 与 `LLM Wiki` 类数据库软件，当年原版装不上，故以纯 Markdown + Node 把那一层能力重写成 MD 版（即本发布包）；② **真实使用的底座依赖**——SQLite/WASM、ONNX Runtime、Hugging Face 生态、Mermaid、Node + Git；③ **同构引证**——别人独立做出来、与本包思路相合的工作。三者都不是背书关系。**特别注意：aing 与 Karpathy 的 LLM Wiki 范式是相反路线**（那边是"摄入→编译→查询"的线性静止资产，这边给知识加上发芽/授粉/芥子/再生/过期的代谢），所以**只认它的社区工具作数据层蓝本，不认它作概念源头**（详见 `docs/User-Guide/03-FAQ.md` §10）。
+> Timeline: founded **2026-06**; MD substrate shaped **2026-07**; on the public repo since **2026-08** (earliest archive 2026-08-29). **The credits split three ways and must not be conflated**: (1) **software blueprints** — Tolaria and LLM-Wiki-family database tools, re-implemented in plain Markdown + Node because the originals could not be installed then; (2) **foundational dependencies actually used** — SQLite/WASM, ONNX Runtime, the Hugging Face ecosystem, Mermaid, Node + Git; (3) **isomorphic citations** — independent convergence, not lineage. **Note: aing runs contrary to Karpathy's LLM Wiki paradigm** (compile once into a static asset, versus metabolism: sprout / pollinate / mustard-seed / regenerate / expire), so its community tools are credited as a data-layer blueprint only, never as a conceptual origin (see `docs/User-Guide/03-FAQ.md` §10).
 > Origin note: aing's two-brain substrate re-implements two database tools — **LLM Wiki + Tolaria** — in plain Markdown, because the originals could not be installed at the time.
 > 有条件的用户，可以把两脑各自的实体软件挂上，让秩序脑与生长脑各得其所：
 
@@ -88,7 +100,7 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 | Paradigm | Compilation / 编译 | **Metabolism / 代谢** |
 | Growth | Linear: ingest→compile→query | Non-linear: sprout·pollinate·metabolize·regenerate |
 | LLM role | Single LLM as "programmer" | None required in the core loop (mechanical steps + local models); optional host-agent shells
-| Ceiling | ~200 sources / 50K tokens | Theoretically unbounded |
+| Ceiling | ~200 sources / 50K tokens | 单库 50 标签类目健康 / 100 可用 / 150+ 退化（多库扩展，容量推演见 [TAG-CAPACITY-ANALYSIS](./docs/Engineering/TAG-CAPACITY-ANALYSIS.md)） |
 
 ## Architecture / 架构
 
@@ -114,6 +126,8 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 │ Tri-Path Orchestrator / 三路突击                               │
 │ • Explore / Verify / Optimize + Circuit Breaker              │
 ├──────────────────────────────────────────────────────────────┤
+│ Assets: assets/skills/aing-operator + neural-evolution-swarm │
+│          (bundled specs; packaged != installed in runtime)   │
 │ Storage: fs-based (wiki/entities/*.md, wiki/links/*.md)      │
 │          + sql.js (in-memory SQLite via knowledge-store.js)  │
 │ Runtime: Node.js CommonJS (.js), no TypeScript, no build     │
@@ -124,12 +138,14 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 
 ## Quick Start / 快速开始
 
+
+> **最短路径 / Fastest path**：`npm run bootstrap` —— 一键完成 依赖 → 配置 → 建库 → 代谢链 → 语义模型 → 验收，跑完即可查询。以下为分步说明。
 ```bash
 # 1. Clone
 git clone https://github.com/doerking/aing.git
 cd aing
 
-# 2. Install dependencies（一条命令装齐：sql.js / transformers / sharp）
+# 2. Install dependencies（核心：sql.js / transformers；sharp 可选，非核心管道所需）
 npm install
 
 # 3. Configure
@@ -145,12 +161,12 @@ echo "# My First Knowledge
 
 Content here...
 
-[tag:example]
+[tag:example:5]
 " > raw/my-first-doc.md
 
-# 6. Run full metabolism pipeline (10 steps: compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（10 步）
+# 6. Run full metabolism pipeline (11 steps: compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune) / 完整代谢（11 步）
 node src/run-metabolism.js
-
+# 代谢默认不替用户提交：compile 步的 git add -A + commit 已被 AING_NO_AUTOCOMMIT 关掉（确需时 AING_AUTOCOMMIT=1，门禁 C13 钉住）
 # 7. Smart mode (GrowthDirector decides what to do)
 node src/run-metabolism.js --smart
 
@@ -170,7 +186,7 @@ node src/growth-director.js
 node src/guide-chain-swarm.js
 ```
 
-> **Note**: aing is a collection of standalone Node.js scripts (CommonJS `.js`), not a TypeScript project — each script is run directly with `node`. `package.json` only declares dependencies & shortcuts (`npm run verify` / `npm run metabolism`).
+> **Note**: aing is a collection of standalone Node.js scripts (CommonJS `.js`), not a TypeScript project — each script is run directly with `node`. `package.json` only declares dependencies & shortcuts (`npm run verify` / `npm run all` / `npm run calibrate:fusion`).
 >
 > **Agent 必读：** 部署/验收/排障前先读 [`AGENTS.md`](./AGENTS.md)。部署完成后必跑 `node verify-deploy.js` —— 拿到 ALL GREEN 报告才算部署完成。
 
@@ -192,6 +208,17 @@ node src/index-vectors.js --semantic --reindex
 
 ---
 
+## Try Demo Data (Optional) / 演示数据（可选，60 秒体验）
+
+```bash
+npm run seed:demo     # 灌入 6 篇虚构演示文档（云杉折纸社）：不碰真实数据、不产生 git 提交
+npm run query -- "千纸鹤"       # 看融合分构成与链接命中
+npm run unseed:demo   # 拆除：按 demo-% 前缀清 DB 六表 + 文件，真实数据零接触
+```
+
+演示组刻意设计：密集双向链接（KD 密度维）、created 时间梯度（KG 生长维）、
+一组符号规范争议文档（KQ 一致性场景）。seed 后实体 14（仍 <30，标定工具按实况提示小样本纪律；实体 ≥30 后结论才够硬）。
+
 ## Resident Services & API (Optional) / 常驻服务与 API（可选）
 
 ```bash
@@ -202,17 +229,51 @@ npm run scheduler            # env AING_SCHEDULER_INTERVAL_MS to tune interval /
 npm run server               # without AING_API_KEY: listens on 127.0.0.1 (local-trust mode) / 未设密钥仅监听本机
 AING_API_KEY=my-key npm run server   # with key: 0.0.0.0 + Bearer auth on all but /health / 设密钥后全端点认证
 
+# 备忘录与入库 CLI / memo + ingest CLI（不起服务也能用，这就是“最后一米”那两条）
+node src/memo.js --summary        # 仪表台：意识层 + 组件链接 + 告警 + 待办 + 健康判定 + 派单 / dashboard
+node src/memo.js --peek           # 只读快拍（纯 JSON：health + todos + dispatch）/ machine-readable glance
+node src/memo.js --dispatch       # 只问要不要派神经进化团队 / should we dispatch the swarm
+node src/memo.js todo add "<用户挂着的事>" [--due YYYY-MM-DD] [--agent]   # 把待办记进备忘录（面板与仪表台同一张表）
+node src/memo.js todo list        # 看活跃待办；--all 含已销（留痕不删行）
+node src/memo.js todo done <id>    # 销办
+node src/memo.js --actions        # 只要下一步命令 / derived next actions only
+node src/auto-ingest.js <session-id> "<json|文本>"    # 一次性入库（投完退出；--keep 才转常驻批处理）
+
+# 意识层写端 CLI / control surface（读靠 memo，动手靠 neural；二者都不必起服务）
+node src/neural.js status           # 只读：kernel 状态 + 在效抑制清单 / read-only
+node src/neural.js event '{"channel":"anomaly","target":"<目标>","intensity":0.9}'   # 投一条意识事件
+node src/neural.js inhibit <目标> [--reason r] [--hours N]   # 抑制误报源（到期自动失效，kernel 无撤销 API）
+node src/neural.js assess '[{"channel":"structure","target":"wiki/x.md"}]'          # 评估（走 controller → 同一个 kernel）
+node src/neural.js verify '{"checks":[{"name":"复验全绿","passed":true}]}'          # 补记校验到 decision lineage
+node src/neural.js record '{"result":"...","lesson":"..."}' # 补记结果与教训
+node src/neural.js deliberate high  # 蜂群协商维护（只出共识不执行；需本院 knowledge.db）
+
 # 查询 CLI / query CLI
 node src/query.js "三路突击" --limit 5
 
 # 端点一览 / endpoints
+# ── 意识神经控制 + 备忘录（agent ↔ aing 主界面）──
+# GET  /api/consciousness/briefing    memo / 备忘录（aing 状态 + 组件链接 + 告警热点 + 待办 + 会话交接）
+# GET  /api/consciousness             意识神经状态（焦点/唤醒/通道健康）
+# POST /api/consciousness/event      agent 向 kernel 投递意识事件
+# POST /api/consciousness/sense      agent 感知（检索 + 记录谱系）
+# POST /api/consciousness/assess     agent 评估（事件 → kernel 整合）
+# GET  /api/consciousness/lineage    最近决策谱系
+# ── 知识检索 ──
 # GET  /health                       health check (public) / 健康检查（公开）
-# GET  /api/status                    runtime status (entities/kespi lifecycle/distill debt) / 运行时状态一眼判定
+# GET  /api/status                    runtime status / 运行时状态
 # GET  /api/entities                 entity list / 实体列表
 # GET  /api/entity/<id>              entity detail + latest KESPI / 实体详情+最新 KESPI
-# GET  /api/query?q=<词>&limit=<N>   semantic/keyword search / 语义与关键词检索
-# POST /api/ingest                   session ingest (optional X-Tenant-ID; optional body.distillation passthrough) / 会话入库，可带租户头与蒸馏透传
+# GET  /api/query?q=<词>&limit=<N>   full-chain search (answer-pack: snippet/kespi/neighbors/tags) / 全链检索
+# ── 入库写入 ──
+# POST /api/ingest                   session ingest (role: user/assistant/analysis/research) / 会话入库（四种角色；只入贴出来的详情，纯采集过程回 422）
+# POST /api/entity                  create entity (Todo/Skill/Output) / 创建实体
+# PATCH /api/entity/<id>            update entity status/content / 更新实体
+# GET  /api/delta?since=<ISO>        incremental awareness / 增量感知
+# GET  /api/tags/<tag>               tag-driven loading / 标签驱动加载
 ```
+
+> **Tolaria 9 段标签容量**：`[tag:xxx:N]` N=1-9 关联强度。50 类目健康 / 100 可用 / 150 退化 / 200+ 走样。50 类目为 Tolaria + LLM.WIKI 数据库软件进入时机。推演数据见 [TAG-CAPACITY-ANALYSIS.md](./docs/Engineering/TAG-CAPACITY-ANALYSIS.md)。
 
 ---
 
@@ -222,7 +283,9 @@ node src/query.js "三路突击" --limit 5
 
 1. **关键步骤熔断 / Critical-step breaker (P0)**：`run-metabolism` 将 compile / import / vector / kespi 设为关键步骤，任一失败立即中止并把退出码置 1；`node src/run-metabolism.js --force` 仅继续非关键步骤。/ Any critical-step failure aborts with exit code 1; `--force` continues non-critical steps only.
 2. **KESPI 写实 / Real KESPI lifecycle (P1b)**：`compile.js` 产出实体 `kespi_status: pending`，由 `kespi-check.js` 首次真实评估翻转；不再有编译期随机分数。/ `kespi_status` starts `pending`; `kespi-check.js` flips it on first real evaluation. No random scores.
-3. **入库写实 / Faithful ingest (P1a)**：`auto-ingest.js` 正文含 `## 蒸馏摘要 / Distilled Summary` 模板；`POST /api/ingest` 可带可选 `body.distillation`（summary/entities）透传入库。/ Optional `body.distillation` passthrough on ingest.
+3. **入库写实 / Faithful ingest (P1a)**：`auto-ingest.js` 写角色节（用户提问 / Agent 回复 / Agent 分析 / 收集资料）+ 蒸馏摘要占位；`POST /api/ingest` 可选带 `body.distillation`，但**只作提议**入「Agent 提议（未核验）」节，档身份仍 `pending-distillation` / `confidence: 0`，由 `distill.js` 兑付后才转 active（服务端定身份，纪律 4）。契约由 `verify-deploy.js` C10g 双向守。 / Optional `body.distillation` is stored as an **unverified proposal only**; the server alone sets status/confidence, and `distill.js` redeems it.
+   - 会话入库产物落 `raw/inbox/`（运行态，gitignore），人工知识源仍在 `raw/` 顶层；每条 accepted 消息先落 WAL `data/ingest-buffer.jsonl`，进程重启自动重放。 / Runtime session docs land in `raw/inbox/` and every accepted message is WAL-journaled before the response.
+   - **只入贴出来的详情 / Detail-only ingest**：正文里属于「贴出来之前的 HTTP 采集步骤」的行（命令行/请求行/响应头/报文）由 `src/ingest-scrub.js` 在入口剥除，不留原文、不写旁路，档内只记 `traceScrubbed` 计数；纯过程内容整条 `422` 拒收；`metadata` 采集元数据自 2026-09-14 停收。 / Collection-trace lines (commands, request/response headers, raw payloads) are stripped at the entry point and never stored.
 4. **双语输出 / Bilingual console**：人读输出为 `中文 / English` 对照；机器令牌（`kespi_status` 等）恒为英文。/ Human-facing logs are bilingual; machine tokens stay English-only.
 
 ### Troubleshooting / 故障引导
@@ -232,7 +295,10 @@ node src/query.js "三路突击" --limit 5
 | 代谢中途停止、退出码 1、日志 `❌ 失败 / Failed: <step>` | 关键步骤失败（P0 熔断） | 看该步 stderr 修复后重跑；确需跳过：`node src/run-metabolism.js --force`（仅续非关键步骤） |
 | 实体 KESPI 显示 `pending` | 编译后尚未首评（P1b 流转） | 跑 `node src/kespi-check.js` 或全量代谢；**非故障 / not a fault** |
 | 日志出现「中文 / English」双语文 | 本迭代双语输出（预期） | 无需处理；勿当乱码「修复」，勿改机器令牌 |
-| `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段；缺省落「待生成 / pending」占位，非错误 |
+| `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段，缺省落「待生成 / pending」占位，非错误；带自报也只进提议节 |
+| `distill.js` 报 `no raw messages` | 档里没有可识别的原话节（角色节白名单没对齐） | 看 C10g 是否红；改任一节名必须同步 `auto-ingest.PRODUCED_SECTIONS` ↔ `distill.RAW_SECTIONS` |
+| `accepted:true` 但 `raw/inbox/` 没档 | 正常：消息在 WAL 挂起，未触发 flush | 攒够批次 / 会话静默 / 定时器任一触发才落档；进程重启会从 WAL 重放 |
+| `POST /api/ingest` 回 `422 collection-trace-only` | 正文全部是采集过程行 | 预期行为（只入贴出来的详情）；把要保存的详情正文单独贴一条 |
 | 代谢提示「already running (pid=…)」且退出码 0 | 并发保护：跨进程原子锁（2026-09-08 起），第二实例自动让位 | 非故障 / not a fault：等当前代谢结束，或交给 scheduler 排程 |
 | 重复执行双语补丁 | 幂等设计 | 重复运行自动跳过已双语行，不会重复插入 / idempotent by design |
 
@@ -248,6 +314,8 @@ node src/query.js "三路突击" --limit 5
 | 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
 | 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
 | 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
+| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 神经进化团队半拉起（理论家/工程师/训练师/分析师，按指标触发） |
+| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
 
 ## Database / 数据库
 
@@ -301,7 +369,7 @@ node src/setup-db.js --backup     # 手动备份
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
 | `init-knowledge-base.js` | 知识库初始化（首装一步） | 空 → 初始目录与库 |
-| `run-metabolism.js` | **全流程（10 步）**+ 智能模式；关键步骤（compile/import/vector/kespi）失败熔断并置退出码 1，`--force` 仅续行非关键步骤 / critical-step breaker with exit code 1; `--force` continues non-critical | raw/* → 完整代谢 |
+| `run-metabolism.js` | **全流程（11 步）**+ 智能模式；关键步骤（compile/import/vector/kespi）失败熔断并置退出码 1，`--force` 仅续行非关键步骤 / critical-step breaker with exit code 1; `--force` continues non-critical | raw/* → 完整代谢 |
 | `compile.js` | 秩序脑编译；实体 `kespi_status` 首置 `pending`，待 kespi-check 首评翻转 / writes `kespi_status: pending` until first KESPI run | raw/*.md → wiki/entities/*.md |
 | `import-from-wiki.js` | 导入数据库 | wiki/ → SQLite |
 | `auto-link.js` | 自动发现链接 | 实体标签/关键词 → links 表 |
@@ -330,6 +398,10 @@ node src/setup-db.js --backup     # 手动备份
 | `show-kespi.js` | 显示 KESPI 分数 | 数据库 → 报告 |
 | `recalc-kespi.js` | 批量重算 KESPI | 修复后历史数据修正 |
 | `setup-db.js` | 数据库管理 | 创建/重置/验证/备份 |
+| `tools/verify-sibling-roots.js` | 院际全量同源核验（只读，不改任何文件/库）：src/tools/根文件逐字节比对 + 库结构核对，退出码机器判定 | 各院 `knowledge.db` + `git ls-files` → 代差台账（`npm run verify:siblings`） |
+| `node tools/gate-counts.js` | 门禁计数真值（AGENTS/README/greenlist 里那句「N 项（C0–CMAX）」以它为准，抄错即 C19 红） |
+| `tools/gen-greenlist.js` | 由 `docs/greenlist.json`（真源）重生成 `docs/GREEN-LIST.md`（视图），保留 frontmatter 水印 | 真源 JSON → 视图 MD（C10a 校验一致） |
+| `tools/self-test.js` | 发布包自测（探针自回收、`AING_NO_AUTOCOMMIT` 禁自动提交） | 临时实体/WAL → ALL GREEN + 零残留 |
 
 ### Repair & Maintenance / 修复与维护
 
@@ -356,14 +428,15 @@ node src/setup-db.js --backup     # 手动备份
 | `consciousness-kernel.js` | 意识核（coordination-only 硬约束） | 事件 → 聚合/抑制/持久化（data/consciousness/state.json） |
 | `consciousness-controller.js` | Agent 侧模式控制器 | 三模式 + 决策血缘（不执行、不自动批准） |
 | `hermes-aing-adapter.js` | 宿主接入适配器（IF-001 参考实现） | ingest / search / briefing / deliberate |
-| `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十步成功/失败 → 9 通道事件（source=metabolism） |
+| `neural.js` | 意识层**写端** CLI（W2，2026-09-14） | status / event / inhibit / assess / verify / record / deliberate；只做转发，不写阈值与默认值；`--kb <院>` 可指向别院探针 |
+| `run-metabolism.js`（内嵌发射器） | 代谢→意识事件接线（2026-09-08） | 十一步成功/失败 → 9 通道事件（source=metabolism） |
 
 ### Resident Services & Retrieval / 常驻服务与检索
 
 | 脚本 | 用途 | 输入 → 输出 |
 |------|------|------------|
 | `scheduler.js` | 常驻调度器（定时代谢 + raw/ 轮询触发 + `--once`） | 时间/文件变化 → 代谢链 |
-| `api-server.js` | HTTP API 服务（零依赖，Bearer 认证，租户隔离） | HTTP 请求 → JSON |
+| `api-server.js` | HTTP API 服务（零依赖，Bearer 认证，单用户；多租户已砍除） | HTTP 请求 → JSON |
 | `query.js` | 查询 CLI（语义/关键词 + KESPI 附分） | 关键词 → 命中实体 |
 | `shared-spine.js` | 编译门禁（真实 KESPI 评分版） | raw 档 + 库实体 → 接受/拒收/待入库 |
 | `auto-ingest.js` | 会话自动入库（链路起点，听指纹去重）；正文含 `## 蒸馏摘要 / Distilled Summary` 模板 / renders distilled-summary section | 消息 → raw 档 → 代谢链 |
@@ -406,80 +479,138 @@ node src/setup-db.js --backup     # 手动备份
 - [x] Phase 1 — Growth Brain v1 (sprouting, pollination, mustard seed, pruning)
 - [x] Phase 2 — KESPI self-check (8-dim weighted scoring, 3-color light, DB-backed via kespi_history)
 - [x] Phase 2.5 — Consciousness Neural Architecture (sensory + guide chain + consciousness)
-- [ ] Phase 2.6 — Metacognition Layer (in repo, not wired into the pipeline; heuristic self-check only — wiring under evaluation / 组件在库、未接管线)
+- [x] Phase 2.6 — Metacognition Layer (self-check reads real metrics: confidence=KESPI avg, errorRate=metabolism fail rate; reviewConsciousness wired to kernel; decision lineage logged / 自我认知读真实指标，元认知审查接通 kernel，决策因果链落盘)
 - [x] Phase 2.7 — Tri-Path Orchestrator (explore/verify/optimize with real scoring + jury verdict + circuit breaker; thresholds in growth.config.js `triPath`, env-overridable / 三路真实评分+队正裁决+熔断，阈值可环境变量覆盖)
-- [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode; no hot-reload / 定时代谢+raw 轮询触发，热重载未纳入)
-- [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + tenant session isolation + semantic search endpoint; no enterprise multi-tenancy / 零依赖 HTTP+Bearer 认证+租户会话隔离，企业级多租户未含)
+- [x] Phase 3 — Scheduled metabolism automation (scheduler: configurable interval + raw/ polling trigger + `--once` mode + hot config via data/scheduler-config.json, delete-to-revert, min interval 60s / 定时代谢+raw 轮询触发+配置热重载，删除即回退，最小间隔 60s；2026-09-08)
+- [x] Phase 4 — Servitization v1 (API server: zero-dep HTTP + Bearer auth + semantic search endpoint; multi-tenancy removed 2026-09-14 / 零依赖 HTTP+Bearer 认证+语义检索端点；多租户组件已砍除（2026-09-14，不再列路线图）)
 - [x] Phase 5 — Consciousness upgrade integration (13 modules per original design; G1-G8 gates green; metabolism→kernel events wired 2026-09-08; N1 cross-process atomic lock / N2 timing-safe auth / N3 self-test exit discipline; consciousness-neural docs realigned to code truth — evidence: `e847d15`, verify-deploy + self-test ALL GREEN)
+
+## 🔬 Verification Evidence / 验证证据
+
+> aing 的每个声称都附带可复现的验收脚本——32 项部署门禁（C0–C20，`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
+>
+> *Every claim carries a reproducible verification script — 32-item (C0–C20) deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison (caliber-dependent, see M4 §I4/§J). 6 architectural proofs independently verified; M4 record now spans A–K (incl. OPT sandbox re-run §J and closeout §K).*
+
+### 报告与数据集 / Reports & Data
+
+> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。**例外（2026-09-14 复查）**：`simulation/proof-search-ab.json` 包内**没有对应生成脚本**＝不可复现证据，其「语义 > 关键词 2 倍」属人工提词口径，禁止当无条件既成事实引用（分口径实测见 M4 §I4 与 §J 第 9 链）。
+> *The proof files below are locally reproducible artifacts (gitignored, not committed) — regenerate them locally by running the corresponding verification scripts.*
+
+| 文档 | 说明 |
+|------|------|
+| [📋 M4 数据采集表](./docs/M4-DATA-COLLECTION-2026-09-13.md) | A–K 逐项：A–H 基础链 + I 6 项架构证明 + **J OPT 部署沙盒换血复跑（十一链逐条读数）** + **K 存盘 / 复原 L1 / 再对齐（收工段）**，含核验意见（五层全部解锁） |
+| [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 按需接入项清单（视图由 `tools/gen-greenlist.js` 生成，C10a 钉住与 `docs/greenlist.json` 一致） |
+| [🚚 部署实操手册 DEPLOY-PLAYBOOK](./docs/DEPLOY-PLAYBOOK.md) | 从开箱到 ALL GREEN 的手怎么动：阶段 0–N、换血/复原、故障表 |
+| [🧭 Agent 五步引导 AGENT-ONBOARDING](./docs/AGENT-ONBOARDING.md) | 第一次接触 aing 的入口：纪律 → 院子地图 → 部署 → 日常 → 汇报格式 |
+| [🧪 KESPI 敏感性验证](./simulation/proof-kespi-sensitivity.json) | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
+| [🧠 意识层闭环实测](./simulation/proof-consciousness-loop.json) | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
+| [📊 步级贡献度](./simulation/proof-step-contribution.json) | 11 步管线每步 before/after 快照对比 |
+| [🔍 检索质量 A/B](./simulation/proof-search-ab.json) | 语义 0.838 vs 关键词 0.428（21 任务，**人工提词口径、无随包生成脚本**）。2026-09-14 OPT 三臂实测：整句原样提问时 LIKE 0%／语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8／语义 top3 37.5%＝8 实体随机底（语义不占优） |
+| [📈 代谢 Delta](./simulation/proof-metabolism-delta.json) | 无新知识 delta=0 / 投入新知识 entities+1 links+21 kespi+0.005 |
+| [🧬 实体生命周期](./simulation/proof-entity-lifecycle.json) | kespi-system 9 维度全追踪（raw→wiki→DB→向量→KESPI→意识层→决策链） |
+| [🏋️ SkillOpt 训练证据](./simulation/skillopt-evidence.json) | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
+| [🏋️ SkillOpt 在线证据](./simulation/skillopt-online-evidence.json) | aing API 检索辅助: 在线 vs 离线对比 |
+| [📦 矛盾任务包](./simulation/skillopt-task-package.json) | 41 条 / 6 领域，从真实数据提取 |
 
 ## Vision & Operations / 愿景与运行
 
 > 想知道 aing 的愿景如何实现、部署后如何跑代谢、训练与真执行器怎么接入？读这一篇：
-> **[愿景与运行手册 · Vision & Operations Playbook](./raw/vision-and-operations.md)**（中英双语 · bilingual）
+> **愿景与运行手册 · Vision & Operations Playbook**（`raw/vision-and-operations.md`，中英双语 · bilingual）
+>
+> ⚠️ **该手册不在发布包内**：`raw/` 被 `.gitignore` 排除，本包 `git ls-files raw` 为 **0 篇**（aing/OPT 各跟踪 8 篇，系规则生效前播种）→ 走 git 分发时这个路径不可点，别按链接找文件。装机后 C3「raw/ 有知识文档」需自行放入至少一篇 `raw/*.md`（见 DEPLOY-PLAYBOOK 阶段 0）。/ *Absent from a git-cloned package (`raw/` is gitignored): provision ≥1 `raw/*.md` before C3.*
 
 ## 🧬 Architecture Lineage / 架构谱系与验证锚点
 
 > Every anchor in the table below is clickable and independently verifiable. 表内每一格都可点击核查，欢迎逐格翻验。
 
-![Architecture Lineage](docs/lineage.svg)
+```mermaid
+mindmap
+  root((aing 架构谱系))
+    🧠 思想层
+      GWT → Jacobian Lens 2026-07
+      Baars / Dehaene · Anthropic 实证
+      状态：已对齐
+    🏋️ 训练层
+      SkillOpt 六阶段 ReflACT
+      AlphaEvolve 血统 · OpenEvolve
+      arXiv:2605.23904
+      状态：adapter 就位
+    🗄️ 记忆层
+      Forms–Functions–Dynamics 三维框架
+      arXiv:2512.13564 · Paper-List
+      状态：双脑落地 / 双时态迭代
+    🧬 结构层
+      左右脑单交叉 × 双时态（编译 × 代谢两期）
+      主 agent 自收敛，非编排手写
+      状态：迭代中
+    🔌 生态层
+      SkillOpt 源码签名核对，零 wrapper
+      microsoft.github.io/SkillOpt
+      状态：EnvAdapter 就位 · 冒烟全绿
+    🏗️ 工程层
+      Harness Engineering：aing 即 agent 的 harness
+      LangChain Harness Anatomy 2026
+      SEAGym · Browser Harness
+      状态：已对齐
+    🚀 aing 本体
+      引擎就绪
+      机甲按需挂载 — the chassis is swappable
+      MIT · github.com/doerking/aing
+```
+
+> 上图只作视觉总览；**每一层的可点击锚点与出处在下面的表里**，图中任何一层若与表格不一致，以表格为准（门禁 C20 每轮核一次集合包含关系）。
+> The map is an overview only; clickable anchors stay in the table below, and C20 checks each round that every layer named in the table also appears in the map.
 
 | 层 | 锚点 | 出处 | 状态 |
 |---|---|---|---|
 | 🧠 思想层 | GWT → Jacobian Lens (2026-07) | [Baars/Dehaene](https://www.transformer-circuits.pub/) · Anthropic 实证 | 已对齐 |
 | 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 血统 | [MSR SkillOpt (arXiv:2605.23904)](https://arxiv.org/abs/2605.23904) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
-| 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 | 主 agent 自收敛，非编排手写 | 迭代中 |
+| 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 （本包的双时态＝**编译时态 × 代谢时态**，不是数据库 valid-time/transaction-time 双列） | 主 agent 自收敛，非编排手写 | 迭代中 |
 | 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
+| 🏗️ 工程层 | Harness Engineering：aing 即 agent 的 harness | [LangChain Harness Anatomy 2026](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) · [翁荔 SEAGym 2026](https://arxiv.org/abs/2606.17546) · [Browser Harness 592 行](https://github.com/browser-use/browser-harness) | 已对齐 |
 
 ## 🙏 Acknowledgments / 致谢
 
-aing 站在这些肩膀上（按三层闭环归位，排名不分先后）：
+> aing 站在这些肩膀上。下面**逐块标明账目性质**：软件蓝本 ／ 真实依赖 ／ 同构引证——不混记，也不构成背书。
+> Each block states what kind of credit it is: software blueprint / actually-used dependency / isomorphic citation.
 
 ### 思想源头 / Intellectual Origins
 
 - **认知科学的思想源头** — Baars / Dehaene 的全局工作空间理论（意识层的 GWT 映射）、赫布可塑性（生长与剪枝的学习律）、Richard Sutton 的 "Era of Experience"（经验时代的自进化方向）。aing 的意识神经蓝图从中取火。
 - **[Anthropic · Jacobian Lens](https://www.transformer-circuits.pub/)** — 《Verbalizable Representations Form a Global Workspace in Language Models》（2026-07）在 LLM 内部首次实证全局工作空间：可读出、可干预、容量极小、只服务灵活推理。aing 的 GWT 映射自此从理论隐喻升级为工程对标。
 
-### 进化环 / Evolution Loop · Training & Implementation
+### 两脑底座 · 软件蓝本与一条路线分歧 / Substrate Blueprints & a Route Disagreement
 
-- **[Microsoft SkillOpt](https://github.com/microsoft/SkillOpt)**（arXiv:2605.23904，MSR 与上海交大等）— “技能文档即可训练参数”的思想与六阶段训练循环（ReflACT：Rollout→Reflect→Aggregate→Select→Update→Validate）。aing 的进化环（`training/adapter.py`）基于其 EnvAdapter 接口构建；其 SkillOpt-Sleep（夜间回放失败任务写入技能文档）与 aing 的代谢回炉互为同构印证。
-- **[DeepMind AlphaEvolve 及开源生态](https://github.com/topics/alpha-evolve)**（OpenEvolve / CodeEvolve / GigaEvo）— LLM×进化算法的程序空间优化，双向血统追踪让每个后代可溯源，与 aing 回炉微粒沿 `recycled_from` 血统链可溯源的 KPI 殊途同归。
-- **OPT 实现历程** — aing 的训练副本与实现现场。影子目录隔离、EnvAdapter 按源码签名逐条核对、32 条取自部署包真实口径的矛盾任务包、KESPI 斜率天然挂钩训练奖励，三项核心组件一次冒烟即“已就位”。aing 不需要为被训练而改造自己：它活着的方式就是被训练的方式。
+- **Tolaria**（数据库软件）— **生长脑的实体外壳候选**：人读视图、双向链接浏览、每日笔记。本包既不随附也不依赖它；要挂实体外壳见 `docs/Engineering/TWO-BRAIN-BODIES.md`（含挂载图与回流约定）。
+- **LLM Wiki 类社区实现**（数据库软件）— **秩序脑的编译前端候选**：摄入 → 编译 → 查询。当年**原版装不上**，作者把这一层能力用纯 Markdown + Node **重写**成了 MD 版（即本发布包）——是重写，不是插件，所以二者都不是运行时依赖。
+- **路线分歧（这条最要紧）** — **aing 与 Karpathy 的 LLM Wiki 范式是相反方向**：范式本身把知识当"编译完即静止的资产"（线性、一次性）；aing 在 raw/wiki/schema 三层之上**再压一层代谢**（发芽／授粉／芥子／再生／过期），让库自己生长、衰减、回炉。故这里**只认社区工具为数据层蓝本，不认其概念为源头**，完整对比见 `docs/User-Guide/03-FAQ.md` §10。
 
-### 数据层 / Data Layer · The Cross-Temporal Dual-Brain Foundation
+### 真实使用的底座依赖 / Foundational Dependencies Actually Used
 
-- **[sql.js](https://github.com/sql-js/sql.js)** 与 **Node.js**（内置 `node:sqlite`）— 交叉时态双脑数据层的零原生编译底座。
-- **[@xenova/transformers](https://github.com/xenova/transformers.js)** 与 **[all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2)** — 纯本地、零外呼的语义向量能力（384 维混合检索）。
-- **[Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564v1)**（Hu et al., 2025，arXiv:2512.13564，NUS、人大、复旦、北大等 12 家机构；官方配套论文列表与资源索引：[Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List)）— “形式-功能-动态”三维正交框架及其“事实记忆与经验记忆必须严格分离”的论断，为交叉时态双脑数据层提供行业话语体系；Zep Graphiti 的双时态知识图是记忆时间维度的现成参照。
+- **SQLite + Emscripten/WASM** — `sql.js` 的真身与编译工具链：交叉时态数据层实际跑的引擎（换来零原生编译）。
+- **ONNX Runtime（`onnxruntime-web` / `onnxruntime-node` 1.14.0）** — `@xenova/transformers` 之下的推理引擎，**语义检索真正的执行者是它**；此前只谢了上层壳。
+- **Hugging Face 生态** — 模型仓库 `Xenova/all-MiniLM-L6-v2`（随包 4 件：config / tokenizer / tokenizer_config / 量化 ONNX；**许可证以上游仓库为准，本包未随附条款文本**）、chat 模板引擎 `@huggingface/jinja`，以及国内网络下**必经**的镜像 `hf-mirror.com`（见「已知坑」第 2 条）。
+- **Mermaid** — 本页架构图（`mindmap`）由托管平台内建渲染器绘制，**本包不含渲染器**；图只作总览，可点击锚点全在下方谱系表。
+- **Node.js ≥ 18 + Git** — 除一条 `npm install` 之外的全部运行时要求：MD + Git + Node 即可跑完整代谢环。
 
-### 记忆与检索优化研究 / Memory & Retrieval Research
+### 检索与记忆 · 已在包内落地 / Retrieval & Memory Research (shipped)
 
-> 2026-09 外部调研吸收（约束：不动四层架构、不换存储引擎、不新增重依赖）。
-> 状态标注守绿灯解锁制：✅ 已吸收并影子验证 ｜ 🔬 候选（设计中，未接线）｜ 📖 同构印证（叙事引用）。
+- **OpenClaw 混合检索实践**（SQLite FTS5 70/30 加权、中文 unicode61 分词坑对策）— ✅ 已落地：`src/query.js` 三路加权融合（语义 0.6 / 关键词 0.25 / 名称 0.15），阈值全在 `src/growth.config.js` 的 `query` 段（纪律第 5 条）。
+- **RF-Mem**（Familiarity–Recollection 双加工检索）— ✅ 已落地：快/慢双路径，候选整体置信低于阈值时沿 wiki 链接邻居做二跳慢回忆（`--slow` 可强制）。
+- **Qwen3 Reranker 等 cross-encoder 精排** — ✅ 以替代形态落地：不引 0.6B 重依赖，改为 KESPI + 30 天半衰期的 recency 伪精排（`rerank` 段）。
+- **MemoryBank 遗忘曲线 / 访问频次淘汰** — ✅ **已落地（此前被误标成"候选"）**：`src/growth-loop.js` 的 `factorUsage` 因子就是"access_count 越高越抗衰减"。
+- 📖 **同构印证（未落地，仅叙事，不当能力宣传）**：LightMem 的睡眠期离线巩固 ↔ `src/scheduler.js` 常驻代谢调度器；Forms–Functions–Dynamics 三维框架（arXiv:2512.13564）↔ 下方谱系表"记忆层"锚点。
+- **机制命名说明** — `FadeMem`（三因子衰减）与 `RAKG`（参照建链）是**本院院档的内部命名**（见 `docs/M4-DATA-COLLECTION-2026-09-13.md` §D / §E），**不是对外部论文的引用**；其外部原始出处未经核实，故此处不作任何来源或背书声明。
 
-- **OpenClaw 混合检索实践**（SQLite FTS5 70/30 加权，含中文 unicode61 分词坑对策）— ✅ query.js 加权融合排序（语义 0.6 + 关键词 0.25 + 名称 0.15，阈值入 `growth.config.js`）。
-- **RF-Mem**（ICLR 2026，Familiarity-Recollection 双加工检索）— ✅ 快/慢双路径：候选平均相似度低于阈值时自动触发二跳邻居慢回忆。
-- **Qwen3 Reranker 等 cross-encoder 精排思路** — ✅ 以替代形态吸收：不引 0.6B 重依赖，改为 KESPI + 30 天半衰期 recency 伪精排。
-- **[LightMem](https://arxiv.org/abs/2510.18866)**（ICLR 2026，zjunlp）— 🔬 感官过滤（入库前"值得记"判定）为候选；📖 其睡眠期离线巩固与 aing scheduler 定时代谢天然同构。
-- **MemoryBank 遗忘曲线 / 访问频次淘汰** — 🔬 候选：`access_count` 访问强化 + KESPI 衰减对高频实体减速（Wave 2）。
-- **mem0 Agent 记忆横评**（准确率×成本×延迟三维 Pareto）— 🔬 候选：32 任务包评测拟升级为三维记录（Wave 3）。
-- **Externalization in LLM Agents**（上交大/中科院，2026）— 📖 "检索质量比存储容量更重要"与"技能=程序性记忆外化"，为代谢链与芥子回炉提供同构印证。
+### 工程实践 · 理念同构 / Engineering Practice (isomorphic, not a code dependency)
 
-**记忆研究论文（B组定向调研，2026-09）**：
+- **[LangChain · The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness)**（2026）— "讲不清 harness，模型就成了你的架构"，与本包"门禁即架构"的立场相合。
+- **[翁荔 · Harness Engineering for Self-Improvement / SEAGym](https://arxiv.org/abs/2606.17546)**（清华，2026-07）— harness 层才是自我改进的真瓶颈；本包把验收器与绿名单当 harness 治理。
+- **[Browser Harness](https://github.com/browser-use/browser-harness)**（Browser Use 团队，2026-04）— 极简直连、少抽象的工程口味与本包脚本面相近。
+- 以上三件**均为理念同构，本包不含其任何代码**；谱系表"工程层＝已对齐"就是这个口径（别去找一个叫 harness 的模块）。
 
-- **Agent Memory Survey**（arXiv:2602.06052）— 📖 记忆是自进化基底：短期门控→长期固化→技能复用，即 aing "自己养自己"的他证。
-- **Agent-Native Memory**（arXiv:2606.24775）— 📖 "局部维护优于全局重组"，代谢式剪枝/压缩/回炉路线的实证背书。
-- **TMA-NM 记忆投毒防御**（arXiv:2606.24322）— 🔬 写时来源绑定（trust-on-birth）启发了 origin-trust 设计（`entities.origin_trust` 血统信任 + ≥2 可信源佐证门 + 隔离区），保卫进化闭环的血统诚实；设计中。
-- **AgeMem**（arXiv:2601.01885）— 📖 agent 自主管理记忆与 SkillOpt "技能文档即可训练参数"同向；RL 手段不同法，aing 走文档自进化。
-- **Oracle Agent Memory**（arXiv:2607.13157）— 📖 DB-native 记忆生命周期管理，与 11 步代谢链形结构同构。
-- **MRMMIA 隐私攻击**（arXiv:2605.27825）— 📖 反证：攻击面在可远程查询的记忆，aing 纯本地架构天然免疫，本地孤岛的安全溢价。
-
-### 运行后端 / Runtime Backend
-
-- **[DeepSeek](https://www.deepseek.com/)** — M2 影子训练联调的 LLM 后端（openai_compatible 模式）。
-
-> 灵感属于所有人，实现属于此刻。
-> *If I have seen further, it is by standing on the shoulders of giants.*
+> 灵感属于所有人，实现属于此刻。/ *If I have seen further, it is by standing on the shoulders of giants.*
 
 ## License
 MIT — see [LICENSE](./LICENSE) for the full license text.

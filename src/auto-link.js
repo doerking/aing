@@ -14,6 +14,21 @@
 
 const KnowledgeStore = require('./knowledge-store');
 
+// M4 RAKG: 幻觉过滤——语义相似度门槛
+// 关键词重叠可以触发候选，但 confidence >= 0.8 必须通过语义相似度验证
+// 防止"提到了同一个词但讨论完全不同事物"的虚假链接
+let _vectorSearch = null;
+async function getVectorSearch(store) {
+  if (_vectorSearch) return _vectorSearch;
+  const VectorSearch = require('./vector-search');
+  _vectorSearch = new VectorSearch(store);
+  await _vectorSearch.init();
+  try { await _vectorSearch.enableSemantic(); } catch (e) {
+    console.log('[auto-link] 语义模型不可用，回退 hash 模式');
+  }
+  return _vectorSearch;
+}
+
 function extractKeywords(content) {
   const stopWords = new Set([
     'the', 'a', 'an', 'is', 'are', 'was', 'were', 'in', 'on', 'at', 'to', 'for',
@@ -32,6 +47,11 @@ function extractKeywords(content) {
 }
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写；作为 STEPS 第 4 步子进程凭 AING_METABOLISM_CHILD 豁免照跑
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('auto-link'));
+    process.exit(3);
+  }
   const dryRun = process.argv.includes('--dry-run');
   
   const store = new KnowledgeStore();
@@ -59,15 +79,31 @@ async function main() {
       let confidence = 0;
       let reason = '';
       
-      // 1. 共享标签
+      // 1. 共享标签（9 段数值加权）
       let tagsA = [], tagsB = [];
       try { tagsA = JSON.parse(a.tags || '[]'); } catch (e) {}
       try { tagsB = JSON.parse(b.tags || '[]'); } catch (e) {}
       
-      const sharedTags = tagsA.filter(t => tagsB.includes(t));
+      // 解析标签名和数值：["metabolism:8"] → Map { metabolism → 8 }
+      // 无 :N 的标签默认 5
+      const parseTagVals = (arr) => {
+        const m = new Map();
+        for (const t of arr) {
+          const mm = String(t).match(/^(.+):([1-9])$/);
+          if (mm) m.set(mm[1], parseInt(mm[2], 10));
+          else m.set(String(t), 5);
+        }
+        return m;
+      };
+      const valsA = parseTagVals(tagsA);
+      const valsB = parseTagVals(tagsB);
+      
+      const sharedTags = [...valsA.keys()].filter(k => valsB.has(k));
       if (sharedTags.length > 0) {
-        confidence = Math.max(confidence, 0.6 + sharedTags.length * 0.1);
-        reason = `共享标签: ${sharedTags.join(', ')}`;
+        // 共享标签的数值之和归一化：min(1.0, 0.3 + sum(min(a,b)/9 * 0.15))
+        const tagStrength = sharedTags.reduce((s, t) => s + Math.min(valsA.get(t), valsB.get(t)), 0);
+        confidence = Math.max(confidence, Math.min(1.0, 0.3 + tagStrength / 9 * 0.15));
+        reason = `共享标签: ${sharedTags.map(t => `${t}:${Math.min(valsA.get(t), valsB.get(t))}`).join(', ')}`;
       }
       
       // 2. 关键词重叠
@@ -86,6 +122,37 @@ async function main() {
         reason = `同类型: ${a.type}`;
       }
       
+      // M4 RAKG: 幻觉过滤——高置信度链接必须通过语义相似度验证
+      // 关键词重叠 >= 0.8 的候选需要语义确认，防止"同词不同义"的虚假链接
+      if (confidence >= 0.8) {
+        try {
+          const vs = await getVectorSearch(store);
+          // 直接对比 a 和 b 的向量相似度
+          const embARow = store.getEmbedding(a.id);
+          const embBRow = store.getEmbedding(b.id);
+          if (embARow?.embedding && embBRow?.embedding) {
+            const bufA = Buffer.isBuffer(embARow.embedding) ? embARow.embedding : Buffer.from(embARow.embedding);
+            const bufB = Buffer.isBuffer(embBRow.embedding) ? embBRow.embedding : Buffer.from(embBRow.embedding);
+            const vecA = [];
+            const vecB = [];
+            for (let k = 0; k < bufA.length; k += 4) vecA.push(bufA.readFloatLE(k));
+            for (let k = 0; k < bufB.length; k += 4) vecB.push(bufB.readFloatLE(k));
+            const simScore = vs.cosineSimilarity(vecA, vecB);
+            if (simScore < 0.35) {
+              // 语义不匹配，降级置信度（低于真实实体对分布下界 0.338）
+              confidence = Math.min(confidence, 0.5);
+              reason = reason + ' [语义未通过 降级 sim=' + simScore.toFixed(3) + ']';
+            } else {
+              reason = reason + ' [语义通过 sim=' + simScore.toFixed(3) + ']';
+            }
+          } else {
+            reason = reason + ' [语义跳过: 无向量]';
+          }
+        } catch (e) {
+          reason = reason + ' [语义跳过: ' + e.message + ']';
+        }
+      }
+
       // 创建链接
       if (confidence >= 0.3) {
         const linkKey = `${a.id}__${b.id}`;

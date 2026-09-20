@@ -31,7 +31,9 @@ class ConsciousnessLayer {
   /**
    * 生成知识简报
    */
-  generateBriefing() {
+  generateBriefing(options = {}) {
+    // 存档改为可选（默认存档，保住既有调用方行为）：读端纯净化由上层适配器决定传 save:false
+    const save = options.save !== false;
     console.log('🧠 意识层生成简报...');
     
     const briefing = {
@@ -43,7 +45,7 @@ class ConsciousnessLayer {
       recommendations: this._generateRecommendations(),
     };
     
-    this._saveBriefing(briefing);
+    if (save) this._saveBriefing(briefing);
     
     return briefing;
   }
@@ -286,9 +288,20 @@ class ConsciousnessLayer {
   _getAllRawFiles() {
     if (!fs.existsSync(this.rawDir)) return [];
     
-    return fs.readdirSync(this.rawDir)
-      .filter(f => f.endsWith('.md'))
-      .map(name => ({ name, path: path.join(this.rawDir, name) }));
+    // 递归：入库产物在 raw/inbox/ 子目录，旧实现只看顶层 → 会话档逃过"未编译/久未更新"巡检
+    const out = [];
+    const stack = [this.rawDir];
+    while (stack.length) {
+      const cur = stack.pop();
+      let items;
+      try { items = fs.readdirSync(cur, { withFileTypes: true }); } catch (e) { continue; }
+      for (const it of items) {
+        const full = path.join(cur, it.name);
+        if (it.isDirectory()) { stack.push(full); continue; }
+        if (it.name.endsWith('.md')) out.push({ name: it.name.replace(/.md$/, ''), path: full });
+      }
+    }
+    return out;
   }
   
   _countLinks() {

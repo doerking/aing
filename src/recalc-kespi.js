@@ -13,6 +13,11 @@ const KnowledgeStore = require('./knowledge-store');
 const KespiChecker = require('./kespi-check');
 
 async function main() {
+  // 2026-09-17 F3：代谢持库时拒写（单源判定见 metabolism-lock.js）
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('recalc-kespi'));
+    process.exit(3);
+  }
   const dryRun = process.argv.includes('--dry-run');
   
   const store = new KnowledgeStore();

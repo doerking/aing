@@ -5,7 +5,7 @@
  * 功能：串联所有代谢引擎，执行完整的双脑代谢流程
  * 
  * 三种模式：
- * 1. 完整模式（默认）: 按固定顺序执行全部 10 步
+ * 1. 完整模式（默认）: 按固定顺序执行全部 11 步
  * 2. 智能模式 (--smart): 生长决策器判断该做什么，按需执行
  * 3. 单步模式 (--step xxx): 只执行指定步骤
  * 
@@ -13,7 +13,7 @@
  * 1. 秩序脑编译（raw → wiki）
  * 2. 导入数据库（wiki → SQLite）
  * 3. 自动链接发现（实体关联）
- * 4. 向量索引（64-dim embedding）
+ * 4. 向量索引（默认 384 维本地语义向量；语义模型缺失才回退 64 维哈希）
  * 5. 发芽引擎（新关联发现）
  * 6. 授粉引擎（跨域融合）
  * 7. 芥子压缩（低频归档）
@@ -23,7 +23,7 @@
  * 使用：
  *   node run-metabolism.js              # 执行完整流程
  *   node run-metabolism.js --smart      # 智能决策模式
- *   node run-metabolism.js --step compile    # 只执行编译
+ *   node run-metabolism.js --step=compile    # 只执行编译（必须等号形；空格形会被当成整链跑，2026-09-14 实测）
  *   node run-metabolism.js --force            # 强制模式
  *   node run-metabolism.js --resume           # 断点续传
  *   node run-metabolism.js --feedback         # 执行后反馈分析
@@ -33,21 +33,27 @@ const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// ── 铁律守卫：代谢不得替用户提交工作树 / metabolism must never commit on the user's behalf ──
+// 实测事故（2026-09-14，OPT）：本文件第 1 步 compile 走到底会调 src/compile.js 的 gitCommit()，
+// 那里面是 `git add -A` + `git commit --no-verify`（身份取该院 local git config），
+// 一步代谢就把当时 38 个文件提成了 `1a3382b`——绕过用户「未经允许不得 commit」铁律，
+// 而当时 24 项验收全绿（旧门只查入库链与自测链，没人查这个入口）。
+// 因此默认注入 AING_NO_AUTOCOMMIT=1（下面 executeStep 用 execSync 继承 process.env → 子进程可见）；
+// 确需自动提交时必须显式 opt-in：AING_AUTOCOMMIT=1。seed-demo / sync-opt / auto-ingest 本来就传
+// NO_AUTOCOMMIT=1，同向不受影响。由 verify-deploy C13 钉住（在隔离假院里真跑：带守卫无提交、删守卫出提交）。
+if (process.env.AING_AUTOCOMMIT !== '1') process.env.AING_NO_AUTOCOMMIT = '1';
+// 2026-09-17 深度检查 F3：持锁后子进程豁免标记——import/kespi/vector/link 等子步自身也是写者，
+// 若让它们也查 metabolism.lock 会「代谢自己把自己锁死」（原链路事故）；子步凭此标记通行。
+// 共享判据见 src/metabolism-lock.js；execSync 继承 process.env → 子进程自动可见。
+if (!process.env.AING_METABOLISM_CHILD) process.env.AING_METABOLISM_CHILD = '1';
+
 
 // ── N1: 跨进程原子锁（范式同 distill.js D4：wx 原子创建 + finally 释放 + 陈旧锁按 age/pid 回收）──
 const LOCK_PATH = path.join(__dirname, '..', 'data', 'metabolism.lock');
-const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十步全流程宽裕上限
+const LOCK_STALE_MS = 30 * 60 * 1000; // 30min：十一步全流程宽裕上限
 let heldLock = null; // 持锁句柄，main 结束时保证释放
 
 function pidAlive(pid) {
-  // P1 #002: 跨平台 PID 检查（Windows 使用 tasklist，Unix 使用 kill -0）
-  if (process.platform === 'win32') {
-    try {
-      const { execSync } = require('child_process');
-      execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, { encoding: 'utf8', stdio: 'pipe' });
-      return true;
-    } catch (e) { return false; }
-  }
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
 }
 
@@ -76,7 +82,7 @@ function acquireLock() {
 
 // ── A1: 代谢→意识神经事件发射（kernel 锁定 coordination-only：只感知/路由/建议，不执行）──
 const METABOLISM_CHANNEL = {
-  compile: 'structure', import: 'structure', 'link-sync': 'structure',
+  compile: 'structure', import: 'structure', distill: 'structure', 'link-sync': 'structure',
   link: 'semantic', vector: 'semantic', sprout: 'semantic', pollinate: 'semantic',
   compress: 'temporal', prune: 'temporal', kespi: 'kespi'
 };
@@ -104,6 +110,30 @@ function emitMetabolismEvent({ step, ok, intensity, evidence, suggestedAction })
   }
 }
 
+// ── M4 自我解释：代谢决策因果链日志 ──
+// 每步记录：做了什么决策、基于什么证据、考虑了什么替代方案、结果如何
+const DECISION_LINEAGE_FILE = path.join(__dirname, '..', 'logs', 'metabolism-decision-lineage.jsonl');
+
+function logDecisionLineage(step, decision) {
+  try {
+    fs.mkdirSync(path.dirname(DECISION_LINEAGE_FILE), { recursive: true });
+    const entry = {
+      timestamp: new Date().toISOString(),
+      step,
+      action: decision.action || 'execute',
+      target: decision.target || `step:${step}`,
+      evidence: decision.evidence || {},
+      reason: decision.reason || '',
+      alternatives: decision.alternatives || [],
+      outcome: decision.outcome || 'unknown',
+      causalChain: decision.causalChain || [`${step} → ${decision.outcome || 'executed'}`],
+    };
+    fs.appendFileSync(DECISION_LINEAGE_FILE, JSON.stringify(entry) + '\n', 'utf8');
+  } catch (e) {
+    // 非关键：日志写入失败不影响代谢
+  }
+}
+
 // 配置
 const CONFIG = {
   scriptsDir: path.join(__dirname),
@@ -115,14 +145,15 @@ const CONFIG = {
 const STEPS = [
   { name: 'compile', desc: '秩序脑编译 (raw/*.md → wiki/entities/*.md)', script: 'compile.js', args: [] },
   { name: 'import', desc: '导入数据库 (wiki/ → SQLite)', script: 'import-from-wiki.js', args: [] },
+  { name: 'distill', desc: '蒸馏器 (pending-distillation → active)', script: 'distill.js', args: [] },
   { name: 'link', desc: '自动链接发现 (实体关联)', script: 'auto-link.js', args: [] },
-  { name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
-  { name: 'vector', desc: '向量索引 (64-dim embedding)', script: 'index-vectors.js', args: [] },
+{ name: 'link-sync', desc: '双脑同步 (DB链接 → wiki/links/ 落盘)', script: 'sync-links-to-fs.js', args: [] },
+  { name: 'vector', desc: '向量索引 (语义 384 维；模型缺失回退 64 维哈希)', script: 'index-vectors.js', args: [] },
   { name: 'sprout', desc: '发芽引擎 (新关联发现)', script: 'sprout.js', args: [] },
   { name: 'pollinate', desc: '授粉引擎 (跨域融合)', script: 'pollinate.js', args: [] },
   { name: 'compress', desc: '芥子压缩 (低频归档)', script: 'compress.js', args: [] },
   { name: 'kespi', desc: 'KESPI 八维自检', script: 'kespi-check.js', args: [] },
-  { name: 'prune', desc: '剪枝清理 (过期归档)', script: 'prune.js', args: [] }
+{ name: 'prune', desc: '剪枝清理 (过期归档)', script: 'prune.js', args: [] },
 ];
 
 // P0: 关键步骤 —— 失败必须中断流水线，不允许「成功 8 失败 1」冒充成功
@@ -202,6 +233,17 @@ function executeStep(index, force = false, resume = false) {
       duration
     };
     
+    // M4 自我解释：记录决策因果链
+    logDecisionLineage(step.name, {
+      action: 'execute',
+      target: `step:${step.name}`,
+      evidence: { script: step.script, duration, output: output.slice(0, 200) },
+      reason: `代谢步骤 ${step.desc} 正常执行完成`,
+      alternatives: ['跳过（--step 模式）', '强制重试（--force）'],
+      outcome: 'success',
+      causalChain: [`run-metabolism.main → executeStep(${step.name}) → execSync(${step.script}) → success (${duration}ms)`],
+    });
+    
     console.log(`\n✅ 完成: ${step.desc} (${duration}ms) / Done:`);
     
     // 保存恢复点
@@ -221,6 +263,18 @@ function executeStep(index, force = false, resume = false) {
       error: error.message
     };
     state.errors.push({ step: step.name, error: error.message });
+    
+    // M4 自我解释：记录失败决策因果链
+    const isCritical = CRITICAL_STEPS.has(step.name);
+    logDecisionLineage(step.name, {
+      action: 'execute',
+      target: `step:${step.name}`,
+      evidence: { script: step.script, error: error.message, duration },
+      reason: `代谢步骤 ${step.desc} 执行失败: ${error.message}`,
+      alternatives: isCritical ? ['中断管线（关键步骤失败）'] : ['跳过继续（非关键步骤失败）', '强制重试（--force）'],
+      outcome: 'failed',
+      causalChain: [`run-metabolism.main → executeStep(${step.name}) → execSync(${step.script}) → FAIL: ${error.message} → ${isCritical ? '管线中断' : '继续后续步骤'}`],
+    });
     
     console.error(`\n❌ 失败: ${step.desc} (${duration}ms) / Failed:`);
     console.error(`   错误: ${error.message} / Error:`);
@@ -292,6 +346,40 @@ function printFinalStats() {
 /**
  * 智能决策模式：让生长决策器决定执行哪些步骤
  */
+// ── 治理出口（L1, 2026-09-08）：sync-opt 副本对齐挂 main() 出口，smart/observe/step/full 殊途同归。──
+// 背景：此前 sync-opt 是 full 链第 11 步，--smart 的 observe 分支提前 return 时永远到不了（T1 陷阱：
+// OPT 永远是 aing 的副本，在智能模式下退化为运气）。摘出 STEPS 后由出口统一执行；
+// marker 门在 sync-opt.js 内部（无 data/opt-root.json 时零操作，其他 clone 不受影响）。
+async function runGovernanceExit() {
+  if (process.argv.includes('--step=')) {
+    // 单步模式（--step=compile）多为调试/CI 精确重放，不代跑副本对齐（避免调试动作触发换血副作用）
+    console.log('⏭️  [治理出口] --step 单步模式跳过 sync-opt');
+    return;
+  }
+  try {
+    // 直接 execSync（executeStep 绑定 STEPS 索引与状态机；出口执行不伪装成链上步骤、不进代谢日志）
+    execSync(`node "${path.join(__dirname, 'sync-opt.js')}"`, {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit',
+      timeout: 10 * 60 * 1000
+    });
+  } catch (e) {
+    console.log('⚠️  [治理出口] sync-opt 失败（非关键，不改变代谢退出码）: ' + e.message);
+  }
+}
+
+/**
+ * 意识层尾步：生成注意力队列面板（卡 3）。非关键步骤，失败不影响代谢退出码。
+ */
+async function runPanelTail() {
+  try {
+    const panelMod = require('./metabolism-panel.js');
+    await panelMod();
+  } catch (e) {
+    console.log(`\n⚠️  意识层面板生成失败（非关键，不影响代谢结果）: ${e.message}`);
+  }
+}
+
 async function smartMode(enableFeedback = false) {
   console.log('🧬 aing 知识代谢流水线 — 智能决策模式\n / smart-decision mode');
   
@@ -330,6 +418,15 @@ async function smartMode(enableFeedback = false) {
     // 4. 执行
     if (decision.action === 'observe') {
       console.log('\n👁️  系统判断无需操作，继续观察 / System decides no action, keep observing');
+      // L1c: observe 也是一次可学习的决策——照拍反馈快照，让 feedback 知道'判断为不动作'的系统当时长什么样
+      if (enableFeedback) {
+        try {
+          const snap = await feedback.takeSnapshot();
+          await feedback.logFeedback({ observe: true, decision: decision.action, snap }, []);
+        } catch (e) {
+          console.log('⚠️  observe 快照失败（不影响决策）: ' + e.message);
+        }
+      }
       return;
     }
     
@@ -371,7 +468,6 @@ async function smartMode(enableFeedback = false) {
  */
 async function main() {
   const args = process.argv.slice(2);
-  const forceLock = args.includes('--force-lock');
   const force = args.includes('--force');
   const resume = args.includes('--resume');
   const smart = args.includes('--smart');
@@ -391,6 +487,8 @@ async function main() {
   // 智能决策模式
   if (smart) {
     await smartMode(feedback);
+    await runGovernanceExit(); // L1: 治理出口（含 observe 路径）
+    await runPanelTail();    // 意识层尾步：注意力队列面板
     return;
   }
   
@@ -487,8 +585,68 @@ async function main() {
     process.exitCode = 0;
   }
 
+  // ── W3（2026-09-14）：意识层闭环的写端 / consciousness cycle bookkeeping ──
+  // kernel.recordCycleResult() 此前**全仓零调用点** → stagnationCount 恒 0 →
+  // growth-director.js:150/235 与 metacognition-layer.js:459 三个读者永远等不到值，
+  // 「意识层连续空产出 ≥ 3 → 触发完整代谢」这条自主路径从未成立
+  //（M4 表原先靠人手改 data/consciousness/state.json 才能演示，那是假闭环）。
+  // 判据只用离散存在性，不新增数值阀值（纪律 5）：本轮无失败且未中止 + 库里有活跃实体
+  // + 意识层当前持有活跃事件。任一不成立→记一次空产出；连续 3 次 kernel 自行转
+  // stagnant 并往 raw/ 写 MetaKnowledge，下一次 growth-director 就会选 full_metabolism。
+  // 由门禁 C14 在隔离假院里连跑 3 趟空代谢，证明这个计数会自己爬到 3（不靠改 state.json）。
+  try {
+    let liveEntities = 0;
+    try {
+      const KS = require('./knowledge-store');
+      const KStore = KS.KnowledgeStore || KS;
+      const cycStore = new KStore();
+      await cycStore.init();
+      const row = cycStore.all("SELECT COUNT(*) AS n FROM entities WHERE status='active'")[0];
+      liveEntities = Number((row && row.n) || 0);
+      if (typeof cycStore.close === 'function') cycStore.close();
+    } catch (eStore) { liveEntities = 0; }
+    if (!_kernel) {
+      const { ConsciousnessKernel } = require('./consciousness-kernel');
+      _kernel = new ConsciousnessKernel({ baseDir: path.join(__dirname, '..') });
+    }
+    const activeEvents = (_kernel.state && Array.isArray(_kernel.state.activeEvents)) ? _kernel.state.activeEvents.length : 0;
+    const hasValidOutput = failedSteps.length === 0 && !state.aborted && liveEntities > 0 && activeEvents > 0;
+    const cycle = _kernel.recordCycleResult(hasValidOutput, hasValidOutput ? '' : 'metabolism-cycle-empty-output', {
+      liveEntities, activeEvents, attemptedPaths: Object.keys(state.steps || {})
+    });
+    console.log(`\n🧠 意识层本轮记账 / cycle bookkeeping: ${hasValidOutput ? '有效产出 / valid output' : '空产出 / empty'}（活跃实体 ${liveEntities} / 活跃事件 ${activeEvents}）→ stagnationCount=${cycle.stagnationCount}${cycle.broken ? ' ⚠️ 已连续 3 次空产出：转 stagnant 并写 MetaKnowledge' : ''}`);
+  } catch (e) {
+    console.log(`\n⚠️  意识层记账失败（不影响代谢结果）/ cycle bookkeeping failed: ${e.message}`);
+  }
+
+  // L1: 治理出口——full 链同样汇入（sync-opt 从 STEPS 摘出后的统一执行点）
+  await runGovernanceExit();
+
+  // 意识层尾步：注意力队列面板（卡 3，非关键）
+  await runPanelTail();
+
   // 打印统计
   printFinalStats();
+
+  // M4 自我解释：记录全局代谢决策因果链
+  logDecisionLineage('pipeline-summary', {
+    action: 'summarize',
+    target: 'metabolism-pipeline',
+    evidence: {
+      totalSteps: STEPS.length,
+      successSteps: Object.values(state.steps).filter(s => s.status === 'success').length,
+      failedSteps: state.errors.length,
+      totalDuration: Date.now() - state.startTime,
+    },
+    reason: `完整代谢${state.errors.length === 0 ? '全部成功' : '存在失败步骤'}`,
+    alternatives: ['--smart 智能模式', '--step 单步模式'],
+    outcome: state.errors.length === 0 ? 'success' : 'partial-failure',
+    causalChain: [
+      `run-metabolism.main → ${STEPS.length} steps → ${Object.values(state.steps).filter(s => s.status === 'success').length} success / ${state.errors.length} failed`,
+      `→ sync-opt（治理出口）→ panel（意识层尾步）`,
+      `→ 决策因果链已记录至 logs/metabolism-decision-lineage.jsonl`,
+    ],
+  });
 }
 
 main().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => {
