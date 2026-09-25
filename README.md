@@ -28,22 +28,6 @@ AIGC:
 
 ---
 
-## 🔥 Shell-Agnostic · Verified
-
-> aing binds to **no note-taking app**. Verified: **plain Markdown + Git + Node alone run the full metabolism loop.**
-> Tolaria / Obsidian / SilverBullet / plain terminal — all are optional front-end shells. 有条件就把两脑实体软件（Tolaria + LLM Wiki）配置上，见下文「两脑实体软件」。
-
-| Pillar | What it doesn't fuss over | Status |
-|---|---|---|
-| Shell-agnostic | Front-end / storage / runtime | ✅ |
-| Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented — coordination-only kernel; metabolism→kernel events wired 2026-09-08 (`e847d15`)
-| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only; selfCheck reads real KESPI/errorRate (M4); reviewConsciousness wired to kernel; decision lineage logged (Phase 2.6 complete)
-| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented — real scoring, no mock (docs realigned 2026-09-08)
-
-**Zero LLM calls in the core loop: plain MD + Node runs the full metabolism; semantic vectors are local & optional. LLMs are optional host shells (session memory, compile aid) — not engine parts. / 核心代谢环零 LLM 调用：MD + Node 跑完全程，语义向量本地可选；LLM 是可选宿主外壳（会话记忆/编译辅助），不是引擎零件。**
-> **Naming discipline / 措辞纪律**："Consciousness" 在本包中始终指**意识神经协调层**——9 通道事件感知 → 注意力路由 → 简报生成；coordination-only（不执行、不自动批准），写入一律走 `ingest → 代谢管线`。它不是自主意识体：无自主目标、无外部行动力。*"Consciousness" here always means the coordination-only neural layer (sense → route → brief); it is not an autonomous agent — no self-set goals, no external agency, writes only via the ingest pipeline.*
-
-
 ## 🗣️ Two Sentences / 两句话说清
 
 **给普通用户 / For you:**
@@ -67,6 +51,21 @@ AIGC:
 > aing 不替你思考，也不替你上网找新知识——它只做一件事：让你和你的 agent 已经知道的一切，活得比你的记性和它的上下文窗口都长。
 >
 > *aing neither thinks for you nor fetches for you. It does one thing: makes everything you already know outlive both your memory and its context window.*
+
+## 🔥 Shell-Agnostic · Verified
+
+> aing binds to **no note-taking app**. Verified: **plain Markdown + Git + Node alone run the full metabolism loop.**
+> Tolaria / Obsidian / SilverBullet / plain terminal — all are optional front-end shells. 有条件就把两脑实体软件（Tolaria + LLM Wiki）配置上，见下文「两脑实体软件」。
+
+| Pillar | What it doesn't fuss over | Status |
+|---|---|---|
+| Shell-agnostic | Front-end / storage / runtime | ✅ |
+| Consciousness Neural | Sensory → Guide Chain → Consciousness 3-layer | ✅ implemented — coordination-only kernel; metabolism→kernel events wired 2026-09-08 (`e847d15`)
+| Metacognition | Self-check → Evaluate → Adjust 3-layer | ✅ implemented — advisory only; selfCheck reads real KESPI/errorRate (M4); reviewConsciousness wired to kernel; decision lineage logged (Phase 2.6 complete)
+| Tri-Path Orchestrator | Explore / Verify / Optimize with circuit breaker | ✅ implemented — real scoring, no mock (docs realigned 2026-09-08)
+
+**Zero LLM calls in the core loop: plain MD + Node runs the full metabolism; semantic vectors are local & optional. LLMs are optional host shells (session memory, compile aid) — not engine parts. / 核心代谢环零 LLM 调用：MD + Node 跑完全程，语义向量本地可选；LLM 是可选宿主外壳（会话记忆/编译辅助），不是引擎零件。**
+> **Naming discipline / 措辞纪律**："Consciousness" 在本包中始终指**意识神经协调层**——9 通道事件感知 → 注意力路由 → 简报生成；coordination-only（不执行、不自动批准），写入一律走 `ingest → 代谢管线`。它不是自主意识体：无自主目标、无外部行动力。*"Consciousness" here always means the coordination-only neural layer (sense → route → brief); it is not an autonomous agent — no self-set goals, no external agency, writes only via the ingest pipeline.*
 
 ## 🫀 Two-Brain Bodies (Optional) / 两脑实体软件（可选）
 
@@ -274,6 +273,21 @@ node src/query.js "三路突击" --limit 5
 ```
 
 > **Tolaria 9 段标签容量**：`[tag:xxx:N]` N=1-9 关联强度。50 类目健康 / 100 可用 / 150 退化 / 200+ 走样。50 类目为 Tolaria + LLM.WIKI 数据库软件进入时机。推演数据见 [TAG-CAPACITY-ANALYSIS.md](./docs/Engineering/TAG-CAPACITY-ANALYSIS.md)。
+### Automation Boundary / 自动化边界（无人值守 vs 等触发）
+
+> 「自己长」= 左列无需人守；右列等宿主或人触发。与 AGENTS 纪律 8（组件透明化）同源。
+> "Self-growing" = the left column runs unattended; the right column waits for a host/human trigger.
+
+| Unattended / 无人值守自动运行 | Trigger-gated / 等触发才运行 |
+|---|---|
+| 定时代谢 + raw/ 轮询（scheduler） | 单步 `--step` 与智能决策 `--smart` |
+| 会话入库 + 指纹去重（auto-ingest / POST /api/ingest） | 蒸馏债消费（distill.js `--id`） |
+| 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
+| 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
+| 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
+| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 神经进化团队半拉起（理论家/工程师/训练师/分析师，按指标触发） |
+| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
+
 
 ---
 
@@ -301,21 +315,6 @@ node src/query.js "三路突击" --limit 5
 | `POST /api/ingest` 回 `422 collection-trace-only` | 正文全部是采集过程行 | 预期行为（只入贴出来的详情）；把要保存的详情正文单独贴一条 |
 | 代谢提示「already running (pid=…)」且退出码 0 | 并发保护：跨进程原子锁（2026-09-08 起），第二实例自动让位 | 非故障 / not a fault：等当前代谢结束，或交给 scheduler 排程 |
 | 重复执行双语补丁 | 幂等设计 | 重复运行自动跳过已双语行，不会重复插入 / idempotent by design |
-
-### Automation Boundary / 自动化边界（无人值守 vs 等触发）
-
-> 「自己长」= 左列无需人守；右列等宿主或人触发。与 AGENTS 纪律 8（组件透明化）同源。
-> "Self-growing" = the left column runs unattended; the right column waits for a host/human trigger.
-
-| Unattended / 无人值守自动运行 | Trigger-gated / 等触发才运行 |
-|---|---|
-| 定时代谢 + raw/ 轮询（scheduler） | 单步 `--step` 与智能决策 `--smart` |
-| 会话入库 + 指纹去重（auto-ingest / POST /api/ingest） | 蒸馏债消费（distill.js `--id`） |
-| 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
-| 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
-| 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
-| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 神经进化团队半拉起（理论家/工程师/训练师/分析师，按指标触发） |
-| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
 
 ## Database / 数据库
 
