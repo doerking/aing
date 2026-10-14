@@ -502,6 +502,7 @@ node src/setup-db.js --backup     # 手动备份
 | [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 按需接入项清单（视图由 `tools/gen-greenlist.js` 生成，C10a 钉住与 `docs/greenlist.json` 一致） |
 | [🚚 部署实操手册 DEPLOY-PLAYBOOK](./docs/DEPLOY-PLAYBOOK.md) | 从开箱到 ALL GREEN 的手怎么动：阶段 0–N、换血/复原、故障表 |
 | [🧭 Agent 五步引导 AGENT-ONBOARDING](./docs/AGENT-ONBOARDING.md) | 第一次接触 aing 的入口：纪律 → 院子地图 → 部署 → 日常 → 汇报格式 |
+| [📐 设计稿真源面 docs/design/](./docs/design/) | 2026-10-15 物理并入：`docs/design/patches/`（11 篇 patch 设计稿 patch-1~patch-11 + 两份 SUMMARY）与 `docs/design/dual-brain/`（dual-brain-full-design.md + Home.md）；原散落在外部 `wiki/`（无 git）与 `ailing-wiki/`（独立 git）两院属目录，现与代码同仓同 git，可 diff、可回滚；两独立仓原样保留作只读备份 |
 | 🧪 KESPI 敏感性验证 `simulation/proof-kespi-sensitivity.json`（不随包，本地可复现，不作发布包自证） | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
 | 🧠 意识层闭环实测 `simulation/proof-consciousness-loop.json`（不随包，本地可复现，不作发布包自证） | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
 | 📊 步级贡献度 `simulation/proof-step-contribution.json`（不随包，本地可复现，不作发布包自证） | 11 步管线每步 before/after 快照对比 |
