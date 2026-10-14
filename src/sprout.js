@@ -18,6 +18,7 @@
  */
 
 const fs = require('fs');
+const { logTrigger } = require('./trigger-log.js');
 const path = require('path');
 
 /**
@@ -359,6 +360,13 @@ method: sprouting
 `;
   
   fs.writeFileSync(linkPath, linkContent, 'utf8');
+
+  // p9 触发日志：sprout_link 后落一条 AFTER/sprout_link
+  logTrigger({
+    type: 'AFTER', name: 'sprout_link', status: 'SUCCESS',
+    related: sourceId + '->' + targetId, input: { sourceId: sourceId, targetId: targetId, similarity: similarity },
+    output: { created: linkPath },
+  });
   console.log(`   ✅ 自动链接: [[${sourceId}]] ↔ [[${targetId}]]`);
 }
 
