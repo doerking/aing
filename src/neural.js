@@ -19,7 +19,8 @@
  *   node src/neural.js deliberate [low|medium|high|critical]     协商维护（需本院 knowledge.db，缺库如实报错）
  *   node src/neural.js verify '{"checks":[{"name":"x","passed":true}],"observedOutcome":"..."}'
  *   node src/neural.js record  '{"result":"...","lesson":"...","route":["compile"]}'
- *
+ *   node src/neural.js archive [--apply] [--target <t>] [--min-age-hours <N>] [--attention-floor <F>]
+ *      旧观察项写端衰减/归档：controller.archiveObserved → kernel.archiveObservedEvents（有界，默认 dry-run 预测） *
  * 全局可选：--kb <院子目录>（把意识层与 lineage 指到别处，门禁探针用）
  *          --json（恒为 JSON，此旗为显式声明）| --logs（把模块日志留在 stdout）
  * stdout 只放结果（JSON），模块日志走 stderr —— 与 src/memo.js 同口径。
@@ -38,6 +39,7 @@ const USAGE = [
   "  node src/neural.js deliberate [low|medium|high|critical]",
   '  node src/neural.js verify  \'{"checks":[{"name":"x","passed":true}],"observedOutcome":"..."}\'',
   '  node src/neural.js record  \'{"result":"...","lesson":"...","route":["compile"]}\'',
+  '  node src/neural.js archive [--apply] [--target <t>] [--min-age-hours <N>] [--attention-floor <F>]',
   '全局可选：--kb <院子目录> | --json | --logs',
 ].join('\n');
 
@@ -48,6 +50,10 @@ function parseArgs(argv) {
     if (a === '--kb') { opts.kb = argv[++i] || null; continue; }
     if (a === '--reason') { opts.reason = argv[++i] || opts.reason; continue; }
     if (a === '--hours') { opts.hours = argv[++i]; continue; }
+    if (a === '--apply') { opts.apply = true; continue; }
+    if (a === '--target') { opts.target = argv[++i]; continue; }
+    if (a === '--min-age-hours') { opts.minAgeHours = argv[++i]; continue; }
+    if (a === '--attention-floor') { opts.attentionFloor = argv[++i]; continue; }
     if (a === '--json') { opts.json = true; continue; }
     if (a === '--logs') { opts.logs = true; continue; }
     if (a === '--help' || a === '-h') { opts.help = true; continue; }
@@ -174,6 +180,21 @@ async function run(argv) {
         lineageId: lineage.lineageId, episodeId: lineage.output.episodeId,
         status: lineage.output.status, lesson: lineage.output.lesson,
         note: lineage.output.note,
+      };
+    }
+    case 'archive': {
+      const apply = opts.apply === true;
+      const target = (opts.target || '').trim() || undefined;
+      const minAgeHours = opts.minAgeHours !== undefined ? Number(opts.minAgeHours) : undefined;
+      const attentionFloor = opts.attentionFloor !== undefined ? Number(opts.attentionFloor) : undefined;
+      const lineage = needController().archiveObserved({ apply, target, minAgeHours, attentionFloor });
+      const o = lineage.output || {};
+      return {
+        lineageId: lineage.lineageId, kind: lineage.kind, status: lineage.status,
+        dryRun: !apply, toArchive: o.toArchive, kept: o.kept, archived: o.archived,
+        applied: o.applied, state: o.state, reasons: o.reasons,
+        note: apply ? '已真搬旧观察项到归档台账（logs/consciousness/archived-events.jsonl，可回溯），谱系已落 agent-decision-lineage.jsonl'
+                   : 'dry-run 预测，未写 state.json / 未写归档台账；加 --apply 才真搬',
       };
     }
     case 'deliberate': {

@@ -255,6 +255,99 @@ class ConsciousnessKernel {
     return { target, reason, until };
   }
 
+  /**
+   * archiveObservedEvents — 把超龄且低注意力的 observed 事件搬入归档台账（写端衰减）
+   *
+   * 背景：kernel 的 activeEvents 是滚动缓冲（上限 maxEvents），低强度 observed 事件
+   * 一旦进来就常驻到被新事件挤出，期间一直挂在备忘录的 consciousnessAlerts 里，
+   * 账面「有告警」但实际无故障。本方法是补上的「有界写端衰减」通道：
+   *   - 只搬 status='observed' AND attention < attentionFloor AND 创建超过 minAgeHours 的项
+   *   - aroused / focused / approvalRequired / 高注意力事件永不归档
+   *   - 默认 dryRun=true 只预测；apply=true 才真搬
+   *   - 真搬时逐条写 logs/consciousness/archived-events.jsonl（可回溯，留痕不删）
+   *   - 归档后 activeEvents 空则 state 落回 idle（对齐 integrate 的 idle 语义）
+   *   - 旋钮单源（纪律 5）：minAgeHours / attentionFloor 缺省取 consciousnessTuning()
+   *
+   * @param {{dryRun?:boolean, target?:string, minAgeHours?:number, attentionFloor?:number}} [opts]
+   * @returns 预测/执行报告（dryRun / toArchive / kept / archived / applied / archiveFile）
+   */
+  archiveObservedEvents(opts = {}) {
+    const tuning = consciousnessTuning();
+    const dryRun = opts.dryRun !== false;
+    const attentionFloor = Number.isFinite(Number(opts.attentionFloor))
+      ? Number(opts.attentionFloor)
+      : Number(tuning.archiveObservedAttentionFloor);
+    const minAgeMs = Number.isFinite(Number(opts.minAgeHours))
+      ? Number(opts.minAgeHours) * 3600000
+      : Number(tuning.archiveObservedMinAgeHours) * 3600000;
+    const now = Date.now();
+
+    const reasons = [];
+    const archived = [];
+    const kept = [];
+    for (const ev of this.state.activeEvents || []) {
+      const isObserved = ev.status === 'observed';
+      const ageMs = now - Date.parse(ev.createdAt || '1970-01-01T00:00:00Z');
+      const stale = ageMs >= minAgeMs;
+      const lowAttention = Number(ev.attention ?? ev.intensity ?? 1) < attentionFloor;
+      const notApproval = !ev.approvalRequired;
+      const arousalOk = ev.arousal === 'sensing' || ev.arousal === 'integrating' || !ev.arousal;
+      const targetOk = !opts.target || ev.target === opts.target;
+      if (isObserved && stale && lowAttention && notApproval && arousalOk && targetOk) {
+        archived.push(ev);
+        reasons.push(`${ev.target || '?'}@${ev.createdAt} attention=${(ev.attention ?? 0).toFixed(3)}`);
+      } else {
+        kept.push(ev);
+      }
+    }
+
+    const out = {
+      dryRun,
+      toArchive: archived.length,
+      kept: kept.length,
+      archived: 0,
+      reasons: reasons.slice(0, 8),
+      state: this.state.state,
+      attentionFloor,
+      minAgeMs,
+      now: new Date(now).toISOString(),
+      applied: false,
+    };
+    if (dryRun) {
+      out.note = 'dry-run：只预测将归档的旧观察项，未写 state.json / 未写归档台账';
+      return out;
+    }
+    // 真搬：写归档台账（可回溯），更新 activeEvents，必要时 state 落回 idle
+    const archiveFile = path.join(this.baseDir, 'logs', 'consciousness', 'archived-events.jsonl');
+    fs.mkdirSync(path.dirname(archiveFile), { recursive: true });
+    const stamp = new Date(now).toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+    const batchId = `arch-batch-${stamp}`;
+    const lines = archived.map((ev) => JSON.stringify({
+      batchId,
+      target: ev.target,
+      channels: ev.channels,
+      attention: ev.attention,
+      intensity: ev.intensity,
+      status: ev.status,
+      arousal: ev.arousal,
+      createdAt: ev.createdAt,
+      archivedAt: new Date(now).toISOString(),
+      reason: 'archiveObservedEvents: stale low-attention observed event',
+      eventIds: ev.eventIds,
+    }) + '\n');
+    fs.appendFileSync(archiveFile, lines.join(''), 'utf8');
+    this.state.activeEvents = kept;
+    if (!kept.length) this.state.state = DEFAULT_STATE.state;
+    this.saveState();
+    out.archived = archived.length;
+    out.applied = true;
+    out.archiveFile = archiveFile;
+    out.batchId = batchId;
+    out.state = this.state.state;
+    out.note = `applied：${archived.length} 条旧观察项已搬入 ${path.basename(archiveFile)}（可回溯），activeEvents 余 ${kept.length}`;
+    return out;
+  }
+
   isInhibited(target) {
     const now = Date.now();
     return this.state.suppressedEvents.some(item => item.target === target && Number(item.until || 0) > now);
