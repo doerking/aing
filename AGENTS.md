@@ -66,7 +66,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C2b | sharp (optional, non-critical) / 可选依赖 | `npm install` if needed; absence does not block deployment / 缺失不阻塞部署 |
 | C3 | raw/ contains knowledge docs / raw/ 有知识文档 | Put at least one .md / 放入至少一篇 .md |
 | C4 | DB entities + vector index / 数据库实体与向量索引 | `node src/run-metabolism.js`, then / 再 `node src/index-vectors.js --semantic --reindex` |
-| C5 | Local semantic model bundled in models/ (~22MB) / 本地语义模型 | `powershell -File setup-vectors.ps1` |
+| C5 | Local semantic model bundled in models/ (~113MB, multilingual M2 L12) / 本地语义模型 | `powershell -File setup-vectors.ps1` |
 | C6 | Semantic search actually hits / 语义检索真实命中 | `node src/index-vectors.js --semantic --reindex` |
 | C7a | KESPI lifecycle consistency wiki↔db / 生命周期一致 | Full metabolism then re-verify / 全量代谢后复验 |
 | C7b | Patch-layer fingerprints (v1 defs) / 补丁层指纹 | Replay all cockpit layers v1→v3 (Pitfall 7) / 整层重放 |
@@ -110,7 +110,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | 自我报告 | `node src/memo.js`（无需起服务；HTTP 同口径 `GET /api/consciousness/briefing`） | selfAssessment 六属性全 ✓ | 确认 KB_ROOT 变量; skillopt-evidence.json 存在 |
 | 轨迹表 | `node src/trajectory-store.js --import-metabolism && node src/trajectory-store.js --count` | ≥ 本轮代谢步数（因果链每步一条；OPT 2026-09-14 首跑 12 条）。124 是 Tip 历史累计，**不是发布包首跑可得** | 旧实现找 `logs/metabolism-last-run.json`（run-metabolism 从不写此文件）→ 已改吃 `metabolism-decision-lineage.jsonl`；`--import-growth-loop` 少解构 `{ GrowthLoop }` 亦已修 |
 | SkillOpt adapter | **在 SkillOpt 检出根目录跑，不在本包内跑**：`cd <dd-root>\321\SkillOpt && PYTHONPATH=. python -c "from skillopt.envs.aing.adapter import AingEnvAdapter"` | 导入成功 | 适配器属**外部 SkillOpt 检出**，本包只有 `training/adapter.py`（两者不同物）。2026-09-15 本机实测：`<dd-root>\321\SkillOpt` 内 `IMPORT_OK`；在 Tip 包内与 `<sqa-root>\SkillOpt` 里同命令均 `ModuleNotFoundError`（同名检出有两份，一份有 `envs/aing` 一份没有 → 别按目录名猜） |
-| 检索 A/B | 自然语言问句 vs SQL LIKE（无现成命令，按口径实测） | **分口径**：整句原样提问时 LIKE 命中 0%、语义 top3 38%（此时语义完胜）；人工提词后 LIKE 8 题中 8、语义 top3 37.5%＝8 实体随机底（此时语义不占优）。「语义 > 关键词 2 倍」只在整句口径成立，禁止当无条件既成事实引用 | `models/` 是 **Xenova/all-MiniLM-L6-v2 英文模型**，中文查询近 OOV、小语料上塌到 3 个枢纽实体；要涨必须先换多语模型或扩语料（2026-09-14 OPT 三臂实测） |
+| 检索 A/B | 自然语言问句 vs SQL LIKE（无现成命令，按口径实测） | **分口径**：整句原样提问时 LIKE 命中 0%、语义 top3 38%（此时语义完胜）；人工提词后 LIKE 8 题中 8、语义 top3 37.5%＝8 实体随机底（此时语义不占优）。「语义 > 关键词 2 倍」只在整句口径成立，禁止当无条件既成事实引用 | `models/` 现为 **Xenova/paraphrase-multilingual-MiniLM-L12-v2 多语模型（384 维，官方覆盖 zh-cn/zh-tw；粤语 yue 不在清单，书面粤语经繁体共享近似受益、无官方保证）**；2026-09-14 三臂实测的「中文 OOV」短板已随 2026-10-15 换多语模型解除，需重跑三臂复测确认检索质量 |
 | FadeMem 衰减 | 先 `node src/growth-loop.js episode '{"taskType":"metabolism","route":["compile"],"success":true,"durationMs":165}'`（若干条）→ `node src/growth-loop.js decay` | weight < 1.0 且 `factors` 三因子齐（OPT 实测 weight≈0.35，time/usage/quality=1/0.5/1） | 全新沙盒无 `data/growth-loop.json` → patterns 空、decay 返回 `[]` 属正常，先喂 episode 再判 |
 | 成长层文档桥（growth-docs） | `node src/growth-docs.js episode '{"taskType":"probe","route":["compile"],"success":true}'`（写 `raw/growth/` 文档档，compile 主循环 `getAllFiles` 递归消费（现码 :282/:380 实证 2026-09-17），下轮代谢自然消化） | 档落 `raw/growth/`；不碰 knowledge.db、不自执行候选（头注契约） | 零 npm 名零文档登记即本行补的「悬空能力」面（2026-09-17）；候选改动照旧只提案不落地，四门回滚链验收 |
 | 四门回滚 | propose → evaluate `<id>` → promote `<id> true` → rollback `<geneId>` | rolledBack=true 且状态还原 tested（gene 从 `state.genes` 摘除） | rollback 收的是 **geneId**（`state.genes[].geneId`），不是 improvement id；OPT 实测 Gate-1/3/4 负向都能红 |

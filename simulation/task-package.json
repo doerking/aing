@@ -25,7 +25,7 @@
       "domain": "contract",
       "question": "关于「11 步代谢顺序：compile→i…」哪种说法成立？",
       "answerA": "11 步代谢顺序：compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
-      "answerB": "(扭曲表述) 未知数 步代谢顺序：compile→import→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
+      "answerB": "(扭曲表述) 未知数 步代谢顺序：compile→import→distill→link→link-sync→vector→sprout→pollinate→compress→kespi→prune",
       "correct": "A"
     },
     {

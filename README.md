@@ -201,7 +201,7 @@ powershell -ExecutionPolicy Bypass -File setup-vectors.ps1
 node src/index-vectors.js --semantic --reindex
 ```
 
-- 模型（all-MiniLM-L6-v2 量化版，约 22MB）落在 `models\` 目录，装完**纯离线**，零外呼。
+- 模型（paraphrase-multilingual-MiniLM-L12-v2 量化版，约 113MB，多语含中文；粤语 yue 不在官方清单，书面粤语经繁体共享近似受益）落在 `models\` 目录，装完**纯离线**，零外呼。
 - 国内网络**直连 huggingface.co 会超时**——脚本已默认走 hf-mirror 镜像，这是最常见的部署卡点，已替你排掉。
 - 回退：删掉 `models\` 目录即自动回退纯哈希模式（或加 `--hash` 强制），两套向量在库里按维度自动区分、互不干扰。
 
@@ -492,7 +492,7 @@ node src/setup-db.js --backup     # 手动备份
 
 ### 报告与数据集 / Reports & Data
 
-> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。**例外（2026-09-14 复查）**：`simulation/proof-search-ab.json` 包内**没有对应生成脚本**＝不可复现证据，其「语义 > 关键词 2 倍」属人工提词口径，禁止当无条件既成事实引用（分口径实测见 M4 §I4 与 §J 第 9 链）。
+> **关于验证产物 / About the proof files**：下表 `simulation/proof-*.json`、`skillopt-evidence.json`、`task-package.json` 为**本地可复现产物**——由验证脚本在本机生成，`.gitignore` 排除不入库、**不随包、不作发布包自证**（GitHub 上不直接可点，属预期）。克隆仓库后运行对应验证脚本（`npm run verify` / 代谢链 / SkillOpt 离线 rollout）即重新生成。**例外（2026-09-14 复查）**：`simulation/proof-search-ab.json` 包内**没有对应生成脚本**＝不可复现证据（不随包，禁止当无条件既成事实引用），其「语义 > 关键词 2 倍」属人工提词口径（分口径实测见 M4 §I4 与 §J 第 9 链）。
 > *The proof files below are locally reproducible artifacts (gitignored, not committed) — regenerate them locally by running the corresponding verification scripts.*
 
 | 文档 | 说明 |
@@ -501,14 +501,14 @@ node src/setup-db.js --backup     # 手动备份
 | [🟢 绿灯清单 GREEN-LIST](./docs/GREEN-LIST.md) | 能力真源：绿灯项 + 证据日期 + 按需接入项清单（视图由 `tools/gen-greenlist.js` 生成，C10a 钉住与 `docs/greenlist.json` 一致） |
 | [🚚 部署实操手册 DEPLOY-PLAYBOOK](./docs/DEPLOY-PLAYBOOK.md) | 从开箱到 ALL GREEN 的手怎么动：阶段 0–N、换血/复原、故障表 |
 | [🧭 Agent 五步引导 AGENT-ONBOARDING](./docs/AGENT-ONBOARDING.md) | 第一次接触 aing 的入口：纪律 → 院子地图 → 部署 → 日常 → 汇报格式 |
-| [🧪 KESPI 敏感性验证](./simulation/proof-kespi-sensitivity.json) | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
-| [🧠 意识层闭环实测](./simulation/proof-consciousness-loop.json) | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
-| [📊 步级贡献度](./simulation/proof-step-contribution.json) | 11 步管线每步 before/after 快照对比 |
-| [🔍 检索质量 A/B](./simulation/proof-search-ab.json) | 语义 0.838 vs 关键词 0.428（21 任务，**人工提词口径、无随包生成脚本**）。2026-09-14 OPT 三臂实测：整句原样提问时 LIKE 0%／语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8／语义 top3 37.5%＝8 实体随机底（语义不占优） |
-| [📈 代谢 Delta](./simulation/proof-metabolism-delta.json) | 无新知识 delta=0 / 投入新知识 entities+1 links+21 kespi+0.005 |
-| [🧬 实体生命周期](./simulation/proof-entity-lifecycle.json) | kespi-system 9 维度全追踪（raw→wiki→DB→向量→KESPI→意识层→决策链） |
-| [🏋️ SkillOpt 训练证据](./simulation/skillopt-evidence.json) | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
-| [🏋️ SkillOpt 在线证据](./simulation/skillopt-online-evidence.json) | aing API 检索辅助: 在线 vs 离线对比 |
+| 🧪 KESPI 敏感性验证 `simulation/proof-kespi-sensitivity.json`（不随包，本地可复现，不作发布包自证） | 腐坏注入→红灯 0.37→逐步修复→绿灯 0.81，敏感度 0.25 |
+| 🧠 意识层闭环实测 `simulation/proof-consciousness-loop.json`（不随包，本地可复现，不作发布包自证） | kernel 停滞→growth-director→full_metabolism→代谢执行 因果链 |
+| 📊 步级贡献度 `simulation/proof-step-contribution.json`（不随包，本地可复现，不作发布包自证） | 11 步管线每步 before/after 快照对比 |
+| 🔍 检索质量 A/B `simulation/proof-search-ab.json`（不随包，无随包生成脚本，不可复现证据，不作发布包自证） | 语义 0.838 vs 关键词 0.428（21 任务，**人工提词口径**）。2026-09-14 OPT 三臂实测：整句原样提问时 LIKE 0%／语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8／语义 top3 37.5%＝8 实体随机底（语义不占优） |
+| 📈 代谢 Delta `simulation/proof-metabolism-delta.json`（不随包，本地可复现，不作发布包自证） | 无新知识 delta=0 / 投入新知识 entities+1 links+21 kespi+0.005 |
+| 🧬 实体生命周期 `simulation/proof-entity-lifecycle.json`（不随包，本地可复现，不作发布包自证） | kespi-system 9 维度全追踪（raw→wiki→DB→向量→KESPI→意识层→决策链） |
+| 🏋️ SkillOpt 训练证据 `simulation/skillopt-evidence.json`（不随包，本地可复现，不作发布包自证） | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
+| 🏋️ SkillOpt 在线证据 `simulation/skillopt-online-evidence.json`（不随包，本地可复现，不作发布包自证） | aing API 检索辅助: 在线 vs 离线对比 |
 | [📦 矛盾任务包](./simulation/skillopt-task-package.json) | 41 条 / 6 领域，从真实数据提取 |
 
 ## Vision & Operations / 愿景与运行

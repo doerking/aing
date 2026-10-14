@@ -3,12 +3,12 @@
  * semantic-vector.js — 本地语义向量引擎（可选升级件）
  *
  * 把 aing 的向量能力从 64-dim 哈希升级为 384-dim 语义向量
- * （Xenova/all-MiniLM-L6-v2，量化 onnx 约 22MB，纯本地离线推理）。
+ * （Xenova/paraphrase-multilingual-MiniLM-L12-v2 量化 onnx 约 113MB，纯本地离线推理，多语含中文）。
  *
  * 前置条件（二选一）：
  *   - 运行包根目录的 setup-vectors.ps1（自动装依赖 + 从 hf-mirror 下载模型）
  *   - 手动：npm install @xenova/transformers --ignore-scripts，
- *           并将模型文件放入 models/Xenova/all-MiniLM-L6-v2/
+ *           并将模型文件放入 models/Xenova/paraphrase-multilingual-MiniLM-L12-v2/
  *
  * 未就绪时 isAvailable() 返回 false，vector-search.js 自动回退 64-dim 哈希模式，
  * 因此本模块是纯增量：不装它，aing 一切照旧。
@@ -19,7 +19,7 @@ const fs = require('fs');
 
 const PKG_DIR = path.resolve(__dirname, '..');
 const MODEL_DIR = path.join(PKG_DIR, 'models');
-const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
+const MODEL_NAME = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
 const DIMENSIONS = 384;
 
 /** 依赖与模型文件是否就绪（不加载模型，只查文件，零成本） */
