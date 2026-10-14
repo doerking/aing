@@ -98,6 +98,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 > 部署全绿后，以下组件链应可端到端跑通。每条链附验证命令和预期结果，排障时逐条检查。
 > M4 数据报告：[docs/M4-DATA-COLLECTION-2026-09-13.md](./docs/M4-DATA-COLLECTION-2026-09-13.md)（A–K：A–H 基础链 + I 6 项架构证明 + J OPT 部署沙盒换血复跑十一链 + K 存盘/复原 L1/再对齐收工段，含核验意见）
 > 手怎么动：[docs/DEPLOY-PLAYBOOK.md](./docs/DEPLOY-PLAYBOOK.md)；第一次接触本包：[docs/AGENT-ONBOARDING.md](./docs/AGENT-ONBOARDING.md)
+> 设计稿真源面：`docs/design/`（[docs/design/patches/](./docs/design/patches/) 11 篇 patch 设计稿 patch-1~patch-11 + 两份 SUMMARY 汇总；[docs/design/dual-brain/](./docs/design/dual-brain/) 双脑总设计 dual-brain-full-design.md + Home.md）——原散落在外部 `wiki/`（无 git）与 `ailing-wiki/`（独立 git）两个院属目录，2026-10-15 起物理并入本仓 `docs/design/`，与代码同仓同 git，设计稿变更可 diff、可回滚；两个独立仓原样保留作只读备份，不删。p9 设计稿（patch-9）已于 2026-10-15 由 B1 轻量 JSONL 落地（`src/trigger-log.js`，分支 feat/p9-trigger-log-b1），其余 patch 的落地对照见 patch-11 命名架构与 M4 表
 
 | 组件链 | 验证命令 | 预期结果 | 故障排查 |
 |--------|----------|----------|----------|
