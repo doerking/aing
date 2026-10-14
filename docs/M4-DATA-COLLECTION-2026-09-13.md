@@ -140,7 +140,7 @@ AIGC:
 
 **结论**：KESPI 对质量变化敏感（敏感度 0.25），每个维度独立可测量，腐坏→红灯→逐步修复→绿灯的完整生命周期曲线成立。
 
-**数据文件**：`simulation/proof-kespi-sensitivity.json`
+**数据文件**：`simulation/proof-kespi-sensitivity.json`（不随包，本地可复现，不作发布包自证）
 
 ### I2. 意识层闭环实测（意识层是活的，不是装饰）
 
@@ -168,7 +168,7 @@ consciousness-kernel state.json: stagnationCount=3, state=stagnant
 
 **结论**：意识层停滞→growth-director感知→full_metabolism触发→代谢执行，闭环成立。KESPI delta=0 是诚实数据（知识库已饱和，无新知识可代谢）。
 
-**数据文件**：`simulation/proof-consciousness-loop.json`
+**数据文件**：`simulation/proof-consciousness-loop.json`（不随包，本地可复现，不作发布包自证）
 
 ### I3. 步级贡献度表（11 步不是忙工）
 
@@ -192,7 +192,7 @@ consciousness-kernel state.json: stagnationCount=3, state=stagnant
 
 **注**：当前知识库已饱和（20 实体 / 190 链接稳定），步级 delta 均为 0 是稳定态的诚实数据。步级贡献在"投入新知识"场景中体现（见 I5）。
 
-**数据文件**：`simulation/proof-step-contribution.json`
+**数据文件**：`simulation/proof-step-contribution.json`（不随包，本地可复现，不作发布包自证）
 
 ### I4. 检索质量 A/B 对照（语义检索优于关键词）
 
@@ -214,9 +214,9 @@ consciousness-kernel state.json: stagnationCount=3, state=stagnant
 
 **结论**：语义检索命中率是关键词匹配的 2 倍，特别是在英文标识符和抽象概念上优势显著。
 
-> ⚠️ **口径限定（2026-09-14 OPT 三臂实测，见 §J 第 9 链）**：本行的「2 倍」是 Tip 22 实体库、**人工提词**口径下的 `avgHitRatio` 对比，且 `simulation/proof-search-ab.json` 在包内**没有对应生成脚本**＝不可复现证据。整句原样提问时 LIKE 命中 0%、语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8、语义 top3 37.5%＝8 实体随机底（语义不占优）。**禁止把本行当无条件既成事实引用。**
+> ⚠️ **口径限定（2026-09-14 OPT 三臂实测，见 §J 第 9 链）**：本行的「2 倍」是 Tip 22 实体库、**人工提词**口径下的 `avgHitRatio` 对比，且 `simulation/proof-search-ab.json` 在包内**没有对应生成脚本**＝不可复现证据（不随包，不作发布包自证）。整句原样提问时 LIKE 命中 0%、语义 top3 38%（语义完胜）；人工提词后 LIKE 8 题中 8、语义 top3 37.5%＝8 实体随机底（语义不占优）。**禁止把本行当无条件既成事实引用。**
 
-**数据文件**：`simulation/proof-search-ab.json`（73KB，含 21 任务逐条对比）
+**数据文件**：`simulation/proof-search-ab.json`（73KB，含 21 任务逐条对比；不随包，无随包生成脚本，不可复现证据，不作发布包自证）
 
 ### I5. 代谢前后 KESPI Delta（含投入新知识场景）
 
@@ -234,7 +234,7 @@ consciousness-kernel state.json: stagnationCount=3, state=stagnant
 
 **结论**：无新知识时代谢 delta=0（稳定态），投入新知识后 entities+1、links+21、avgKespi+0.0053。代谢管线吸收新知识并产出 KESPI 增量。投入的新实体已清理，清理后数据完全恢复到 before 基线。
 
-**数据文件**：`simulation/proof-metabolism-delta.json`
+**数据文件**：`simulation/proof-metabolism-delta.json`（不随包，本地可复现，不作发布包自证）
 
 ### I6. 实体全生命周期追踪（从 raw 到 briefing 的完整数据流）
 
@@ -258,7 +258,7 @@ consciousness-kernel state.json: stagnationCount=3, state=stagnant
 
 **结论**：实体从 raw 文件到 DB 到向量到 KESPI 到意识层到决策链的完整生命周期数据可追溯，9 个维度全覆盖。
 
-**数据文件**：`simulation/proof-entity-lifecycle.json`（33KB，含全部 9 维度原始数据）
+**数据文件**：`simulation/proof-entity-lifecycle.json`（33KB，含全部 9 维度原始数据；不随包，本地可复现，不作发布包自证）
 
 
 ---

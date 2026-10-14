@@ -75,7 +75,7 @@ function run(name, cmd, args, opts = {}) {
   if (!run('代谢链（完整一轮）', 'node', ['src/run-metabolism.js'])) process.exit(1);
 
   // 4) 语义模型（best-effort，失败不阻断）
-  const modelDir = path.join(ROOT, 'models', 'Xenova', 'all-MiniLM-L6-v2');
+  const modelDir = path.join(ROOT, 'models', 'Xenova', 'paraphrase-multilingual-MiniLM-L12-v2');
   if (!fs.existsSync(modelDir)) {
     console.log('\n▶ 语义模型未就位，尝试 setup-vectors.ps1（失败将回退 hash 模式，不阻断）');
     const r = spawnSync('powershell', ['-ExecutionPolicy', 'Bypass', '-File', 'setup-vectors.ps1'], {
