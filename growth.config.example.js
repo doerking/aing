@@ -45,6 +45,8 @@ const config = {
     inhibitDefaultHours: 1,       // kernel.inhibit 未指定时长时的缺省抑制小时数（原 3600000ms）
     dedupeWindowSeconds: 300,     // 同指纹事件去重窗口（原 300000ms）
     maxRetainedEvents: 200,       // activeEvents / suppressedEvents 保留上限（原 200）
+    archiveObservedMinAgeHours: 48,      // 写端事件归档：仅搬「创建超过 N 小时」的 observed 低注意力事件（默认 48h，新事件不会被误归档）
+    archiveObservedAttentionFloor: 0.45,  // 写端事件归档：attention 低于此值才算「低注意力可归档」（默认 0.45；aroused/高注意力/待审批事件永不归档）
   },
   kespi: {
 

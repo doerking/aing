@@ -262,6 +262,43 @@ class ConsciousnessController {
     return this._record({ ...lineage, output });
   }
 
+  /**
+   * archiveObserved — 意识层旧观察项写端衰减（补 API）。
+   * 调 kernel.archiveObservedEvents（有界：只搬超龄低注意力 observed 项），
+   * 并把这次写端动作落一条 decision lineage（对齐 verify/record 的审计风格）。
+   * @param {{taskId?:string, apply?:boolean, target?:string, minAgeHours?:number, attentionFloor?:number}} [input]
+   */
+  archiveObserved(input = {}) {
+    this._assertAdapter();
+    const taskId = input.taskId || null;
+    const apply = input.apply === true;
+    this.setOperationalState(OPERATIONAL_STATES.VERIFYING);
+    const lineage = this._begin('archive-observed', taskId, { ...input, apply });
+    const result = this.adapter.consciousnessKernel.archiveObservedEvents({
+      dryRun: !apply,
+      target: input.target,
+      minAgeHours: input.minAgeHours,
+      attentionFloor: input.attentionFloor,
+    });
+    return this._record({
+      ...lineage,
+      status: apply ? 'archived' : 'archive-predicted',
+      input: clone({ taskId, apply, target: input.target || null }),
+      output: clone({
+        dryRun: result.dryRun,
+        toArchive: result.toArchive,
+        kept: result.kept,
+        archived: result.archived,
+        applied: result.applied,
+        state: result.state,
+        reasons: result.reasons,
+        note: result.note,
+      }),
+      requiresApproval: false,
+      promotion: 'none',
+    });
+  }
+
   createEpisode(input = {}) {
     const taskId = input.taskId || null;
     const episodeId = input.episodeId || this._stateId('episode', taskId);

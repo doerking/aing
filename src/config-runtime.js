@@ -71,6 +71,8 @@ const CONSCIOUSNESS_FALLBACK = Object.freeze({
   inhibitDefaultHours: 1,
   dedupeWindowSeconds: 300,
   maxRetainedEvents: 200,
+  archiveObservedMinAgeHours: 48,
+  archiveObservedAttentionFloor: 0.45,
 });
 
 function getConsciousnessConfig(fallback = CONSCIOUSNESS_FALLBACK) {
