@@ -11,6 +11,8 @@ const orig = fs.readFileSync(RP);
 const L = orig.toString('utf8').replace(/\r/g, '').split(nl);
 const i = L.findIndex(l => new RegExp('^\\s+' + KEY + ':').test(l));
 if (i < 0) { console.log('❌ 运行配置里没有 ' + KEY + ' 键 → 注入锚失效，本判无意义，改脚本连这里一起修'); process.exit(2); }
+const __restoreOnBreak = () => { try { process.emit('exit', 0); } catch (e) {} };
+for (const sig of ['SIGINT','SIGTERM']) process.on(sig, () => { __restoreOnBreak(); process.exit(130); });
 process.on('exit', () => { try { if (!fs.readFileSync(RP).equals(orig)) fs.writeFileSync(RP, orig); } catch (e) { } });
 L.splice(i, 1);
 fs.writeFileSync(RP, L.join(nl));
