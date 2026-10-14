@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const KnowledgeStore = require('./knowledge-store');
+const { logTrigger } = require('./trigger-log.js');
 
 const CONFIG = {
   seedsIndex: path.join(__dirname, '..', 'mustard-seeds', 'compressed', 'index.json'),
@@ -145,6 +146,13 @@ async function main() {
 
   recyclePhase(seeds);
   saveSeeds(seeds); // recycled 标记持久化
+
+  // p9 \u89e6\u53d1\u65e5\u5fd7\uff1a\u56de\u7089\u95ed\u73af\u5b8c\u6210\u540e\u843d\u4e00\u6761 AFTER/recycle_seed
+  logTrigger({
+    type: 'AFTER', name: 'recycle_seed', status: stats.recycled > 0 ? 'SUCCESS' : 'SKIPPED',
+    input: { total: stats.seedsTotal },
+    output: { recycled: stats.recycled, skipped: stats.skipped, husksArchived: stats.husksArchived },
+  });
 
   await archiveHusks(seeds);
 

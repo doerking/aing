@@ -114,6 +114,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | FadeMem 衰减 | 先 `node src/growth-loop.js episode '{"taskType":"metabolism","route":["compile"],"success":true,"durationMs":165}'`（若干条）→ `node src/growth-loop.js decay` | weight < 1.0 且 `factors` 三因子齐（OPT 实测 weight≈0.35，time/usage/quality=1/0.5/1） | 全新沙盒无 `data/growth-loop.json` → patterns 空、decay 返回 `[]` 属正常，先喂 episode 再判 |
 | 成长层文档桥（growth-docs） | `node src/growth-docs.js episode '{"taskType":"probe","route":["compile"],"success":true}'`（写 `raw/growth/` 文档档，compile 主循环 `getAllFiles` 递归消费（现码 :282/:380 实证 2026-09-17），下轮代谢自然消化） | 档落 `raw/growth/`；不碰 knowledge.db、不自执行候选（头注契约） | 零 npm 名零文档登记即本行补的「悬空能力」面（2026-09-17）；候选改动照旧只提案不落地，四门回滚链验收 |
 | 四门回滚 | propose → evaluate `<id>` → promote `<id> true` → rollback `<geneId>` | rolledBack=true 且状态还原 tested（gene 从 `state.genes` 摘除） | rollback 收的是 **geneId**（`state.genes[].geneId`），不是 improvement id；OPT 实测 Gate-1/3/4 负向都能红 |
+| 芥子触发日志（p9 B1） | `node src/trigger-log.js`（读回面：`node -e 'require('./src/trigger-log.js').readTriggers().forEach(r=>console.log(r.type+'/'+r.name+' status=' + r.status))'`，或直接看 `logs/metabolism-trigger-log.jsonl`） | 芥子 CRUD 五个触发点（compress/recycle/prune/sprout/pollinate）每次真跑必落一条 JSONL 记录，字段对齐 p9 设计稿（trigger_type/name/status/execution_time_ms/related/input/output） | 贴现行双脑+芥子文件态架构，**不建 SQLite 表**（C10e 7 类子表面不动、C19 计数不动）；require 失败静默不阻断（同 metabolism-log 面）；2026-10-15 B1 轻量落地（分支 feat/p9-trigger-log-b1，用户拍板选 B1 不选 B2 建表）|
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 

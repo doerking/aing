@@ -18,6 +18,7 @@
  */
 
 const fs = require('fs');
+const { logTrigger } = require('./trigger-log.js');
 const path = require('path');
 
 // 配置
@@ -190,6 +191,15 @@ function compress() {
   
   // 打印统计
   printStats(seeds.length);
+
+  // p9 触发日志：每轮压缩完成都落一条（空跑亦留 SKIPPED 痕迹，行为层可证）
+  logTrigger({
+    type: 'CRON', name: 'compress_to_seed',
+    status: stats.entitiesCompressed > 0 ? 'SUCCESS' : 'SKIPPED',
+    ms: Math.round(Date.now() - stats.startTime),
+    input: { scanned: stats.entitiesScanned },
+    output: { compressed: stats.entitiesCompressed, newSeeds: seeds.length, bytesSaved: stats.bytesSaved },
+  });
 }
 
 /**

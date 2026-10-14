@@ -246,6 +246,7 @@ node src/neural.js assess '[{"channel":"structure","target":"wiki/x.md"}]'      
 node src/neural.js verify '{"checks":[{"name":"复验全绿","passed":true}]}'          # 补记校验到 decision lineage
 node src/neural.js record '{"result":"...","lesson":"..."}' # 补记结果与教训
 node src/neural.js deliberate high  # 蜂群协商维护（只出共识不执行；需本院 knowledge.db）
+node src/trigger-log.js [--tail N] # p9 芥子触发日志：打印最近 N 条（缺省 20）芥子 CRUD 触发痕迹；5 个写点 compress/recycle/prune/sprout/pollinate 各落一条
 
 # 查询 CLI / query CLI
 node src/query.js "三路突击" --limit 5
