@@ -17,6 +17,7 @@
  */
 
 const fs = require('fs');
+const { logTrigger } = require('./trigger-log.js');
 const path = require('path');
 
 // 配置
@@ -315,6 +316,13 @@ tags:
 `;
   
   fs.writeFileSync(linkPath, linkContent, 'utf8');
+
+  // p9 触发日志：pollinate_link 后落一条 AFTER/pollinate_link
+  logTrigger({
+    type: 'AFTER', name: 'pollinate_link', status: 'SUCCESS',
+    related: sourceId + '->' + targetId, input: { sourceId: sourceId, targetId: targetId },
+    output: { created: linkPath },
+  });
   console.log(`   ✅ 跨域链接: [[${sourceId}]] (${suggestion.type1}) ↔ [[${targetId}]] (${suggestion.type2})`);
 }
 

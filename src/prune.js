@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const KnowledgeStore = require('./knowledge-store');
+const { logTrigger } = require('./trigger-log.js');
 
 // 配置
 const CONFIG = {
@@ -304,4 +305,11 @@ if (daysMatch) {
 (async () => {
   prune(dryRun, force);
   if (!dryRun) await purgePrunedFromDB();
+
+  // p9 触发日志：剪枝闭环后落一条 CRON/prune_entity
+  logTrigger({
+    type: 'CRON', name: 'prune_entity', status: stats.entitiesPruned > 0 ? 'SUCCESS' : 'SKIPPED',
+    input: { dryRun: dryRun, force: force },
+    output: { pruned: stats.entitiesPruned },
+  });
 })();
