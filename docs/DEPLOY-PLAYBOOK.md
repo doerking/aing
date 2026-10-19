@@ -74,3 +74,21 @@ node src/query.js "关键词"                        # 查询（加权融合精�
 ## 声明（绿灯解锁制）
 
 本手册只描述已验证能力。未验证能力（元认知接线、热重载、回炉第 11 步）；多租户已于 2026-09-14 砍除，不再是待验证项不在本手册范围内，能力边界以 `docs/GREEN-LIST.md` 为唯一真源。
+
+## 外部接口登记（C20 ⑦⑧ 的"按设计缺席"面）
+
+> `verify-deploy.js` 的 C20 会把文档里指到「按设计不在包内」的路径当作**登记的外部接口**放行（计数、不判红），
+> 条件是每条登记都在本正本档有对应 `### 接口: <id>` 节，且同时含「怎么接」与「缺席语义」两项。
+> 登记表真源在 `verify-deploy.js` 的 `INTERFACES`（`verify-deploy.js` C20 段）；加/减接口须同一笔改动同步本正本节。
+
+### 接口: deploy-config
+- **怎么接**：克隆包后执行部署第 0 步 `cp growth.config.example.js src/growth.config.js`（Windows 用 `copy`）；`src/growth.config.js` 被 `.gitignore` 第 19 行排除，真实配置只在本院存在，不随 git 走。
+- **缺席语义**：`src/growth.config.js` 缺席是**正常未部署态**（pre-deploy）——按 C0 修复列补一行模板复制即可，不算缺陷、不算死链。
+
+### 接口: m4-proof
+- **怎么接**：M4 验证产物 `simulation/proof-*.json` 由机内 `.temp/` 工具生成，只落运行院，不随包发布；要看证据在生成它的院里读，别在本包找。
+- **缺席语义**：`simulation/proof-*.json` 缺席是**正常历史读数态**（historical-readout）——是"某次验证留下的产物"，不是"应存在而缺失"，判绿。
+
+### 接口: skillopt
+- **怎么接**：外部 SkillOpt 检出的离线/在线 rollout 产物（`simulation/skillopt-evidence.json` / `skillopt-online-evidence.json` / `last-run.json`）由 `<dd-root>\321\SkillOpt` 检出回填；消费真源是包内已跟踪的 `simulation/skillopt-task-package.json`，外部根由环境变量 `AING_SKILLOPT_ROOT` 指认。
+- **缺席语义**：三条证据档缺席是**可选外部态**（optional-external）——**接不接 SkillOpt 都不影响 C20 门禁结果**；opt-in 探针 `VD_SKILLOPT_PROBE=1` 才开，开了也只报"已回填 N/3"，任何失败/外部根不存在只报"未核"、**永不判红**。

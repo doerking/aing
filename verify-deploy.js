@@ -1162,7 +1162,9 @@ async function main() {
     const neural = fsx.readFileSync(neuralPath, 'utf8').replace(/\r/g, '');
     const selfNumbers = neural.match(/intensity\s*[:=]\s*0?\.\d+|confidence\s*[:=]\s*0?\.\d+|>=\s*0?\.\d+/g);
     if (selfNumbers) throw new Error('src/neural.js 自带数值阈值/事件默认强度 → 判据必须只留在 kernel 与 ConsciousnessEvent 一处（纪律 5）：' + selfNumbers.slice(0, 3).join(' , '));
-    for (const cmd of ['status', 'event', 'inhibit', 'assess', 'verify', 'record', 'deliberate']) {
+    // 2026-10-16：扩上 archive（写端衰减通道，M4 已登记 `neural.js archive [--apply]`）——
+    // 静态断言「分支在位」必须与 neural.js 实装的子命令集合同步，少一个=下一场没人知道有这条写端。
+    for (const cmd of ['status', 'event', 'inhibit', 'assess', 'verify', 'record', 'archive', 'deliberate']) {
       if (!new RegExp("case '" + cmd + "'").test(neural)) throw new Error('src/neural.js 缺子命令 ' + cmd + ' 分支');
     }
 
@@ -1600,6 +1602,26 @@ async function main() {
     const REF_RE = /(?:src|tools|docs|assets|training|simulation|demo)\/[\w.\-\/]*\.(?:json|md|js|py|ps1|svg|html|sql|ts)/g;
     // 反例/历史/院属/外部引用必须**在同一行带标记**才许出现（不标记即视为「教人去找」=缺陷）
     const MARK = /不存在|已砍除|只在|只存在|历史上|曾生成|反例|第[一二三四五]例|看着像|必失败|已修正|作废|别按它排障|OPT 侧|aing 侧|已废弃|用户自备|不随包|迷你院|\.temp\/|gate-c1[0-9]|垃圾|陈旧|判定|外部检出|非本包|院属语料|exists in no|does not exist|not shipped|external|legacy|historical|counter-example/i;
+    // ⑦ 外部接口登记表（单源；本门「放行但计数、不静默」的设计核心，2026-10-19 接 @58ffd7a 目标态）。
+    // 为什么：文档里指到「按设计不在包内」的路径（部署生成、机内产物、外部检出回填）若按死引用反复判红，
+    // 人们会开始「为过门而造档」——更坏的结局。故把「按设计缺席」与「陈账死链」分离：登记即放行，
+    // 但**计数并印进文案**（静默放行会让登记表无限膨胀，最后没人知道放行了什么）；
+    // 且「无效 ≠ 缺席」：探针失败/外部根不存在只报「未核」，绝不判红。
+    // 维护规则：加/减接口必须同一笔改动里同时动 INTERFACES 与 docs/DEPLOY-PLAYBOOK.md 的 `### 接口: <id>` 正本节
+    // （⑧ 核结构与「怎么接/缺席语义」两项必备，缺一即红；正本写了而表里没有 = 陈接口红；
+    // 登记表声称的缺席档被 git 收进包 = 口径漂移红）。
+    // skillopt 特例（用户 2026-10-19 拍板）：只对接状态面——opt-in 探针（VD_SKILLOPT_PROBE=1 才开），
+    // 接不接 skillopt 都不影响门禁结果；探针任何失败只报「未核」不判红。
+    const INTERFACES = [
+      { id: 'deploy-config', match: [/^src\/growth\.config\.js$/],
+        nature: '部署第 0 步生成（.gitignore 排除；模板 growth.config.example.js）；缺席是正常未部署态', absence: 'pre-deploy' },
+      { id: 'm4-proof', match: [/^simulation\/proof-[a-z0-9-]+\.json$/],
+        nature: 'M4 验证产物；生成器属机内 .temp/ 工具，不随包；缺席是正常历史读数态', absence: 'historical-readout' },
+      { id: 'skillopt', match: [/^simulation\/skillopt-evidence\.json$/, /^simulation\/skillopt-online-evidence\.json$/, /^simulation\/last-run\.json$/],
+        nature: '外部 SkillOpt 检出回填（离线/在线 rollout）；接不接与本门无关（opt-in 探针，永不判红）', absence: 'optional-external',
+        consumes: 'simulation/skillopt-task-package.json', rootEnv: 'AING_SKILLOPT_ROOT', probeEnv: 'VD_SKILLOPT_PROBE', probe: true },
+    ];
+    const ifaceLetThrough = {};
     const docs = [];
     const walk = d => {
       if (!fs.existsSync(d)) return;
@@ -1625,6 +1647,8 @@ async function main() {
           if (/[<>*…$]/.test(m[0]) || /\$\{|%\w/.test(m[0])) continue;   // 模板/占位命令不 assert
           refChecked++;
           if (fs.existsSync(path.join(PKG_DIR, m[0]))) continue;
+          const itf = INTERFACES.find(x => x.match.some(re => re.test(m[0])));
+          if (itf) { ifaceLetThrough[itf.id] = (ifaceLetThrough[itf.id] || 0) + 1; continue; }   // 登记表放行：按设计缺席，计数不静默
           if (MARK.test(l)) continue;                                     // 带标记的反例：合法
           problems.push('引用不存在的包内路径且未标反例: ' + rel + ':' + (i + 1) + ' → ' + m[0]);
         }
@@ -1813,8 +1837,54 @@ async function main() {
     if (stepChecked === 0) problems.push('步数口径门一处也没核到（锚点全失）→ 不能算通过');
     const stepFace = '代谢步数 ' + stepChecked + ' 处对真值 ' + STEP_TRUTH + '（干扰/史记豁免 ' + stepWaived + '）' + (stepFace0 ? ' · ' + stepFace0 : '');
 
+    // ⑦ 外部接口放行计数：登记表放行的"按设计缺席"引用在此计数并印进文案（放行但计数、不静默）
+    const ifaceCount = INTERFACES.length;
+    const ifaceLetTotal = Object.values(ifaceLetThrough).reduce((a, b) => a + b, 0);
+    // skillopt opt-in 探针（用户 2026-10-19 拍板：只对接状态、接不接都不影响门禁）——仅 VD_SKILLOPT_PROBE=1 才开，
+    // 任何结果只作"已回填 N/M"文案，**永不判红**。
+    let skilloptNote = 'skillopt 探针未开（opt-in，接不接不影响门禁）';
+    if (process.env.VD_SKILLOPT_PROBE === '1') {
+      const skPaths = ['simulation/skillopt-evidence.json', 'simulation/skillopt-online-evidence.json', 'simulation/last-run.json'];
+      const n = skPaths.filter(p => fs.existsSync(path.join(PKG_DIR, p))).length;
+      skilloptNote = 'skillopt 探针已开：已回填 ' + n + '/' + skPaths.length + ' 档（仅报状态，永不判红）';
+    }
+    let ifaceFace = '外部接口 ' + ifaceCount + ' 个（放行引用 ' + ifaceLetTotal + ' 处）· 正本接口节 0 节';
+
+    // ⑧ 接口正本接线节：登记表 INTERFACES ↔ 正本档 docs/DEPLOY-PLAYBOOK.md 的 `### 接口: <id>` 节双向自洽
+    //   （手法沿用 C10g 生产端↔消费端白名单；只比结构与两项必备内容，避免散落提及替正本顶包）
+    const PLAY = path.join(PKG_DIR, 'docs', 'DEPLOY-PLAYBOOK.md');
+    const knownIfaceIds = new Set(INTERFACES.map(x => x.id));
+    let ifaceSections = 0;
+    if (fs.existsSync(PLAY)) {
+      const ptxt = fs.readFileSync(PLAY, 'utf8').replace(/\r/g, '');
+      const secIds = [...ptxt.matchAll(/^###\s*接口[:：]\s*([A-Za-z0-9-]+)/gm)].map(m => m[1]);
+      ifaceSections = secIds.length;
+      for (const x of INTERFACES) {
+        if (!secIds.includes(x.id)) { problems.push('正本 DEPLOY-PLAYBOOK.md 缺 `### 接口: ' + x.id + '` 节（登记表有、正本无 → 接线缺失）'); continue; }
+        const idx = ptxt.indexOf('### 接口: ' + x.id);
+        // 本节正文边界 = 其后的**最近** H2 或 H3 标题（只认 \n## 会越过同级 ### 接口: 节，把别的节内容误并入 → 2026-10-19 负向③ 实测）
+        const rest = ptxt.slice(idx + 10);
+        const cand = [rest.search(/\n###\s/), rest.search(/\n##\s/)].filter(n => n >= 0).map(n => idx + 10 + n);
+        const nextSec = cand.length ? Math.min(...cand) : ptxt.length;
+        const body = ptxt.slice(idx, nextSec);
+        if (!/怎么接/.test(body)) problems.push('正本 `### 接口: ' + x.id + '` 缺「怎么接」');
+        if (!/缺席语义/.test(body)) problems.push('正本 `### 接口: ' + x.id + '` 缺「缺席语义」');
+      }
+      for (const sid of secIds) if (!knownIfaceIds.has(sid)) problems.push('正本有 `### 接口: ' + sid + '` 但 INTERFACES 未登记（陈接口：删掉该节或补登记）');
+      // 口径漂移：登记表声称"按设计缺席"的产物档，若被 git 收进包 = 与登记表矛盾
+      const tracked = (() => { const g = spawnSync('git', ['ls-files'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 }); return g.status === 0 ? String(g.stdout).replace(/\r/g, '').split('\n').map(s => s.trim()).filter(Boolean) : null; })();
+      if (tracked) {
+        const conflicted = tracked.filter(t => INTERFACES.some(x => x.match.some(re => re.test(t))));
+        if (conflicted.length) problems.push('口径漂移：登记表声称"按设计缺席"的档被 git 收进包：' + conflicted.join('、'));
+      }
+      ifaceFace = '外部接口 ' + ifaceCount + ' 个（放行引用 ' + ifaceLetTotal + ' 处）· 正本接口节 ' + ifaceSections + ' 节';
+      if (process.env.VD_SKILLOPT_PROBE === '1') ifaceFace += ' · ' + skilloptNote;
+    } else {
+      problems.push('正本 docs/DEPLOY-PLAYBOOK.md 不在位（C20 ⑧ 无法核对接口接线节）');
+    }
+
     if (problems.length) throw new Error(problems.length + ' 项文档命令不可执行：\n      ' + problems.slice(0, 8).join('\n      ') + (problems.length > 8 ? '\n      …另 ' + (problems.length - 8) + ' 项' : ''));
-    return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · ' + stepFace + ' · 扫 ' + docs.length + ' 档';
+    return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · ' + stepFace + ' · ' + ifaceFace + ' · 扫 ' + docs.length + ' 档';
   });
 
   // ── 报告 ─────────────────────────────────────────────────────
