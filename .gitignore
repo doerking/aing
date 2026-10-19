@@ -49,3 +49,8 @@ src/package.json
 docs/index.html
 # 2026-09-17 sqa 交接单§七/§九批：分析报表工具带时间戳的运行产物，非包内容
 SELF-GROWTH-REPORT.md
+
+# AgnesCode 应用运行态 + 独立数据项目（院属资产，不进 aing 包面；
+# 换血第2步会扫未跟踪野文件进沙盒，先挂 ignore 止血 —— F6 先例）
+.agnes/
+data-analysis/
