@@ -62,8 +62,12 @@ console.log('── ③ python 命令未自带执行位置（skillopt 类）：'
 [...pyLoc].slice(0, 8).forEach(s => console.log('    ⚠ ' + s.slice(0, 122)));
 
 console.log('\n── ④ 只读类命令真跑（改动类不在这里跑）');
-const SAFE = /^(node (src\/memo\.js (--summary|--peek|--todos|)|src\/neural\.js status|tools\/gate-counts\.js|tools\/verify-sibling-roots\.js --print-face)|npm run gate-counts|node --check)/;
-const safe = list.filter(x => SAFE.test(x.c));
+const SAFE = /^(node src\/memo\.js (--summary|--peek|--actions)?( todo list (--all)?)?|node src\/neural\.js status|node tools\/gate-counts\.js|node tools\/verify-sibling-roots\.js --print-face|npm run gate-counts|node --check \S+)$/;
+// 防呆（2026-10-19 第七节雷）：SAFE 必须整行锚定、显式枚举——旧版 `(--summary|--peek|--todos|)` 的空交替会把
+// 任意 `node src/memo.js …` 判成只读，从而把文档里 `todo add` 示例行真跑成写库。再叠一层 WRONG_WORDS 兜底，
+// 任何含写命令词的候选直接排除（验收器/清点脚本绝不自持写命令）。
+const WRONG_WORDS = /\b(todo (add|done)|new|set|create|feed|dispatch|record|inhibit|uninhibit|archive|compile|init|migrate|purge|reindex|start|stop)\b/i;
+const safe = list.filter(x => SAFE.test(x.c) && !WRONG_WORDS.test(x.c));
 let ok = 0, bad = 0;
 for (const x of safe) {
   const args = x.c.replace(/^npm run \S+/, 'skip').replace(/^node\s+/, '').split(/\s+/).filter(Boolean);

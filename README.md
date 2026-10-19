@@ -240,6 +240,8 @@ node src/auto-ingest.js <session-id> "<json|文本>"    # 一次性入库（投�
 
 # 意识层写端 CLI / control surface（读靠 memo，动手靠 neural；二者都不必起服务）
 node src/neural.js status           # 只读：kernel 状态 + 在效抑制清单 / read-only
+node src/neural.js archive [--apply] [--target <t>] [--min-age-hours <N>] [--attention-floor <F>]
+# 意识层旧观察项写端衰减/归档（默认 dry-run 预测；--apply 才真搬到日志归档台账，只搬超龄低注意力 observed 项）
 node src/neural.js event '{"channel":"anomaly","target":"<目标>","intensity":0.9}'   # 投一条意识事件
 node src/neural.js inhibit <目标> [--reason r] [--hours N]   # 抑制误报源（到期自动失效，kernel 无撤销 API）
 node src/neural.js assess '[{"channel":"structure","target":"wiki/x.md"}]'          # 评估（走 controller → 同一个 kernel）
