@@ -13,10 +13,10 @@
 4. [冲突仲裁与 Harness 规则](./patch-5-conflict-resolution.md)
 5. [KESPI 八维自检指标体系](./patch-6-kespi-red-light-criteria.md)
 
-（以下两篇为 2026-11-01 从 DeepSeek Harness 生态 dsh-orchestrate / dsh goal 子系统吸收的机制改造设计稿，**设计中、未接线**，源码实现待所有者拍板后走纪律 9 分支流程；本两篇不动 C0–C20 门禁计数、不动 11 步代谢）
+（以下两篇为 2026-11-01 从 DeepSeek Harness 生态 dsh-orchestrate / dsh goal 子系统吸收的机制改造设计稿；两篇均不动 C0–C20 门禁计数、不动 11 步代谢）
 
-6. [对抗审查角色并入蜂群共识收敛（dsh-orchestrate 对抗式审查+收敛）](./patch-12-adversarial-reviewer.md)
-7. [持久化 Goal 多轮追踪与收敛判定（dsh goal 子系统 → 备忘录 Todo 面）](./patch-13-persistent-goal-loop.md)
+6. [对抗审查角色并入蜂群共识收敛（dsh-orchestrate 对抗式审查+收敛）](./patch-12-adversarial-reviewer.md) ✅ 已实现（2026-11-01，分支 `feat/p12-adversarial-reviewer`：技能资产 5 角色 + Gate5 共识门禁 + memo entityNote 登记，负向自证真跑 ALL PASS）
+7. [持久化 Goal 多轮追踪与收敛判定（dsh goal 子系统 → 备忘录 Todo 面）](./patch-13-persistent-goal-loop.md) ⬜ 设计中（未接线，源码实现待拍板后走纪律 9 分支流程）
 
 ---
 

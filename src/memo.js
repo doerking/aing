@@ -494,7 +494,7 @@ function deriveSwarmDispatch(health, memo, panel, ready) {
     bundledInPackage: !!ready.bundledInPackage,
     swarmSearch: ready,
     roles,
-    entityNote: '四角色说明书与 aing-operator 自 2026-09-14（W5）起随包携带在 assets/skills/；注意：**包内有说明书 ≠ 本运行时已装载**，能否真派单只看 inRuntimeSurface'
+    entityNote: '五角色说明书（neuro-theorist / senior-engineer / skill-trainer / plasticity-analyst + 共识对抗审查 adversarial-reviewer）与 aing-operator 自 2026-09-14（W5）起随包携带在 assets/skills/；其中 adversarial-reviewer 是共识收敛门禁角色（出共识要人批前 inline 填，非健康驱动派单入口，不进 roles[]），其余四角色才进派单。注意：**包内有说明书 ≠ 本运行时已装载**，能否真派单只看 inRuntimeSurface'
   };
 }
 
