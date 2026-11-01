@@ -453,12 +453,13 @@ node src/setup-db.js --backup     # 手动备份
 | `session-ingest.js` | 会话完整入库（自带 `SessionStore`）：入库用户消息 + Agent 分析/答复，抽实体/关系/标签，编译成 wiki/ 并触发生长脑代谢 | `echo '<JSON>' \| node src/session-ingest.js` · `--file session.json` |
 | `agent-auto-ingest.js` | Agent 对话自动入库**插件**（宿主侧 SDK 面）：`AgentAutoIngest` 类，暴露 `入库({role,content})` / `入库对话([...])`，基于 `对话自动入库.对话存储` | `require('./src/agent-auto-ingest')`（宿主内调用，非 CLI） |
 | `对话自动入库.js` | 对话事件监听式自动入库（中文文件名，agent 事件流），env `KB_ROOT`/`AGENT_ID`/`INGEST_INTERVAL_MS` | `node src/对话自动入库.js --agent hermes --listen` |
+| `examples/对话自动入库示例.js` | 上列入库家族的**演示样例**（模拟对话 → `AgentAutoIngest.入库` 批量入库，不接真实会话） | `node examples/对话自动入库示例.js`（演示用，非管线组件） |
 
 ### Host Dashboards & Boot / 宿主控制面板与开场自检（组件在库）
 
 | 脚本 | 用途 | 状态 |
 |------|------|------|
-| `agent-dashboard.js` | aing Agent 控制面板：独立 RESTful HTTP（默认 3789，`--port`/`--api-key`），聚合 KnowledgeStore / VectorSearch / SessionStore / ConsciousnessKernel / GrowthDirector + `Hermes`/`Agnes` 双 adapter。与 `api-server.js` 是**并行的另一宿主接入面** | 组件在库，非核心 |
+| `agent-dashboard.js` | aing Agent 控制面板：独立 RESTful HTTP（默认 3789，`--port`/`--api-key`），聚合 KnowledgeStore / VectorSearch / SessionStore / ConsciousnessKernel / GrowthDirector + `Hermes`/`Agnes` 双 adapter。与 `api-server.js` 是**并行的另一宿主接入面**；配套子包描述 `package-dashboard.json`（`main` 指向本脚本，自带 `dashboard`/`dashboard:dev`/`dashboard:auth` 一组 npm scripts，宿主侧按需） | 组件在库，非核心 |
 | `boot-sequence.js` | 开场自检模块：每次对话开始加载完整识态（知识/意识/任务/风险）生成「第一印象」上下文 | 组件在库，宿主侧调用 |
 | `memo-call.js` | 备忘录呼叫系统：`--full/--briefing/--growth` 出识态摘要/简报/生长决策 | 组件在库 |
 | `memo-trigger.js` | 备忘录触发监听器：检查消息是否含备忘录关键词（`memo`/`备忘录`/`briefing` 等），`--listen` 持续监听 stdin | 组件在库 |
@@ -544,6 +545,7 @@ node src/setup-db.js --backup     # 手动备份
 | 🏋️ SkillOpt 在线证据 `simulation/skillopt-online-evidence.json`（不随包，本地可复现，不作发布包自证） | aing API 检索辅助: 在线 vs 离线对比 |
 | [📦 矛盾任务包](./simulation/skillopt-task-package.json) | 41 条 / 6 领域，从真实数据提取 |
 | 🧮 检索质量工具 `node tools/eval-retrieval.js`（可复现 · 只读 · 独立于门禁，3409f2a 新增） | 对库内 active 实体自指问句或 `--set <json>` 人工标注集跑 `semanticSearch`，出 recall@k + MRR；复用 `VectorSearch`+`KnowledgeStore` 不写库/不建表/不碰门禁；384 维缺失自动回退 64 维并标注通道（不假报 semantic）；`--k` 调截断 |
+| 🧪 单元测试面 `tests/unit/`（11 个测试）+ `jest.config.js`（在库 · **孤悬：`jest` 未声明在 `package.json`，无 npm script 入口，宿主需自备 jest**） | `collectCoverageFrom` 排除 `*-fixed.js` 变体；测试覆盖 auto-ingest / compile / kespi / consciousness-kernel / growth-director / pid-alive / verify-deploy-c7c 等；`verify-deploy.js` 与 `tools/self-test.js` 均不消费本面（独立于门禁） |
 
 ## Vision & Operations / 愿景与运行
 

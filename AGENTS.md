@@ -137,6 +137,9 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | `src/config-hotreload.js` | 配置热重载 | 监听 `growth.config.js` 变更自动重载（require 缓存清除后重导入，对应绿名单 locked「热重排」项的**实现体**，按需接入） | 在库，按需 |
 | `src/search-and-ingest.js` | 采集入库桥 | `node src/search-and-ingest.js "<查询>" [limit]` · `--web` · `--page <URL>`（宿主面：搜索/读取结果自动入库并触发代谢） | 在库，宿主侧 |
 | `tools/eval-retrieval.js` | 检索质量 KPI | `node tools/eval-retrieval.js [--set <qa.json>] [--k N]`（对 Q&A 对跑 semanticSearch 出 recall@k + MRR，**只读、独立于 verify-deploy 门禁**；384 维缺失自动回退 64 维并标注通道；分数来自真实检索，纪律 5） | 工具在库，只读 |
+| `examples/对话自动入库示例.js` | 入库样例 | `node examples/对话自动入库示例.js`（入库家族的演示样例：模拟对话 → `AgentAutoIngest.入库` 批量入库；非管线组件） | 样例在库 |
+| `package-dashboard.json` | 宿主子包 | `agent-dashboard.js` 的配套子包描述（`main` 指向该脚本，自带 `dashboard`/`dashboard:dev`/`dashboard:auth` npm scripts；宿主侧按需，主 `package.json` 不引用它） | 在库，非核心 |
+| `jest.config.js` + `tests/unit/`（11 个） | 单测框架 | **孤悬**：测试与配置在库，但 `jest` 未声明在 `package.json`、无 npm script 入口、`verify-deploy`/`self-test` 不消费 → 宿主需自备 jest 方可跑；`collectCoverageFrom` 排除 `*-fixed.js` | 在库，未接管线/依赖未声明 |
 
 > 与主线的关系：入库主线仍是 `auto-ingest.js` / `POST /api/ingest`（C10g/C10h 门禁钉死契约），上面这批入库家族是**并行入口**；`api-server.js` 是正式 HTTP 面，`agent-dashboard.js` 是并行宿主面板；`kespi-check.js` 是正式 KESPI 首评器，`kespi-check-fixed.js` 是修复变体。别把「在库变体」当成「默认管线」。
 
