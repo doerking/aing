@@ -73,6 +73,26 @@
 - [ ] 负向自证：假前提注入必触发 critical 反驳并挡共识（真跑，非 grep）
 - [ ] `node verify-deploy.js` 复跑 C0–C20 全绿（本 patch 不改 C 计数）
 
+## 五·B、证据摘录（自包含，钉 dsh 侧 commit，不依赖 .temp 副本）
+
+> 以下逐字摘录自本地 clone（gitignore 面、非本包），**钉 commit 可离线复核**——即使 `.temp/dsh-src/` 被清，凭本节即可自证。摘录保留上游原文（中英混合）：
+>
+> - **dsh-orchestrate**（外部检出，非本包）`github.com/ConradLu2740/dsh-orchestrate` @ **`da46a0a`**（MIT；第三方插件）
+>   - `.temp/dsh-src/dsh-orchestrate/src/persona.ts` L94/L98/L104/L110（devil，非本包）：
+>     `/** devil：刁难者（压力测试方案，产出反面论点）。 */` … `challenge: { type: 'string', description: '对该方案/主张的核心质疑' }` … `what_if: { … }` … `required: ['challenge']`
+>   - `.temp/dsh-src/dsh-orchestrate/src/persona.ts` L43/L53/L69（reviewer，非本包）：
+>     `/** adversarial/reviewer：对抗审查报告。 */` … `assumptions_challenged: { … }` … `required: ['verdict', 'risks', 'assumptions_challenged', 'edge_cases', 'suggestions']`
+>   - `.temp/dsh-src/dsh-orchestrate/src/persona.ts` L123/L140（非本包）：persona 注册表 `reviewer` / `devil` 两条目（`id` + 对应 schema）
+>   - `.temp/dsh-src/dsh-orchestrate/src/review.ts` L18/L130-131/L159/L177（非本包）：
+>     `export const MAX_REVIEWERS = 5`；`reviewerCountClamped = Math.min(Math.max(reviewerCount, 1), MAX_REVIEWERS)`；`orchestrateMode: 'adversarial'`；结果 `mode: 'adversarial'`
+>     ——**并行为只读子 Agent、工具只机械汇总，父 Agent 逐条决断（见 §2.1 头注「不替父 Agent 决断」）**
+>   - `.temp/dsh-src/dsh-orchestrate/src/converge.ts` L26/L46/L56（非本包；converge = 后台任务收集器，非共识判定）：
+>     `await Promise.allSettled(bgChildren.map(c => c.handle.result))`；`const finalStatus = run.status === 'stopped' ? 'stopped' : 'settled'`；`okCount: okTotal`
+>     ——**无 pass/fail 判据**，印证 §2.1「dsh 的收敛 = 收集结果」
+>
+> - **复核命令（外部检出，非本包；`.temp/dsh-src/` 已清）**：
+>     `git clone https://github.com/ConradLu2740/dsh-orchestrate`（在任一出检目录）后 `git log --oneline -1` 对 `da46a0a`、`git show da46a0a:src/persona.ts`（外部检出文件，非本包）看上面 4 段
+
 ## 六、证据级别声明（双证据制度 · 纪律 2）——已升级至代码级
 
 - **dsh 侧已 clone + 精读**：`dsh-orchestrate@0.3.1` 落在 `.temp/dsh-src/dsh-orchestrate/`（gitignore 面、不进包），精读 `src/review.ts` / `src/converge.ts` / `src/persona.ts` / `README.md`。确认：**存在具名 `devil` persona**（`{challenge, counterpoints[], what_if[]}`）与 `reviewer`（`{verdict, risks[], assumptions_challenged[], edge_cases[], suggestions[]}`）；`orchestrate_review` 并行 spawn 1-5 个只读审查者、**工具只机械汇总、由父 Agent 逐条决断、不设自动拦截**；`orchestrate_converge` 是后台任务结果收集器（`Promise.allSettled` → ok/failed/summary），**非 pass/fail 共识判定**。
