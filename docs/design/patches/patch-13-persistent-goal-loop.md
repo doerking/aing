@@ -68,8 +68,24 @@
 - [ ] 阈值/缺省在 `growth.config.js`（`convergence` 段），C10d 模板同构
 - [ ] `node verify-deploy.js` 复跑 C0–C20 全绿（本 patch 不改 C 计数）
 
-## 六、证据级别声明（双证据制度 · 纪律 2）——已升级至代码级
+## 五·B、证据摘录（自包含，钉 dsh 侧 commit，不依赖 .temp 副本）
 
-- **dsh 侧已 clone + 精读**：`deepseek-harness` 落在 `.temp/dsh-src/harness/`（gitignore 面、不进包），精读 `packages/goal/goal/src/{types.ts,domain.ts}` + `packages/goal/goal-round-driver/src/index.ts`。确认：**dsh goal = 持久化 4 相状态机（active/paused/blocked/complete）+ 7 操作（create/edit/pause/resume/complete/block/clear）+ CAS `revision` 乐观并发 + `maxGoalRounds` 硬上限 + 阻塞带稳定 `code` 分类码**；`goal-round-driver` 是 agent 空闲自动驱动器（pre-step 双向 fence、`roundsStarted+1` 才放行）——**此自动驱动 aing 不搬**（无常驻 loop，见 §4）。`activation`（armed/disarmed）进程本地不持久化，aing 亦不搬。
+> 以下逐字摘录自本地 clone（gitignore 面、非本包），**钉 commit 可离线复核**——即使 `.temp/dsh-src/` 被清，凭本节即可自证。摘录保留上游原文：
+>
+> - **deepseek-harness**（外部检出，非本包）`github.com/deepseek-ai/deepseek-harness` @ **`ce7073d`**（MIT；官方运行时）
+>   - `.temp/dsh-src/harness/packages/goal/goal/src/types.ts` L45-49（非本包；4 相状态机）：
+>     `export type GoalPhase =` `| 'active'` `| 'paused'` `| 'blocked'` `| 'complete'`
+>   - `.temp/dsh-src/harness/packages/goal/goal/src/domain.ts` L14-20（非本包；7 操作）：
+>     `export type GoalOperation =` `| 'create' | 'edit' | 'pause' | 'resume' | 'complete' | 'block'`（+ `'clear'`，`L21`）
+>   - `.temp/dsh-src/harness/packages/goal/goal/src/types.ts`（非本包；`GoalBlockReason`）：`{ readonly code: string /* stable lower-kebab-case */, readonly message: string }` —— **阻塞带稳定分类码**，可机器路由（§3 `blocked_code` 落点的上游原型）
+>   - `.temp/dsh-src/harness/packages/goal/goal-round-driver/src/index.ts` L182/L184/L185（非本包；到顶自动 block）：
+>     `if (goal.roundsStarted >= goal.maxGoalRounds) {` `ctx.goals.block(agent, goalRef(goal), {` `code: 'round-limit',` `message: \`Goal reached its configured limit of ${goal.maxGoalRounds} rounds.\`` });`
+>     ——**硬轮次上限到顶自动转 `blocked(code='round-limit')`**，印证 §2「自动 block 非时序启发式」
+>   - `.temp/dsh-src/harness/packages/goal/goal-round-driver/src/index.ts`（非本包；`validReservation`）：`source.round === goal.roundsStarted + 1` 才放行 —— **pre-step 双向 fence**（§4「不搬此自动驱动器」的依据）
+>
+> - **复核命令（外部检出，非本包；`.temp/dsh-src/` 已清）**：
+>     `git clone https://github.com/deepseek-ai/deepseek-harness`（在任一出检目录）后 `git log --oneline -1` 对 `ce7073d`、`git show ce7073d:packages/goal/goal/src/types.ts`（外部检出文件，非本包）看上面 3 段
+
+## 六、证据级别声明（双证据制度 · 纪律 2）——已升级至代码级
 - **本 patch 相对 dsh 的两处差异（已标清，非 dsh 原样）**：①执行驱动不同（dsh 自动 followup vs aing 人工/代谢触发）；②暂不做并发 CAS（单写者走 metabolism-lock，保留 revision 字段）。
 - **aing 侧代码取证（真实行号）**：`src/memo.js:272/300/320/335/444/488`、`src/metabolism-panel.js` queues 规则、`src/metabolism-lock.js` 持库单源判据、`growth.config.js` 阈值单源、C12/C16 既有门禁面。
