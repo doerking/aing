@@ -14,18 +14,18 @@
 
 ## 二、机制（dsh 侧代码级证据 + aing 侧落点）
 
-### 2.1 dsh-orchestrate 实际怎么做的（源码取证，`src/review.ts` / `README.md`）
+### 2.1 dsh-orchestrate 实际怎么做的（源码取证，本地 `.temp/dsh-src/dsh-orchestrate/` clone，非本包）
 
-> 证据源：本地 clone `dsh-orchestrate@0.3.1`（MIT，第三方插件，建在官方 `ctx.subagents` 之上，只加"决策层 + 编排模式层 + 收敛层"）。精读后确认：
+> 证据源：本地 clone `dsh-orchestrate@0.3.1`（MIT，第三方插件，建在官方 `ctx.subagents` 之上，只加"决策层 + 编排模式层 + 收敛层"；落在 gitignore 面 `.temp/dsh-src/`，**非 aing 交付面**）。精读后确认：
 
-- **两个对抗 persona**（`src/persona.ts` + README 角色表）：
+- **两个对抗 persona**（`.temp/dsh-src/dsh-orchestrate/src/persona.ts` + README 角色表）：
   - `reviewer`：结构化输出 `{ verdict, risks[], assumptions_challenged[], edge_cases[], suggestions[] }`
   - **`devil`：`{ challenge, counterpoints[], what_if[] }`**——dsh **已具名"对抗/刁难"角色**，不是我原稿臆想新增。
-- **`orchestrate_review` 的机制**（`src/review.ts` `createReviewTool`）：
+- **`orchestrate_review` 的机制**（`.temp/dsh-src/dsh-orchestrate/src/review.ts` `createReviewTool`）：
   - 对 target **并行 spawn N 个只读子 Agent**（`role:'reviewer'`/`orchestrateMode:'adversarial'`；`reviewers` 1-5 默认 2、`aspects` 每个方面一个审查者、并发 cap 4、`maxDepth=1` 防递归、子 Agent 自动隐藏 `orchestrate_*`）。
   - 工具**只做机械汇总，不替父 Agent 决断**（review.ts 头注明示"父 Agent 收到报告后逐条评估并决定采纳哪些"）；`outputText`/`structured` 原样返回，父 Agent 逐条采纳或反驳。
   - 每个审查者任务书要**自包含**（"需自包含，审查者不依赖额外上下文"）——触发率 100% 靠任务书自包含（Spike C，deepseek-v4-flash）。
-- **`orchestrate_converge` 是纯机械汇总，不是 pass/fail 判定**（`src/converge.ts` `convergeDelegation`）：
+- **`orchestrate_converge` 是纯机械汇总，不是 pass/fail 判定**（`.temp/dsh-src/dsh-orchestrate/src/converge.ts` `convergeDelegation`）：
   - 语义 = 等后台 run 全部子会话 `result` 结算（`Promise.allSettled`）→ 拼 `okCount/failedCount/summary`；**没有任何"通过/否决"判据**，`status` 只有 `settled/stopped`。
   - 即 dsh 的"收敛"= **收集后台任务结果**，不等于"共识收敛判定"。
 
