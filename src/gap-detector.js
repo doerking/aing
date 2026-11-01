@@ -80,7 +80,7 @@ class GapDetector {
       SELECT e.*, em.consistency, em.originality, em.relevance, em.provability, em.utility
       FROM entities e
       LEFT JOIN entity_metadata em ON e.id = em.entity_id
-      WHERE e.status = 'active' AND e.type <> 'Todo'
+      WHERE e.status = 'active' AND e.type NOT IN ('Todo', 'Goal')
     `);
 
     this.stats.totalEntities = entities.length;

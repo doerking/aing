@@ -269,6 +269,11 @@ node src/memo.js --summary                  # 备忘录/仪表台 CLI（不起�
 node src/memo.js --peek                     # 只读快拍：健康 + 用户待办 + 派单（纯 JSON）/ machine-readable glance
 node src/memo.js todo add "<用户挂着的事>" [--due YYYY-MM-DD] [--agent]   # 待办进备忘录 / record a pending item
 node src/memo.js todo done <id|关键词>          # 销办（留痕）/ close a todo with audit trail
+node src/memo.js goal add "<多轮目标>" [--max-rounds N]   # 持久化 goal 多轮追踪（P13；到顶自动 blocked(round-limit)）
+node src/memo.js goal round <id> "<推进>" [--outcome advance|blocked|done]  # 追加一轮；到顶自动 block、outcome=done 自动 complete
+node src/memo.js goal block <id> <code> "<message>"   # 显式阻塞（code 走 config.convergence.blockedCodes 单源；缺 code/message 必拒）
+node src/memo.js goal resume|pause|complete|clear <id>   # 状态机操作（resume 使 revision+1；clear 留痕不删）
+node src/memo.js goal list [--all] [--phase active|paused|blocked|complete]  # 列 goal + 各 phase/roundsStarted/blockedCode
 node src/memo.js --actions                  # 只要下一步命令 / just the derived next actions
 node src/neural.js status                    # 意识层只读快拍（含在效抑制清单）/ read-only kernel status
 node src/neural.js inhibit <目标> --hours 1    # 抑制误报源（到期自动失效；无撤销 API）/ inhibit a target
@@ -313,6 +318,11 @@ node src/memo.js --dispatch                # 只要派单
 node src/memo.js todo add "用户要周五前看到训练报告" --due 2026-09-18 --tag 训练
 node src/memo.js todo add "待复跑 A/B 检索三臂" --agent
 node src/memo.js todo list [--all]         # --all 含已销（status=done 留痕，不删行）
+node src/memo.js goal add "<多轮目标>" [--max-rounds N]   # 持久化 goal 多轮追踪（P13，dsh goal 子系统；到顶自动 blocked(round-limit)）
+node src/memo.js goal round <id> "<推进>" [--outcome advance|blocked|done]  # 追加一轮；到顶自动 block、outcome=done 自动 complete
+node src/memo.js goal block <id> <code> "<message>"   # 显式阻塞（code 走 config.convergence.blockedCodes 单源；缺 code/message 必拒）
+node src/memo.js goal resume|pause|complete|clear <id>   # 状态机（resume 使 revision+1；clear 留痕不删）
+node src/memo.js goal list [--all] [--phase <p>]   # 列 goal + phase/roundsStarted/blockedCode
 node src/memo.js todo done <id|关键词>      # 销办只改 status，保留审计链
 node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针用，不脏真库）
 ```

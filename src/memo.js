@@ -19,7 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { consciousnessTuning, getConfigState } = require('./config-runtime');
+const { consciousnessTuning, getConfigState, convergenceTuning } = require('./config-runtime');
 
 /**
  * 组装备忘录全量结构。
@@ -214,6 +214,16 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
     rule: 'entitiesActive 同 metabolism-panel.js:49 口径（status=active）'
   };
   memo.todos = todoSplit;
+  // P13：blocked Goal（多轮目标到顶 round-limit / 依赖等待 / 人工受阻）是异常驱动派单的输入面（C12 同源）。
+  // 单列 memo.blockedGoals，供 health 挂账 + swarmDispatch 按 blocked_code 机器路由；只读 entities(type=Goal)，不写表。
+  let blockedGoals = [];
+  try {
+    const gRows = store.all("SELECT * FROM entities WHERE type='Goal' AND status='active'");
+    blockedGoals = gRows.map(r => { const c = parseGoalContent(r); return { row: r, c }; })
+      .filter(x => x.c.phase === 'blocked')
+      .map(x => ({ id: x.row.id, objective: x.c.objective, phase: x.c.phase, blockedCode: x.c.blockedCode, blockedMessage: x.c.blockedMessage, roundsStarted: goalRoundsStarted(x.c), maxRounds: x.c.maxRounds }));
+  } catch (e) { blockedGoals = []; }
+  memo.blockedGoals = blockedGoals;
   memo.health = assessHealth(memo, panelRead);
   // 进化团在场面（2026-09-17 所有者点单「明标」）：三种「有」常显，不能只在要派单时才说；
   // HTTP briefing 与 CLI 共用 buildMemo，故两面同得。
@@ -338,6 +348,184 @@ function listAllTodos(store, limit = 30) {
   } catch (e) { return { error: e.message }; }
 }
 
+/* ════════════════════════════════════════════════════════════
+ * P13 持久化 goal 多轮追踪与收敛判定（吸收 dsh goal 子系统，patch-13）
+ *
+ * 单一来源：Goal 存 entities(type='Goal')（与 Todo 同表同机制，**不新开表/不加列**——
+ *   真实结构里没有 todos 子表，设计稿 §3 的「todos.goal_id 列」无从落地，故按
+ *   「Goal 也是一等实体」收窄；旧 Todo 完全不受影响，天然向后兼容）。
+ * 4 相状态机 + 7 操作 + 到顶自动 block(code='round-limit')，贴 dsh goal 真实语义：
+ *   phase ∈ {active,paused,blocked,complete}；rounds[] 每轮归属 (goal, round, outcome)。
+ * 纪律 5：maxRounds 缺省与 blocked_code 单源表一律走 convergenceTuning()（growth.config.js
+ *   convergence 段），组件内不硬编码。到顶自动 block 不硬停、可 resume（贴 driver round-limit）。
+ * ════════════════════════════════════════════════════════════ */
+
+const GOAL_PHASES = ['active', 'paused', 'blocked', 'complete'];
+
+/** 读 Goal 实体的 content JSON（缺省兜底空结构，不抛）。 */
+function parseGoalContent(row) {
+  let c = {};
+  try { c = JSON.parse((row && row.content) || '{}'); } catch (e) { c = {}; }
+  if (!Array.isArray(c.rounds)) c.rounds = [];
+  if (!GOAL_PHASES.includes(c.phase)) c.phase = 'active';
+  if (!(Number.isFinite(c.revision))) c.revision = 1;
+  if (!(Number.isFinite(c.maxRounds))) c.maxRounds = null;
+  return c;
+}
+
+function goalRoundsStarted(c) { return c.rounds.length; }
+
+/** 按精确 id 或 id/正文关键词定位一个 Goal（限 type='Goal'，不误伤 Todo/其它实体；镜像 doneTodo 定位法）。 */
+function findGoal(store, idOrKeyword, opts = {}) {
+  const w = String(idOrKeyword || '').trim();
+  if (!w) { const e = new Error('需要 goal id / goal id is required'); e.code = 'NO_ID'; throw e; }
+  const statusFilter = opts.includeDone ? "type='Goal'" : "type='Goal' AND status='active'";
+  let hit = store.get("SELECT * FROM entities WHERE " + statusFilter + " AND id = ?", [w]);
+  if (!hit) {
+    hit = store.get("SELECT * FROM entities WHERE " + statusFilter + " AND (id LIKE ? OR name LIKE ?) ORDER BY updated_at DESC LIMIT 1", ['%' + w + '%', '%' + w + '%']);
+  }
+  if (!hit) { const e = new Error('找不到 goal：' + w + (opts.includeDone ? '' : '（已 clear/complete 的用 memo goal list --all 查）')); e.code = 'GOAL_NOT_FOUND'; throw e; }
+  return hit;
+}
+
+/** 写回 Goal 实体（content 序列化 + revision 自增 + updated_at 刷新，贴 dsh 每次 durable 变更 revision+1）。 */
+function commitGoal(store, row, c, { incrementRevision = true } = {}) {
+  if (incrementRevision) c.revision += 1;
+  c.updatedAt = new Date().toISOString();
+  store.saveEntity({
+    id: row.id, name: c.objective || row.name, type: 'Goal',
+    content: JSON.stringify(c), tags: row.tags || '[]',
+    status: c.phase === 'complete' ? 'done' : 'active',   // 表级 status：complete 视为「办结留痕」（同 doneTodo 不删行）；clear 另有 tombstone
+    confidence: 0, source_file: row.source_file || 'memo-goal',
+  });
+  return c;
+}
+
+/**
+ * 建 Goal（create）+ 首轮。
+ * @param {object} store KnowledgeStore
+ * @param {object} input {objective 必填, maxRounds 缺省走 convergenceTuning, roundNote 首轮推进文本, outcome 'advance'|'blocked'|'done'}
+ */
+function addGoal(store, input = {}) {
+  const objective = String(input.objective || '').trim();
+  if (!objective) { const e = new Error('goal 目标不能为空 / goal objective is required'); e.code = 'EMPTY_GOAL'; throw e; }
+  const tuning = convergenceTuning();
+  const maxRounds = Number.isFinite(Number(input.maxRounds)) && Number(input.maxRounds) > 0 ? Number(input.maxRounds) : tuning.maxRoundsDefault;
+  const id = 'goal-' + new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14) + '-' + objective.replace(/[^\p{L}\p{N}]+/gu, '-').slice(0, 18).toLowerCase().replace(/^-|-$/g, '');
+  const now = new Date().toISOString();
+  const c = {
+    objective, phase: 'active', maxRounds, blockedCode: null, blockedMessage: null,
+    revision: 1, createdAt: now, updatedAt: now,
+    rounds: [],
+  };
+  // 收窄（贴 dsh create 语义）：create 不消耗轮次，roundsStarted 从 0 起、首轮推进由 `memo goal round` 记。
+  // 唯一例外：显式 --outcome done（创建即完成，罕见）记第 1 轮 done。
+  if (input.outcome === 'done') {
+    c.rounds.push({ round: 1, note: String(input.roundNote || ''), outcome: 'done', at: now });
+    c.phase = 'complete';
+  }
+  store.saveEntity({
+    id, name: objective.length > 90 ? objective.slice(0, 90) + '…' : objective, type: 'Goal',
+    content: JSON.stringify(c), tags: ['goal'], status: c.phase === 'complete' ? 'done' : 'active',
+    confidence: 0, source_file: 'memo-goal',
+  });
+  return { ok: true, id, objective, phase: c.phase, roundsStarted: goalRoundsStarted(c), maxRounds, blockedCode: c.blockedCode, revision: c.revision };
+}
+
+/**
+ * 追加一轮（edit）；outcome=done 自动 complete；到顶且 outcome≠done 自动 block(round-limit)。
+ */
+function goalRound(store, idOrKeyword, input = {}) {
+  const row = findGoal(store, idOrKeyword);
+  const c = parseGoalContent(row);
+  if (c.phase === 'complete' || c.phase === 'blocked' || c.phase === 'paused') {
+    // 暂停/受阻目标推进须先 resume（贴 dsh：blocked/paused 态不允许直接 edit）
+    const e = new Error('goal 处于 ' + c.phase + ' 态，先 `memo goal resume ' + row.id + '` 再推进'); e.code = 'GOAL_NOT_ACTIVE'; throw e;
+  }
+  const outcome = ['advance', 'blocked', 'done'].includes(input.outcome) ? input.outcome : 'advance';
+  c.rounds.push({ round: goalRoundsStarted(c) + 1, note: String(input.note || ''), outcome, at: new Date().toISOString() });
+  if (outcome === 'done') { c.phase = 'complete'; c.blockedCode = null; c.blockedMessage = null; }
+  else if (c.rounds.length >= c.maxRounds) { c.phase = 'blocked'; c.blockedCode = 'round-limit'; c.blockedMessage = 'Goal reached its configured limit of ' + c.maxRounds + ' rounds.'; }
+  commitGoal(store, row, c);
+  return { ok: true, id: row.id, phase: c.phase, roundsStarted: c.rounds.length, blockedCode: c.blockedCode, revision: c.revision };
+}
+
+/**
+ * 显式 block（必带 code + message，贴 dsh GoalBlockReason / GOAL_INVALID_BLOCK_REASON；缺任一即拒）。
+ * code 走 blocked_code 稳定分类码（convergenceTuning().blockedCodes 为已登记单源，未知码允许写但会在路由面无对应角色）。
+ */
+function blockGoal(store, idOrKeyword, code, message) {
+  const row = findGoal(store, idOrKeyword);
+  const c = parseGoalContent(row);
+  const codeS = String(code || '').trim();
+  const msgS = String(message || '').trim();
+  if (!codeS || !msgS) { const e = new Error('block 必须带 code + message（贴 dsh GOAL_INVALID_BLOCK_REASON）'); e.code = 'GOAL_INVALID_BLOCK_REASON'; throw e; }
+  const registered = convergenceTuning().blockedCodes;
+  c.phase = 'blocked'; c.blockedCode = codeS; c.blockedMessage = msgS;
+  commitGoal(store, row, c);
+  return { ok: true, id: row.id, phase: c.phase, blockedCode: codeS, registeredCode: registered.includes(codeS), revision: c.revision };
+}
+
+/** pause：挂起（不改 rounds，保留 phase=paused）。 */
+function pauseGoal(store, idOrKeyword) {
+  const row = findGoal(store, idOrKeyword);
+  const c = parseGoalContent(row);
+  if (c.phase === 'complete') { const e = new Error('已 complete 的 goal 不能再 pause'); e.code = 'GOAL_NOT_ACTIVE'; throw e; }
+  c.phase = 'paused'; commitGoal(store, row, c);
+  return { ok: true, id: row.id, phase: 'paused', revision: c.revision };
+}
+
+/** resume：从 paused/blocked 恢复 active（revision+1，贴 dsh resume 语义；不自动清 blockedCode，留痕）。 */
+function resumeGoal(store, idOrKeyword) {
+  const row = findGoal(store, idOrKeyword);
+  const c = parseGoalContent(row);
+  if (c.phase === 'complete') { const e = new Error('已 complete 的 goal 不能再 resume'); e.code = 'GOAL_NOT_ACTIVE'; throw e; }
+  c.phase = 'active'; c.revision += 1; c.updatedAt = new Date().toISOString();
+  commitGoal(store, row, c, { incrementRevision: false });   // resume 已在此手动 +1
+  return { ok: true, id: row.id, phase: 'active', revision: c.revision };
+}
+
+/** 显式 complete。 */
+function completeGoal(store, idOrKeyword) {
+  const row = findGoal(store, idOrKeyword);
+  const c = parseGoalContent(row);
+  c.phase = 'complete'; c.blockedCode = null; c.blockedMessage = null;
+  commitGoal(store, row, c);
+  return { ok: true, id: row.id, phase: 'complete', roundsStarted: c.rounds.length, revision: c.revision };
+}
+
+/** clear：tombstone（status=done 留痕不删行，同 doneTodo；不删因果链）。 */
+function clearGoal(store, idOrKeyword) {
+  const row = findGoal(store, idOrKeyword, { includeDone: true });
+  const c = parseGoalContent(row);
+  c.phase = c.phase;   // 保留最后 phase 供回溯
+  store.saveEntity({ id: row.id, name: c.objective || row.name, type: 'Goal', content: JSON.stringify(c), tags: row.tags || '[]', status: 'done', confidence: 0, source_file: row.source_file || 'memo-goal' });
+  return { ok: true, id: row.id, cleared: true, lastPhase: c.phase };
+}
+
+/** 列 Goal（默认活跃 + complete；--all 含已 clear tombstone；--phase 过滤）。 */
+function listGoals(store, opts = {}) {
+  const phase = opts.phase;
+  if (phase && !GOAL_PHASES.includes(phase)) { const e = new Error('phase 须为 ' + GOAL_PHASES.join('/') + '；收到：' + phase); e.code = 'BAD_PHASE'; throw e; }
+  const all = opts.all;
+  const rows = store.all("SELECT * FROM entities WHERE type='Goal' ORDER BY (status='active') DESC, updated_at DESC");
+  return rows.filter(r => {
+    const c = parseGoalContent(r);
+    if (all) return true;
+    if (phase) return c.phase === phase;
+    return r.status === 'active';   // 默认看未 clear 的
+  }).map(r => {
+    const c = parseGoalContent(r);
+    return {
+      id: r.id, objective: c.objective, phase: c.phase,
+      roundsStarted: goalRoundsStarted(c), maxRounds: c.maxRounds,
+      blockedCode: c.blockedCode, blockedMessage: c.blockedMessage,
+      revision: c.revision, lastRoundOutcome: c.rounds.length ? c.rounds[c.rounds.length - 1].outcome : null,
+      status: r.status,
+    };
+  });
+}
+
 /** 读意识层面板（gaps/queues/health 是现成读数；缺失只降级不报错）。 */
 function readPanel(KB_ROOT) {
   const f = path.join(KB_ROOT, 'data', 'panel.json');
@@ -388,6 +576,13 @@ function assessHealth(memo, panel, opts = {}) {
     const bad = Object.entries(g).filter(([, n]) => Number(n) > 0);
     if (bad.length) push('gaps', 'degraded', '面板缺口非零：' + bad.map(([k, n]) => k + '=' + n).join(' '), 'panel.gaps');
   } else if (panel && !panel.ok) push('panel-absent', 'degraded', '意识层面板不可读（' + (panel.reason || '?') + '）：缺口与队列读数看不见', 'data/panel.json');
+  // P13：blocked Goal（多轮目标到顶 round-limit / 依赖等待 / 人工受阻）是异常驱动派单的输入面（C12 同源）。
+  // 挂账为 degraded（目标卡住不是链路断裂，但需要人关注），evidence 带 code 供派单机器路由。
+  const bGoals = memo.blockedGoals || [];
+  if (bGoals.length) {
+    const codes = bGoals.map(g => g.id + ':' + (g.blockedCode || '?')).join(' ');
+    push('goal-blocked', 'degraded', bGoals.length + ' 个多轮目标受阻（code 可路由：' + codes + '）', 'blockedGoals=' + bGoals.length);
+  }
   const weak = Object.entries(memo.selfAssessment || {}).filter(([, v]) => !v || v.score !== '✓').map(([k]) => k);
   if (weak.length) push('self-weak', 'degraded', '自我报告未全绿：' + weak.join(', '), 'selfAssessment');
   if ((memo.consciousnessAlerts || []).length) push('alerts', 'degraded', '意识层告警在响', 'consciousnessAlerts=' + memo.consciousnessAlerts.length);
@@ -466,6 +661,12 @@ function deriveSwarmDispatch(health, memo, panel, ready) {
     const ev = health.reasons.find(x => x.code === 'kespi-red' || x.code === 'kespi-yellow');
     want.analyst = (want.analyst ? want.analyst + '; ' : '') + (ev ? ev.evidence : 'kespiAvg 跌破');
   }
+  // P13：blocked Goal 按 blocked_code 机器路由升级（C12 异常驱动同源；code 是稳定分类码，可路由到对应处置）
+  //   round-limit → 重新定范围（director）；dep-waiting → 查依赖；manual-blocked → 人工裁决。
+  const bGoals = memo.blockedGoals || [];
+  if (bGoals.length) {
+    want.analyst = (want.analyst ? want.analyst + '; ' : '') + 'goal-blocked ' + bGoals.map(g => g.id + '[' + (g.blockedCode || '?') + ']').join(' ');
+  }
 
   const GATE = {
     theorist: '六属性 ✓ ≥4 且无关键 ✗（转述 AGENTS 约定，仅供人看，不参与判定）',
@@ -528,7 +729,7 @@ function deriveNextActions(memo) {
   return acts;
 }
 
-module.exports = { buildMemo, openMemoContext, deriveNextActions, collectTodos, addTodo, doneTodo, listAllTodos, assessHealth, deriveSwarmDispatch, swarmRolesReady, readPanel };
+module.exports = { buildMemo, openMemoContext, deriveNextActions, collectTodos, addTodo, doneTodo, listAllTodos, assessHealth, deriveSwarmDispatch, swarmRolesReady, readPanel, addGoal, goalRound, blockGoal, pauseGoal, resumeGoal, completeGoal, clearGoal, listGoals };
 
 /* ── CLI：agent 出场第一步读备忘录，不必先起 HTTP 服务 ──
  * 机器消费约定：本文件 CLI 模式下，依赖模块自带的进度日志一律改走 stderr，
@@ -553,7 +754,11 @@ if (require.main === module) {
   }
   const emit = s => process.stdout.write(s + '\n');
   const flagVal = (name) => { const i = argvAll.indexOf(name); return i >= 0 ? argvAll[i + 1] : null; };
-  const pos = argvAll.filter(a => !a.startsWith('--') && a !== flagVal('--db') && a !== flagVal('--due') && a !== flagVal('--tag'));
+  // P13：pos 须排除**所有已知 flag 的值**（--max-rounds/--outcome/--note/--id/--phase 等），
+  // 否则 goal add 的 --max-rounds 值会漏进 objective、goal round 的 id 被拼碎（负向自证 2026-11-01 抓到）。
+  // 注意：--all/--agent 是布尔旗标、无值，flagVal 取到 undefined（不是 null）→ 用 != null 兜（v24 回归 C12 todo list --all 崩就出在这）。
+  const FLAG_VALUES = new Set(['--db', '--due', '--tag', '--max-rounds', '--outcome', '--note', '--id', '--phase', '--round', '--all'].map(flagVal).filter(v => v != null && !v.startsWith('--')));
+  const pos = argvAll.filter(a => !a.startsWith('--') && !FLAG_VALUES.has(a));
 
   const printSummary = (memo) => {
     const cs = memo.consciousness || {};
@@ -590,10 +795,13 @@ if (require.main === module) {
 
   (async () => {
     const sub = pos[0] === 'todo' ? pos[1] : null;
+    const goalSub = pos[0] === 'goal' ? pos[1] : null;
     const dbPath = flagVal('--db');
-    // 2026-09-17 F3：todo 写面在默认院且代谢持库时拒写（单行丢写也是事故）；--db 隔离探针自管不拦。
-    if ((sub === 'add' || sub === 'done') && !dbPath && require('./metabolism-lock.js').metabolismBusy()) {
-      console.log(require('./metabolism-lock.js').refuseLine('memo todo 写面'));
+    // 2026-09-17 F3：写面在默认院且代谢持库时拒写（单行丢写也是事故）；--db 隔离探针自管不拦。
+    // P13：goal 写面（add/round/block/pause/resume/complete/clear）与 todo 写面同源拦代谢持库。
+    const goalWrite = goalSub && ['add', 'round', 'block', 'pause', 'resume', 'complete', 'clear'].includes(goalSub);
+    if ((sub === 'add' || sub === 'done' || goalWrite) && !dbPath && require('./metabolism-lock.js').metabolismBusy()) {
+      console.log(require('./metabolism-lock.js').refuseLine(goalWrite ? 'memo goal 写面' : 'memo todo 写面'));
       process.exit(3);
     }
     const { deps, close } = await openMemoContext({ semantic: !argvAll.includes('--no-semantic'), dbPath: dbPath || null });
@@ -615,6 +823,41 @@ if (require.main === module) {
         const c = collectTodos(deps.store);
         const rows = argvAll.includes('--all') ? listAllTodos(deps.store) : { user: c.user, agent: c.agent };
         emit(JSON.stringify(rows, null, 2));
+        return;
+      }
+
+      // —— P13 写面：持久化 goal 多轮追踪（7 操作对齐 dsh GoalOperation，entities type=Goal 单一来源）——
+      // pos 已排除全部 flag 值（含 --max-rounds/--outcome/--note/--id/--phase/--round 的值），故位置参数干净。
+      if (goalSub === 'add') {
+        const objective = pos.slice(2).join(' ').trim();
+        const maxRounds = flagVal('--max-rounds') ? Number(flagVal('--max-rounds')) : undefined;
+        const outcome = flagVal('--outcome') || undefined;
+        const res = addGoal(deps.store, { objective, maxRounds, roundNote: flagVal('--round'), outcome });
+        emit(JSON.stringify(res));
+        return;
+      }
+      if (goalSub === 'round') {
+        const id = pos[2] || flagVal('--id');
+        const note = flagVal('--note') || pos.slice(3).join(' ');
+        const res = goalRound(deps.store, id, { note, outcome: flagVal('--outcome') });
+        emit(JSON.stringify(res));
+        return;
+      }
+      if (goalSub === 'block') {
+        const id = pos[2];
+        const code = pos[3];
+        const message = pos.slice(4).join(' ').trim() || flagVal('--message') || '';
+        const res = blockGoal(deps.store, id, code, message);
+        emit(JSON.stringify(res));
+        return;
+      }
+      if (goalSub === 'pause') { emit(JSON.stringify(pauseGoal(deps.store, pos[2]))); return; }
+      if (goalSub === 'resume') { emit(JSON.stringify(resumeGoal(deps.store, pos[2]))); return; }
+      if (goalSub === 'complete') { emit(JSON.stringify(completeGoal(deps.store, pos[2]))); return; }
+      if (goalSub === 'clear') { emit(JSON.stringify(clearGoal(deps.store, pos[2]))); return; }
+      if (goalSub === 'list') {
+        const opts = { all: argvAll.includes('--all'), phase: flagVal('--phase') };
+        emit(JSON.stringify(listGoals(deps.store, opts), null, 2));
         return;
       }
 

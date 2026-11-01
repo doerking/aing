@@ -186,6 +186,14 @@ const config = {
 
     maxRegenCount: 3
 
+  },
+
+  // 持久化 goal 多轮收敛旋钮（P13，2026-11-01；纪律 5 单源，组件内不硬编码）：
+  // 未显式 --max-rounds 的 goal 取此缺省轮次上限；到顶自动 block(code='round-limit')（memo.js goal round）。
+  // blockedCodes = blocked_code 稳定分类码单源表（kebab，可机器路由）；新增码须登记在此，组件不得自造。
+  convergence: {
+    maxRoundsDefault: 5,
+    blockedCodes: ['round-limit', 'manual-blocked', 'dep-waiting']
   }
 
 };
