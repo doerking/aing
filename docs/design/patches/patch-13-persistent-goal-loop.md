@@ -2,7 +2,9 @@
 
 > 定位：把 DeepSeek Harness 的「goal 子系统」（persistent, multi-round objective tracking）改造进 aing 备忘录 Todo 面，让「用户挂着的事」从一次性待办升级成**多轮目标 + 收敛判定**的一等对象。
 > 吸收来源：dsh goal 子系统（deepseek-ai 生态，机制层：持续目标、多轮推进、收敛判定）。
-> **本档为设计稿，不落地代码、不动 C0–C20 门禁计数、不动 11 步代谢**；源码实现待所有者拍板后走纪律 9 分支流程。
+> **实现状态（2026-11-01，分支 `feat/p13-persistent-goal`）：已落地**——`memo.js` 8 个 goal 函数 + CLI 8 子命令（add/round/block/pause/resume/complete/list/clear，4 相状态机 + 到顶自动 `blocked(round-limit)` + `block` 缺 code 必拒 + `resume` revision+1）；`convergence` 旋钮进 `growth.config.js`（src+example 同构）+ `config-runtime.convergenceTuning()` 单源读取；`blocked Goal` 接 `goal-blocked` 健康账 + 派单路由（C12 同源，blocked_code 机器路由）；`gap-detector` 排除 Goal（队列项退出缺口扫描，同 Todo 先例）。
+> **落地时纠正设计稿一处假前提**：真实结构**无 todos 子表**（Todo 就在 `entities` 表），§3「todos.goal_id 列」无从落地 → 收窄为 **Goal 走 `entities(type='Goal')`、不新开表/不加列/不迁移**（避开 C10c/C10e 门禁面，旧 Todo 天然向后兼容）。
+> 边界不变：不搬 `goal-round-driver` 自动驱动器（aing 无常驻 loop，多轮推进是人工 `memo goal round`/代谢触发）；暂不做并发 CAS（单写者走 metabolism-lock，保留 revision）；**不动 C0–C20 门禁计数、不动 11 步代谢、不注册新门禁编号**（负向自证挂 patch 自身验收，照 C12/C16 套路真跑通过）。
 
 ---
 

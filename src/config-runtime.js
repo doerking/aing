@@ -92,4 +92,35 @@ function consciousnessTuning() {
   return getConsciousnessConfig(CONSCIOUSNESS_FALLBACK);
 }
 
-module.exports = { CONFIG_PATH, loadGrowthConfig, getConfigState, CONSCIOUSNESS_FALLBACK, getConsciousnessConfig, consciousnessTuning };
+/**
+ * 持久化 goal 多轮收敛旋钮的唯一读取口（P13，2026-11-01；纪律 5 单源，照 consciousnessTuning 模式）。
+ *
+ * 权威值在 `src/growth.config.js` 的 `convergence` 段（与 growth.config.example.js 同构，C10d 校验）。
+ * FALLBACK 只在没有配置文件时兜底（未部署院/门禁假院），组件内不得再写死 maxRounds 或自造 blocked_code：
+ * 到顶自动 block 的轮数、可路由的阻塞分类码，一律经此读取，改 config 即改行为。
+ * @returns {{maxRoundsDefault:number, blockedCodes:string[]}}
+ */
+const CONVERGENCE_FALLBACK = Object.freeze({
+  maxRoundsDefault: 5,
+  blockedCodes: ['round-limit', 'manual-blocked', 'dep-waiting'],
+});
+
+function getConvergenceConfig(fallback = CONVERGENCE_FALLBACK) {
+  let cfg = null;
+  try { cfg = loadGrowthConfig(); } catch (e) { cfg = null; }   // 未部署院：statSync 会抛 ENOENT，退回 fallback
+  const raw = (cfg && typeof cfg === 'object' && cfg.convergence) || {};
+  const out = {};
+  const mr = Number(raw.maxRoundsDefault);
+  out.maxRoundsDefault = Number.isFinite(mr) && mr > 0 ? mr : fallback.maxRoundsDefault;
+  const codes = Array.isArray(raw.blockedCodes) ? raw.blockedCodes.map(String).filter(Boolean) : [];
+  out.blockedCodes = codes.length ? codes : fallback.blockedCodes.slice();
+  // 到顶自动阻塞码是机器路由的稳定码，永远保留，防止 config 误删导致 round-limit 不可路由
+  if (!out.blockedCodes.includes('round-limit')) out.blockedCodes.push('round-limit');
+  return out;
+}
+
+function convergenceTuning() {
+  return getConvergenceConfig(CONVERGENCE_FALLBACK);
+}
+
+module.exports = { CONFIG_PATH, loadGrowthConfig, getConfigState, CONSCIOUSNESS_FALLBACK, getConsciousnessConfig, consciousnessTuning, CONVERGENCE_FALLBACK, getConvergenceConfig, convergenceTuning };

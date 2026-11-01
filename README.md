@@ -235,6 +235,11 @@ node src/memo.js --dispatch       # 只问要不要派神经进化团队 / shoul
 node src/memo.js todo add "<用户挂着的事>" [--due YYYY-MM-DD] [--agent]   # 把待办记进备忘录（面板与仪表台同一张表）
 node src/memo.js todo list        # 看活跃待办；--all 含已销（留痕不删行）
 node src/memo.js todo done <id>    # 销办
+node src/memo.js goal add "<多轮目标>" [--max-rounds N]   # 持久化 goal 多轮追踪（P13，dsh goal 子系统；到顶自动 blocked(round-limit)）
+node src/memo.js goal round <id> "<推进>" [--outcome advance|blocked|done]  # 追加一轮
+node src/memo.js goal block <id> <code> "<message>"   # 显式阻塞（code 走 config.convergence.blockedCodes 单源）
+node src/memo.js goal resume|pause|complete|clear <id>   # 状态机（resume 使 revision+1；clear 留痕不删）
+node src/memo.js goal list [--all] [--phase <p>]   # 列 goal + phase/roundsStarted/blockedCode
 node src/memo.js --actions        # 只要下一步命令 / derived next actions only
 node src/auto-ingest.js <session-id> "<json|文本>"    # 一次性入库（投完退出；--keep 才转常驻批处理）
 
