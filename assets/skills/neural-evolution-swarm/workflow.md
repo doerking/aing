@@ -14,8 +14,11 @@ graph TD
     P --> A[plasticity-analyst<br/>六维拓扑体检]
     T --> G4a{Gate4a: 候选分>基线}
     A --> G4b{Gate4b: 守恒比0.8~1.5<br/>回炉闭环}
-    G4a --> I[Leader: 集成与终报<br/>矛盾原样呈现]
-    G4b --> I
+    G4a --> AD[adversarial-reviewer<br/>共识对抗审查<br/>只反驳不修复]
+    G4b --> AD
+    AD --> G5{Gate5: rebuttals[]<br/>无critical/major才放行}
+    G5 -->|critical/major<br/>回炉≤1轮| L
+    G5 -->|无critical/major| I[Leader: 集成与终报<br/>矛盾原样呈现]
     I --> R[最终报告]
 ```
 
@@ -45,8 +48,14 @@ graph TD
    - analyst：六维拓扑体检 → 健康报告 + 处方
      - 质量门槛（Gate4b）：守恒比 0.8~1.5 且回炉闭环成立；否则处方转 senior-engineer 工单
 
-5. **集成与终报**（Leader，串行）
-   - 动作：汇总四方输出，矛盾原样呈现不调解；trainer 未过 Gate 的候选标记为影子产物留档
+5. **共识对抗审查**（adversarial-reviewer，串行，收敛门禁）
+   - 输入：Leader 的共识草案 + 四方报告 + 原始设计稿
+   - 动作：按 `devil` 合同（`{challenge / counterpoints[] / what_if[]}`）只反驳不修复，产出 `rebuttals[]`（每条带 severity：critical/major/minor）
+   - 质量门槛（Gate5）：存在 critical 或 major 反驳 → **挡共识、回炉第 1 步（≤1 轮，防死循环）**；无 critical/major → 放行出共识要人批
+   - 降级：运行时未装团队技能（`inRuntimeSurface=false`）时，Leader 按 `roles/adversarial-reviewer.md` 的 Inline Persona 段自己填该角色，仍出 `rebuttals[]`，不跳过门禁
+
+6. **集成与终报**（Leader，串行）
+   - 动作：汇总四方输出 + 对抗审查 `rebuttals[]`，矛盾原样呈现不调解；trainer 未过 Gate 的候选标记为影子产物留档
    - 输出：最终报告
 
 ### 最终报告格式
@@ -66,14 +75,18 @@ graph TD
 ## 拓扑健康
 [六维体检] + [综合诊断] + [处方] + [Gate4b 裁决]
 
+## 共识对抗审查
+[rebuttals[] 逐条（severity + 证据出处）] + [假前提清单] + [群体漂移判定] + [Gate5 裁决]
+
 ## 遗留矛盾与影子产物
 [未调解的分歧，原样呈现] + [影子模式留档清单]
 ```
 
 ## Acceptance Criteria
 
-- 四个角色各产出一份符合其 Output Schema 的报告
-- 全部 Gate 有明确裁决记录（放行/打回轮次/理由）
+- 五个角色各产出一份符合其 Output Schema 的报告（含 adversarial-reviewer 的 rebuttals[]）
+- 全部 Gate 有明确裁决记录（放行/打回轮次/理由，含 Gate5）
+- 共识收敛：出"要人批"的共识前必过 Gate5——无 critical/major 反驳才放行；有则回炉 ≤1 轮
 - 影子模式与正式模式的产物边界清晰，无越界应用
 - 最终报告完整、矛盾未被静默调解
-- 若发生降级运行（角色缺失），报告中显式标注降级范围
+- 若发生降级运行（角色缺失），报告中显式标注降级范围；adversarial-reviewer 降级为 Leader 自填 inline persona，门禁不跳过

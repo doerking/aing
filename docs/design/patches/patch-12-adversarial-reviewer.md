@@ -2,7 +2,8 @@
 
 > 定位：把 DeepSeek Harness 生态 `dsh-orchestrate` 的「对抗式审查 + 收敛」机制，改造进 aing 神经进化蜂群（`assets/skills/neural-evolution-swarm`）的**共识收敛阶段**。
 > 吸收来源：dsh-orchestrate（deepseek-ai 生态插件，机制层：委派 → 对抗式审查 → 多样化探索 → 收敛，"一个提示词、一个智能体团队"）。
-> **本档为设计稿，不落地代码、不动 C0–C20 门禁计数、不动 11 步代谢**；源码实现待所有者拍板后走纪律 9 分支流程。
+> **实现状态（2026-11-01，分支 `feat/p12-adversarial-reviewer`）：已落地**——`SKILL.md` frontmatter roles 4→5 + Roles 表 + Workflow 第 5 步共识对抗节点、`workflow.md` Mermaid Gate5 + 分步 + 报告格式/验收、新 `roles/adversarial-reviewer.md`（devil 合同，inline persona）、`src/memo.js` entityNote 五角色登记。改动仅技能资产面 + 1 行 memo 文案，**不动 C0–C20 门禁计数、不动 11 步代谢、不注册新门禁编号**（对抗审查是 patch 自身验收，非常设 C 门）。负向自证真跑通过（`.temp/p12-verify.js`，ALL PASS）。
+> 边界不变：不落地 P13；不动 B5；不引入 spawn provider（aing 无 subagent 运行时，按 inline-persona 降级）。
 
 ---
 

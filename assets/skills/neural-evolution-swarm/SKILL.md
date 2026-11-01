@@ -2,7 +2,7 @@
 status: active
 name: neural-evolution-swarm
 description: |
-  神经进化团队：4角色混合流水线（理论评审→工程实现→技能训练→拓扑体检），把认知神经科学理论、工程实现与 SkillOpt 式自进化闭环拧成一个团队，为意识神经类系统（如 aing）提供设计、评审、实现与训练全链路。
+  神经进化团队：5角色混合流水线（理论评审→工程实现→技能训练→拓扑体检→共识对抗审查），把认知神经科学理论、工程实现与 SkillOpt 式自进化闭环拧成一个团队，为意识神经类系统（如 aing）提供设计、评审、实现、训练与共识收敛对抗审查全链路。
   Use when 用户要求开发/评审/训练意识神经或自进化类系统，需要理论与工程双重角色协作，或要跑 SkillOpt 式技能训练闭环。
   Do NOT use for 单文件琐碎改动、纯理论闲聊、或与意识神经/自进化无关的普通业务开发。
 version: "0.1"
@@ -28,11 +28,16 @@ roles:
     purpose: 分析链接拓扑健康度与回炉闭环，评估赫布可塑性守恒平衡
     skills: [consciousness-neural-methodology]
     tools: [node]
+  - id: adversarial-reviewer
+    kind: ai_agent
+    purpose: 共识收敛阶段专门挑刺（只反驳不修复），暴露共识的假前提与未检验假设，挡下带 critical 的共识
+    skills: [consciousness-neural-methodology]
+    tools: []
 ---
 
 # 神经进化团队（Neural Evolution Swarm）
 
-Mixed C+A 模式（理论评审是对抗性门禁 + 四阶段专精流水线）：设计稿必须先过理论家的六属性评审，实现必须过回归，训练必须过 Gate，进化后的系统必须过拓扑体检。单代理无法同时扮演对抗双方——工程师天然偏向"能跑就行"，理论家天然偏向"机制不成立就是空转"，这个盲区只有分角色才能暴露。
+Mixed C+A 模式（理论评审是对抗性门禁 + 五阶段专精流水线 + 共识收敛对抗审查）：设计稿必须先过理论家的六属性评审，实现必须过回归，训练必须过 Gate，进化后的系统必须过拓扑体检；**出共识要人批之前，共识必须再过一轮专门挑刺的对抗审查（第 5 角色，只反驳不修复）**——四角色看同一份输入容易往同一方向飘，共识质量不能全靠"四个都同意"。单代理无法同时扮演对抗双方——工程师天然偏向"能跑就行"，理论家天然偏向"机制不成立就是空转"，这个盲区只有分角色才能暴露。
 
 ## Workflow
 
@@ -46,7 +51,8 @@ Mixed C+A 模式（理论评审是对抗性门禁 + 四阶段专精流水线）�
 
 4. **训练与体检（并行）** — 并行派发 `skill-trainer`（输入：实现产物 + 仲裁任务包）与 `plasticity-analyst`（输入：知识库/拓扑）。trainer 跑 SkillOpt 式闭环产出 best_skill 候选；analyst 输出拓扑健康报告。**Gate**：trainer 的候选分须高于当前基线；analyst 守恒比在 0.8~1.5 且回炉闭环成立。
 
-5. **集成与终报** — Leader 汇总四方输出，矛盾原样呈现不调解。若 trainer 候选未过 Gate，标记为影子模式产物（只留档不应用）。
+5. **共识对抗审查（第 5 角色门禁）** — 在 Leader 出共识之前，派发 `adversarial-reviewer`（inline persona，按 dsh `devil` 合同填：`{challenge / counterpoints[] / what_if[]}`，只反驳不修复）。输入 = Leader 的共识草案 + 四方报告 + 设计稿。产出 `rebuttals[]`（每条带 severity：critical/major/minor）。**收敛判据（机器可判）**：存在 critical 或 major 反驳 → **挡共识、回炉第 1 步（≤1 轮，防死循环）**；无 critical/major → 放行出共识要人批。
+6. **集成与终报** — Leader 汇总四方输出 + 对抗审查 `rebuttals[]`，矛盾原样呈现不调解。若 trainer 候选未过 Gate，标记为影子模式产物（只留档不应用）。
 
 ## Roles
 
@@ -56,6 +62,7 @@ Mixed C+A 模式（理论评审是对抗性门禁 + 四阶段专精流水线）�
 | senior-engineer | 代码实现与排障 | 设计过审后第 3 步 | 设计稿 + 仓库路径 | senior-developer, node, git | [roles/senior-engineer.md](roles/senior-engineer.md) |
 | skill-trainer | SkillOpt 式技能训练闭环 | 实现过审后第 4 步（并行） | 实现产物 + 任务包 | python, node | [roles/skill-trainer.md](roles/skill-trainer.md) |
 | plasticity-analyst | 拓扑健康与守恒体检 | 实现过审后第 4 步（并行） | 知识库路径 | consciousness-neural-methodology, node | [roles/plasticity-analyst.md](roles/plasticity-analyst.md) |
+| adversarial-reviewer | 共识收敛专门挑刺（只反驳不修复） | 出共识要人批前第 5 步（门禁） | 共识草案 + 四方报告 + 设计稿 | consciousness-neural-methodology | [roles/adversarial-reviewer.md](roles/adversarial-reviewer.md) |
 
 > Before dispatching each teammate, read the corresponding role file and extract the
 > `## Inline Persona for Teammate` section — paste it directly into the dispatch prompt.
