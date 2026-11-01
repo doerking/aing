@@ -443,6 +443,35 @@ node src/setup-db.js --backup     # 手动备份
 | `shared-spine.js` | 编译门禁（真实 KESPI 评分版） | raw 档 + 库实体 → 接受/拒收/待入库 |
 | `auto-ingest.js` | 会话自动入库（链路起点，听指纹去重）；正文含 `## 蒸馏摘要 / Distilled Summary` 模板 / renders distilled-summary section | 消息 → raw 档 → 代谢链 |
 
+### Ingest Family / 入库家族（多入口，组件在库）
+
+> 这组脚本是「把历史 / agent 侧会话灌进 aing」的**并行入口**，与主线 `auto-ingest.js` / `POST /api/ingest` 并存，各带一套会话存储形态。**未接进默认代谢管线**——要入库走主线或按其用法单次调用（组件透明化：状态=在库，非默认接线）。
+
+| 脚本 | 用途 | 用法 |
+|------|------|------|
+| `batch-ingest.js` | 批量导入历史会话到 aing（单文件 / 目录 / stdin 三形态），复用 `auto-ingest.SessionStore` + `HermesAingAdapter` + `ConsciousnessKernel` | `node src/batch-ingest.js <session-file>` · `--dir <dir>` · `--stdin` |
+| `session-ingest.js` | 会话完整入库（自带 `SessionStore`）：入库用户消息 + Agent 分析/答复，抽实体/关系/标签，编译成 wiki/ 并触发生长脑代谢 | `echo '<JSON>' \| node src/session-ingest.js` · `--file session.json` |
+| `agent-auto-ingest.js` | Agent 对话自动入库**插件**（宿主侧 SDK 面）：`AgentAutoIngest` 类，暴露 `入库({role,content})` / `入库对话([...])`，基于 `对话自动入库.对话存储` | `require('./src/agent-auto-ingest')`（宿主内调用，非 CLI） |
+| `对话自动入库.js` | 对话事件监听式自动入库（中文文件名，agent 事件流），env `KB_ROOT`/`AGENT_ID`/`INGEST_INTERVAL_MS` | `node src/对话自动入库.js --agent hermes --listen` |
+
+### Host Dashboards & Boot / 宿主控制面板与开场自检（组件在库）
+
+| 脚本 | 用途 | 状态 |
+|------|------|------|
+| `agent-dashboard.js` | aing Agent 控制面板：独立 RESTful HTTP（默认 3789，`--port`/`--api-key`），聚合 KnowledgeStore / VectorSearch / SessionStore / ConsciousnessKernel / GrowthDirector + `Hermes`/`Agnes` 双 adapter。与 `api-server.js` 是**并行的另一宿主接入面** | 组件在库，非核心 |
+| `boot-sequence.js` | 开场自检模块：每次对话开始加载完整识态（知识/意识/任务/风险）生成「第一印象」上下文 | 组件在库，宿主侧调用 |
+| `memo-call.js` | 备忘录呼叫系统：`--full/--briefing/--growth` 出识态摘要/简报/生长决策 | 组件在库 |
+| `memo-trigger.js` | 备忘录触发监听器：检查消息是否含备忘录关键词（`memo`/`备忘录`/`briefing` 等），`--listen` 持续监听 stdin | 组件在库 |
+
+### Retrieval Quality & NER / 检索质量工具与实体抽取（组件在库）
+
+| 脚本 | 用途 | 状态 |
+|------|------|------|
+| `tools/eval-retrieval.js` | **检索质量 KPI 面（独立于 verify-deploy 门禁）**：对一组「已知 Q&A 对」跑 `semanticSearch` 算 recall@k + MRR。只读（复用 `VectorSearch`+`KnowledgeStore`，绝不写库/不建表/不碰门禁）；默认取库内 active 实体自指问句，`--set <json>` 传人工标注集；384 维缺失自动回退 64 维并标注通道（不假报 semantic）；分数必来自真实检索（纪律 5） | 工具在库，只读 |
+| `ner-extractor.js` | 命名实体识别提取器（P2 #008）：`@xenova/transformers` 跑 `Xenova/bert-base-multilingual-cased-ner-hrl`（走 hf-mirror），中英文混合文本实体提取 | 组件在库（外部 NER 模型，非核心代谢所需） |
+
+> 检索质量工具 `eval-retrieval` 的复现命令与「验证证据」面见下文「🔬 Verification Evidence」。
+
 ---
 
 ## Documentation / 文档
@@ -514,6 +543,7 @@ node src/setup-db.js --backup     # 手动备份
 | 🏋️ SkillOpt 训练证据 `simulation/skillopt-evidence.json`（不随包，本地可复现，不作发布包自证） | 离线 rollout: baseline 7/41 → corrected 20/41, Gate PASS |
 | 🏋️ SkillOpt 在线证据 `simulation/skillopt-online-evidence.json`（不随包，本地可复现，不作发布包自证） | aing API 检索辅助: 在线 vs 离线对比 |
 | [📦 矛盾任务包](./simulation/skillopt-task-package.json) | 41 条 / 6 领域，从真实数据提取 |
+| 🧮 检索质量工具 `node tools/eval-retrieval.js`（可复现 · 只读 · 独立于门禁，3409f2a 新增） | 对库内 active 实体自指问句或 `--set <json>` 人工标注集跑 `semanticSearch`，出 recall@k + MRR；复用 `VectorSearch`+`KnowledgeStore` 不写库/不建表/不碰门禁；384 维缺失自动回退 64 维并标注通道（不假报 semantic）；`--k` 调截断 |
 
 ## Vision & Operations / 愿景与运行
 

@@ -118,6 +118,28 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | 四门回滚 | propose → evaluate `<id>` → promote `<id> true` → rollback `<geneId>` | rolledBack=true 且状态还原 tested（gene 从 `state.genes` 摘除） | rollback 收的是 **geneId**（`state.genes[].geneId`），不是 improvement id；OPT 实测 Gate-1/3/4 负向都能红 |
 | 芥子触发日志（p9 B1） | `node src/trigger-log.js`（读回面：`node -e 'require('./src/trigger-log.js').readTriggers().forEach(r=>console.log(r.type+'/'+r.name+' status=' + r.status))'`，或直接看 `logs/metabolism-trigger-log.jsonl`） | 芥子 CRUD 五个触发点（compress/recycle/prune/sprout/pollinate）每次真跑必落一条 JSONL 记录，字段对齐 p9 设计稿（trigger_type/name/status/execution_time_ms/related/input/output） | 贴现行双脑+芥子文件态架构，**不建 SQLite 表**（C10e 7 类子表面不动、C19 计数不动）；require 失败静默不阻断（同 metabolism-log 面）；2026-10-15 B1 轻量落地（分支 feat/p9-trigger-log-b1，用户拍板选 B1 不选 B2 建表）|
 
+## In-Library Component Register / 在库组件登记（3409f2a 增量，未接默认管线）
+
+> 下面这批组件在 `3409f2a` 的 15 个增量提交里进了源码面（`git ls-files` 在位、可 require、可单跑），但**均未接进默认代谢管线**——按纪律 6/8 状态标为「组件在库、未接默认接线」，不虚报为已上线能力。需要时按其用法单次调用或宿主侧接入。此节是组件能力面登记，**不涉及 C0–C20 门禁计数与 11 步代谢步数**（那些真值不动）。
+
+| 组件 | 面 | 用法 | 状态 |
+|------|----|------|------|
+| `src/batch-ingest.js` | 入库家族 | `node src/batch-ingest.js <session-file>` · `--dir <dir>` · `--stdin`（复用 auto-ingest.SessionStore + HermesAingAdapter + ConsciousnessKernel） | 在库，非默认 |
+| `src/session-ingest.js` | 入库家族 | `echo '<JSON>' \| node src/session-ingest.js` · `--file session.json`（自带 SessionStore，抽实体/关系/标签并编译 wiki/） | 在库，非默认 |
+| `src/agent-auto-ingest.js` | 宿主插件 | `require('./src/agent-auto-ingest')` → `AgentAutoIngest.入库()/入库对话()`（宿主内调用，非 CLI） | 在库，宿主侧 |
+| `src/对话自动入库.js` | 入库家族 | `node src/对话自动入库.js --agent hermes --listen`（env `KB_ROOT`/`AGENT_ID`/`INGEST_INTERVAL_MS`） | 在库，非默认 |
+| `src/agent-dashboard.js` | 宿主面板 | `node src/agent-dashboard.js [--port 3789] [--api-key …]`（并行于 api-server.js 的另一 RESTful 宿主面，聚合双 adapter） | 在库，非核心 |
+| `src/boot-sequence.js` | 开场自检 | `require('./src/boot-sequence').run()` 生成识态「第一印象」上下文 | 在库，宿主侧 |
+| `src/memo-call.js` | 备忘录呼叫 | `node src/memo-call.js [--full\|--briefing\|--growth]` | 在库 |
+| `src/memo-trigger.js` | 备忘录触发 | `node src/memo-trigger.js '<消息>'` · `--listen`（备忘录关键词监听） | 在库 |
+| `src/ner-extractor.js` | 实体抽取 | `@xenova/transformers` 跑 `Xenova/bert-base-multilingual-cased-ner-hrl`（走 hf-mirror），中英文混合 NER（P2 #008） | 在库（外部 NER 模型，非核心代谢所需） |
+| `src/kespi-check-fixed.js` | 修复维护 | KESPI 八维修复版（KD/KB 方向已反转、KQ consistency 改从链接推导）；替代场景下用，正式首评翻转仍以 `kespi-check.js` 为准 | 在库 |
+| `src/config-hotreload.js` | 配置热重载 | 监听 `growth.config.js` 变更自动重载（require 缓存清除后重导入，对应绿名单 locked「热重排」项的**实现体**，按需接入） | 在库，按需 |
+| `src/search-and-ingest.js` | 采集入库桥 | `node src/search-and-ingest.js "<查询>" [limit]` · `--web` · `--page <URL>`（宿主面：搜索/读取结果自动入库并触发代谢） | 在库，宿主侧 |
+| `tools/eval-retrieval.js` | 检索质量 KPI | `node tools/eval-retrieval.js [--set <qa.json>] [--k N]`（对 Q&A 对跑 semanticSearch 出 recall@k + MRR，**只读、独立于 verify-deploy 门禁**；384 维缺失自动回退 64 维并标注通道；分数来自真实检索，纪律 5） | 工具在库，只读 |
+
+> 与主线的关系：入库主线仍是 `auto-ingest.js` / `POST /api/ingest`（C10g/C10h 门禁钉死契约），上面这批入库家族是**并行入口**；`api-server.js` 是正式 HTTP 面，`agent-dashboard.js` 是并行宿主面板；`kespi-check.js` 是正式 KESPI 首评器，`kespi-check-fixed.js` 是修复变体。别把「在库变体」当成「默认管线」。
+
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 
 1. **NEVER install sharp with `--ignore-scripts`** — the native binary goes missing and importing transformers crashes outright. If transformers' nested old sharp lacks the binary, delete it and Node falls back to the top-level newer sharp.
