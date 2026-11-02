@@ -251,13 +251,25 @@ class StrategyAgent {
   }
 
   _getDecisionHistory() {
+    // 修正（2026-11-03，断线 9）：旧实现读 system_log WHERE type='decision'，但本仓
+    // system_log 唯一写手是 feedback-loop（写 type='feedback'），type='decision' 永远 0 行
+    // → history 永远空 →「近期多次 observe」辅助判断永不触发。
+    // 真源是 logs/metabolism-decision-lineage.jsonl（每步决策谱系，append-only，有 172 行数据）。
+    // 诚实边界：该真源记录的是代谢步骤动作（execute/summarize），无 'observe'，
+    // 故消费方 `action==='observe'` 子判断如实返回 0（不硬造）；history.length 门槛恢复有真数据。
     try {
-      const logs = this.store.exec(
-        `SELECT action, created_at FROM system_log 
-         WHERE type = 'decision' 
-         ORDER BY created_at DESC LIMIT 10`
-      );
-      return logs || [];
+      const file = resolvePath('logs/metabolism-decision-lineage.jsonl');
+      if (!fs.existsSync(file)) return [];
+      const lines = fs.readFileSync(file, 'utf8').trim().split('\n').filter(Boolean);
+      const newest10 = lines.slice(-10).reverse(); // DESC（新→旧），与旧 ORDER BY created_at DESC 同向
+      return newest10.map((l) => {
+        try {
+          const o = JSON.parse(l);
+          return { action: o.action, created_at: o.timestamp };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
     } catch (e) {
       return [];
     }

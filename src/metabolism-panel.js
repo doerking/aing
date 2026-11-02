@@ -50,6 +50,9 @@ async function main() {
   const kespiAvg = kespiRow.length && kespiRow[0].v != null ? Number(kespiRow[0].v).toFixed(2) : null;
   const entityCount = num(store.all("SELECT COUNT(*) AS n FROM entities WHERE status='active'"));
   const linkCount = num(store.all('SELECT COUNT(*) AS n FROM links'));
+  // 断线 G（2026-11-03 4面审计）：蒸馏债真源 = pending-distillation 计数（与 memo.js distillDebt 同源）。
+  // 旧写死 0 是假仪表台——distill 未兑付时面板仍报 0，agent 读 panel 看不到债。
+  const subchainDebt = num(store.all("SELECT COUNT(*) AS n FROM entities WHERE status='pending-distillation'"));
 
   // ── gaps：缺口 5 维——单一真源 = gap-detector.js 的 GapDetector ────────
   // 2026-09-17 缺陷修复（半拉起巡检）：旧版在此手写 SQL 自定口径（thin=链接数≤1、
