@@ -451,14 +451,12 @@ node src/setup-db.js --backup     # 手动备份
 ### Ingest Family / 入库家族（多入口，组件在库）
 
 > 这组脚本是「把历史 / agent 侧会话灌进 aing」的**并行入口**，与主线 `auto-ingest.js` / `POST /api/ingest` 并存，各带一套会话存储形态。**未接进默认代谢管线**——要入库走主线或按其用法单次调用（组件透明化：状态=在库，非默认接线）。
+>
+> 2026-11-02 收口：曾经的多个自带会话存储的平行入口（`session-ingest.js`、`agent-auto-ingest.js`、`对话自动入库.js` 及示例档）因**绕过主线全部安全闸**（直接写 `status:active`/`confidence:0.9`、全局 `lastIngestTime` 批处理 bug、无 role 归一、无采集痕迹剥除、无持库让位、无 WAL、节名与 distill 白名单漂移）已**全部删除**，只保留唯一走主线契约的 `batch-ingest.js`（复用 `auto-ingest.SessionStore` + `HermesAingAdapter` + `ConsciousnessKernel`）。入库一律走主线 `auto-ingest.js` / `POST /api/ingest` 或 `batch-ingest.js`。
 
 | 脚本 | 用途 | 用法 |
 |------|------|------|
 | `batch-ingest.js` | 批量导入历史会话到 aing（单文件 / 目录 / stdin 三形态），复用 `auto-ingest.SessionStore` + `HermesAingAdapter` + `ConsciousnessKernel` | `node src/batch-ingest.js <session-file>` · `--dir <dir>` · `--stdin` |
-| `session-ingest.js` | 会话完整入库（自带 `SessionStore`）：入库用户消息 + Agent 分析/答复，抽实体/关系/标签，编译成 wiki/ 并触发生长脑代谢 | `echo '<JSON>' \| node src/session-ingest.js` · `--file session.json` |
-| `agent-auto-ingest.js` | Agent 对话自动入库**插件**（宿主侧 SDK 面）：`AgentAutoIngest` 类，暴露 `入库({role,content})` / `入库对话([...])`，基于 `对话自动入库.对话存储` | `require('./src/agent-auto-ingest')`（宿主内调用，非 CLI） |
-| `对话自动入库.js` | 对话事件监听式自动入库（中文文件名，agent 事件流），env `KB_ROOT`/`AGENT_ID`/`INGEST_INTERVAL_MS` | `node src/对话自动入库.js --agent hermes --listen` |
-| `examples/对话自动入库示例.js` | 上列入库家族的**演示样例**（模拟对话 → `AgentAutoIngest.入库` 批量入库，不接真实会话） | `node examples/对话自动入库示例.js`（演示用，非管线组件） |
 
 ### Host Dashboards & Boot / 宿主控制面板与开场自检（组件在库）
 

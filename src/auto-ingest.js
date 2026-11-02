@@ -112,7 +112,10 @@ const slug = s => String(s).replace(/[^\w\u4e00-\u9fff-]+/g, '-');
  * 现已封死：一律 pending-distillation、confidence 0，等 distill.js 机械蒸馏兑付。
  */
 function renderConversationDoc({ sessionId, messages, distillation, serverEntities, serverTags, timestamp }) {
-  const safeSessionId = String(sessionId).replace(/[^a-zA-Z0-9\-_\u4e00-\u9fff]/g, '-');
+  // P2-5（2026-11-02 代码审查）：sessionId 净化后无长度上限 → 超长 id 拼进文件名会
+  // ENAMETOOLONG（Windows 255 字节 / Linux 255 字节单段），写盘失败但消息已落 WAL。
+  // 现净化后截断到 80 字符（与 api-server 实体 id 上限同口径），超长仅截断不拒收，可用性优先。
+  const safeSessionId = String(sessionId).replace(/[^a-zA-Z0-9\-_\u4e00-\u9fff]/g, '-').slice(0, 80);
   const ts = timestamp || new Date().toISOString();
   const fileStamp = ts.replace(/[:.]/g, '-');
   const proposal = normalizeDistillation(distillation || {});

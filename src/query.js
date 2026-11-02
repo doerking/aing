@@ -76,10 +76,22 @@ function nameScore(entity, query) {
 }
 
 // 新鲜度分：30 天半衰期
+// P2-4（2026-11-02 代码审查）：SQLite datetime('now') 出「YYYY-MM-DD HH:MM:SS」为 **UTC**
+// 但无 Z/时区标记；JS new Date() 对空格形式按**本地**时区解析，UTC+8 上偏 8 小时 →
+// 实体被误判成比实际「更新」，新鲜度分虚高。现显式按 UTC 解析（空格→T + 补 Z）。
+function parseDbTime(raw) {
+  if (raw == null) return NaN;
+  let s = String(raw);
+  // 仅对 SQLite 的「YYYY-MM-DD HH:MM:SS」无时区形式补 Z；带 Z/±HH:MM 的 ISO 原样解析
+  if (/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\d*$/.test(s) && !/[Zz]|[+-]\d{2}:?\d{2}$/.test(s)) {
+    s = s.replace(' ', 'T') + 'Z';
+  }
+  return new Date(s).getTime();
+}
 function recencyScore(entity) {
   if (!entity.updated_at) return 0;
-  const days = Math.max(0, (Date.now() - new Date(entity.updated_at).getTime()) / 86400000);
-  if (Number.isNaN(days)) return 0;
+  const t = parseDbTime(entity.updated_at);
+  const days = Number.isNaN(t) ? 0 : Math.max(0, (Date.now() - t) / 86400000);
   return 1 / (1 + days / 30);
 }
 
