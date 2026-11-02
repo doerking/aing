@@ -130,7 +130,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | `src/memo-call.js` | 备忘录呼叫 | `node src/memo-call.js [--full\|--briefing\|--growth]` | 在库 |
 | `src/memo-trigger.js` | 备忘录触发 | `node src/memo-trigger.js '<消息>'` · `--listen`（备忘录关键词监听） | 在库 |
 | `src/ner-extractor.js` | 实体抽取 | `@xenova/transformers` 跑 `Xenova/bert-base-multilingual-cased-ner-hrl`（走 hf-mirror），中英文混合 NER（P2 #008） | 在库（外部 NER 模型，非核心代谢所需） |
-| `src/kespi-check-fixed.js` | 修复维护 | KESPI 八维修复版（KD/KB 方向已反转、KQ consistency 改从链接推导）；替代场景下用，正式首评翻转仍以 `kespi-check.js` 为准 | 在库 |
+| `src/kespi-check-fixed.js` | 修复维护 | KESPI 八维修复版（KD/KB 方向已反转、KQ consistency 改从链接推导）；替代场景下用，正式首评翻转仍以 `kespi-check.js` 为准 | 在库，有意保留（非病变变体） |
 | `src/config-hotreload.js` | 配置热重载 | 监听 `growth.config.js` 变更自动重载（require 缓存清除后重导入，对应绿名单 locked「热重排」项的**实现体**，按需接入） | 在库，按需 |
 | `src/search-and-ingest.js` | 采集入库桥 | `node src/search-and-ingest.js "<查询>" [limit]` · `--web` · `--page <URL>`（宿主面：搜索/读取结果自动入库并触发代谢） | 在库，宿主侧 |
 | `tools/eval-retrieval.js` | 检索质量 KPI | `node tools/eval-retrieval.js [--set <qa.json>] [--k N]`（对 Q&A 对跑 semanticSearch 出 recall@k + MRR，**只读、独立于 verify-deploy 门禁**；384 维缺失自动回退 64 维并标注通道；分数来自真实检索，纪律 5） | 工具在库，只读 |
@@ -138,6 +138,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | `jest.config.js` + `tests/unit/`（11 个） | 单测框架 | **孤悬**：测试与配置在库，但 `jest` 未声明在 `package.json`、无 npm script 入口、`verify-deploy`/`self-test` 不消费 → 宿主需自备 jest 方可跑；`collectCoverageFrom` 排除 `*-fixed.js` | 在库，未接管线/依赖未声明 |
 
 > 与主线的关系：入库主线仍是 `auto-ingest.js` / `POST /api/ingest`（C10g/C10h 门禁钉死契约），上面这批入库家族是**并行入口**；`api-server.js` 是正式 HTTP 面，`agent-dashboard.js` 是并行宿主面板；`kespi-check.js` 是正式 KESPI 首评器，`kespi-check-fixed.js` 是修复变体。别把「在库变体」当成「默认管线」。
+> **2026-11-02 决策**：`kespi-check-fixed.js`（0 调用点孤悬变体，全仓无 require）**有意保留**，非病变档——佢唔写实体 status/confidence、唔绕过安全闸，纯 KESPI 八维计算器变体（KD/KB 方向反转、KQ 改由链接推导，需隔离假院验算过先接线）。部署净不删佢；将来要接上须走「改码 + 全量代谢 + KESPI 验算 + verify-deploy ALL GREEN + 负向自证」全流程，唔改改就收。
 > **2026-11-02 收口**：曾与主线并存的四个自带会话存储平行入口（`session-ingest.js` / `agent-auto-ingest.js` / `对话自动入库.js` / `对话自动入库示例.js`，均属已删除档）因绕过主线全部安全闸（直接写 `status:active`/`confidence:0.9`、全局 `lastIngestTime` 批处理 bug、无 role 归一、无采集痕迹剥除、无持库让位、无 WAL、节名与 distill 白名单漂移）已**全部删除**，文档同步改口。入库家族现存唯一会话入口 `batch-ingest.js`（走主线 `auto-ingest.SessionStore` + `HermesAingAdapter` + `ConsciousnessKernel`）与健康 `search-and-ingest.js`（写 web 检索档，唔涉会话 status/confidence）。
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
