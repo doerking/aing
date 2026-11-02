@@ -183,14 +183,29 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 - 全量代谢 11 步成功 + `node verify-deploy.js` **ALL GREEN（C0–C20，32 项）**
 - 未做：给 feedback-loop 造假读手（I 明拒）；未动 C19 计数（32 项不变）、未动 11 步代谢步数
 
-## 七、院际对齐记录（E:\ZPD 院，2026-11-03）
+## 六-补、断线 J — prune 断链清理中文 ID 正则误删（破坏性，2026-11-03 第四轮）
 
-> D/E（断线 8/9）曾在 E:\ZPD\aing 院被另一 agent 平行自改（worktree 12 个 tracked 档 + 2 份自写 KESPI-DISCONNECT 文档，未 commit），与本仓 D/E 修复**字面不同源**——按纪律 9（部署与源码零偏移）与 C18（跨院字面差异须销账），本仓 `70bfbd1` 为真源，E:\ZPD 须对齐。
+> <zpd-yard> 院 agent 先报此 bug（362 链档误删 307），本仓独立复核坐实且**更严重**（链档 4035、含中文 ID 3254）。
+
+| 项 | 值 |
+|---|---|
+| 断线 | `prune.js cleanupBrokenLinks()` 旧正则 `/source:\s*([\w.-]+)/`：JS `\w` 唔匹配中文字，中文实体 ID `data-analysis-100个Excel函数与公式应用` 被截成 `data-analysis-100` → `existsSync(entities/data-analysis-100.md)` 假阴性 → `unlinkSync` **误删有效链档** |
+| 前科注脚 | 原注释「实体 ID 含连字符，`\w` 不够」——之前修过一次（加 `.-`），**漏咗中文** |
+| 后果 | 触发面：`prune --force` 或代谢链 `pruneAutoForce`（`AING_PRUNE_AUTO_FORCE=1`）即爆。默认 dry-run 保护住，但一开闸就一次删走 **3255/4035 链档（80.9%）** |
+| 本仓探针 | `.temp/probe-prune-links.js`（双正则对照，走真库 wiki 面只读）：旧 `\w` 误删 3255、新整行值正则误删 465 |
+| 465 条二次复核 | `.temp/probe-prune-broken-class.js`：465 条**全部真断链**（实体档完全不存在，0 条连字符/下划线脱节）→ 删佢哋系正确行为，唔系又一层脱节 |
+| 修 | `prune.js:228-229` 正则改行首锚定 + 整行值：`/^source:\s*(.+?)\s*$/m`、`/^target:\s*(.+?)\s*$/m`（frontmatter 单一 key，整行值吃中文） |
+| 修后自证 | 旧 3255 误删 → 新 465（全真断链，0 误删）；prune dry-run 0 剪枝正常；全量代谢 11 步全绿 + verify-deploy **ALL GREEN（C0–C20，32 项）** |
+| 行为层教训 | 本断线系「破坏性操作靠 regex 提取值」——同形坑 15（接线类断言必须真跑）：唔真跑 `cleanupBrokenLinks` 函数体，只 grep 正则永远看不见中文截断 |
+
+## 七、院际对齐记录（<zpd-yard> 院，2026-11-03）
+
+> D/E（断线 8/9）曾在 <zpd-yard> 院被另一 agent 平行自改（worktree 12 个 tracked 档 + 2 份自写 KESPI-DISCONNECT 文档，未 commit），与本仓 D/E 修复**字面不同源**——按纪律 9（部署与源码零偏移）与 C18（跨院字面差异须销账），本仓 `70bfbd1` 为真源，<zpd-yard> 须对齐。（院实际路径：E 盘 ZPD 子目录，C8 盘符脱敏以 `<zpd-yard>` 代；对齐操作在该院 cwd 内 `git reset --hard origin/main`。）
 
 | 步 | 动作 | 结果 |
 |---|---|---|
-| 1 备份 | `E:\ZPD\aing-backup-20261103-r1\`（tracked-dirt.patch + 2 份自写 KESPI-DISCONNECT 文档 + growth.config.js.pre） | 该院未提交面全部留痕，可复原 |
-| 2 对齐 | `git fetch` + `git reset --hard origin/main`（E:\ZPD\aing 有独立 git + 共享 remote doerking/aing） | E:\ZPD HEAD → `70bfbd1`（origin/main）；`src/growth.config.js`/`knowledge.db` 被 gitignore，runtime 面存活 |
-| 3 销账 | 本仓 `node tools/verify-sibling-roots.js --root ZPD=E:\ZPD\aing` | **真实漂移 0**（原 23）· 仅行尾 45（CRLF/LF 噪声）· 对方缺失 1（`cantonese-nlp-agent.md` 未跟踪档，不随 reset，预期）· 库结构一致 |
+| 1 备份 | `<zpd-yard>-backup-20261103-r1\`（tracked-dirt.patch + 2 份自写 KESPI-DISCONNECT 文档 + growth.config.js.pre） | 该院未提交面全部留痕，可复原 |
+| 2 对齐 | `git fetch` + `git reset --hard origin/main`（<zpd-yard> 有独立 git + 共享 remote doerking/aing） | <zpd-yard> HEAD → `70bfbd1`（origin/main）；`src/growth.config.js`/`knowledge.db` 被 gitignore，runtime 面存活 |
+| 3 销账 | 本仓 `node tools/verify-sibling-roots.js --root ZPD=<zpd-yard>` | **真实漂移 0**（原 23）· 仅行尾 45（CRLF/LF 噪声）· 对方缺失 1（`cantonese-nlp-agent.md` 未跟踪档，不随 reset，预期）· 库结构一致 |
 
 **结论**：D/E 跨院字面差异自此销账、两院同源（均以 `70bfbd1` 为准）；C18 院际比对**未豁免**——对齐后 `verify-sibling-roots` 真跑出 0 漂移即证明。45 项仅行尾差异系历史 CRLF/LF 噪声，非内容代差（建议包根加 `.gitattributes` 统一 eol 后重检出，属未决事项，不阻塞本次）。
