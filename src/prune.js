@@ -78,8 +78,11 @@ function shouldPrune(entityId, entityContent) {
   }
 
   // 2. 检查 KESPI 质量（简化版）
-  const freshnessMatch = entityContent.match(/freshness:\s*([\d.]+)/);
-  const overallMatch = entityContent.match(/overall:\s*([\d.]+)/);
+  // KESPI 状态 block 是 ```json 格式（compile.js / kespi-check.js 写，"overall": 0.87 带引号），
+  // 旧正则 /overall:\s*([\d.]+)/ 只认 YAML 无引号写法，全库 89 份实体档命中 0 → 质量剪枝形同虚设。
+  // 修正（2026-11-03）：兼容 JSON（"overall"）与 YAML（overall:）两种写法。
+  // 删除未接线的 freshnessMatch（freshness 字段从未被任何写方写过，纯死变量）。
+  const overallMatch = entityContent.match(/"?overall"?\s*:\s*([\d.]+)/);
   
   if (overallMatch) {
     const overallScore = parseFloat(overallMatch[1]);

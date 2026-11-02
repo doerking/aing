@@ -150,8 +150,9 @@ class NeuralGuideChain {
     
     const content = fs.readFileSync(entityFile, 'utf8');
     
-    // 从 KESPI 分数提取活力
-    const kespiMatch = content.match(/overall:\s*([\d.]+)/);
+    // 从 KESPI 分数提取活力（KESPI block 是 ```json 格式 "overall": 0.87，旧 YAML 正则全库命中 0 →
+    // 永远落到时间衰减分支。修正 2026-11-03：兼容 JSON 写法。）
+    const kespiMatch = content.match(/"?overall"?\s*:\s*([\d.]+)/);
     if (kespiMatch) {
       return parseFloat(kespiMatch[1]);
     }

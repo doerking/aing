@@ -294,7 +294,7 @@ class KnowledgeStore {
    */
   getEntity(id) {
     return this.get(`
-      SELECT e.*, m.*
+      SELECT e.*, m.originality, m.relevance, m.consistency AS meta_consistency, m.provability, m.utility, m.kespi_score, m.last_checked_at, m.metadata, m.entity_id
       FROM entities e
       LEFT JOIN entity_metadata m ON e.id = m.entity_id
       WHERE e.id = ?
@@ -305,7 +305,11 @@ class KnowledgeStore {
    * 获取所有实体
    */
   getEntities(filters = {}) {
-    let sql = 'SELECT e.*, m.* FROM entities e LEFT JOIN entity_metadata m ON e.id = m.entity_id';
+    // 修正（2026-11-03）：旧 `SELECT e.*, m.*` 中 entities.consistency 与 entity_metadata.consistency
+    // 同名，m.* 在后 → object 的 .consistency 永远被 metadata 值（多为 0.0）盖过，
+    // 令 KQ 维度（读 entity.consistency）食到错误来源。现将 m.consistency alias 为 meta_consistency，
+    // 使 .consistency 回归 entities 表真值（saveEntity 写入值，默认 0.5）。metadata 值另经 meta_consistency 读取。
+    let sql = `SELECT e.*, m.originality, m.relevance, m.consistency AS meta_consistency, m.provability, m.utility, m.kespi_score, m.last_checked_at, m.metadata, m.entity_id FROM entities e LEFT JOIN entity_metadata m ON e.id = m.entity_id`;
     const params = [];
     const conditions = [];
 

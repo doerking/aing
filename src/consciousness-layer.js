@@ -318,7 +318,9 @@ class ConsciousnessLayer {
     if (!fs.existsSync(entityFile)) return 0.5;
     
     const content = fs.readFileSync(entityFile, 'utf8');
-    const match = content.match(/overall:\s*([\d.]+)/);
+    // KESPI 状态 block 是 ```json 格式（"overall": 0.87 带引号），旧 YAML 正则全库命中 0 →
+    // 活力评估永远吃默认 0.5。修正（2026-11-03）：兼容 JSON 写法。
+    const match = content.match(/"?overall"?\s*:\s*([\d.]+)/);
     return match ? parseFloat(match[1]) : 0.5;
   }
   
