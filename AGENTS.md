@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 21 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 22 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -254,6 +254,13 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 另记一条**事实修正**（同坑 18/19 的病）：我原打算把语料里"全绿（9 步 / 9 成功）"一并升级，查 `metabolism_log` 才发现
 2026-09-07 那一轮**确实只落 9 行**、近几轮才是 11 行——**那是实录不是错**，改它就是伪造历史。动数字前先测，别把"我以为的现在"写进过去的句子。
 / **Exempted surfaces are not safe surfaces**, and a numeric-claim check must test the character before the *digit*, not before the match; scan only git-tracked corpus, and say so when git is unavailable.
+
+**22. 提取器/比较器的「字符集 + 时间格式假设」必须对真实数据形状真跑证，唔系照默认 ASCII / 默认 ISO 写（2026-11-03 第五轮，J/K 同形）。**
+两例同形，全部「照默认假设写、真数据打脸」：
+① **J（破坏性）**：`prune.js cleanupBrokenLinks()` 用 `/source:\s*([\w.-]+)/` 提链档实体 ID——JS `\w` 唔匹配中文字，中文实体 ID `data-analysis-100个Excel函数与公式应用` 被截成 `data-analysis-100` → `existsSync` 假阴性 → `unlinkSync` **误删有效链档**（本院实测 3255/4035，80.9%；一 `prune --force` 即爆）。原注释「实体 ID 含连字符，`\w` 不够」之前修过一次加咗 `.-`，**漏咗中文**。
+② **K（同形 P2-4）**：`api-server.js /api/delta` 把 since 转成 ISO-T-Z 串（`...T...Z`）去跟 SQLite `datetime('now')` 嘅**空格-UTC** 串（`... ...`）做字典序比较——同刻边界实体因 `space(0x20) < T(0x54)` 被漏算。query.js 嘅 P2-4 修咗同病根喺 recency 面，但**同病根喺 api-server since 比较面漏网**——同形病根要全仓扫，唔系修一处。
+**对策**：任何「用正则提取值 / 用时间串比较」嘅地方，必须对**真实数据形状**（中文 ID、`datetime('now')` 空格 UTC、9 段 tag）跑一次真值断言（同坑 15「接线类断言必须真跑函数体」、坑 11「行首锚定」），唔系照默认 ASCII 字符集 / 默认 ISO 格式写；**破坏性操作（`unlinkSync` / 删档 / 删表）前更要对 100% 真实样本跑「误删 = 0」负向证**。证据：`docs/KESPI-READPATH-FIX-2026-11-03.md` §六-补（J）+ §八（K），探针 `.temp/probe-prune-links.js` / `.temp/probe-delta.js` / `.temp/probe-delta-fix.js`。
+/ **Charset + time-format assumptions in extractors/comparators must be proven against REAL data shapes, not written against default ASCII / default ISO** — J: `\w` regex 唔匹配中文字 → 误删 80.9% 有效链档；K: ISO-T-Z since vs SQLite 空格-UTC 字典序边界漏算（同 query.js P2-4 病根，另一比较面漏网）。Prove against real data (Chinese IDs, `datetime('now')` space-UTC), and run a 100% "0 false-deletions" negative proof before any destructive op; scan the WHOLE repo for the same shape, not just the one site you just fixed.
 
 ## Daily Operation / 日常运行（部署完成后）
 
