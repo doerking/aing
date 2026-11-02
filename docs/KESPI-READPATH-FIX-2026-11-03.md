@@ -209,3 +209,40 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 | 3 销账 | 本仓 `node tools/verify-sibling-roots.js --root ZPD=<zpd-yard>` | **真实漂移 0**（原 23）· 仅行尾 45（CRLF/LF 噪声）· 对方缺失 1（`cantonese-nlp-agent.md` 未跟踪档，不随 reset，预期）· 库结构一致 |
 
 **结论**：D/E 跨院字面差异自此销账、两院同源（均以 `70bfbd1` 为准）；C18 院际比对**未豁免**——对齐后 `verify-sibling-roots` 真跑出 0 漂移即证明。45 项仅行尾差异系历史 CRLF/LF 噪声，非内容代差（建议包根加 `.gitattributes` 统一 eol 后重检出，属未决事项，不阻塞本次）。
+
+## 八、第五轮 4 面审计（api-server 端点 / query.js / consciousness-controller / error_log，2026-11-03）
+
+> 续 4 面审计的第四波。每面读码 + 真跑探针后才定罪。结论 1 修 + 3 销账/登记。
+
+### K（api-server `/api/delta`）— since 时区脱节（同形 P2-4，已修）
+
+| 项 | 值 |
+|---|---|
+| 断线 | `api-server.js /api/delta` 端点：调用方传 ISO since（`YYYY-MM-DDTHH:MM:SS.sssZ`），旧 `sinceTs = new Date(since).toISOString()` 出 **ISO-T-Z 串**去跟 `entities.created_at/updated_at` 的 SQLite `datetime('now')`（**空格 UTC** `YYYY-MM-DD HH:MM:SS`）做**字典序**比较 |
+| 后果 | 同刻边界实体漏算：`char10` 上 ISO=`T`(0x54) vs 空格=` `(0x20)，字典序 space < T，边界实体被判 `< since` 而落外。`.temp/probe-delta.js` 真证：造 3 实体（old/mid/new，created_at 真写 `datetime('now')`），since=now 旧逻辑 `added=[]`（d-new 漏），since 传空格 UTC 后 `added=[d-new]` 正确 |
+| 修 | `api-server.js:493` sinceTs 归一成空格-UTC 秒格式：`d.toISOString().replace('T',' ').replace(/\.\d+Z?$/,'')`；同时补 `isNaN` 真拒（旧 `new Date` 只 catch 抛出，无效串仍放行） |
+| 修后自证 | `.temp/probe-delta-fix.js`：since=now 修后 `added=[d-new]` 命中，同刻边界不再漏 |
+| 教训 | P2-4（query.js recency 时区）修完只核了 query.js，**同形「SQLite 空格-UTC vs JS 时间串」脱节在 api-server 的 since 比较面漏网**——同病根要全仓扫，唔系修一处 |
+
+### error_log — 写读契约自洽（0 行系「在库未接默认管线」，登记不修）
+
+| 项 | 值 |
+|---|---|
+| 契约核对 | 写口 `knowledge-store.js logError` 不传 `status` → 表默认 `'pending'`（`setup-db.js:91`）；读口 `getPendingErrors WHERE status='pending'` **匹配**；销口 `resolveError` 改 `'resolved'`+`resolved_at`。写 A 读 B 不成立 |
+| 0 行真相 | `error_log` 全库 0 行：驱动面 `error-handler.js` 只被 `self-growth.js` 消费，**不在默认 11 步代谢**（STEPS 无 error-handler 步骤）→ 无管线写它。同 I 面 shape（孤写），登记「在库未接默认管线」，**不造假驱动**（纪律 2/4） |
+| 读消费面 | `generate-analysis-report.js` / `self-growth.js` 都读 `getPendingErrors`（有读手，非 D/E 的「读唔存在 key」）——只要 error-handler 一旦跑起来，读写即通 |
+
+### query.js — P2-4 UTC 漏核（无漏）
+
+`query.js` 唯一时间读口 = `recencyScore`（:91）走 `parseDbTime`（:82，P2-4 已修）；全文件 `new Date`/时间解析点扫描（:89/:92/:93/:94/:104/:246）确认**无其他漏网**——P2-4 修复完整。
+
+### consciousness-controller — 净读 kernel（无脱节）
+
+`consciousness-controller.js` 只调 `kernel.ingest` / `kernel.archiveObservedEvents`（:182/:277），无自持库读写、无时间解析、无「读 A 写 B」——干净面。
+
+### 第五轮收工门槛
+
+- 改 1 个 JS（`api-server.js`）`node --check` 过
+- 行为层：K 探针修前 d-new 漏 → 修后命中
+- 全量代谢 11 步成功 + `node verify-deploy.js` **ALL GREEN（C0–C20，32 项）**
+- 未动 C19 计数（32 项不变）、未动 11 步代谢步数；error_log 登记不修、query.js / consciousness-controller 销账
