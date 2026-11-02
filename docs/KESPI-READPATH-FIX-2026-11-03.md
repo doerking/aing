@@ -182,3 +182,15 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 - 行为层：H 探针修前 false→修后 true；G 探针插探针条 0→1；F 探针 getStats=活跃口径
 - 全量代谢 11 步成功 + `node verify-deploy.js` **ALL GREEN（C0–C20，32 项）**
 - 未做：给 feedback-loop 造假读手（I 明拒）；未动 C19 计数（32 项不变）、未动 11 步代谢步数
+
+## 七、院际对齐记录（E:\ZPD 院，2026-11-03）
+
+> D/E（断线 8/9）曾在 E:\ZPD\aing 院被另一 agent 平行自改（worktree 12 个 tracked 档 + 2 份自写 KESPI-DISCONNECT 文档，未 commit），与本仓 D/E 修复**字面不同源**——按纪律 9（部署与源码零偏移）与 C18（跨院字面差异须销账），本仓 `70bfbd1` 为真源，E:\ZPD 须对齐。
+
+| 步 | 动作 | 结果 |
+|---|---|---|
+| 1 备份 | `E:\ZPD\aing-backup-20261103-r1\`（tracked-dirt.patch + 2 份自写 KESPI-DISCONNECT 文档 + growth.config.js.pre） | 该院未提交面全部留痕，可复原 |
+| 2 对齐 | `git fetch` + `git reset --hard origin/main`（E:\ZPD\aing 有独立 git + 共享 remote doerking/aing） | E:\ZPD HEAD → `70bfbd1`（origin/main）；`src/growth.config.js`/`knowledge.db` 被 gitignore，runtime 面存活 |
+| 3 销账 | 本仓 `node tools/verify-sibling-roots.js --root ZPD=E:\ZPD\aing` | **真实漂移 0**（原 23）· 仅行尾 45（CRLF/LF 噪声）· 对方缺失 1（`cantonese-nlp-agent.md` 未跟踪档，不随 reset，预期）· 库结构一致 |
+
+**结论**：D/E 跨院字面差异自此销账、两院同源（均以 `70bfbd1` 为准）；C18 院际比对**未豁免**——对齐后 `verify-sibling-roots` 真跑出 0 漂移即证明。45 项仅行尾差异系历史 CRLF/LF 噪声，非内容代差（建议包根加 `.gitattributes` 统一 eol 后重检出，属未决事项，不阻塞本次）。
