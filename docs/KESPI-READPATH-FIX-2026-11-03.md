@@ -1,6 +1,6 @@
 ---
 tags: [kespi, readpath, defect-fix, kq, consistency, integrity, trend, decision-history, write-a-read-b, audit, must-read]
-description: KESPI 读路径五处断线（A 读方正则脱节 / B getEntities 列撞 / C prune 死检查 / D growth-director 趋势读错真源 / E guide-chain-swarm 决策历史读错真源）+ 4 面写 A 读 B 审计（F getStats 双口径 / G panel subchain_debts 写死 / H kernel hasHistory 死旗标 / I system_log 孤写面）的修复记录与前后证据，含负向自证
+description: KESPI 读路径断线全系列修复记录（A 读方正则脱节 / B getEntities 列撞 / C prune 死检查 / D 趋势读错真源 / E 决策历史读错真源 / F getStats 双口径 / G panel subchain_debts 写死 / H kernel hasHistory 死旗标 / I system_log 孤写面 / J prune 中文ID正则误删 / K api-server /api/delta 时区 / L new Date(DB 空格串) 8h偏移 / dbPath fail-fast / M type_index 死索引登记）与前后证据、负向自证，跨 2026-11-03 六轮审计
 ---
 
 # KESPI 读路径修复记录（2026-11-03）
@@ -246,3 +246,44 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 - 行为层：K 探针修前 d-new 漏 → 修后命中
 - 全量代谢 11 步成功 + `node verify-deploy.js` **ALL GREEN（C0–C20，32 项）**
 - 未动 C19 计数（32 项不变）、未动 11 步代谢步数；error_log 登记不修、query.js / consciousness-controller 销账
+
+## 九、第六轮审计（L 时间 8h 偏移 + dbPath fail-fast + M 死索引登记，2026-11-03）
+
+> 接手 <zpd-yard> 自检清单。每处独立探针复核后才修。
+
+### L — `new Date(DB 空格-UTC 串)` 本地解析偏 8h（3 活位 + 2 死孪生）
+
+| 项 | 值 |
+|---|---|
+| 病根 | SQLite `datetime('now')` 出「`YYYY-MM-DD HH:MM:SS`」空格 UTC 串；JS `new Date()` 对非 ISO 空格形式按**本地时区**（+08:00）解析 → 时间轴偏 8h |
+| 探针坐实 | `.temp/probe-round6.js`：`'2026-11-02 12:52:03'` 旧 `new Date` 落 `04:52:03Z`、`parseDbTime` 落 `12:52:03Z`，**偏移 -8.00h**；L2 KM 24h 阈值边界：「20h 前检查」旧法 KM=0.8 / 新法 KM=1.0（分档修正坐实） |
+| 活位 L1 | `kespi-check.js:100` `_calcKG`（`updated_at` 时效分档 7/30/90/180 天）——11 步代谢每次跑 |
+| 活位 L2 | `kespi-check.js:149` `_calcKM`（`last_checked_at` ≤24h 阈值，最敏感） |
+| 活位 L3 | `gap-detector.js:52` 缺口「N 天未更新」 |
+| 死孪生 L4/L5 | `kespi-check-fixed.js:128/:170`（0 引用孤悬变体，**有意保留**未修行为，档头已加 ⚠ 时间断线登记，接线前须补 parseDbTime） |
+| 修 | 抽共享叶子模块 `src/db-time.js`（`parseDbTime`，纪律 5 单源——同 K 面「同形病根要全仓扫、唔修一处」教训）；`query.js` 旧 inline `parseDbTime` 改代理 db-time（export 保留向后兼容）、`kespi-check.js` L1/L2、`gap-detector.js` L3 全改走 `parseDbTime` + NaN 兜底 |
+| 教训 | P2-4 修 `query.js recency` 面时只修一处，同病根喺 kespi-check（KG/KM）与 gap-detector（stagnant）**漏网**——时间串比较面要全仓扫，唔系修一处（同已知坑 22②「同形 P2-4」同病根，本条系把佢全仓收齐） |
+
+### dbPath hardening — `KnowledgeStore` 唔验类型（fail-fast）
+
+| 项 | 值 |
+|---|---|
+| 病根 | `knowledge-store.js` constructor 旧 `this.dbPath = dbPath \|\| 默认` 唔验类型；传 object 唔炸到入口，到 `_save():199` 先 `${this.dbPath}.tmp` 强制转字符串 → **静默写 `[object Object].tmp`**（90KB SQLite 垃圾档落包根），rename 先 throw |
+| 证据 | <zpd-yard> 自检探针 `new GrowthDirector({})` 踩到（垃圾档已清理）；本仓垃圾档无残留（`if exist "[object Object].tmp"` 核） |
+| 修 | constructor 入口 `if (dbPath != null && typeof dbPath !== 'string') throw new TypeError`（fail-fast）；`undefined/null` 走默认路径合法（净挡 object/number 非法类型） |
+| 自证 | `.temp/probe-round6.js`：`new KnowledgeStore({})` 抛 TypeError、`new KnowledgeStore()` undefined→默认合法，两式全过 |
+| 调用面核对 | 全仓 30+ 个 `new KnowledgeStore(...)` 实调用方全部传 string 或 undefined（`path.join` / 字面 / `this.dbPath` 透传）——fail-fast 唔炸任何合法用法，只拦探针那种误传 object |
+
+### M — `type_index` 死索引（登记不修）
+
+| 项 | 值 |
+|---|---|
+| 事实 | 全仓零**功能**读者：只有写入维护（`knowledge-store.js:282/285` 每次 saveEntity DELETE+INSERT OR REPLACE、`prune.js:282` / `recycle-seeds.js:124` 清引用）+ verify C10e 当子表清点（`verify-deploy.js:371`）；26 行与 entities 1:1、数据一致（唔系写读脱节，纯写开销） |
+| 处置 | 纪律 2/4 唔造假读者。将来做 type 快取检索先接线，或砍表须走 C10f 防复活流程。**登记不修**（同 I 面 system_log / error_log shape） |
+
+### 第六轮收工门槛
+
+- 改 5 个 JS（新增 `db-time.js` + `kespi-check` / `gap-detector` / `query` / `knowledge-store`）+ `kespi-check-fixed` 档头登记；`node --check` 全过
+- 行为层：L 探针 8h 偏移坐实 + L2 KM 分档修正；dbPath fail-fast 拦 object 放 undefined
+- 全量代谢 11 步成功 + `node verify-deploy.js` **ALL GREEN（C0–C20，32 项 @5f81420）**
+- 未动 C19 计数、未动 11 步代谢步数；M / L4 / L5 登记不修（假读者禁）

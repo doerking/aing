@@ -76,18 +76,10 @@ function nameScore(entity, query) {
 }
 
 // 新鲜度分：30 天半衰期
-// P2-4（2026-11-02 代码审查）：SQLite datetime('now') 出「YYYY-MM-DD HH:MM:SS」为 **UTC**
-// 但无 Z/时区标记；JS new Date() 对空格形式按**本地**时区解析，UTC+8 上偏 8 小时 →
-// 实体被误判成比实际「更新」，新鲜度分虚高。现显式按 UTC 解析（空格→T + 补 Z）。
-function parseDbTime(raw) {
-  if (raw == null) return NaN;
-  let s = String(raw);
-  // 仅对 SQLite 的「YYYY-MM-DD HH:MM:SS」无时区形式补 Z；带 Z/±HH:MM 的 ISO 原样解析
-  if (/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\d*$/.test(s) && !/[Zz]|[+-]\d{2}:?\d{2}$/.test(s)) {
-    s = s.replace(' ', 'T') + 'Z';
-  }
-  return new Date(s).getTime();
-}
+// 断线 L（2026-11-03 第六轮）：parseDbTime 抽到 src/db-time.js（共享单源），
+// query.js 仍保留同形 export（向后兼容 require('./query.js').parseDbTime 旧调用），
+// 但实现直接代理 db-time，唔再 inline 复制（同形病根全仓扫、唔修一处教训）。
+const { parseDbTime } = require('./db-time');
 function recencyScore(entity) {
   if (!entity.updated_at) return 0;
   const t = parseDbTime(entity.updated_at);
@@ -283,4 +275,4 @@ if (require.main === module) {
 }
 
 // 导出：供标定/评测工具复用同一套检索与融合逻辑（不构成第二实现）
-module.exports = { searchCandidates, keywordScore, nameScore, recencyScore };
+module.exports = { searchCandidates, keywordScore, nameScore, recencyScore, parseDbTime };

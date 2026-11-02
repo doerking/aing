@@ -18,6 +18,15 @@ const initSqlJs = require('sql.js');
 
 class KnowledgeStore {
   constructor(dbPath) {
+    // 断线 dbPath（第六轮 2026-11-03 复核）：旧 `dbPath || 默认` 唔验类型，传 object
+    // 唔炸到入口、到 _save() 先 `${this.dbPath}.tmp` 静默写 `[object Object].tmp`
+    // （90KB SQLite 垃圾档落包根）。fail-fast：入口拒非字符串（undefined/null 走默认合法）。
+    if (dbPath != null && typeof dbPath !== 'string') {
+      throw new TypeError(
+        `KnowledgeStore dbPath 必须系字符串或省略（拿到 ${typeof dbPath}）；` +
+        `传 object 会静默落 [object Object].tmp 垃圾档（第六轮 dbPath hardening）。`
+      );
+    }
     this.dbPath = dbPath || path.join(__dirname, '..', 'knowledge.db');
     this.db = null;
   }

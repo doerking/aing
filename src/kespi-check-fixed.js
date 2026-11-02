@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 /**
- * kespi-check.js — KESPI 八维质量评估引擎
- * 
+ * kespi-check-fixed.js — KESPI 八维修复变体（0 调用点孤悬，2026-11-02 决策有意保留）
+ *
+ * ⚠ 时间断线 L4/L5（第六轮 2026-11-03 登记，未修）：本档 `_calcKG`(:128)/`_calcKM`(:170)
+ *   仍用 `new Date(entity.updated_at / last_checked_at)` 本地解析 SQLite 空格-UTC 串，
+ *   偏 8h（同主档 L1/L2 病根）。主档 `kespi-check.js` 已抽 `src/db-time.js` parseDbTime 修掉；
+ *   本变体接线前必须先补 `parseDbTime`（同主档修法），否则 8h 偏移随它一起上线。
+ *   纪律：将来接上须走「改码 + 全量代谢 + KESPI 验算 + verify-deploy ALL GREEN + 负向自证」全流程。
+ *
  * 八维全部遵循"越高越好"原则：
  *   1.0 = 完美, 0.0 = 最差
- * 
+ *
  * 维度说明：
  *   KQ 质量：confidence、逻辑一致性
  *   KG 生长：周环比增长率（时效性）
@@ -14,7 +20,7 @@
  *   KC 检索：向量索引命中率
  *   KR 回答：内容完整度
  *   KB 阻断：安全事件（无事件=高）—— 修复：已反转
- * 
+ *
  * 修复记录：
  *   v2: 修复 KD/KB 反转问题。原实现 KD/KB 越高=越差，
  *       与其他6维方向相反，导致综合分被拖低。

@@ -24,6 +24,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseDbTime } = require('./db-time');
 
 function resolvePath(segment) {
   const args = process.argv;
@@ -49,7 +50,11 @@ const GAP_DIMENSIONS = {
     label: '停滞实体', icon: '⏳', desc: '长期未更新（>30天）', severity: 'medium',
     check: (e) => {
       if (!e.updated_at) return false;
-      const days = (Date.now() - new Date(e.updated_at).getTime()) / 86400000;
+      // 断线 L（第六轮）：updated_at 系 SQLite 空格-UTC 串，旧 new Date(空格串) 本地解析偏 8h
+      // → 天数虚增 0.33 天，>30 天边界误分。改 parseDbTime（UTC 安全），无效串落回不判停滞。
+      const t = parseDbTime(e.updated_at);
+      if (Number.isNaN(t)) return false;
+      const days = (Date.now() - t) / 86400000;
       return days > 30;
     }
   },
