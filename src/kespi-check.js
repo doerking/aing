@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const KnowledgeStore = require('./knowledge-store');
 const config = require('./growth.config');
+const { parseDbTime } = require('./db-time');
 
 function markEntityKespiComputed(entityId, result) {
   const entityPath = path.join(__dirname, '..', 'wiki', 'entities', entityId + '.md');
@@ -97,7 +98,9 @@ class KespiChecker {
    */
   _calcKG(entity) {
     const now = Date.now();
-    const updated = entity.updated_at ? new Date(entity.updated_at).getTime() : now;
+    // 断线 L（第六轮）：updated_at 系 SQLite datetime('now') 空格-UTC 串，
+    // 旧 new Date(空格串) 按本地时区解析偏 8h；改 parseDbTime（UTC 安全）。
+    const updated = entity.updated_at ? parseDbTime(entity.updated_at) : now;
     const ageDays = (now - updated) / (1000 * 60 * 60 * 24);
     
     if (ageDays <= 7) return 1.0;
@@ -145,8 +148,10 @@ class KespiChecker {
    */
   _calcKM(entity) {
     const now = Date.now();
-    const lastChecked = entity.last_checked_at 
-      ? new Date(entity.last_checked_at).getTime() 
+    // 断线 L（第六轮）：last_checked_at 写口 datetime('now') 空格-UTC 串，读方必须 UTC 解析
+    // （旧 new Date 本地解析偏 8h，KM ≤24h 阈值边界误分档最敏感）→ parseDbTime。
+    const lastChecked = entity.last_checked_at && !Number.isNaN(parseDbTime(entity.last_checked_at))
+      ? parseDbTime(entity.last_checked_at)
       : now;
     const ageHours = (now - lastChecked) / (1000 * 60 * 60);
     
