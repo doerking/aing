@@ -125,9 +125,6 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | 组件 | 面 | 用法 | 状态 |
 |------|----|------|------|
 | `src/batch-ingest.js` | 入库家族 | `node src/batch-ingest.js <session-file>` · `--dir <dir>` · `--stdin`（复用 auto-ingest.SessionStore + HermesAingAdapter + ConsciousnessKernel） | 在库，非默认 |
-| `src/session-ingest.js` | 入库家族 | `echo '<JSON>' \| node src/session-ingest.js` · `--file session.json`（自带 SessionStore，抽实体/关系/标签并编译 wiki/） | 在库，非默认 |
-| `src/agent-auto-ingest.js` | 宿主插件 | `require('./src/agent-auto-ingest')` → `AgentAutoIngest.入库()/入库对话()`（宿主内调用，非 CLI） | 在库，宿主侧 |
-| `src/对话自动入库.js` | 入库家族 | `node src/对话自动入库.js --agent hermes --listen`（env `KB_ROOT`/`AGENT_ID`/`INGEST_INTERVAL_MS`） | 在库，非默认 |
 | `src/agent-dashboard.js` | 宿主面板 | `node src/agent-dashboard.js [--port 3789] [--api-key …]`（并行于 api-server.js 的另一 RESTful 宿主面，聚合双 adapter） | 在库，非核心 |
 | `src/boot-sequence.js` | 开场自检 | `require('./src/boot-sequence').run()` 生成识态「第一印象」上下文 | 在库，宿主侧 |
 | `src/memo-call.js` | 备忘录呼叫 | `node src/memo-call.js [--full\|--briefing\|--growth]` | 在库 |
@@ -137,11 +134,11 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | `src/config-hotreload.js` | 配置热重载 | 监听 `growth.config.js` 变更自动重载（require 缓存清除后重导入，对应绿名单 locked「热重排」项的**实现体**，按需接入） | 在库，按需 |
 | `src/search-and-ingest.js` | 采集入库桥 | `node src/search-and-ingest.js "<查询>" [limit]` · `--web` · `--page <URL>`（宿主面：搜索/读取结果自动入库并触发代谢） | 在库，宿主侧 |
 | `tools/eval-retrieval.js` | 检索质量 KPI | `node tools/eval-retrieval.js [--set <qa.json>] [--k N]`（对 Q&A 对跑 semanticSearch 出 recall@k + MRR，**只读、独立于 verify-deploy 门禁**；384 维缺失自动回退 64 维并标注通道；分数来自真实检索，纪律 5） | 工具在库，只读 |
-| `examples/对话自动入库示例.js` | 入库样例 | `node examples/对话自动入库示例.js`（入库家族的演示样例：模拟对话 → `AgentAutoIngest.入库` 批量入库；非管线组件） | 样例在库 |
 | `package-dashboard.json` | 宿主子包 | `agent-dashboard.js` 的配套子包描述（`main` 指向该脚本，自带 `dashboard`/`dashboard:dev`/`dashboard:auth` npm scripts；宿主侧按需，主 `package.json` 不引用它） | 在库，非核心 |
 | `jest.config.js` + `tests/unit/`（11 个） | 单测框架 | **孤悬**：测试与配置在库，但 `jest` 未声明在 `package.json`、无 npm script 入口、`verify-deploy`/`self-test` 不消费 → 宿主需自备 jest 方可跑；`collectCoverageFrom` 排除 `*-fixed.js` | 在库，未接管线/依赖未声明 |
 
 > 与主线的关系：入库主线仍是 `auto-ingest.js` / `POST /api/ingest`（C10g/C10h 门禁钉死契约），上面这批入库家族是**并行入口**；`api-server.js` 是正式 HTTP 面，`agent-dashboard.js` 是并行宿主面板；`kespi-check.js` 是正式 KESPI 首评器，`kespi-check-fixed.js` 是修复变体。别把「在库变体」当成「默认管线」。
+> **2026-11-02 收口**：曾与主线并存的四个自带会话存储平行入口（`session-ingest.js` / `agent-auto-ingest.js` / `对话自动入库.js` / `对话自动入库示例.js`，均属已删除档）因绕过主线全部安全闸（直接写 `status:active`/`confidence:0.9`、全局 `lastIngestTime` 批处理 bug、无 role 归一、无采集痕迹剥除、无持库让位、无 WAL、节名与 distill 白名单漂移）已**全部删除**，文档同步改口。入库家族现存唯一会话入口 `batch-ingest.js`（走主线 `auto-ingest.SessionStore` + `HermesAingAdapter` + `ConsciousnessKernel`）与健康 `search-and-ingest.js`（写 web 检索档，唔涉会话 status/confidence）。
 
 ## Known Pitfalls / 已知坑（脚本已内置修复，手工操作时注意）
 

@@ -88,21 +88,31 @@ function authorized(req) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let size = 0;
+    let aborted = false;
     const chunks = [];
     req.on('data', c => {
+      if (aborted) return;                       // 已超限：停止累积（内存有界），socket 保持活俾 response 写完
       size += c.length;
       if (size > BODY_LIMIT) {
-        reject(new Error('请求体超过 1MB 上限'));
-        req.destroy();
+        aborted = true;
+        // P2-3（2026-11-02 代码审查）：旧实现 req.destroy() 后写 response 会 ERR_STREAM_DESTROYED，
+        // 且 reject 无状态码 → 顶层 catch 一律 500。现：标记 aborted + req.resume() 排干余体，
+        // socket 唔拆（response 能正常写 413），错误带 status=413 交顶层 catch 映射。
+        const err = new Error('请求体超过 1MB 上限');
+        err.status = 413;
+        err.code = 'BODY_TOO_LARGE';
+        reject(err);
+        req.resume();                            // 排干剩余 body，socket 干净收尾
         return;
       }
       chunks.push(c);
     });
     req.on('end', () => {
+      if (aborted) return;
       try { resolve(chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {}); }
       catch (e) { reject(new Error('请求体不是合法 JSON')); }
     });
-    req.on('error', reject);
+    req.on('error', (e) => { if (!aborted) reject(e); });
   });
 }
 
@@ -420,9 +430,19 @@ async function handle(req, res) {
     if (!body.name || !body.type) {
       return json(res, 400, { error: '需要 {name, type} 字段；type 自由字符串（Todo/Skill/Output/Concept/...）' });
     }
-    const id = body.id || String(body.name).replace(/[^\w\u4e00-\u9fff-]+/g, '-').slice(0, 80).toLowerCase();
-    if (!ID_PATTERN.test(id)) {
-      return json(res, 400, { error: 'id 含非法字符（仅允许字母/数字/-_中文）' });
+    // P1-2（2026-11-02 代码审查）：body.id 分支原先**无长度上限**（仅 name 分支 slice(0,80)），
+    // 客户端可传任意长 id 进 DB 主键与后续 wiki/entities/ 文件名（Windows 255 字节上限）。
+    // 现两条派生路径共用同一上限 128（常量单源），截断后空串/纯非法字符即 400。
+    const ID_MAX = 128;
+    let id;
+    if (body.id != null && String(body.id).trim() !== '') {
+      id = String(body.id).trim();
+      if (id.length > ID_MAX) id = id.slice(0, ID_MAX);   // 先截断再校验，避免超长主键膨胀
+    } else {
+      id = String(body.name).replace(/[^\w\u4e00-\u9fff-]+/g, '-').slice(0, 80).toLowerCase();
+    }
+    if (!id || !ID_PATTERN.test(id)) {
+      return json(res, 400, { error: `id 非法或超长（仅允许字母/数字/-_中文，上限 ${ID_MAX} 字符；截断后为空亦拒）` });
     }
     if (store.getEntity(id)) {
       return json(res, 409, { error: `实体已存在: ${id}` });
@@ -542,7 +562,12 @@ async function main() {
 
   const host = API_KEY ? '0.0.0.0' : '127.0.0.1';
   const server = http.createServer((req, res) => {
-    handle(req, res).catch(e => json(res, 500, { error: e.message }));
+    handle(req, res).catch(e => {
+      // P2-3（2026-11-02 代码审查）：尊重 readBody 带出嘅语义状态码（超限 413 唔再一律 500）；
+      // 无 status 嘅未知异常仍落 500。res 未写完前 writeHead 合法（socket 未 destroy）。
+      const code = (e && Number.isFinite(e.status)) ? e.status : 500;
+      json(res, code, { error: e && e.message ? e.message : 'internal error' });
+    });
   });
 
   setInterval(() => {

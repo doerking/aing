@@ -19,8 +19,7 @@ source: deep-analysis-report
 
 ## 影响范围
 
-- `src/auto-ingest.js`（实体提取）
-- `src/agent-auto-ingest.js`（Agent 集成）
+- `src/auto-ingest.js`（实体提取；主线入库家族唯一持有 `extractEntities` 正则抽取器）
 - `models/`（NER 模型）
 
 ## 修复方案
