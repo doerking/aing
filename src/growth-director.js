@@ -330,10 +330,14 @@ class GrowthDirector {
       const current = entities[0]?.avg_score || 0;
       
       // 从历史获取上一次
+      // 修正（2026-11-03，断线 8）：旧实现读 system_log WHERE type='kespi_check'，
+      // 但本仓 system_log 唯一写手是 feedback-loop（写 type='feedback'），type='kespi_check' 永远 0 行
+      // → previous 永远 fallback 到 current → decline 永远 0（KESPI 下降探不到，趋势读数失真）。
+      // 真源是 kespi_history（每轮逐实体 INSERT，created_at 分轮）：取倒数第二个批次均值作 previous。
       const prev = store.exec(
-        `SELECT kespi_avg FROM system_log WHERE type = 'kespi_check' ORDER BY created_at DESC LIMIT 1 OFFSET 1`
+        `SELECT AVG(overall_score) AS c FROM kespi_history WHERE created_at = (SELECT DISTINCT created_at FROM kespi_history ORDER BY created_at DESC LIMIT 1 OFFSET 1)`
       );
-      const previous = prev[0]?.kespi_avg || current;
+      const previous = prev[0]?.c || current;
       
       return {
         current,

@@ -126,8 +126,12 @@ class ConsciousnessKernel {
     }
 
     this.state.suppressedEvents = [...this.state.suppressedEvents, ...suppressed].slice(-this.maxEvents);
+    // 断线 H（2026-11-03 4面审计）：hasHistory 旧取 context.hasHistory——全仓无任何调用方传它（死旗标），
+    // routeMemory 的 retrieve 支路（hasHistory || ambiguity>=0.45 || evidence>3）永不可达。
+    // 真源 = 该 target 在本轮 integrate 之前是否已在 activeEvents 里被观察过（滚动缓冲即历史）。
+    const seenTargets = new Set((this.state.activeEvents || []).map(r => r.target));
     const reactions = this.integrate(accepted);
-    const processed = this.processReactions(reactions, { accepted, suppressed, stagnationCount: this.state.stagnationCount });
+    const processed = this.processReactions(reactions, { accepted, suppressed, stagnationCount: this.state.stagnationCount, hasHistoryTargets: seenTargets });
     this.saveState();
     return { accepted: accepted.map(event => event.toJSON()), suppressed, reactions, growth: processed.growth, metacognition: processed.metacognition, state: this.status() };
   }
@@ -208,7 +212,9 @@ class ConsciousnessKernel {
       const route = reaction.suggestedActions.length ? reaction.suggestedActions : ['inspect', 'verify'];
       const memory = growthDocs.writeMemoryDecision({
         query: `${reaction.target} ${reaction.eventTypes.join(' ')}`,
-        hasHistory: Boolean(context.hasHistory),
+        // 断线 H：从 kernel 滚动缓冲（activeEvents）判"同 target 已有历史观察"，
+        // 替代旧的全仓无人传入的 context.hasHistory 死旗标。
+        hasHistory: Boolean(context.hasHistoryTargets && context.hasHistoryTargets.has(reaction.target)),
         evidenceGap: reaction.confidence < 0.65,
         ambiguity: 1 - reaction.confidence,
         failureSignal: reaction.channels.includes('feedback') || reaction.channels.includes('anomaly'),

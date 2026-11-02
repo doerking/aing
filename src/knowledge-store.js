@@ -484,7 +484,14 @@ class KnowledgeStore {
   getStats() {
     const entityCount = this.get('SELECT COUNT(*) as count FROM entities');
     const linkCount = this.get('SELECT COUNT(*) as count FROM links');
-    const avgKespi = this.get('SELECT AVG(kespi_score) as avg FROM entity_metadata');
+    // 断线 F（2026-11-03 4面审计）：avgKespi 旧为全表 AVG(kespi_score)（含未评分 0 分行与归档残留行），
+    // 而 panel（metabolism-panel.js）/memo/growth-director 读的是**活跃口径**（e.status='active' 且 score>0）——
+    // 双仪表台同形 A-D：一旦剪枝/销办留痕累积，全表均值被 0 分行拉低、与面板读数分叉。现对齐单源活跃口径。
+    const avgKespi = this.get(`
+      SELECT AVG(m.kespi_score) as avg FROM entity_metadata m
+      JOIN entities e ON e.id = m.entity_id
+      WHERE m.kespi_score > 0 AND e.status = 'active'
+    `);
     const pendingErrors = this.get("SELECT COUNT(*) as count FROM error_log WHERE status = 'pending'");
 
     return {
