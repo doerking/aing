@@ -224,9 +224,10 @@ function cleanupBrokenLinks() {
   for (const file of linkFiles) {
     const content = fs.readFileSync(path.join(CONFIG.linksDir, file), 'utf8');
     
-    // 提取 source 和 target（实体 ID 含连字符，\w 不够）
-    const sourceMatch = content.match(/source:\s*([\w.-]+)/);
-    const targetMatch = content.match(/target:\s*([\w.-]+)/);
+    // 提取 source 和 target（实体 ID 可含连字符与**中文**——\w 唔匹配中文字，历史曾漏，
+    // 一跑 --force 即误删 3254 有效中文链档。整行值 + 行首锚定，frontmatter 单一 key）
+    const sourceMatch = content.match(/^source:\s*(.+?)\s*$/m);
+    const targetMatch = content.match(/^target:\s*(.+?)\s*$/m);
     
     if (sourceMatch && targetMatch) {
       const sourceExists = fs.existsSync(path.join(CONFIG.entitiesDir, `${sourceMatch[1]}.md`));
