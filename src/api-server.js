@@ -490,7 +490,15 @@ async function handle(req, res) {
     const since = url.searchParams.get('since');
     if (!since) return json(res, 400, { error: '缺少 ?since=<ISO时间戳>' });
     let sinceTs = since;
-    try { sinceTs = new Date(since).toISOString(); } catch (e) { return json(res, 400, { error: 'since 格式无效' }); }
+    try {
+      const d = new Date(since);
+      if (Number.isNaN(d.getTime())) throw new Error('since 格式无效');
+      // 断线 K（2026-11-03 第五轮，同形 P2-4）：旧 sinceTs 用 toISOString() 出 ISO-T-Z 串，
+      // 去跟 entities.created_at/updated_at 的 SQLite datetime('now')（「YYYY-MM-DD HH:MM:SS」
+      // 空格 UTC）做字典序比较——同刻边界实体因 space(0x20) < T(0x54) 被漏算。
+      // 归一成空格-UTC 秒格式后再比（.temp/probe-delta.js 真证 d-new 漏→命中）。
+      sinceTs = d.toISOString().replace('T', ' ').replace(/\.\d+Z?$/, '');
+    } catch (e) { return json(res, 400, { error: 'since 格式无效' }); }
     const added = store.all("SELECT id, name, type FROM entities WHERE created_at >= ? ORDER BY created_at DESC", [sinceTs]);
     const updated = store.all("SELECT id, name, type, updated_at FROM entities WHERE updated_at >= ? AND created_at < ? ORDER BY updated_at DESC", [sinceTs, sinceTs]);
     return json(res, 200, { since: sinceTs, added: added.length, updated: updated.length, items: { added, updated } });
