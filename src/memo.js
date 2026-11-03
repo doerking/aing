@@ -676,6 +676,10 @@ function swarmRolesReady() {
   //   bundled   = 随包携带在 assets/skills/ 里（W5 起 Tip 包内就有）—— 说明可安装，不等于已装载
   const roots = [
     { dir: path.join(home, '.sclaw', 'agent', 'skills'), kind: 'runtime' },
+    // 2026-11-04：AgnesCode 宿主实际技能加载面（~/.agnes/skills）同为 runtime 根。
+    // 判定只认「本宿主运行时真会加载的目录」：SCNet 宿主是 .sclaw，AgnesCode 宿主是 .agnes；
+    // 两个根并列，任一在位即 inRuntimeSurface=true。C18 三布尔口径不变（runtime/host/bundled 仍分开报）。
+    { dir: path.join(home, '.agnes', 'skills'), kind: 'runtime' },
     { dir: path.join(home, '.claude', 'skills'), kind: 'host' },
     { dir: path.join(home, '.agents', 'skills'), kind: 'host' },
     { dir: path.join(path.resolve(__dirname, '..'), 'assets', 'skills'), kind: 'bundled' },   // 用包根，不用 cwd（否则换个目录跑就变卦）
