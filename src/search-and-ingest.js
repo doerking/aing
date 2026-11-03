@@ -20,7 +20,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 // ========== 配置 ==========
 const CONFIG = {
@@ -48,14 +48,13 @@ async function executeSearch(query, limit) {
   // 这里调用实际的搜索工具
   // 由于我们是在 Node.js 环境中，使用 shell 调用或 API
   
-  const searchCmd = `node src/query.js "${query}" --limit ${limit} --mode web`;
-  
-  try {
-    const output = execSync(searchCmd, { 
-      cwd: CONFIG.kbRoot,
-      encoding: 'utf8',
-      timeout: 30000
-    });
+  // 安全修复（Mimosa 命令注入）：execSync shell 拼接 → execFileSync 参数数组，query/limit 独立参数直传
+    try {
+      const output = execFileSync('node', ['src/query.js', '--', String(query), '--limit', String(limit), '--mode', 'web'], {
+        cwd: CONFIG.kbRoot,
+        encoding: 'utf8',
+        timeout: 30000
+      });
     const parsed = parseSearchOutput(output);
     // W11 (2026-11-03)：query.js 没有 --mode web 面（只做本地库检索，输出解析不出 web 条目）。
     // 解析为空 = 无真搜索源。旧实现把这种空壳 / 伪造结果入库 raw/，污染代谢链；
@@ -107,9 +106,11 @@ async function readWebpage(url) {
 async function executeRead(url) {
   // 使用 read_webpage 工具或 curl
   try {
-    const output = execSync(`curl -s --max-time 30 "${url}" | head -c 10000`, {
-      encoding: 'utf8'
-    });
+    // 安全修复：shell 管道(curl|head) → execFileSync 参数数组，10KB 截断 JS 侧 slice 等价
+      const output = execFileSync('curl', ['-s', '--max-time', '30', '--', url], {
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024
+      }).slice(0, 10000);
     
     return {
       success: true,

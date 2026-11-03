@@ -224,6 +224,40 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
       .map(x => ({ id: x.row.id, objective: x.c.objective, phase: x.c.phase, blockedCode: x.c.blockedCode, blockedMessage: x.c.blockedMessage, roundsStarted: goalRoundsStarted(x.c), maxRounds: x.c.maxRounds }));
   } catch (e) { blockedGoals = []; }
   memo.blockedGoals = blockedGoals;
+  // —— 接线面（agent 出场处置面，2026-11-03 所有者点单）：git 状态动态 + 注册表指路 ——
+  // git 状态每场实时（git status 纯读，唔做静态登记防过期）；技能/MCP 分类真源喺 aing 实体
+  // （tag skill-registry / mcp-registry），此处只指路——细节按标签加载，唔全文倾倒（tag-taxonomy-rules）。
+  memo.agentSurface = (() => {
+    const out = { git: null, registries: [] };
+    try {
+      const { execSync } = require('child_process');
+      const raw = execSync('git status --porcelain=v1 -b', { cwd: KB_ROOT, timeout: 5000, encoding: 'utf8' });
+      const lines = raw.split('\n').filter(Boolean);
+      const head = lines.find(l => l.startsWith('## ')) || '';
+      const bm = head.match(/^##\s+(\S+?)(?:\.\.\.(\S+))?(?:\s+\[(?:ahead (\d+))?(?:, )?(?:behind (\d+))?\])?\s*$/);
+      const dirty = lines.filter(l => !l.startsWith('## '));
+      out.git = {
+        branch: bm ? bm[1] : '?',
+        upstream: bm ? (bm[2] || null) : null,
+        ahead: bm && bm[3] ? Number(bm[3]) : 0,
+        behind: bm && bm[4] ? Number(bm[4]) : 0,
+        dirtyCount: dirty.length,
+        dirtySample: dirty.slice(0, 5).map(l => l.trim()),
+        handle: dirty.length
+          ? '工作区有未收口改动：会话末决定 commit/留痕，唔带尸过场'
+          : (bm && bm[4] ? '落后 upstream：先 pull 再代谢' : '干净')
+      };
+    } catch (e) { out.git = { handle: 'n/a（非 git 面或 git 不可用: ' + String(e.message).slice(0, 40) + '）' }; }
+    try {
+      const rows = store.all("SELECT id, name FROM entities WHERE tags LIKE '%skill-registry%' AND status='active'");
+      const mcpRows = store.all("SELECT id, name FROM entities WHERE tags LIKE '%mcp-registry%' AND status='active'");
+      out.registries = [
+        ...rows.map(r => ({ kind: 'skills', id: r.id, name: r.name, handle: '技能分类按标签加载（/api/tags/skill-registry），按需调用唔预载' })),
+        ...mcpRows.map(r => ({ kind: 'mcp', id: r.id, name: r.name, handle: 'MCP 分类按标签加载（/api/tags/mcp-registry），按需调用' }))
+      ];
+    } catch (e) { /* --db 隔离探针无注册表实体时静默降级 */ }
+    return out;
+  })();
   // W2 (2026-11-03)：待人批審批請求注入（只讀 data/consciousness/approvals-pending.json 的 pending 節）。
   // 守 C16 讀端純讀：只讀檔、唔投事件、唔寫 state.json、唔改 pending 檔；檔案缺失/損壞回 []（不裝數、不假報）。
   let approvalsPending = [];
@@ -801,6 +835,10 @@ if (require.main === module) {
       + ' → 本运行时' + (face.inRuntimeSurface ? '可派单（swarm-skill）' : '不可派单，按需用角色档 inline 自办（禁假称能派）'));
     if ((face.where || []).length) emit('      团队在: ' + face.where.join(' / '));
     (d.roles || []).forEach(x => { emit('    · ' + x.role + ' — 因由: ' + x.why); emit('      交什么: ' + x.how); emit('      过什么 Gate: ' + x.gate); });
+    const sf = memo.agentSurface || {};
+    // 轻身原则（2026-11-03 所有者点单）：memo 只带标签级指针，唔带文件名清单——细节喺 JSON 面（--peek）与 aing 实体
+    if (sf.git) emit('  【接线面·git】' + (sf.git.branch || '?') + (sf.git.ahead ? ' ↑' + sf.git.ahead : '') + (sf.git.behind ? ' ↓' + sf.git.behind : '') + ' | 未收口 ' + (sf.git.dirtyCount ?? '?') + ' 项 → ' + (sf.git.handle || ''));
+    (sf.registries || []).forEach(x => emit('  【接线面·' + x.kind + '】[' + x.id + '] → ' + x.handle));
     emit('  意识层: ' + (cs.state || '?') + ' / 组件链接: ' + Object.entries(cl).map(([k, v]) => k + '=' + ((v && v.status) || '?')).join(' | '));
     emit('  蒸馏债: ' + (memo.distillDebt || 0) + '  | 回炉欠: ' + (memo.reflowPending ?? 0) + '  | 告警: ' + (memo.consciousnessAlerts || []).length + '  | 优先级: ' + (memo.priority || '-') + '  | 待办(旧字段) ' + (uf.todos || []).length + ' / 会话交接 ' + (uf.sessionHandoff || []).length + ' 条');
     emit('  自我报告: ' + Object.entries(memo.selfAssessment || {}).map(([k, v]) => k + '=' + ((v && v.score) || '?')).join(' '));

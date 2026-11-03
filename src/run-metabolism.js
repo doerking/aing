@@ -29,7 +29,7 @@
  *   node run-metabolism.js --feedback         # 执行后反馈分析
  */
 
-const { execSync, spawn } = require('child_process');
+const { execFileSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -215,7 +215,10 @@ function executeStep(index, force = false, resume = false) {
     const scriptPath = path.join(CONFIG.scriptsDir, step.script);
     console.log(`\n💻 执行: node ${step.script} ${step.args.join(' ')} / Exec:`);
     
-    const output = execSync(`node "${scriptPath}" ${step.args.join(' ')}`, {
+    // 2026-11-03 安全债修复（Mimosa 扫描 run-metabolism.js:218 命令注入）：
+    // 旧写法 execSync(`node "${scriptPath}" ${args}`) 走 shell 拼接；现改参数数组直传，
+    // 消除 shell 语义（script/args 均来自文件内 STEPS 常量，行为等价：输出捕获、退出码抛错）。
+    const output = execFileSync('node', [scriptPath, ...step.args], {
       cwd: path.join(__dirname, '..'),
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
@@ -357,12 +360,15 @@ async function runGovernanceExit() {
     return;
   }
   try {
-    // 直接 execSync（executeStep 绑定 STEPS 索引与状态机；出口执行不伪装成链上步骤、不进代谢日志）
-    execSync(`node "${path.join(__dirname, 'sync-opt.js')}"`, {
+    // 直接子进程（executeStep 绑定 STEPS 索引与状态机；出口执行不伪装成链上步骤、不进代谢日志）。
+    // 2026-11-03 安全债修复：execSync shell 拼接 → spawnSync 参数数组（路径为文件内常量，语义等价）。
+    const so = spawnSync('node', [path.join(__dirname, 'sync-opt.js')], {
       cwd: path.join(__dirname, '..'),
       stdio: 'inherit',
       timeout: 10 * 60 * 1000
     });
+    if (so.error) throw so.error;
+    if (so.status !== 0) throw new Error(`sync-opt 退出码 ${so.status}（原 execSync 同样对非零退出抛错）`);
   } catch (e) {
     console.log('⚠️  [治理出口] sync-opt 失败（非关键，不改变代谢退出码）: ' + e.message);
   }

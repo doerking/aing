@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const growthConfig = require('./growth.config');
 const { scrubCollectionTrace } = require('./ingest-scrub'); // 只入贴出来的详情：采集过程行在入口剥除   // 阈值唯一来源（纪律第 5 条）
 
@@ -479,12 +479,17 @@ class SessionStore {
         // `git add -A` + `commit --no-verify`，等于让一条会话入库消息把工作树里所有未提交改动
         // 打包提交（2026-09-14 实测：self-test 探针 flush 后当场生成 "chore: compile knowledge base"，
         // 把 26 个尚未获批的改动一并卷走）。人工 `npm run compile` 的行为保持不变。
-        execSync(`node "${scriptPath}"`, {
+        // 2026-11-03 安全债修复（Mimosa 扫描 auto-ingest.js:482 命令注入）：
+        // execSync shell 拼接 → spawnSync 参数数组（script 来自 CONFIG.pipelineScripts 常量白名单）；
+        // 非零退出/超时仍抛错，保持「链式步骤，前面失败就停」语义。
+        const r = spawnSync('node', [scriptPath], {
           cwd: CONFIG.kbRoot,
           stdio: 'inherit',
           timeout: 60000,
           env: { ...process.env, AING_NO_AUTOCOMMIT: '1' }
         });
+        if (r.error) throw r.error;
+        if (r.status !== 0) throw new Error(`${script} 退出码 ${r.status}`);
         console.log(`🔧 完成: ${script} / Done:`);
       } catch (e) {
         console.error(`⚠️ ${script} 失败: / script failed:`, e.message);
