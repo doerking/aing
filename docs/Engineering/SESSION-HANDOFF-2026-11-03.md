@@ -78,6 +78,7 @@ E 院保留 Mimosa 命令注入安全债修复 + 院属工程文档，`1f521ab` 
 - `interchange-router` 复活条件：接 `query.js` 安全路由 + 补 `config/interchange-routing.json` 最小策略（或代谢需跨 lane 多关系链接）
 - SkillOpt adapter 属外部检出，须 `cd <dd-root>\321\SkillOpt` 跑，勿按目录名猜
 - E 院 `.mimosa/` 运行态目录如需版本化另议
+- **（2026-11-04 勘误）** E 院 briefing `selfImprovement=△` **非设计层缺口**：成因系同步时未带入被 gitignore 嘅运行态 `simulation/last-run.json`，被误带成「长期开放」。同日喺 E 院重跑 `node simulation/training-sim.js` 产出证据档（gatePassed=true，baseline 0.74 → best 1.0891，+47.2%），E 院 briefing 六属性全 ✓；回执：E 院 memo `todo-20261103T16254`（agent）。「真实改善实证」缺口（SkillOpt 真实 rollout，外部依赖）不变
 
 ## 6. 交接回执（memo 已登记）
 
