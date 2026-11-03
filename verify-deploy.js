@@ -14,7 +14,6 @@
 const fs = require('fs');
 const { spawnSync } = require('child_process');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const PKG_DIR = path.resolve(__dirname);
 const results = [];
@@ -174,7 +173,12 @@ async function main() {
 
   // ── C8. 盘符字面量扫描（2026-09-08：人工脱敏三审曾漏正斜杠变体，守门改机器）──
   await check('C8 硬编码盘符扫描 (redaction gate)', async () => {
-    const tracked = execSync('git ls-files', { cwd: PKG_DIR, encoding: 'utf8' })
+    // 2026-11-03 安全债修复：execSync('git ls-files') shell 语义 → spawnSync 参数数组。
+    // 命令为文件内常量、无外部输入，行为等价（失败仍抛错中断 C8 检查）。
+    const gl = spawnSync('git', ['ls-files'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 });
+    if (gl.error) throw gl.error;
+    if (gl.status !== 0) throw new Error('git ls-files 失败: ' + String(gl.stderr || '').slice(0, 200));
+    const tracked = String(gl.stdout)
       .split('\n').map(s => s.trim()).filter(Boolean);
     const scope = tracked.filter(f => /\.(js|json|md|ps1)$/i.test(f) && !/^raw\//.test(f));
     const driveRe = /(?<![A-Za-z])[A-Za-z]:[\\/]/;

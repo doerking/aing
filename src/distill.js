@@ -227,7 +227,7 @@ async function main() {
       targets = pending.filter(r => r.id === onlyId);
       if (!targets.length) {
         // D5: 指定 id 不存在/不在债中 —— 明确区分，不给调度方假成功
-        const exists = store.all("SELECT id, status FROM entities WHERE id = " + JSON.stringify(onlyId));
+        const exists = store.all("SELECT id, status FROM entities WHERE id = ?", [onlyId]);
         if (!exists.length) { console.log(JSON.stringify({ mode, result: 'failed', reason: 'id-not-found', id: onlyId })); process.exitCode = 2; return; }
         console.log(JSON.stringify({ mode, result: 'clean', reason: 'id-exists-but-not-pending', id: onlyId, currentStatus: exists[0].status }));
         process.exitCode = 0; return;

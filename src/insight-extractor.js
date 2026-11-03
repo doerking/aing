@@ -153,7 +153,10 @@ function writeInsightDoc(insights, meta) {
     `created: ${JSON.stringify(ts)}`,
     `modified: ${JSON.stringify(ts)}`,
     `tags: ${JSON.stringify(['insight', 'metabolism', 'kespi', 'expeL'])}`,
-    `status: pending-distillation`,
+    // 2026-11-03 修：insight 係统计抽取结论、唔係会话，冇 raw messages → 唔进蒸馏队列（distill 白名单
+    // 对 Insight 会 refuse 'no raw messages'）。直接 active + confidence 0（低置信标记），
+    // 下轮 compile 自然代谢成实体、晋级仍走 growth-loop 四门（纪律 4），唔自评为「候选>基线」。
+    `status: active`,
     `confidence: 0`,
     `source: insight-extractor.js`,
     `origin: derived`,
