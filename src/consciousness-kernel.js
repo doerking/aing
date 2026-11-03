@@ -172,6 +172,9 @@ class ConsciousnessKernel {
       // 缺省 1.0=中性（无数据不调制）；调制分=baseline*channelBias 再钳位。
       // 影子期（channelShadowModulation=false，默认）只把双分记独立面 channel-shadow.jsonl、不动 reaction；
       // 翻真（true）才让 reaction.attention=modulated。红线：关=字节级同现状；不动 state.json 写者唯一性。
+      // 热重载（2026-11-03 W5 收尾）：旋钮从「构造时读一次」改为「每次 integrate 现读」——
+      // loadGrowthConfig 自带 mtime 缓存（config-runtime.js:18-26），热改 config 即刻生效，无需重启 kernel。
+      this.shadowTuning = consciousnessShadowTuning();
       let modulatedAttention = baselineAttention;
       let channelBias = 1.0;
       if (channels.length) {
