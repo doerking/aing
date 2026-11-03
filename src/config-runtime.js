@@ -92,6 +92,36 @@ function consciousnessTuning() {
   return getConsciousnessConfig(CONSCIOUSNESS_FALLBACK);
 }
 
+// W5 (2026-11-03)：channelWeights 影子调制旋钮的独立读取口。
+// 为何单开：getConsciousnessConfig 只按 Number 读 + 强制 >0（防把 0 当「关闭」却熔成永不熔断），
+// 而 channelShadowModulation 是**布尔**（false=影子期合法值，不能被 >0 判成未配置）、
+// channelShadowClampStep 是允许 0.05 的小浮点——两者都走那个 Number 口会被误伤。
+// 读法：直接取 cfg.consciousness 段的布尔/数值，缺失回缺省（modulation=false 影子、clampStep=0.05）。
+// W7 (2026-11-03)：导链蜂群用户兴趣旋钮读取口（纪律 5 单源，照 consciousnessTuning 模式）。
+// 权威值在 growth.config.js 的 guideChain 段（与 example 同构，C10d 校验）。代码缺失/配错退回缺省：
+// userInterests 用原代码的 4 词（行为不变），userInterestDefault 0.5（原 || 0.5 常数）。
+function guideChainTuning() {
+  let cfg = null;
+  try { cfg = loadGrowthConfig(); } catch (e) { cfg = null; } // 未部署院退回缺省（与原硬编码行为一致）
+  const raw = (cfg && typeof cfg === 'object' && cfg.guideChain) || {};
+  const FALLBACK_INTERESTS = Object.freeze({ 'dual-brain': 0.9, architecture: 0.8, cache: 0.7, agent: 0.6 });
+  const interests = (raw.userInterests && typeof raw.userInterests === 'object' && !Array.isArray(raw.userInterests))
+    ? Object.freeze({ ...raw.userInterests }) : FALLBACK_INTERESTS;
+  let def = Number(raw.userInterestDefault);
+  if (!Number.isFinite(def) || def < 0 || def > 1) def = 0.5; // 缺省 0.5（原代码常数），越界/缺失退回缺省
+  return Object.freeze({ userInterests: interests, userInterestDefault: def });
+}
+function consciousnessShadowTuning() {
+  let cfg = null;
+  try { cfg = loadGrowthConfig(); } catch (e) { cfg = null; } // 未部署院退回缺省（影子）
+  const raw = (cfg && typeof cfg === 'object' && cfg.consciousness) || {};
+  let modulation = raw.channelShadowModulation;
+  let clampStep = Number(raw.channelShadowClampStep);
+  if (modulation !== true && modulation !== false) modulation = false; // 缺省/非布尔 → 影子
+  if (!Number.isFinite(clampStep) || clampStep <= 0) clampStep = 0.05; // 缺省钳位步长 0.05（HAL 外环慢变有界）
+  return Object.freeze({ channelShadowModulation: modulation, channelShadowClampStep: clampStep });
+}
+
 /**
  * 持久化 goal 多轮收敛旋钮的唯一读取口（P13，2026-11-01；纪律 5 单源，照 consciousnessTuning 模式）。
  *
@@ -123,4 +153,4 @@ function convergenceTuning() {
   return getConvergenceConfig(CONVERGENCE_FALLBACK);
 }
 
-module.exports = { CONFIG_PATH, loadGrowthConfig, getConfigState, CONSCIOUSNESS_FALLBACK, getConsciousnessConfig, consciousnessTuning, CONVERGENCE_FALLBACK, getConvergenceConfig, convergenceTuning };
+module.exports = { CONFIG_PATH, loadGrowthConfig, getConfigState, CONSCIOUSNESS_FALLBACK, getConsciousnessConfig, consciousnessTuning, consciousnessShadowTuning, CONVERGENCE_FALLBACK, getConvergenceConfig, convergenceTuning , guideChainTuning };

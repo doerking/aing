@@ -19,6 +19,8 @@
 
 const fs = require('fs');
 const path = require('path');
+// W7 (2026-11-03)：用户兴趣因子单源走 config（growth.config 的 guideChain 段，config-runtime 读取口；代码不再硬编码示例词）
+const { guideChainTuning } = require('./config-runtime');
 
 class NeuralGuideChain {
   constructor(options = {}) {
@@ -36,12 +38,8 @@ class NeuralGuideChain {
     };
     
     // 用户兴趣映射
-    this.userInterests = options.userInterests || {
-      'dual-brain': 0.9,
-      'architecture': 0.8,
-      'cache': 0.7,
-      'agent': 0.6,
-    };
+    this.userInterests = options.userInterests || guideChainTuning().userInterests; // W7 (2026-11-03)：改读 config.guideChain.userInterests（单源，纪律 5；原硬编码 4 词已迁入 config 作缺省，行为不变）
+this.userInterestDefault = guideChainTuning().userInterestDefault; // W7：缺省兴趣分也单源 config（原 || 0.5 硬编码；实体未命中兴趣词时不再退化成代码常数）
     
     // 确保目录存在
     if (!fs.existsSync(this.logsDir)) {
@@ -125,7 +123,7 @@ class NeuralGuideChain {
     const anomaly = this._detectAnomaly(entityName, signal);
     
     // 5. 用户兴趣 (user_interest)
-    const userInterest = this.userInterests[entityName] || 0.5;
+    const userInterest = this.userInterests[entityName] != null ? this.userInterests[entityName] : this.userInterestDefault; // W7 (2026-11-03)：缺省分走 config 单源（原 || 0.5 常数）；!= null 判空防 0 分被当缺省
     
     // 加权计算
     const score = 

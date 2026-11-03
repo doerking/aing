@@ -210,18 +210,14 @@ class StrategyAgent {
     };
 
     // 基于历史趋势做长期判断
-    const history = this._getDecisionHistory();
-    
-    if (history.length >= 5) {
-      const recentActions = history.slice(-5);
-      const stagnantCount = recentActions.filter(a => a.action === 'observe').length;
-      
-      if (stagnantCount >= 3) {
-        analysis.reasoning.push('近期多次观察无动作，可能需要调整策略');
-        analysis.recommendation = 'boost_growth';
-        analysis.confidence = 0.65;
-        analysis.strategy = '主动刺激：增加授粉频率';
-      }
+    // W7 (2026-11-03)：原「近期多次 observe → boost_growth」分支已删并留档（工单 W7 补法①二选一取 b）。
+    // 现场取证（红线：勿硬造数据）：_getDecisionHistory 真源 logs/metabolism-decision-lineage.jsonl
+    // 的 action 只有 execute/summarize，全仓无 'observe' → stagnantCount 恒 0 → 该分支永假（死分支）。
+    // 选 b 而非 a（补 observe 落库）= 凭空造数据，工单红线明禁。
+    // boost_growth 仍由下方 entityTrend 下降路径可达（真判据）；_getDecisionHistory 方法保留作真数据读取器（见其头注）。
+    const history = this._getDecisionHistory(); // 保留调用：真数据读取器仍可用（非死码），history 供审计/日志
+    if (history.length) {
+      analysis.reasoning.push('近期代谢 ' + history.length + ' 条决策谱系（action: ' + history.slice(0, 3).map(a => a.action).join(',') + '...）——历史趋势面已接真源 lineage');
     }
 
     // 基于实体数量趋势
@@ -474,6 +470,8 @@ async function main() {
       }
     };
 
+    // W7 (2026-11-03)：下方 context.signals 为 CLI 演示硬编码值（非真库状态），加 DEMO 横幅防假仪表（工单 W7 补法②）
+    console.log('⚠ DEMO 信号，非真状态——context.signals 为 CLI 演示硬编码值（工单 W7 2026-11-03 标注）；要真状态走调度器链，勿把本输出当仪表');
     console.log('🐝 导链蜂群启动...');
     console.log(`   紧急度: ${context.decision.urgencyLevel}`);
     console.log(`   参与Agent: ${context.decision.urgencyLevel === 'critical' ? 3 : context.decision.urgencyLevel === 'high' ? 2 : 1} 个\n`);

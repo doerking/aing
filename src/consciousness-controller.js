@@ -577,7 +577,15 @@ class ConsciousnessController {
       executionAllowed: false,
       promotion: 'none',
     };
-    return this._record({ ...lineage, request });
+    const rec = this._record({ ...lineage, request });
+    // W2 (2026-11-03)：審批請求落 pending 檔（原子寫、冪等）——「持久化 → 人見 → 人批 → 恢復執行」四步嘅
+    // 持久化一步；人見 = memo 讀端注入；人批 = neural.js approve；恢復 = 執行側經 consume() 代碼校驗。
+    // 加性、靜默降級（pending 層失敗唔阻審批鏈，同 trigger-log 風格）；唔改 providerWriteAllowed=false 紅線。
+    try {
+      const { addPending } = require('./approvals-pending');
+      addPending(request);
+    } catch (e) { /* pending 層不可用：審批請求照樣落 lineage，只係唔進 pending 檔（下游 approve 會 not-pending） */ }
+    return rec;
   }
 
   proposeActionHypothesis(input = {}) {

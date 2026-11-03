@@ -139,13 +139,27 @@ class SensoryEndings {
   
   /**
    * 获取目录下的所有 md 文件
+   * W3 (2026-11-03)：改递归（照抄 consciousness-layer.js:288 的 withFileTypes 走栈写法）——
+   * 入库产物落在 raw/inbox/ 子目录，旧实现只扫顶层，会话档永远进不了快照（同形病在
+   * consciousness-layer 已修过）。键改用相对 dir 的路径（而非裸文件名），递归后
+   * raw/a/x.md 与 raw/inbox/x.md 不会撞名；_detectChanges 的 Set 键随之变相对路径，
+   * 顶层档行为不变（相对 raw 顶层即裸名），向后兼容。
    */
   _getFiles(dir) {
     if (!fs.existsSync(dir)) return [];
-    
-    return fs.readdirSync(dir)
-      .filter(f => f.endsWith('.md'))
-      .map(name => ({ name, path: path.join(dir, name) }));
+    const out = [];
+    const stack = [dir];
+    while (stack.length) {
+      const cur = stack.pop();
+      let items;
+      try { items = fs.readdirSync(cur, { withFileTypes: true }); } catch (e) { continue; }
+      for (const it of items) {
+        const full = path.join(cur, it.name);
+        if (it.isDirectory()) { stack.push(full); continue; }
+        if (it.name.endsWith('.md')) out.push({ name: path.relative(dir, full), path: full });
+      }
+    }
+    return out;
   }
   
   /**

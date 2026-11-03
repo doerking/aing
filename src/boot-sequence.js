@@ -60,7 +60,9 @@ async function collectState(modules) {
   // 1. 知识库状态
   if (modules.store) {
     try {
-      const store = new modules.store.default(
+      // W9 (2026-11-03)：旧 `.default` 断流——knowledge-store 直接 `module.exports = KnowledgeStore`（class 本体，无 .default 命名空间）
+      // → `new modules.store.default(...)` 抛 not a constructor → 知识库块落 risks。去 `.default` 修通（工单 W9 修 .default 并接线）。
+      const store = new modules.store(
         path.join(CONFIG.kbRoot, 'knowledge.db')
       );
       await store.init();
@@ -98,7 +100,7 @@ async function collectState(modules) {
   // 3. 生长决策
   if (modules.growthDirector) {
     try {
-      const director = new modules.growthDirector.default(
+      const director = new modules.growthDirector(
         path.join(CONFIG.kbRoot, 'knowledge.db')
       );
       await director.perceive();
@@ -118,9 +120,9 @@ async function collectState(modules) {
   // 4. 元认知状态
   if (modules.metacognition) {
     try {
-      const meta = new modules.metacognition.default({
-        stateDir: path.join(CONFIG.dataDir, 'metacognition')
-      });
+      // W9 (2026-11-03)：metacognition-layer `module.exports = MetacognitionLayer`（class 本体，无 .default）；
+      // 其 constructor() 无参（读固定 selfStateFile），旧 `.default({stateDir})` 断流。去 .default + 去多余参数。
+      const meta = new modules.metacognition();
       const metaState = meta.selfState;
       state.metacognition = {
         confidence: metaState?.selfAwareness?.confidence || 0,

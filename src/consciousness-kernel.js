@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ConsciousnessEvent, CHANNELS, clamp } = require('./consciousness-event');
-const { consciousnessTuning } = require('./config-runtime');   // 熔断轮数等离散旋钮的唯一入口（纪律 5）
+const { consciousnessTuning, consciousnessShadowTuning } = require('./config-runtime');   // 熔断轮数等离散旋钮的唯一入口（纪律 5）+ W5 影子调制旋钮
 
 // Harness 自维继原则：依赖链优雅降级——核心管道不因可选模块缺失而崩溃
 let GrowthDocs = null, MetacognitionLayer = null;
@@ -69,6 +69,12 @@ class ConsciousnessKernel {
     }
     this.state = this.loadState();
     this.state.mode = this.mode;
+    // W5 (2026-11-03)：channelWeights 影子调制旋钮（HAL 双系统外环，单源 consciousnessShadowTuning()，纪律 5）。
+    // 关（默认）= 影子期：integrate 并行算「channelWeights 调制分」只记独立面 logs/consciousness/channel-shadow.jsonl，
+    // 广播仍走固定五因子基线（reaction 与现状字节级一致）；开 = 调制分直接写 reaction.attention。
+    // 红线：不碰 state.json 写者唯一性（写端仍只在 processReactions 的 metacognition 回写那处 :250）。
+    this.shadowTuning = consciousnessShadowTuning();
+    this.channelShadowFile = path.join(this.baseDir, 'logs', 'consciousness', 'channel-shadow.jsonl');
   }
 
   loadState() {
@@ -153,13 +159,45 @@ class ConsciousnessKernel {
       const resonance = clamp((channels.filter(channel => channel !== 'generic').length / formalChannelCount) * intensity * confidence);
       const urgency = targetEvents.some(event => ['anomaly', 'feedback', 'kespi'].includes(event.channel)) ? 1 : 0.5;
       const uncertainty = 1 - confidence;
-      const attention = clamp(
+      const baselineAttention = clamp(
         intensity * this.weights.intensity
         + confidence * this.weights.confidence
         + resonance * this.weights.resonance
         + urgency * this.weights.urgency
         + uncertainty * this.weights.uncertainty
       );
+      // W5 (2026-11-03)：外环·channelWeights 调制分（HAL 双系统——内环快/定=baseline 五因子照旧广播，
+      // 外环慢/有界=本调制分，每轮钳在 [baseline-Δ, baseline+Δ]，Δ 单源 config.consciousness.channelShadowClampStep）。
+      // 取本 reaction 覆盖 channel 在 state.channelWeights（上轮 metacognition 回写的通道健康）的权重均值作 channelBias，
+      // 缺省 1.0=中性（无数据不调制）；调制分=baseline*channelBias 再钳位。
+      // 影子期（channelShadowModulation=false，默认）只把双分记独立面 channel-shadow.jsonl、不动 reaction；
+      // 翻真（true）才让 reaction.attention=modulated。红线：关=字节级同现状；不动 state.json 写者唯一性。
+      let modulatedAttention = baselineAttention;
+      let channelBias = 1.0;
+      if (channels.length) {
+        const ws = this.state.channelWeights || {};
+        channelBias = channels.reduce((s, ch) => s + (Number.isFinite(Number(ws[ch])) ? Number(ws[ch]) : 1.0), 0) / channels.length;
+        if (!Number.isFinite(channelBias) || channelBias <= 0) channelBias = 1.0;
+        const step = this.shadowTuning ? Number(this.shadowTuning.channelShadowClampStep) : 0.05;
+        const rawMod = clamp(baselineAttention * channelBias);
+        modulatedAttention = clamp(Math.max(baselineAttention - step, Math.min(baselineAttention + step, rawMod)));
+      }
+      const attention = this.shadowTuning && this.shadowTuning.channelShadowModulation ? modulatedAttention : baselineAttention;
+      // 影子日志：独立面 logs/consciousness/channel-shadow.jsonl（**不进 decision-lineage**——那是 C14 计数语义，
+      // 双分记录只供 N 轮统计「调制对决策有无增益」，影子期默认恒记；写失败静默降级不阻断代谢）。
+      try {
+        this._appendChannelShadow({
+          ts: new Date().toISOString(),
+          target,
+          baselineAttention: +baselineAttention.toFixed(4),
+          modulatedAttention: +modulatedAttention.toFixed(4),
+          delta: +(modulatedAttention - baselineAttention).toFixed(4),
+          channelBias: +channelBias.toFixed(4),
+          clampStep: this.shadowTuning ? this.shadowTuning.channelShadowClampStep : 0.05,
+          live: this.shadowTuning ? this.shadowTuning.channelShadowModulation : false,
+          channels,
+        });
+      } catch (_) { /* 影子日志非关键，写失败不阻断 */ }
       const arousal = channels.length >= 4 || attention >= 0.8 ? 'aroused'
         : channels.length >= 3 || attention >= 0.6 ? 'focused'
           : channels.length >= 2 || attention >= 0.4 ? 'integrating' : 'sensing';
@@ -195,6 +233,17 @@ class ConsciousnessKernel {
       this.state.state = 'idle';
     }
     return reactions;
+  }
+
+  /**
+   * W5 (2026-11-03)：影子面 append——channelWeights 调制双分记录，独立于 decision-lineage。
+   * 只写 logs/consciousness/channel-shadow.jsonl（mkdir -p + appendFile，失败静默）；
+   * 不进 state.json（写者唯一性红线）、不进 agent-decision-lineage（C14 计数语义）。
+   */
+  _appendChannelShadow(record) {
+    const dir = path.dirname(this.channelShadowFile);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(this.channelShadowFile, JSON.stringify({ ...record, revision: this.state.attentionRevision }) + '\n');
   }
 
   setDependencies({ growthDocs, metacognition } = {}) {
