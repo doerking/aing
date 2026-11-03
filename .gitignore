@@ -54,3 +54,8 @@ SELF-GROWTH-REPORT.md
 # 换血第2步会扫未跟踪野文件进沙盒，先挂 ignore 止血 —— F6 先例）
 .agnes/
 data-analysis/
+
+# Mimosa 安全扫描状态面（2026-11-03）：内部安全审计状态 + 训练运行产物，不进 git
+# —— compile 的 git add -A 曾把整个 .mimosa/ 吞进提交（740ee35 已撤销），此处永久兜底
+.mimosa/
+training/runs/
