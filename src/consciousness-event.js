@@ -17,7 +17,13 @@ function clamp(value, fallback = 0.5) {
 }
 
 function text(value, fallback = '') {
-  return String(value == null ? fallback : value).trim();
+  const v = value == null ? fallback : value;
+  // W8 (2026-11-03)：null/undefined 归一为空串，不再 String(null)→"null"。
+  // 旧写法在 fallback=null（center/candidateId 调用点 :32/:33）时产出字符串 "null"，
+  // 使调用点的 `|| null` 因 "null" 为 truthy 而失效 → state.json 的 centers/candidateIds
+  // 落 "null" 垃圾值。现 v==null 一律返回 ''，调用点 `|| null` 归位成真正的 null。
+  // 所有字符串 fallback 调用点（'generic'/'unknown'/'system'/'observed'...）行为零变化。
+  return v == null ? '' : String(v).trim();
 }
 
 function stableHash(value) {

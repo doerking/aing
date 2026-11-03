@@ -193,6 +193,14 @@ function rewriteWikiFile(filePath, dist) {
 }
 
 async function main() {
+  // W12 (2026-11-03)：代谢持库时拒写让位（同 auto-link.js:51-54 样板；metabolism-lock.js 统一判据）。
+  // 手动跑 distill 会与代谢 11 步链抢写回（sql.js 全量快照 last-writer-wins 互吞）。
+  // STEPS 链内子进程凭 AING_METABOLISM_CHILD=1 豁免（metabolism-lock.js:26），照常跑不受影响；
+  // 编程面（verify-deploy C10g/C10c require 导出的纯函数）不触发 main()，亦不受此门影响。
+  if (require('./metabolism-lock.js').metabolismBusy()) {
+    console.log(require('./metabolism-lock.js').refuseLine('distill'));
+    process.exit(3);
+  }
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const idIdx = args.indexOf('--id');

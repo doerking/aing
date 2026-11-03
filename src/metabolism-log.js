@@ -47,12 +47,15 @@ async function logMetabolismRun({ runId = null, steps = {} }) {
   try {
     await ensureTable(store);
     const kespiAfter = await avgKespi(store);
-    // kespi_before 取本 run_id 上一条记录的 after；没有则取当前（首次运行）
-    const prev = store.get(
-      'SELECT kespi_after FROM metabolism_log WHERE run_id = ? ORDER BY id DESC LIMIT 1',
-      [runId]
-    );
-    const kespiBefore = prev ? prev.kespi_after : kespiAfter;
+    // W6 (2026-11-03)：kespi_before 改跨 run 口径。runId 每轮由 run-metabolism.js main 重新生成
+    // （new Date().toISOString()），旧查询 WHERE run_id = ? 在插入本 run 前恒空 → prev 永远 null →
+    // before 永远回退到 after → SkillOpt Gate 的反馈信号恒零差（前差永远是 0）。
+    // 现排除本 runId 取代谢日志历史最近一条的 after（代谢持库锁保证串行：上一轮 after = 本轮 before）。
+    // 红线：只改查询口径，不动表结构、不写历史行；首次运行无历史时 before=after（分数真没变过，非 bug）。
+    const prev = runId
+      ? store.get('SELECT kespi_after FROM metabolism_log WHERE run_id != ? ORDER BY id DESC LIMIT 1', [runId])
+      : store.get('SELECT kespi_after FROM metabolism_log ORDER BY id DESC LIMIT 1');
+    const kespiBefore = (prev && prev.kespi_after != null) ? prev.kespi_after : kespiAfter;
 
     const names = Object.keys(steps);
     for (const step of names) {

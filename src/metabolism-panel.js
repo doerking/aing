@@ -54,6 +54,28 @@ async function main() {
   // 旧写死 0 是假仪表台——distill 未兑付时面板仍报 0，agent 读 panel 看不到债。
   const subchainDebt = num(store.all("SELECT COUNT(*) AS n FROM entities WHERE status='pending-distillation'"));
 
+  // W10 (2026-11-03)：top_guide_chains 接真源——旧恒 [] 是假仪表台（工单 W10：假字段比缺字段更毒，agent 读面板误判无导链）。
+  // 真源 = logs/guide-chain/routes-*.jsonl（guideChainSwarm 路由日志；按文件名倒序取最新一份，只读，符合面板头「只读事实层」纪律）。
+  // 取该档内按 attentionScore 倒序 top-5；无档/读失败回 []（降级不阻塞面板，失败不改变代谢退出码）。
+  let topGuideChains = [];
+  try {
+    const gcDir = path.join(ROOT, 'logs', 'guide-chain');
+    const routeFiles = fs.readdirSync(gcDir).filter(f => /^routes-\d{4}-\d{2}-\d{2}\.jsonl$/.test(f)).sort().reverse();
+    if (routeFiles.length) {
+      const recs = fs.readFileSync(path.join(gcDir, routeFiles[0]), 'utf8').split(/\r?\n/).filter(Boolean)
+        .map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean)
+        .sort((a, b) => (Number(b.attentionScore) || 0) - (Number(a.attentionScore) || 0))
+        .slice(0, 5)
+        .map(r => ({
+          target: r.target,
+          attentionScore: +(Number(r.attentionScore) || 0).toFixed(4),
+          signalCount: r.signalCount != null ? r.signalCount : null,
+          recommendation: r.recommendation ? (r.recommendation.action || '') + (r.recommendation.priority ? '/' + r.recommendation.priority : '') : null,
+        }));
+      topGuideChains = recs;
+    }
+  } catch (e) { topGuideChains = []; } // 降级：无 routes 档/读失败 → 空清单，不阻塞面板
+
   // ── gaps：缺口 5 维——单一真源 = gap-detector.js 的 GapDetector ────────
   // 2026-09-17 缺陷修复（半拉起巡检）：旧版在此手写 SQL 自定口径（thin=链接数≤1、
   // stale=wiki 文件 mtime>14d），与巡检器（thin=正文<100 字、stagnant=updated_at>30d）
@@ -129,7 +151,7 @@ async function main() {
     health: {
       kespi_avg: kespiAvg,
       gates,
-      subchain_debts: 0,
+      subchain_debts: subchainDebt,   // W10：旧写死 0 是假仪表台——distill 未兑付时面板仍报 0，agent 看不到债。现接真源 subchainDebt
       entity_count: entityCount,
       link_count: linkCount
     },
@@ -150,7 +172,7 @@ async function main() {
       output_count: outputCount
     },
     gaps: { orphan, thin, stale, unindexed, empty },
-    chains: { top_guide_chains: [] },
+    chains: { top_guide_chains: topGuideChains },   // W10：接真源 routes-*.jsonl top-5（旧恒 [] 是假仪表台）
     timeline: {
       conversations_today: convToday + rawToday,
       latest_session: latestConvRow.length ? latestConvRow[0].id : null

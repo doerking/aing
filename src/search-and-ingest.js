@@ -56,40 +56,38 @@ async function executeSearch(query, limit) {
       encoding: 'utf8',
       timeout: 30000
     });
-    
+    const parsed = parseSearchOutput(output);
+    // W11 (2026-11-03)：query.js 没有 --mode web 面（只做本地库检索，输出解析不出 web 条目）。
+    // 解析为空 = 无真搜索源。旧实现把这种空壳 / 伪造结果入库 raw/，污染代谢链；
+    // 现统一落 fallbackSearch 的「拒伪造」处理（success=false，不入 raw/，exit 非零）。
+    if (parsed.length === 0) {
+      return fallbackSearch(query, limit);
+    }
     return {
       success: true,
       query,
-      results: parseSearchOutput(output),
+      results: parsed,
       timestamp: new Date().toISOString()
     };
   } catch (err) {
-    // 如果 query.js 不支持 web 模式，使用 fallback
+    // 如果 query.js 不支持 web 模式 / 调用失败，使用 fallback（拒伪造）
     return fallbackSearch(query, limit);
   }
 }
 
 async function fallbackSearch(query, limit) {
-  // 模拟搜索结果（实际应该调用 web_search 工具）
-  console.log('⚠️  使用模拟搜索结果（实际应集成 web_search 工具）');
+  // W11 (2026-11-03)：未接真 web 搜索源。旧实现返回 success=true + 伪造 example.com 结果，
+  // main() 会把伪 URL 写入 raw/，污染代谢链（伪结果被 compile 蒸馏成实体）。
+  // 现统一报 success=false：只打印说明，绝不入库；--page 面（curl 真读）不受影响。
+  // 接真源须由宿主注入 web_search 工具，不在此文件内伪造。
+  console.log('⚠️  未接真搜索源：拒绝伪造结果入库（请提供真实 web_search 源后使用 --web 面；--page 面仍可正常读取入库）');
   
   return {
-    success: true,
+    success: false,
     query,
-    results: [
-      {
-        title: `${query} - 搜索结果 1`,
-        url: `https://example.com/${query.replace(/\s+/g, '-')}`,
-        snippet: `这是关于 "${query}" 的搜索结果摘要...`,
-        score: 0.95
-      },
-      {
-        title: `${query} - 相关文档`,
-        url: `https://docs.example.com/${query}`,
-        snippet: `详细的文档说明...`,
-        score: 0.87
-      }
-    ],
+    results: [],
+    simulated: true,
+    error: '未接真搜索源',
     timestamp: new Date().toISOString()
   };
 }
@@ -330,9 +328,12 @@ async function main() {
       console.log(`   结果数: ${ingestResult.resultCount}`);
     } else {
       console.log('\n⚠️  入库失败:', ingestResult.error);
+      process.exitCode = 1;
     }
   } else {
+    // W11 (2026-11-03)：失败面（含「未接真搜索源」拒伪造）须退出非零，唔静默成功
     console.log('\n❌ 搜索失败:', searchResult.error);
+    process.exitCode = 1;
   }
 }
 
@@ -341,4 +342,6 @@ main().catch(err => {
   process.exit(1);
 });
 
-module.exports = { searchAndIngest, searchWeb, readWebpage, ingestToAing };
+// 既有隐性缺陷（W11 验收面）：原导出引用了从未定义的 searchAndIngest，CLI load 尾必崩。
+// 全仓零 require（在库/宿主侧组件），仅修导出名单——只留真实存在的函数，不动逻辑。
+module.exports = { searchWeb, readWebpage, ingestToAing };

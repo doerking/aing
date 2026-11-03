@@ -224,6 +224,23 @@ function buildMemo({ store, vectorSearch, sessions, consciousnessKernel, aingAda
       .map(x => ({ id: x.row.id, objective: x.c.objective, phase: x.c.phase, blockedCode: x.c.blockedCode, blockedMessage: x.c.blockedMessage, roundsStarted: goalRoundsStarted(x.c), maxRounds: x.c.maxRounds }));
   } catch (e) { blockedGoals = []; }
   memo.blockedGoals = blockedGoals;
+  // W2 (2026-11-03)：待人批審批請求注入（只讀 data/consciousness/approvals-pending.json 的 pending 節）。
+  // 守 C16 讀端純讀：只讀檔、唔投事件、唔寫 state.json、唔改 pending 檔；檔案缺失/損壞回 []（不裝數、不假報）。
+  let approvalsPending = [];
+  try {
+    const { pendingList } = require('./approvals-pending');
+    approvalsPending = pendingList().map(p => ({
+      requestId: p.requestId,
+      feedbackId: p.feedbackId || null,
+      taskId: p.taskId || null,
+      requestedWriteScope: p.requestedWriteScope || [],
+      verificationStatus: p.verificationStatus || null,
+      pendingAt: p.pendingAt || null,
+      status: p.status || 'awaiting-independent-approval',
+      approveCmd: `node src/neural.js approve ${p.requestId}`,
+    }));
+  } catch (e) { approvalsPending = []; }
+  memo.approvalsPending = approvalsPending;
   memo.health = assessHealth(memo, panelRead);
   // 进化团在场面（2026-09-17 所有者点单「明标」）：三种「有」常显，不能只在要派单时才说；
   // HTTP briefing 与 CLI 共用 buildMemo，故两面同得。

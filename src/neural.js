@@ -40,6 +40,8 @@ const USAGE = [
   '  node src/neural.js verify  \'{"checks":[{"name":"x","passed":true}],"observedOutcome":"..."}\'',
   '  node src/neural.js record  \'{"result":"...","lesson":"...","route":["compile"]}\'',
   '  node src/neural.js archive [--apply] [--target <t>] [--min-age-hours <N>] [--attention-floor <F>]',
+  '  node src/neural.js pending                                  只读：待人批审批请求清单（approvals-pending）',
+  '  node src/neural.js approve <requestId> [approve|deny] [--approver <who>]  人批 resume：校验 approval 存在且未消费 → 记裁决 → verify/record 收尾',
   '全局可选：--kb <院子目录> | --json | --logs',
 ].join('\n');
 
@@ -54,6 +56,7 @@ function parseArgs(argv) {
     if (a === '--target') { opts.target = argv[++i]; continue; }
     if (a === '--min-age-hours') { opts.minAgeHours = argv[++i]; continue; }
     if (a === '--attention-floor') { opts.attentionFloor = argv[++i]; continue; }
+    if (a === '--approver') { opts.approver = argv[++i]; continue; }
     if (a === '--json') { opts.json = true; continue; }
     if (a === '--logs') { opts.logs = true; continue; }
     if (a === '--help' || a === '-h') { opts.help = true; continue; }
@@ -210,6 +213,57 @@ async function run(argv) {
         deliberation: d.deliberation || null,
         signalsIngested: (d.consciousness && d.consciousness.accepted || []).length,
         note: '只返回共识、不执行高风险维护动作；requiresApproval=true 即等人批',
+      };
+    }
+    case 'pending': {
+      // W2 (2026-11-03)：只读待人批审批请求清单（approvals-pending.js 持久层）
+      const { pendingList } = require('./approvals-pending');
+      const items = pendingList();
+      return {
+        pendingCount: items.length,
+        pending: items.map(p => ({
+          requestId: p.requestId,
+          feedbackId: p.feedbackId || null,
+          requestedWriteScope: p.requestedWriteScope || [],
+          verificationStatus: p.verificationStatus || null,
+          status: p.status || 'awaiting-independent-approval',
+          pendingAt: p.pendingAt || null,
+          approveCmd: `node src/neural.js approve ${p.requestId}`,
+        })),
+        note: '只读 pending 清单；人批走 node src/neural.js approve <requestId>（校验存在且未消费 → 记裁决 → verify/record 收尾）',
+      };
+    }
+    case 'approve': {
+      // W2 (2026-11-03)：人批 resume 入口。校验 approval id 存在且未消费 → 记录裁决 → 落 consumed 留痕。
+      // 闸在代码不在提示：consume() 代码校验，重复消费同 requestId 被拒（幂等），不靠提示词。
+      // 红线：providerWriteAllowed 恒 false（只记「范围资格」，不自动执行 provider 写入）。
+      const id = (opts.payload || '').trim().split(/\s+/)[0];
+      const decision = (opts.payload || '').trim().split(/\s+/)[1] || 'approve';
+      if (!id) throw new Error('approve 需要 requestId：node src/neural.js approve <requestId> [approve|deny]\n' + USAGE);
+      if (!['approve', 'deny'].includes(decision)) throw new Error(`approve 的裁决只能是 approve/deny，收到 "${decision}"`);
+      const { consume } = require('./approvals-pending');
+      const result = consume(id, decision, { approver: opts.approver });
+      if (!result.consumed) {
+        // 重复消费 / 未找到：非零退出，不伪造成功
+        throw new Error(result.note || (`审批 ${id} 不可消费（${result.reason}）`));
+      }
+      // verify/record 收尾：裁决落 decision lineage（不依赖外部 adapter 那两条）
+      const lineage = needController().recordFeedbackApprovalDecision({
+        taskId: result.entry.taskId,
+        request: { requestId: id, feedbackId: result.entry.feedbackId, status: 'awaiting-independent-approval', requestedWriteScope: result.entry.requestedWriteScope || [] },
+        approved: decision === 'approve',
+        approvedScope: result.entry.requestedWriteScope || [],
+        approver: opts.approver || 'unspecified',
+        reason: opts.approvalReason || null,
+      });
+      return {
+        consumed: true,
+        requestId: id,
+        decision: result.entry.decision,
+        providerWriteEligible: result.entry.providerWriteEligible,
+        providerWriteAllowed: false,
+        lineageId: lineage.lineageId,
+        note: '审批已裁决并移除 pending（consumed 留痕不删行），谱系已落 agent-decision-lineage.jsonl；provider 写入仍需独立批准，未自动执行',
       };
     }
     default:

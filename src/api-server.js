@@ -37,6 +37,7 @@
  *   POST /api/consciousness/deliberate  协商维护（controller.deliberate → adapter.deliberateMaintenance，只出共识不执行）
  *   POST /api/consciousness/verify      记录校验（controller.verify → decision lineage，不需外部 adapter）
  *   POST /api/consciousness/record      记录结果与教训（controller.record → decision lineage）
+ *   GET  /api/consciousness/approvals-pending   待人批审批请求（approvals-pending 持久层只读清单，W2 2026-11-03）
  */
 
 const http = require('http');
@@ -380,6 +381,22 @@ async function handle(req, res) {
       const records = lines.map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
       return json(res, 200, { count: records.length, records });
     } catch (e) { return json(res, 200, { count: 0, records: [] }); }
+  }
+
+  // ── W2 (2026-11-03)：待人批审批请求（只读；人批入口是 neural.js approve，本路由不执行写入）──
+  if (p === '/api/consciousness/approvals-pending' && req.method === 'GET') {
+    try {
+      const { pendingList, allState } = require('./approvals-pending');
+      const pending = pendingList();
+      const consumed = allState().consumed;
+      return json(res, 200, {
+        pendingCount: pending.length,
+        pending: pending.map(x => ({ requestId: x.requestId, feedbackId: x.feedbackId || null, requestedWriteScope: x.requestedWriteScope || [], status: x.status || 'awaiting-independent-approval', pendingAt: x.pendingAt || null })),
+        consumedCount: Array.isArray(consumed) ? consumed.length : 0,
+        lastConsumed: Array.isArray(consumed) && consumed.length ? { requestId: consumed[consumed.length - 1].requestId, decision: consumed[consumed.length - 1].decision, decidedAt: consumed[consumed.length - 1].decidedAt } : null,
+        note: '只读清单；人批走 node src/neural.js approve <requestId>；本路由不执行 provider 写入（红线：providerWriteAllowed=false）',
+      });
+    } catch (e) { return json(res, 200, { pendingCount: 0, pending: [], consumedCount: 0, note: 'approvals-pending 不可用：' + e.message }); }
   }
 
   // 旧 /api/context 保留兼容，但推荐用 /api/consciousness/briefing

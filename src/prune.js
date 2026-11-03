@@ -292,6 +292,13 @@ async function purgePrunedFromDB() {
 }
 
 // CLI 入口
+// W12 (2026-11-03)：代谢持库时拒写让位（同 auto-link.js:51-54 样板；metabolism-lock.js 统一判据）。
+// 手动跑 prune 会在代谢 11 步链持库期抢写回（sql.js 全量快照 last-writer-wins 互吞）。
+// STEPS 链内子进程凭 AING_METABOLISM_CHILD=1 豁免（metabolism-lock.js:26），照常跑不受影响。
+if (require('./metabolism-lock.js').metabolismBusy()) {
+  console.log(require('./metabolism-lock.js').refuseLine('prune'));
+  process.exit(3);
+}
 const args = process.argv.slice(2);
 // 2026-09-17 深度检查 F2 显式化：以前自动链里本步永远停在 dry-run（STEPS 不传 --force），
 // 「过期归档」能力纸面存在、实链空转。现接入 config.prune.autoForce 单源旋钮（纪律 5）：

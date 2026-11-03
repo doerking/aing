@@ -19,9 +19,14 @@ const path = require('path');
 
 const KB_ROOT = path.resolve(__dirname, '..');
 
+// W3 (2026-11-03)：感知自动化接线——增拉第三个子进程 neural-architecture（三层感知→导链→意识）。
+// 同 :22-25 的 spawn 风格，纳入 fail-fast 树杀（任一子进程退出即整组停，含此感知进程）。
+// 设计取舍（工单 W3 拍板）：感知层挂掉会整组停——这是 fail-fast 语义，避免「调度活着但感知静默」
+// 的半死状态；若感知层故障率高，后续可按需摘除本 child（本行即其挂载位，勿写死进别处）。
 const CHILDREN = [
   { name: 'scheduler', file: path.join(__dirname, 'scheduler.js') },
-  { name: 'api-server', file: path.join(__dirname, 'api-server.js') }
+  { name: 'api-server', file: path.join(__dirname, 'api-server.js') },
+  { name: 'neural-architecture', file: path.join(__dirname, 'neural-architecture.js') }
 ];
 
 const procs = [];
@@ -71,5 +76,5 @@ for (const c of CHILDREN) {
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
-console.log('🟢 start-all: scheduler + api-server 已同起（Ctrl+C 整组关停）');
+console.log('🟢 start-all: scheduler + api-server + neural-architecture 已同起（Ctrl+C 整组关停，W3 感知自动化 2026-11-03）');
 console.log(`   API: http://localhost:${process.env.AING_API_PORT || 3789}`);

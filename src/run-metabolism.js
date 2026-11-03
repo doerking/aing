@@ -647,6 +647,44 @@ async function main() {
       `→ 决策因果链已记录至 logs/metabolism-decision-lineage.jsonl`,
     ],
   });
+
+  // ── W1（2026-11-03）：轨迹自动供数 / lineage → task_trajectories（水位去重）──
+  // 现状：trajectory-store 表只有手工 CLI --import-metabolism 一条写入路（全量重导，无增量）；
+  // 现接链尾：读 lineage 行数 → 比水位（data/trajectory-lineage-watermark.json）→ 只导新行 → 写水位。
+  // 红线：不改 lineage 格式；失败静默降级、不抛出断链（同 trigger-log.js:39-57 风格）。
+  // 水位语义：watermark.lineCount = 上次已导入的 lineage 总行数；若 lineage 被 truncate/重写
+  // （现总行数 < 水位）则水位归零重导，避免漏导。
+  try {
+    const TRAJ_LINEAGE = path.join(__dirname, '..', 'logs', 'metabolism-decision-lineage.jsonl');
+    const TRAJ_WM = path.join(__dirname, '..', 'data', 'trajectory-lineage-watermark.json');
+    if (fs.existsSync(TRAJ_LINEAGE)) {
+      const trjLines = fs.readFileSync(TRAJ_LINEAGE, 'utf8').split(/\r?\n/).filter(Boolean);
+      const trjTotal = trjLines.length;
+      let trjLast = 0;
+      if (fs.existsSync(TRAJ_WM)) {
+        try {
+          trjLast = Number(JSON.parse(fs.readFileSync(TRAJ_WM, 'utf8')).lineCount || 0);
+          if (trjLast > trjTotal) trjLast = 0; // lineage truncate/重写：重置
+        } catch (eWm) { trjLast = 0; }
+      }
+      const trjNew = trjLines.slice(trjLast);
+      if (trjNew.length > 0) {
+        const trjRows = trjNew.map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
+        const TrajectoryStore = require('./trajectory-store');
+        const trjStore = new TrajectoryStore();
+        await trjStore.init();
+        const trjResult = trjStore.logFromLineage(trjRows);
+        trjStore.close();
+        // 写水位（原子：tmp + rename，学 knowledge-store._save 范式）
+        const trjWmTmp = TRAJ_WM + '.tmp';
+        fs.writeFileSync(trjWmTmp, JSON.stringify({ lineCount: trjTotal, updatedAt: new Date().toISOString() }), 'utf8');
+        fs.renameSync(trjWmTmp, TRAJ_WM);
+        console.log(`\n📈 轨迹自动供数 / lineage→task_trajectories: ${trjResult.imported} 条新增（总 ${trjTotal} 行，水位 ${trjLast}→${trjTotal}）`);
+      }
+    }
+  } catch (eW1) {
+    console.log(`⚠ 轨迹自动供数失败（不影响代谢结果）/ lineage→trajectories import failed: ${eW1.message}`);
+  }
 }
 
 main().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => {

@@ -47,6 +47,8 @@ const config = {
     maxRetainedEvents: 200,       // activeEvents / suppressedEvents 保留上限（原 200）
     archiveObservedMinAgeHours: 48,      // 写端事件归档：仅搬「创建超过 N 小时」的 observed 低注意力事件（默认 48h，新事件不会被误归档）
     archiveObservedAttentionFloor: 0.45,  // 写端事件归档：attention 低于此值才算「低注意力可归档」（默认 0.45；aroused/高注意力/待审批事件永不归档）
+    channelShadowModulation: false,      // W5 (2026-11-03)：false=影子期——kernel.integrate 并行算「channelWeights 调制分」只记 logs/consciousness/channel-shadow.jsonl（独立面，不进 decision-lineage，避 C14 计数语义），广播仍走固定五因子基线；true=翻真——调制分直接写 reaction.attention。翻转须影子 N 轮统计分差对决策有增益才开（工单 W5 红线「默认关」）
+    channelShadowClampStep: 0.05,        // W5：调制分每轮相对基线的钳位幅度上限（HAL 双系统外环「慢变有界」）——调制分被钳在 [baseline-Δ, baseline+Δ]，防内环被外环带飞
   },
   kespi: {
 
@@ -292,5 +294,12 @@ config.ingest = {
   scrubTrace: process.env.AING_INGEST_SCRUB !== '0',
   bufferFile: process.env.AING_INGEST_BUFFER || 'data/ingest-buffer.jsonl',
   rawDir: process.env.AING_INGEST_RAW_DIR || 'raw/inbox'
+};
+// W7 (2026-11-03)：导链蜂群用户兴趣单源（neural-guide-chain.js 的兴趣因子经 config-runtime.guideChainTuning() 读这里）。
+// 原代码硬编码 4 个示例词 + 缺省 0.5 常数——兴趣词全不命中时因子退化成常数（工单 W7 病灶③）。现全部收拢到本段：
+// 改这里 → routeSignals 打分随变（工单 W7 验收）；两份 config 必须同构（C10d 机器校验，键值深度一致）。
+config.guideChain = {
+  userInterests: { 'dual-brain': 0.9, 'architecture': 0.8, 'cache': 0.7, 'agent': 0.6 },  // 兴趣词 → 0-1 权重（原代码硬编码，已迁入；可按院改）
+  userInterestDefault: 0.5,  // 实体未命中兴趣词时的缺省分（原 || 0.5 代码常数，已单源化；0-1）
 };
 module.exports = config;
