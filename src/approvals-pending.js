@@ -83,6 +83,41 @@ function allState() {
 }
 
 /**
+ * 執行側恢復閘（W2 第五面，2026-11-03 補）：代碼級校驗「該審批已批准且未過期、且請求範圍被覆蓋」。
+ * 唔靠提示詞——執行側必須先過呢個閘先准做嘢。冪等：同 requestId 只放行一次（second-check 後視為已用）。
+ * @returns {{ consented:boolean, reason?:string, requestId?:string, entry?:object, note?:string }}
+ */
+function hasValidConsent(requestId, opts = {}) {
+  if (!requestId) return { consented: false, reason: 'missing-requestId', note: '執行側未提供 requestId，閘拒' };
+  const st = loadState();
+  const entry = st[CONSUMED_KEY].find(c => c.requestId === requestId);
+  if (!entry) return { consented: false, requestId, reason: 'not-found', note: `無該審批記錄（未批准或已被拒），閘拒 ${requestId}` };
+  if (entry.decision !== 'approved-scope-only' || !entry.providerWriteEligible) {
+    return { consented: false, requestId, reason: 'not-approved', note: `審批 ${requestId} 未批准（decision=${entry.decision}），閘拒` };
+  }
+  const scope = Array.isArray(opts.scope) ? opts.scope : [];
+  const granted = Array.isArray(entry.requestedWriteScope) ? entry.requestedWriteScope : [];
+  if (scope.length && !scope.every(s => granted.includes(s))) {
+    return { consented: false, requestId, reason: 'scope-exceeds', note: `執行範圍 ${scope.join(',')} 超出批准範圍 ${granted.join(',')}，閘拒` };
+  }
+  if (entry.usedAt) {
+    return { consented: false, requestId, reason: 'already-executed', note: `審批 ${requestId} 已於 ${entry.usedAt} 執行過，閘拒（防重放）` };
+  }
+  return { consented: true, requestId, entry, note: `審批 ${requestId} 有效（範圍 ${granted.join(',')}）` };
+}
+
+/** 執行側標記「該批准已用」（防重放，冪等）。返回更新後 entry 或 { used:false, reason }。 */
+function markExecuted(requestId) {
+  const st = loadState();
+  const entry = st[CONSUMED_KEY].find(c => c.requestId === requestId);
+  if (!entry) return { used: false, reason: 'not-found' };
+  if (entry.usedAt) return { used: false, reason: 'already-executed' };
+  entry.usedAt = new Date().toISOString();
+  saveState(st);
+  return { used: true, requestId, entry };
+}
+
+/**
  * 人批/消費一條審批請求：由 neural.js approve <requestId> <approve|deny> 調用。
  * 校驗 approval id 存在且未消費 → 記錄裁決 → 從 pending 移除 → 落 consumed 留痕。
  * 冪等：重複消費同一 requestId 返回 { consumed:false, reason:'not-pending' }（唔炸、唔偽造）。
@@ -147,4 +182,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { addPending, pendingList, allState, consume, PENDING_FILE, loadState, saveState };
+module.exports = { addPending, pendingList, allState, consume, hasValidConsent, markExecuted, PENDING_FILE, loadState, saveState };

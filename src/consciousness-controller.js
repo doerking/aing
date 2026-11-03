@@ -633,6 +633,41 @@ class ConsciousnessController {
     };
     return this._record({ ...lineage, decision });
   }
+
+  /**
+   * 執行側恢復閘（W2 第五面，2026-11-03 補）：
+   * 審批鏈「持久化 → 人見 → 人批 → 恢復執行」嘅第四步。執行側調呢度，先經
+   * approvals-pending.hasValidConsent() 代碼級校驗（批准且未過期、範圍覆蓋、未執行），
+   * 通過先記錄「執行意圖」並標記已用（防重放）。紅線：providerWriteAllowed 仍 false——
+   * 本方法唔執行任何 provider 寫入，只記錄執行意圖（實際寫入留畀真正 provider 層，仍受
+   * providerWriteAllowed=false 全域邊界約束）。閘在代碼唔喺提示。
+   */
+  executeApprovedFeedback(input = {}) {
+    const taskId = input.taskId || null;
+    const requestId = input.requestId || null;
+    const scope = Array.isArray(input.scope) ? input.scope : [];
+    // 代碼級閘：冇有效批准 → 拒，唔靠提示詞
+    const gate = require('./approvals-pending.js').hasValidConsent(requestId, { scope });
+    if (!gate.consented) {
+      const lineage = this._begin('feedback-execution-gate', taskId, { requestId, scope, gateReason: gate.reason });
+      return this._record({ ...lineage, executed: false, reason: gate.reason, note: gate.note, providerWriteAllowed: false, executionAllowed: false });
+    }
+    // 標記已用（防重放），再記錄執行意圖
+    const used = require('./approvals-pending.js').markExecuted(requestId);
+    const lineage = this._begin('feedback-execution-gate', taskId, { requestId, scope, approvedAt: gate.entry?.decidedAt });
+    return this._record({
+      ...lineage,
+      executed: used.used,
+      requestId,
+      scope,
+      approvedScope: Array.isArray(gate.entry?.requestedWriteScope) ? gate.entry.requestedWriteScope : [],
+      providerWriteAllowed: false,   // 紅線：全域仍 false
+      executionAllowed: false,       // 記錄執行意圖；實際寫入仍需 provider 層邊界
+      note: used.used
+        ? `審批 ${requestId} 已過閘；執行意圖已記錄（範圍 ${scope.join(',')}）。實際 provider 寫入仍受 providerWriteAllowed=false 約束，本方法不代為執行。`
+        : gate.note,
+    });
+  }
 }
 
 module.exports = { ConsciousnessController, MODES };
