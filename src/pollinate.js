@@ -19,6 +19,7 @@
 const fs = require('fs');
 const { logTrigger } = require('./trigger-log.js');
 const path = require('path');
+const { linkFilename } = require('./link-filename.js'); // C2（2026-11-05）：边档名唯一口径
 
 // 配置
 const CONFIG = {
@@ -278,17 +279,20 @@ function applySuggestions() {
 /**
 * 检查链接是否已存在（双向：A__B 或 B__A 任一存在即视为已链接，
 * 否则 sprout/pollinate 交替运行时会为同一对实体创建正反两条重复链接）
+* C2（2026-11-05）：文件名走共享 linkFilename（与 sync-links-to-fs 同口径净化 + 长度上限），
+* 不再用原始 id 拼档名（旧法无净化无上限，与 sync 双口径 → 读写互相看不见）。
 */
 function linkExists(sourceId, targetId) {
-  return fs.existsSync(path.join(CONFIG.linksDir, `${sourceId}__${targetId}.md`)) ||
-         fs.existsSync(path.join(CONFIG.linksDir, `${targetId}__${sourceId}.md`));
+  return fs.existsSync(path.join(CONFIG.linksDir, linkFilename(sourceId, targetId))) ||
+         fs.existsSync(path.join(CONFIG.linksDir, linkFilename(targetId, sourceId)));
 }
 
 /**
 * 创建链接
+* C2（2026-11-05）：档名走 linkFilename（唯一净化口径）；frontmatter 的 source/target 保留原始 id（人读）。
 */
 function createLink(sourceId, targetId, suggestion) {
-  const linkPath = path.join(CONFIG.linksDir, `${sourceId}__${targetId}.md`);
+  const linkPath = path.join(CONFIG.linksDir, linkFilename(sourceId, targetId));
   
   const linkContent = `---
 source: ${sourceId}

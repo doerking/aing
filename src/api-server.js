@@ -238,7 +238,10 @@ async function handle(req, res) {
       return json(res, 400, { error: '需要 {sessionId, content} 字段' });
     }
     const r = sessions.addMessage(String(body.sessionId), {
-      role: String(body.role || 'user'),
+      // A2b（2026-11-05 修单）：透传原始 role，不再在入口 `|| 'user'` 静默兜底——空/缺/非法 role
+      // 交 addMessage 的 normalizeRole（缺省返 null）+ unknown-role 分支拒收（400），
+      // 旧法在入口预设为 'user' 令那分支对空 role 成死码（agent 不标角色被记成人的话）。
+      role: body.role == null ? '' : String(body.role),
       content: String(body.content),
       distillation: body.distillation,
       source: body.source || null,
@@ -271,7 +274,8 @@ async function handle(req, res) {
     return json(res, 200, {
       accepted: true,
       session: String(body.sessionId),
-      role: body.role || 'user',
+      // A2c（2026-11-05）：显式回实际 role，不再 `|| 'user'` 误导（入口已拒空 role，此处必非空合法）
+      role: String(body.role),
       buffered: r.buffered,
       flushed: r.flushed
     });

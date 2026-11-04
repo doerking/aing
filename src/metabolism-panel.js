@@ -4,7 +4,7 @@
  *
  * 功能：对事实层（knowledge.db / wiki/ / raw/ / git）做确定性聚合，输出：
  *   1. data/panel.json   — agent 冷启动第一读物（机器视野，schema 进 C9c 门）
- *   2. wiki/panel.md     — 人读视图（Tolaria 标签格式）
+ *   2. wiki/panel.md     — agent 可读投影（Tolaria 标签格式；非人读专属，与 panel.json 同源）
  *
  * 设计纪律（DESIGN-CONSCIOUSNESS-PANEL-2026-09-08）：
  *   - 意识层只陈述事实层，绝不反向改写：本脚本只读 raw/DB/wiki/git，永不写回业务数据
@@ -229,7 +229,7 @@ updated: "${panel._meta.generatedAt}"
 
   fs.mkdirSync(path.dirname(PANEL_MD_PATH), { recursive: true });
   fs.writeFileSync(PANEL_MD_PATH, md, 'utf8');
-  console.log('🧠 人读视图已生成: wiki/panel.md');
+  console.log('🧠 agent 可读投影已生成: wiki/panel.md');
   console.log(`📋 摘要: kespi=${panel.health.kespi_avg ?? '—'} 实体=${panel.health.entity_count} 链接=${panel.health.link_count} 未推送=${panel.lines.unpushed}`);
 }
 

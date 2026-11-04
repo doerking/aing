@@ -4,12 +4,14 @@
  *
  * 背景（2026-09-02 反向同步自 EvoX 修复，修双脑脱节 bug）：
  *   auto-link.js 只 INSERT 进 DB，全 src 无人写 wiki/links/index.md，
- *   而 neural-guide-chain.js / consciousness-layer.js 共 5 处从该文件读邻居
+ *   而 neural-guide-chain.js / consciousness-layer.js 曾从该文件读邻居
  *   → 邻居永远为空，DB 与文件系统两个世界。
+ *   B1（2026-11-05）：读端已改吃 DB 活读（db-live-reader.js），index.md 降级为**纯人读投影**
+ *   （可落后、可重建、仅供人看），不再是机器判据。本脚本仍写它，但写失败不再阻断全量。
  *
- * 双格式落盘（让两端 parser 都吃到）：
+ * 双格式落盘（边文件给人读/工具消费，index.md 作人读汇总）：
  *   1. wiki/links/<src>__<tgt>.md   — 边文件（含 [[A]] [[B]] 内容边）
- *   2. wiki/links/index.md          — 汇总索引（- [[A]] ↔ [[B]] 行格式）
+ *   2. wiki/links/index.md          — 汇总索引（- [[A]] ↔ [[B]] 行格式，纯投影）
  *
  * 使用：
  *   node src/sync-links-to-fs.js           # 全量同步
@@ -19,8 +21,11 @@
 const KnowledgeStore = require('./knowledge-store');
 const fs = require('fs');
 const path = require('path');
+const { linkFilename, safeSeg } = require('./link-filename.js'); // C2/C3：边档名唯一净化口径 + 长度上限
 
-const root = process.cwd();
+// B2（2026-11-05 修单）：锚定包根（与 pollinate.js 的 __dirname 一致），不再 process.cwd()。
+// 旧法换目录跑 → 两组件读写不同位置（C18 同款 process.cwd() 病），边档落到启动目录而非包内 wiki/links。
+const root = path.resolve(__dirname, '..');
 const linksDir = path.join(root, 'wiki', 'links');
 
 async function main() {
@@ -42,30 +47,33 @@ async function main() {
   }
 
   // ---- 1. 边文件 A__B.md ----
+  // B3（2026-11-05 修单）：单条边写包 try/catch（失败计数、继续），index.md 不再被单条
+  // 超长边名卡死（旧法无 catch：一条 ENAMETOOLONG 抛出 → 全量冻结、index 永远轮不到写）。
   let edgesWritten = 0;
+  let edgeFailed = 0;
   for (const link of links) {
     const [src, tgt] = [String(link.source_id), String(link.target_id)];
     if (src === tgt) continue; // 自链接不落盘
-    const safeSrc = src.replace(/[\\/:*?"<>|_]/g, '-');
-    const safeTgt = tgt.replace(/[\\/:*?"<>|_]/g, '-');
-    const filename = `${safeSrc}__${safeTgt}.md`;
+    const sSrc = safeSeg(src);
+    const sTgt = safeSeg(tgt);
+    const filename = linkFilename(src, tgt);
     const filepath = path.join(linksDir, filename);
 
     const created = link.created_at || new Date().toISOString();
     const confidence = typeof link.confidence === 'number' ? link.confidence : 0.5;
     const content = `---
-source: ${safeSrc}
-target: ${safeTgt}
+source: ${sSrc}
+target: ${sTgt}
 relation: ${link.relation || 'related'}
 confidence: ${confidence}
 created: ${created}
 synced_from_db: true
 ---
 
-# Link: ${safeSrc} ↔ ${safeTgt}
+# Link: ${sSrc} ↔ ${sTgt}
 
-- **Source**: [[${safeSrc}]]
-- **Target**: [[${safeTgt}]]
+- **Source**: [[${sSrc}]]
+- **Target**: [[${sTgt}]]
 - **Type**: ${link.relation || 'related'}
 - **Confidence**: ${confidence.toFixed(2)}
 - **Created**: ${created}
@@ -73,18 +81,23 @@ synced_from_db: true
 `;
 
     if (!dryRun) {
-      if (fs.existsSync(filepath)) {
-        const existing = fs.readFileSync(filepath, 'utf8');
-        if (existing.includes(`source: ${safeSrc}`)) continue; // 内容一致跳过
+      try {
+        if (fs.existsSync(filepath)) {
+          const existing = fs.readFileSync(filepath, 'utf8');
+          if (existing.includes(`source: ${sSrc}`)) continue; // 内容一致跳过
+        }
+        fs.writeFileSync(filepath, content, 'utf8');
+      } catch (e) {
+        edgeFailed++;
+        console.warn(`⚠️ 边写失败，跳过（其余边与 index 继续）/ edge write failed, continuing: ${filename} — ${e.message}`);
+        continue;
       }
-      fs.writeFileSync(filepath, content, 'utf8');
     }
     edgesWritten++;
   }
 
-  // ---- 2. 汇总索引 index.md ----
-  // 行格式: - [[A]] ↔ [[B]] （无序对去重；guide-chain._getNeighbors 逐行
-  // 提取含 2+ 个 [[链接]] 的行，consciousness-layer 统计 [[X]] 出现次数）
+  // ---- 2. 汇总索引 index.md（纯人读投影，可落后/可重建；机器判据走 DB）----
+  // 行格式: - [[A]] ↔ [[B]] （无序对去重）
   const seen = new Set();
   const indexLines = [];
   for (const link of links) {
@@ -100,7 +113,7 @@ synced_from_db: true
   const indexContent = `# Links Index（DB 自动同步，勿手改）
 
 > 由 src/sync-links-to-fs.js 从 knowledge.db 链接表镜像生成。
-> 每代谢一轮同步一轮，保证双脑（DB ↔ 文件系统）一致。
+> 纯人读投影（可落后、可重建）；机器判据一律走 DB（db-live-reader.js）。
 
 共 ${indexLines.length} 条链接（${new Date().toISOString()}）
 
@@ -108,10 +121,15 @@ ${indexLines.join('\n')}
 `;
 
   if (!dryRun) {
-    fs.writeFileSync(path.join(linksDir, 'index.md'), indexContent, 'utf8');
+    // B3：index.md 在循环后写，但边写已包 catch，此处必达（不再被单条边卡死）
+    try {
+      fs.writeFileSync(path.join(linksDir, 'index.md'), indexContent, 'utf8');
+    } catch (e) {
+      console.warn(`⚠️ index.md 写失败 / index write failed: ${e.message}`);
+    }
   }
 
-  console.log(`✅ 边文件: ${edgesWritten}/${links.length} → wiki/links/*.md`);
+  console.log(`✅ 边文件: ${edgesWritten}/${links.length} → wiki/links/*.md${edgeFailed ? `（${edgeFailed} 条写失败已跳过）` : ''}`);
   console.log(`✅ 索引:   ${indexLines.length} 条 → wiki/links/index.md${dryRun ? ' [DRY RUN 未落盘]' : ''}`);
 
   store.close();

@@ -21,6 +21,9 @@ const fs = require('fs');
 const path = require('path');
 // W7 (2026-11-03)：用户兴趣因子单源走 config（growth.config 的 guideChain 段，config-runtime 读取口；代码不再硬编码示例词）
 const { guideChainTuning } = require('./config-runtime');
+// B1（2026-11-05 修单）：导链的感觉输入改吃 DB 活读（links 表），wiki/links/index.md 降级为纯人读投影
+// （可落后、可重建）；老 Node（无 node:sqlite）上活读不可用时，行为与旧「index.md 缺失」分支逐值等价（不更糟）。
+const { readLive } = require('./db-live-reader');
 
 class NeuralGuideChain {
   constructor(options = {}) {
@@ -45,8 +48,18 @@ this.userInterestDefault = guideChainTuning().userInterestDefault; // W7：缺�
     if (!fs.existsSync(this.logsDir)) {
       fs.mkdirSync(this.logsDir, { recursive: true });
     }
+
+    // B1：DB 活读缓存（一次读全量，进程内复用）
+    this._liveCache = null;
   }
-  
+
+  /** B1：懒加载 DB 活读快照（links + entities），老 Node 无 node:sqlite 时 available=false。 */
+  _live() {
+    if (this._liveCache) return this._liveCache;
+    this._liveCache = readLive(path.join(this.baseDir, 'knowledge.db'));
+    return this._liveCache;
+  }
+
   /**
    * 处理信号并分配注意力
    * @param {Array} signals - 末梢信号列表
@@ -174,18 +187,15 @@ this.userInterestDefault = guideChainTuning().userInterestDefault; // W7：缺�
   
   /**
    * 获取连接密度
+   * B1（2026-11-05 修单）：改读 DB links 表活值；index.md 不再是机器判据（纯投影，可落后）。
+   * 不可用时返回 0.3 —— 与旧「index.md 缺失」分支逐值等价，删除/改旧 index.md 不影响导链输出。
    */
   _getConnectionDensity(entityName) {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    
-    if (!fs.existsSync(linksFile)) {
-      return 0.3;
-    }
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    const matches = content.match(new RegExp(`\\[\\[${entityName}\\]\\]`, 'g'));
-    
-    return matches ? Math.min(1.0, matches.length / 5) : 0.3;
+    const live = this._live();
+    if (!live.available) return 0.3; // 等价旧 index.md 缺失
+    const n = live.links.filter(l => l.source_id === entityName || l.target_id === entityName).length;
+    // 旧公式 matches.length/5：一次匹配=一条边；DB 侧按边数计数（同实体出现在 A 或 B 端即一条）
+    return Math.min(1.0, n / 5);
   }
   
   /**
@@ -299,15 +309,16 @@ this.userInterestDefault = guideChainTuning().userInterestDefault; // W7：缺�
    * 检查两个实体是否有连接
    */
   _checkConnection(entity1, entity2) {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    
-    if (!fs.existsSync(linksFile)) {
-      return null;
+    // B1（2026-11-05 修单）：直连判定改读 DB links 表（双向任一即直连）；index.md 不再是机器判据。
+    // 不可用时 direct=false，commonNeighbors 由 _getNeighbors 的 DB 侧决定（缺则空），与旧缺失分支等价。
+    const live = this._live();
+    let hasDirect = false;
+    if (live.available) {
+      hasDirect = live.links.some(l =>
+        (l.source_id === entity1 && l.target_id === entity2) ||
+        (l.source_id === entity2 && l.target_id === entity1));
     }
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    const hasDirect = content.includes(`[[${entity1}]]`) && content.includes(`[[${entity2}]]`);
-    
+
     // 检查是否有共同邻居
     const neighbors1 = this._getNeighbors(entity1);
     const neighbors2 = this._getNeighbors(entity2);
@@ -325,29 +336,14 @@ this.userInterestDefault = guideChainTuning().userInterestDefault; // W7：缺�
   
   /**
    * 获取实体邻居
+   * B1（2026-11-05 修单）：改读 DB links 表活值（双向邻居）；index.md 不再是机器判据。
+   * 不可用时返回 [] —— 与旧「index.md 缺失」分支逐值等价。
    */
   _getNeighbors(entityName) {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    
-    if (!fs.existsSync(linksFile)) {
-      return [];
-    }
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    // 逐行提取 wiki 链接：一行内含多个链接且其中之一是目标实体 → 其余即邻居
-    // 兼容任意分隔格式（→ ↔ ← / relates 等）
-    const neighbors = new Set();
-    for (const line of content.split('\n')) {
-      if (!line.includes(entityName)) continue;
-      const links = [...line.matchAll(/\[\[([^\]]+)\]\]/g)].map(m => m[1].trim());
-      if (links.length < 2) continue;
-      if (links.includes(entityName)) {
-        for (const other of links) {
-          if (other !== entityName) neighbors.add(other);
-        }
-      }
-    }
-    return [...neighbors];
+    const live = this._live();
+    if (!live.available) return []; // 等价旧 index.md 缺失
+    const set = live.neighbors[entityName];
+    return set ? [...set] : [];
   }
   
   /**

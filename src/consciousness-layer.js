@@ -14,6 +14,8 @@
 
 const fs = require('fs');
 const path = require('path');
+// B1（2026-11-05 修单）：意识层读端改吃 DB 活读（见 _live / _countLinks 等），投影面降级
+const { readLive } = require('./db-live-reader');
 
 class ConsciousnessLayer {
   constructor(options = {}) {
@@ -26,6 +28,18 @@ class ConsciousnessLayer {
     if (!fs.existsSync(this.logsDir)) {
       fs.mkdirSync(this.logsDir, { recursive: true });
     }
+
+    // B1（2026-11-05 修单）：意识层读端改吃 DB 活读（links + entities.vitality/updated_at），
+    // wiki/links/index.md 与 wiki/entities/*.md 的 KESPI/mtime 只作人读投影，不再是机器判据。
+    // 老 Node 无 node:sqlite 时活读 available=false，各读端走与旧「投影缺失」分支等价的默认值。
+    this._liveCache = null;
+  }
+
+  /** B1：懒加载 DB 活读快照。 */
+  _live() {
+    if (this._liveCache) return this._liveCache;
+    this._liveCache = readLive(path.join(this.baseDir, 'knowledge.db'));
+    return this._liveCache;
   }
   
   /**
@@ -305,47 +319,45 @@ class ConsciousnessLayer {
   }
   
   _countLinks() {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    if (!fs.existsSync(linksFile)) return 0;
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    const matches = content.match(/\[\[([^\]]+)\]\]/g);
-    return matches ? matches.length : 0;
+    // B1（2026-11-05）：链接总数改读 DB links 表活值；index.md 只是人读投影（可落后/可重建）。
+    // 活读不可用时返回 0 —— 与旧「index.md 缺失」分支逐值等价（旧缺失也是 0）。
+    const live = this._live();
+    return live.available ? live.linkCount : 0;
   }
   
   _getVitality(entityName) {
-    const entityFile = path.join(this.wikiDir, 'entities', `${entityName}.md`);
-    if (!fs.existsSync(entityFile)) return 0.5;
-    
-    const content = fs.readFileSync(entityFile, 'utf8');
-    // KESPI 状态 block 是 ```json 格式（"overall": 0.87 带引号），旧 YAML 正则全库命中 0 →
-    // 活力评估永远吃默认 0.5。修正（2026-11-03）：兼容 JSON 写法。
-    const match = content.match(/"?overall"?\s*:\s*([\d.]+)/);
-    return match ? parseFloat(match[1]) : 0.5;
+    // B1（2026-11-05）：活力真源 = DB entity_metadata.kespi_score（投影 entities/*.md 的
+    // KESPI block 只作人读展示，可落后）。活读不可用 / 无该实体 / 无 metadata 行 → 0.5，
+    // 与旧「实体档缺失或 KESPI 未算」分支逐值等价。
+    const live = this._live();
+    const row = live.available ? live.entities[entityName] : null;
+    return row && row.vitality != null ? row.vitality : 0.5;
   }
   
   _getConnectionCount(entityName) {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    if (!fs.existsSync(linksFile)) return 0;
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    const matches = content.match(new RegExp(`\\[\\[${entityName}\\]\\]`, 'g'));
-    return matches ? matches.length : 0;
+    // B1（2026-11-05）：连接数改读 DB links 表活值（该实体出现在 source 或 target 端的边数）。
+    // 活读不可用 / 无该实体 → 0，与旧「index.md 缺失」分支逐值等价。
+    const live = this._live();
+    if (!live.available) return 0;
+    return live.links.filter(l => l.source_id === entityName || l.target_id === entityName).length;
   }
   
   _getEntityMtime(entityName) {
-    const entityFile = path.join(this.wikiDir, 'entities', `${entityName}.md`);
-    if (!fs.existsSync(entityFile)) return 0;
-    
-    return fs.statSync(entityFile).mtimeMs;
+    // B1（2026-11-05）：实体时新度改读 DB entities.updated_at（投影 entities/*.md 的 mtime
+    // 只作人读展示，可落后/可重建）。活读不可用 / 无该实体 → 0，与旧「实体档缺失」分支等价。
+    const live = this._live();
+    const row = live.available ? live.entities[entityName] : null;
+    return row ? row.updatedMs : 0;
   }
   
   _hasConnection(entity1, entity2) {
-    const linksFile = path.join(this.wikiDir, 'links', 'index.md');
-    if (!fs.existsSync(linksFile)) return false;
-    
-    const content = fs.readFileSync(linksFile, 'utf8');
-    return content.includes(`[[${entity1}]]`) && content.includes(`[[${entity2}]]`);
+    // B1（2026-11-05）：直连判定改读 DB links 表（双向任一即直连）；index.md 不再是机器判据。
+    // 活读不可用 → false，与旧「index.md 缺失」分支逐值等价。
+    const live = this._live();
+    if (!live.available) return false;
+    return live.links.some(l =>
+      (l.source_id === entity1 && l.target_id === entity2) ||
+      (l.source_id === entity2 && l.target_id === entity1));
   }
   
   _checkBrokenLinks(entityName) {
