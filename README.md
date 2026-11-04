@@ -201,9 +201,26 @@ powershell -ExecutionPolicy Bypass -File setup-vectors.ps1
 node src/index-vectors.js --semantic --reindex
 ```
 
-- 模型（paraphrase-multilingual-MiniLM-L12-v2 量化版，约 113MB，多语含中文；粤语 yue 不在官方清单，书面粤语经繁体共享近似受益）落在 `models\` 目录，装完**纯离线**，零外呼。
+- 模型（paraphrase-multilingual-MiniLM-L12-v2 量化版，约 113MB，多语含中文）落在 `models\` 目录，装完**纯离线**，零外呼。
 - 国内网络**直连 huggingface.co 会超时**——脚本已默认走 hf-mirror 镜像，这是最常见的部署卡点，已替你排掉。
 - 回退：删掉 `models\` 目录即自动回退纯哈希模式（或加 `--hash` 强制），两套向量在库里按维度自动区分、互不干扰。
+
+### 🏋️ SkillOpt M4 接线（可选，外部检出）
+
+SkillOpt 是**外部工具链**，不在本包内跑；本包只提供环境适配器源料 `training/adapter.py`。
+
+```bash
+# 1) 一次性接线：把适配器落到 SkillOpt 检出（官方 microsoft/SkillOpt，MIT；检出根记为 <sqa-root>\SkillOpt）
+#    目标目录：<sqa-root>\SkillOpt\skillopt\envs\aing\（同目录补空 __init__.py）
+copy training\adapter.py <sqa-root>\SkillOpt\skillopt\envs\aing\adapter.py
+
+# 2) 验证：必须在检出根跑（不在本包内），预期打印 IMPORT_OK
+cd <sqa-root>\SkillOpt && PYTHONPATH=. python -c "from skillopt.envs.aing.adapter import AingEnvAdapter; print('IMPORT_OK')"
+```
+
+在本包内跑第 2 步必 `ModuleNotFoundError` —— 包内只有适配器源料，不是可导入的检出。
+
+公共场（共享检出 + 共享 venv + 产物目录 + 一键重接）的完整手册见 `<sqa-root>\README.md`；检出被重 clone 或 `git clean` 抹掉未跟踪目录后，用 `powershell -ExecutionPolicy Bypass -File <sqa-root>\relink-aing.ps1 -Yard <repo-root>` 复原。
 
 ---
 
