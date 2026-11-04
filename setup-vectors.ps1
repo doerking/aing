@@ -3,9 +3,6 @@
 # 效果：把向量检索从默认 64-dim 零依赖哈希，升级为 384-dim 本地语义向量
 #       （Xenova/paraphrase-multilingual-MiniLM-L12-v2 量化 onnx 约 113MB，纯本地离线推理，零外呼，多语含中文）。
 #
-# 粤语说明：官方 language 清单覆盖 zh-cn / zh-tw（M2 架构 100+ 语种）；
-#           粤语（yue）不在清单——书面粤语经繁体字符共享可近似处理，无官方保证。
-#
 # 用法：
 #   powershell -ExecutionPolicy Bypass -File setup-vectors.ps1
 #
