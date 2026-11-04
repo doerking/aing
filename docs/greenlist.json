@@ -227,7 +227,7 @@
       "id": "doc-command-executable",
       "item": "文档命令可执行性（引用路径 / npm run 名 / 外部依赖执行位置 / 只读命令真跑）",
       "cap": "文档里教人跑的命令必须真跑得通；指外部依赖的必须自带执行位置；引用不存在的东西必须同行标反例",
-      "evidence": "2026-09-15 全仓清点：AGENTS/README/docs/**/training/simulation/demo 抽出 282 条命令，静态核出「引用路径 0 条无标记缺失、npm run 0 条无名、外部依赖命令 100% 带 cd 或 <x-root>」；只读命令清单 7 条真跑全 exit 0（memo --summary/--peek/--actions/todo list、neural status、gate-counts、verify-sibling-roots --print-face）。起因是两例实测假命令：手册教找全仓不存在的 `tools/lsp-server.js`；`PYTHONPATH=. python -c \"from skillopt.envs.aing.adapter …\"` 在本包内必 ModuleNotFoundError（只在 `<dd-root>\\321\\SkillOpt` 检出内 IMPORT_OK）。门禁 C20 每轮复扫",
+      "evidence": "2026-09-15 全仓清点：AGENTS/README/docs/**/training/simulation/demo 抽出 282 条命令，静态核出「引用路径 0 条无标记缺失、npm run 0 条无名、外部依赖命令 100% 带 cd 或 <x-root>」；只读命令清单 7 条真跑全 exit 0（memo --summary/--peek/--actions/todo list、neural status、gate-counts、verify-sibling-roots --print-face）。起因是两例实测假命令：手册教找全仓不存在的 `tools/lsp-server.js`；`PYTHONPATH=. python -c \"from skillopt.envs.aing.adapter …\"` 在本包内必 ModuleNotFoundError（2026-09-15 时点：只在 `<dd-root>\\321\\SkillOpt` 检出内 IMPORT_OK；现状 2026-11-04 起 aing env 已落到 `<sqa-root>\\SkillOpt` 检出，以 M4 表 SkillOpt 行为准）。门禁 C20 每轮复扫",
       "date": "2026-09-15",
       "status": "green"
     }

@@ -90,5 +90,5 @@ node src/query.js "关键词"                        # 查询（加权融合精�
 - **缺席语义**：`simulation/proof-*.json` 缺席是**正常历史读数态**（historical-readout）——是"某次验证留下的产物"，不是"应存在而缺失"，判绿。
 
 ### 接口: skillopt
-- **怎么接**：外部 SkillOpt 检出的离线/在线 rollout 产物（`simulation/skillopt-evidence.json` / `skillopt-online-evidence.json` / `last-run.json`）由 `<dd-root>\321\SkillOpt` 检出回填；消费真源是包内已跟踪的 `simulation/skillopt-task-package.json`，外部根由环境变量 `AING_SKILLOPT_ROOT` 指认。
+- **怎么接**：外部 SkillOpt 检出的离线/在线 rollout 产物（`simulation/skillopt-evidence.json` / `skillopt-online-evidence.json` / `last-run.json`）由 SkillOpt 检出回填（2026-09-15 实测时点在 `<dd-root>\321\SkillOpt`；现状 2026-11-04 起 aing env 已由本包 `training/adapter.py` 落到 `<sqa-root>\SkillOpt\skillopt\envs\aing\`，以 M4 表 SkillOpt 行为准）；消费真源是包内已跟踪的 `simulation/skillopt-task-package.json`，外部根由环境变量 `AING_SKILLOPT_ROOT` 指认。
 - **缺席语义**：三条证据档缺席是**可选外部态**（optional-external）——**接不接 SkillOpt 都不影响 C20 门禁结果**；opt-in 探针 `VD_SKILLOPT_PROBE=1` 才开，开了也只报"已回填 N/3"，任何失败/外部根不存在只报"未核"、**永不判红**。

@@ -72,7 +72,7 @@ AIGC:
 - ✅ **门禁项数与编号范围不再靠手抄：`node tools/gate-counts.js` 直接从 `verify-deploy.js` 注册的 check 反算真值，AGENTS frontmatter / README 部署段 / `docs/greenlist.json` 三处抄写与 AGENTS 清单表行集合必须与它相等**
   - 证据：门禁 C19 双保险：① 门禁自己解析验收器得 count/编号集合，逐处比对三句抄写文本（不等即红并印出「抄的是什么 vs 实为多少」），同时要求 AGENTS 表行集合与验收器**同一集合**（缺行=那道门没登记，陈行=已删的门还挂着）；② 行为层把 5 个文件拷进 `.temp/gate-c19-probe` 真跑工具——完好副本必须退出码 0 且 `count/maxNum` 与门禁解析一致，然后把副本 README 故意改成「9 项部署门禁（C0–C0）」，工具必须转红且 problems 指向 README（证明它是检查器而不是橡皮章）。负向：改 README 数字 / 删 AGENTS 一条清单行 / 复原，各自按预期红与绿（2026-09-14）
 - ✅ **文档里教人跑的命令必须真跑得通；指外部依赖的必须自带执行位置；引用不存在的东西必须同行标反例**
-  - 证据：2026-09-15 全仓清点：AGENTS/README/docs/**/training/simulation/demo 抽出 282 条命令，静态核出「引用路径 0 条无标记缺失、npm run 0 条无名、外部依赖命令 100% 带 cd 或 <x-root>」；只读命令清单 7 条真跑全 exit 0（memo --summary/--peek/--actions/todo list、neural status、gate-counts、verify-sibling-roots --print-face）。起因是两例实测假命令：手册教找全仓不存在的 `tools/lsp-server.js`；`PYTHONPATH=. python -c "from skillopt.envs.aing.adapter …"` 在本包内必 ModuleNotFoundError（只在 `<dd-root>\321\SkillOpt` 检出内 IMPORT_OK）。门禁 C20 每轮复扫（2026-09-15）
+  - 证据：2026-09-15 全仓清点：AGENTS/README/docs/**/training/simulation/demo 抽出 282 条命令，静态核出「引用路径 0 条无标记缺失、npm run 0 条无名、外部依赖命令 100% 带 cd 或 <x-root>」；只读命令清单 7 条真跑全 exit 0（memo --summary/--peek/--actions/todo list、neural status、gate-counts、verify-sibling-roots --print-face）。起因是两例实测假命令：手册教找全仓不存在的 `tools/lsp-server.js`；`PYTHONPATH=. python -c "from skillopt.envs.aing.adapter …"` 在本包内必 ModuleNotFoundError（2026-09-15 时点：只在 `<dd-root>\321\SkillOpt` 检出内 IMPORT_OK；现状 2026-11-04 起 aing env 已落到 `<sqa-root>\SkillOpt` 检出，以 M4 表 SkillOpt 行为准）。门禁 C20 每轮复扫（2026-09-15）
 
 ## 按需接入（3 项 · 未接管线/未解锁，禁止当既成能力承诺）
 
