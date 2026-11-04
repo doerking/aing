@@ -87,6 +87,34 @@ baseline: aing @ f9313f5 (origin/main)
 
 aing 唔係任何一个外网项目嘅翻版，但每一个单一组件都搵得到近亲。独有嘅係**组件间嘅纪律连接**（门禁钉死每个接口、双证据、负向自证、身份不兜底）——呢啲文化层嘢，外网冇人照做。
 
+## 对标 URL 速查表
+
+| 项目 | 网址 |
+|---|---|
+| Innate | https://github.com/vima-tech/Innate |
+| SEL / Selm | arXiv 检索命中「Selm: Self-Evolving Library Management for Multi-Skill Agent Optimization」（2026-10 提交；精确编号按标题重检索确认） |
+| Ratchet | arXiv 检索命中（2026-10；技能 curation + lifecycle，SkillWeaver 衍生；精确编号按标题重检索确认） |
+| agentdb | https://github.com/ruvnet/agentdb |
+| Astrivya | https://github.com/astrivya/astrivya |
+| graphiti-local | https://github.com/renezander030/graphiti-local |
+| waypath | https://github.com/TheStack-ai/waypath |
+| cozo-memory | https://github.com/tobs-code/cozo-memory |
+| keimenon | https://github.com/tsolomon89/keimenon |
+| Cognitive Companion | https://www.alphaxiv.org/zh/abs/2604.13759（arXiv 2604.13759） |
+| DS-MCM | https://lacuna.tiptreesystems.com/work/deep-search-with-hierarchical-meta-cognitive-monitoring |
+| retro_cocos Layer 5 | https://deepwiki.com/daijinru/retro_cocos/5.5-layer-5:-meta-cognitive-safety |
+| 「The missing state」 | https://moltbook.com/post/7b758992-9b54-4672-aef9-ea6da6b1557c |
+| Voyager | https://arxiv.org/abs/2305.16291 / https://github.com/minedojo/voyager |
+| Reflexion | https://arxiv.org/abs/2303.11366 |
+| SkillWeaver | https://arxiv.org/html/2504.07079v1 |
+| SkillEvolver | https://arxiv.org/html/2605.10500 |
+| Mnemosyne | https://nianpangzhi233.github.io/Mnemosyne-AI-Memory/ |
+| SearchSkill | https://arxiv.org/html/2605.09038v3 |
+| SkillRL | arXiv 检索命中「SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning」（SkillBank 层级技能库 + 经验蒸馏；精确编号按标题重检索确认） |
+| SimSkill | arXiv 检索命中（2026-09-11 提交；self-evolving LLM agent for skill + knowledge accumulation in traffic simulation；精确编号按标题重检索确认） |
+
+> 注：SEL / Ratchet / SimSkill 係 arXiv 检索标题，上表列嘅係检索命中描述；若要精确 DOI 须按标题重检索确认。其余嘅 GitHub/arXiv 直链同检索命中一一对应。
+
 ## 搜索覆盖
 
 - 搜索时间：2026-11-05 03:03 UTC+8
