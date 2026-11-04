@@ -47,7 +47,9 @@ function requireNonEmptyString(value, name) {
 
 function normalizeMessage(message) {
   if (!message || typeof message !== 'object') throw new Error('消息必须是对象');
-  const role = String(message.role || 'user');
+  // A2c（2026-11-05 修单）：缺 role 不再静默归 user——保留原始（缺失给 ''），交下游
+  // addMessage 的 normalizeRole 拒收（unknown-role）。说话人不改猜（纪律 4 身份铁律）。
+  const role = message.role == null ? '' : String(message.role);
   const content = requireNonEmptyString(String(message.content || ''), 'message.content');
   return { role, content };
 }

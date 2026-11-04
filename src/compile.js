@@ -400,10 +400,18 @@ function getAllFiles(dir, extensions) {
  */
 function generateEntityId(relativePath) {
   // 移除扩展名，替换特殊字符
-  return relativePath
+  const id = relativePath
     .replace(/\.md$/, '')
     .replace(/[\/\\]/g, '-')
     .replace(/[^a-zA-Z0-9\-_\u4e00-\u9fff]/g, '-');
+  // C1（2026-11-05 修单）：加长度上限——深目录 + 长文件名派生的 id 会直通边档名
+  // （C2 的 `${A}__${B}.md`），撞 255 字节单段墙 → Windows ENAMETOOLONG → 触发 B3 全量冻结。
+  // 截断到 120（与 link-filename.js 的 SEG_MAX 同口径，中文每字 2 code unit ≈ 60 字），
+  // 超长尾部补短哈希保留区分度（防截断后不同档撞同 id）。
+  if (id.length <= 120) return id;
+  let h = 0;
+  for (let i = 120; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return id.slice(0, 112) + '-' + h.toString(36);
 }
 
 /**

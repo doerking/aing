@@ -96,7 +96,10 @@ const { metabolismBusy } = require('./metabolism-lock.js');
 
 function normalizeRole(raw) {
   const key = String(raw == null ? '' : raw).trim().toLowerCase();
-  if (!key) return 'user'; // 缺省仍是 user（旧调用方兼容）
+  // A1（2026-11-05 修单）：缺省（空/null/undefined）不再静默归 user——agent 不标角色时
+  // 被记成人的话（2026-11-04 入库档实证：整篇 agent 复盘落在「## 用户提问」）。
+  // 交 addMessage 的既有拒收分支处理（unknown-role）；要兼容旧调用方须显式传 defaultRole，禁止静默猜。
+  if (!key) return null;
   const canonical = ROLE_ALIASES[key] || key;
   return ROLES.indexOf(canonical) >= 0 ? canonical : null;
 }
@@ -124,8 +127,10 @@ function renderConversationDoc({ sessionId, messages, distillation, serverEntiti
 
   const byRole = { user: [], assistant: [], analysis: [], research: [] };
   for (const m of messages) {
-    const role = normalizeRole(m.role) || 'user';
-    byRole[role].push(m);
+    const role = normalizeRole(m.role);
+    // A1b（2026-11-05 修单）：未知/缺失 role 不入任何分节——不再 `|| 'user'` 静默归 user。
+    // 合法 canonical role（经 addMessage 白名单）才落分节；说话人不改猜（纪律 4 身份铁律）。
+    if (role && byRole[role]) byRole[role].push(m);
   }
 
   const primary = proposal.entities[0];
@@ -224,7 +229,11 @@ class SessionStore {
           session.messages.push({
             id: rec.ts || Date.now(),
             timestamp: rec.timestamp || new Date().toISOString(),
-            role: rec.message.role || 'user',
+            // A2d（2026-11-05 修单）：保留 WAL 里的原始 role，不再 `|| 'user'` 静默兜底。
+            // 正常路径 role 已由 addMessage 白名单归一；旧 WAL 若无 role（早期版本），
+            // 交给 renderConversationDoc 的 normalizeRole——缺省返 null → 不入任何分节（A1b），
+            // 不静默归 user（纪律 4 身份铁律：说话人不改猜）。
+            role: rec.message.role,
             content: scrubCollectionTrace(rec.message.content).kept, // 旧 WAL 可能存着剥除上线前的原文，重放时补剥
             length: String(rec.message.content || '').length,
             source: rec.message.source || null,
@@ -417,7 +426,11 @@ class SessionStore {
 
     // 去重键含 sessionId（2026-09-14 修）：旧实现只哈希正文，两个不同客户端发同样文本时，
     // 第二个会话的整批消息被静默清空——而它早已收到 accepted:true。
-    const batchKey = crypto.createHash('sha1').update(String(sessionId) + '\0' + bodyText, 'utf8').digest('hex');
+    // A3（2026-11-05 修单）：键再含**逐条 role**——旧键只哈希 content，同一段话换说话人重投
+    // （先 user、后按 analysis 重投）被静默丢弃（实战踩过：先把一段话记成 user，之后按 analysis
+    // 重投无声失败）。现逐条 `role + '\x1f' + content` 再 join，同段不同说话人 → 不同键 → 落两篇。
+    const roleText = session.messages.map(m => m.role + '\x1f' + m.content).join('\n');
+    const batchKey = crypto.createHash('sha1').update(String(sessionId) + '\0' + roleText, 'utf8').digest('hex');
     if (this.ingestedHashes.has(batchKey)) {
       const dropped = session.messages.length;
       console.log(`⏭️ 同会话内容指纹命中，跳过重复入库 (${sessionId})，丢弃挂起的 ${dropped} 条 / duplicate batch, ${dropped} messages dropped`);
@@ -500,32 +513,55 @@ class SessionStore {
 }
 
 // ========== CLI 入口 ==========
-// 两种用法（2026-09-14 修掉两处反模式）：
+// 两种用法（2026-09-14 修掉两处反模式；2026-11-05 A2 修单：纯文本须显式 --role）：
 //   1) 一次性投递（默认）—— 落 WAL 并立即成档，跑完退出，不占进程：
-//        node src/auto-ingest.js <session-id> "<json 或纯文本>"
+//        node src/auto-ingest.js <session-id> "<json>"
+//        node src/auto-ingest.js <session-id> "<纯文本>" --role <user|assistant|analysis|research>
 //   2) 常驻批处理（显式开启，老行为）：
 //        node src/auto-ingest.js --keep
 //      满 5 条或 30 秒成批；要持续接入更推荐 npm run server + POST /api/ingest。
 // 旧实现的两处缺陷：① 缺第二个参数时默认伪造 {role:'user',content:'test'} —— 每次误调用都
 // 往库里落一条假消息（历史「selftest/probe 残留实体」就是这么长出来的）；② 投完不退出，
 // setInterval 把一次性调用变成空转常驻进程。现：缺参即非零退出，一次性模式投完即走。
+// A2（2026-11-05）：纯文本投递不再静默按 role=user 入（宿主最省事那条路旧版 100% 归错人）；
+// 必须 --role 显式指明说话人，缺省即拒收（宁可报错，不脏库），与纪律 4「说话人不改猜」对齐。
 function usage() {
   console.error('用法 / Usage:');
-  console.error('  node src/auto-ingest.js <session-id> "<json|纯文本>"   一次性投递（默认，投完退出）');
+  console.error('  node src/auto-ingest.js <session-id> "<json>"          一次性投递（默认，投完退出）');
+  console.error('  node src/auto-ingest.js <session-id> "<纯文本>" --role <r>  纯文本投递须显式给说话人');
   console.error('  node src/auto-ingest.js --keep                        常驻批处理（满 ' + CONFIG.maxMessagesPerBatch + ' 条或 ' + (CONFIG.batchIntervalMs / 1000) + 's 成批）');
-  console.error('  消息体可为 JSON {role,content,source}，或直接给纯文本（按 role=user 入）。');
+  console.error('  消息体须 JSON {role,content,source}；role 必填（白名单 ' + ROLES.join('/') + '，别名 agent/bot→assistant、tool/检索→research）。');
+  console.error('  纯文本投递必须配 --role（缺省即不进库，不静默归 user——说话人不改猜，纪律 4 身份铁律）。');
   console.error('  只存「贴出来的详情」：贴出来之前的采集步骤（命令行/请求行/响应头/报文）在入口剥除。');
 }
 
 function main() {
   const argv = process.argv.slice(2);
-  const flags = argv.filter(a => a.startsWith('--'));
-  const pos = argv.filter(a => !a.startsWith('--'));
+  // A2（2026-11-05 修单）：解析 --role（支持 `--role X` 与 `--role=X`）。纯文本投递必须靠它
+  // 显式指明说话人；缺省仍拒收（宿主最省事的贴纯文本路径旧版 100% 静默归 user，归错人）。
+  let roleFlag = null;
+  const rest = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--role') { roleFlag = argv[++i]; }
+    else if (a.startsWith('--role=')) { roleFlag = a.slice('--role='.length); }
+    else rest.push(a);
+  }
+  const flags = rest.filter(a => a.startsWith('--'));
+  const pos = rest.filter(a => !a.startsWith('--'));
   const badFlag = flags.filter(f => f !== '--keep');
   if (badFlag.length) {
     console.error('❌ 未知参数 / unknown flag: ' + badFlag.join(' '));
     usage();
     process.exit(2);
+  }
+  if (roleFlag != null) {
+    // 预校验：--role 必须落到白名单（经 normalizeRole 归一后仍在 ROLES），否则入口即拒，不落到 addMessage
+    if (!roleFlag || normalizeRole(roleFlag) == null) {
+      console.error('❌ --role 必须是白名单角色 / --role must be one of: ' + ROLES.join('/') + '（别名 agent/bot→assistant，tool/检索→research）');
+      usage();
+      process.exit(2);
+    }
   }
   const store = new SessionStore();
 
@@ -553,8 +589,21 @@ function main() {
   try {
     message = JSON.parse(raw);
     if (!message || typeof message !== 'object' || Array.isArray(message)) throw new Error('JSON 不是对象');
+    // A2（2026-11-05）：JSON 路径若未带 role，且调用方给了 --role → 补上；仍缺 role 则
+    // 由 addMessage 的 unknown-role 分支拒收（空/缺 role 现在归 null，不再静默 user）。
+    if (message.role == null && roleFlag != null) message.role = roleFlag;
   } catch (e) {
-    message = { role: 'user', content: raw };  // 纯文本按 user 投
+    // A2（2026-11-05 修单）：纯文本不再静默按 user 投（旧法宿主最省事的路 100% 归错人）。
+    // 给 --role 才收（补 role）；不给则拒收并提示改投 JSON，缺省即拒——说话人不改猜。
+    if (roleFlag == null) {
+      console.error('❌ 纯文本投递必须显式给说话人 / plain-text needs an explicit speaker');
+      console.error('   ① 加 --role <user|assistant|analysis|research>，例：');
+      console.error('      node src/auto-ingest.js s1 --role user "正文…"');
+      console.error('   或 ② 改投 JSON：{"role":"assistant","content":"正文…"}');
+      usage();
+      process.exit(3);
+    }
+    message = { role: roleFlag, content: raw };
   }
 
   const r = store.addMessage(sessionId, message);
