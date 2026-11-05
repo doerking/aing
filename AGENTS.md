@@ -356,11 +356,26 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
 >
 > **这是 aing 的"按数据指标自动维护"**：不是 agent 猜该做什么，是 aing 通过备忘录告诉 agent 该做什么。agent 的工作从"排障"变成"读仪表台→执行建议"。
 
-## Neural Evolution Swarm (Half-Lifted) / 神经进化团队（半拉起）
+## Swarm Boundary / 蜂群两面边界（自维护 vs 对外派工）
 
-> aing 的神经进化团队（理论家/工程师/训练师/分析师）目前是**半拉起状态**——技能文件已装入 TeleAgent skills 目录，可以由 agent 按需调用做评审，但不是常驻自走的自动化服务。半拉起的正确用法是：**agent 读备忘录后发现指标异常 → 调用对应角色做诊断 → 根据诊断结论执行修复 → 修复后跑 verify-deploy 确认全绿**。
+> 本包（与宿主运行时）的蜂群能力分两面，**各自独立，不作桥接**（所有者设计边界，详见 [docs/Engineering/SWARM-RESEARCH-2026-11-03.md §〇](./docs/Engineering/SWARM-RESEARCH-2026-11-03.md)）：
 >
-> *The neural evolution swarm (theorist/engineer/trainer/analyst) is half-lifted: skill files installed, callable on demand, but not a resident auto-running service. Usage: agent reads memo → detects anomaly → invokes the right role for diagnosis → executes fix → re-verifies ALL GREEN.*
+> | 面 | 主体 | 触发源 | 载体 | 规模 | 生命周期 |
+> |---|---|---|---|---|---|
+> | **守内面（自维护）** | `neural-evolution-swarm`（固定 5 角色：theorist / engineer / trainer / analyst / adversarial-reviewer）＋ `guide-chain-swarm`（运行时 3-agent 投票） | aing 自身健康读数（`selfAssessment` / `verify 红` / `gaps` / `selfImprovement △` / `distillDebt` / `reflowPending` / KESPI 跌破位 / `blockedGoals`） | `assets/skills/neural-evolution-swarm/**`（随包自撰，非宿主副本）＋ `src/guide-chain-swarm.js`（包内代码） | 固定 5 角色严门禁，无动态扩展 | 常驻技能资产 + 包内代码 |
+> | **对外派工面（宿主运行时）** | 宿主动态子代理（sclaw `dynamic-multi-agent-system` v1.4.0 / ZCode Agent 工具） | 用户外部工单（非 aing 自身健康读数） | 宿主运行时面，**不在本包代码/资产内** | 数量不限，按任务复杂度定 | 完即销毁 |
+>
+> **设计要点**：
+> 1. `neural-evolution-swarm` 是「**自维护专用团队**」，派单触发全是 aing 内部健康读数，**不该接对外工单**。
+> 2. `assets/skills/` 里的团队资产是**包内自撰**（非宿主副本）——宿主运行时面没装 neural-evolution-swarm 是**对的**，不构成缺口；`memo` 的 `swarmSearch` 探不到属正常。
+> 3. 对外派工由宿主运行时动态子代理承接（真并行、真隔离、真 Gate 裁决），**与 aing 包无代码接线**；本包资产不对外派工。
+> 4. 两面互不桥接（原文第六节建议 1 已撤回，按此边界修正）。
+
+## Self-Maintenance Swarm (Half-Lifted) / 守内面：神经进化团队（半拉起）
+
+> aing 的神经进化团队（理论家/工程师/训练师/分析师）是**守内面（自维护）专用**——触发源全是 aing 自身健康读数，不是对外派工入口。目前是**半拉起状态**：技能文件已装入 TeleAgent skills 目录，可以由 agent 按需调用做评审，但不是常驻自走的自动化服务。半拉起的正确用法是：**agent 读备忘录后发现指标异常 → 调用对应角色做诊断 → 根据诊断结论执行修复 → 修复后跑 verify-deploy 确认全绿**。
+>
+> *The self-maintenance swarm (theorist/engineer/trainer/analyst + adversarial-reviewer) is exclusively for aing internal health readings — not an external dispatch entry. It is half-lifted: skill files installed, callable on demand, but not a resident auto-running service. Usage: agent reads memo → detects anomaly → invokes the right role for diagnosis → executes fix → re-verifies ALL GREEN.*
 
 ### 半拉起角色与触发条件
 
@@ -398,6 +413,18 @@ node src/memo.js --db <副本.db> …          # 隔离库（门禁/实验探针
 ```
 
 > **核心原则**：agent 不猜——aing 通过备忘录的数据指标告诉 agent 该做什么。agent 不修——除非指标指向明确的修复动作。修完后必须验证——`verify-deploy.js` ALL GREEN 才算修完。
+
+## External Dispatch Swarm / 对外派工面（宿主运行时动态子代理）
+
+> **定位**：宿主运行时的动态多代理能力（sclaw `dynamic-multi-agent-system` v1.4.0、ZCode Agent 工具等），**不在 aing 包内**。触发源是用户外部工单，**非** aing 自身健康读数。规模不限，按任务复杂度动态创建临时子代理，完即销毁。
+>
+> **与守内面的分界**：
+> 1. 守内面（神经进化团队）只接 aing 自身健康读数派单（见上表）；对外派工面接的是宿主工单，两边**互不桥接**（SWARM-RESEARCH §〇 设计边界，原文建议 1 已撤回）。
+> 2. aing 包内资产 `assets/skills/neural-evolution-swarm/**` 是包内自撰的自维护团队说明书，**不**装入宿主通用运行时面；宿主面没装该资产属正常，不构成缺口（`memo` 的 `swarmSearch` 探不到 sclaw root 是设计本意）。
+> 3. 对外派工的具体执行（spawn 真子代理、隔离上下文、Gate 裁决）由宿主运行时承担，**本包代码不实现、不承诺**。宿主面若有该能力，agent 可就地调用；没有则按宿主能力降级，不得借 aing 资产假冒对外派工。
+> 4. 两面共用的方法论（如对抗审查 persona、Gate 结构）以 `docs/design/patches/patch-12-adversarial-reviewer.md` 为真源；**机制共享，入口不共享**。
+>
+> *The external dispatch face lives in the host runtime (sclaw `dynamic-multi-agent-system`, ZCode Agent tool, etc.), not inside the aing package. It is triggered by user work orders, not by aing's own health readings. Scale is dynamic and task-complexity driven; temporary sub-agents are destroyed on completion. The two faces share method (adversarial-review persona, Gate structure, see patch-12) but **never share entry points** — no cross-bridging (SWARM-RESEARCH §〇).*
 
 ## Agent Discipline / Agent 行为纪律（新增，必须遵守）
 

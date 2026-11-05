@@ -248,7 +248,7 @@ AING_API_KEY=my-key npm run server   # with key: 0.0.0.0 + Bearer auth on all bu
 # 备忘录与入库 CLI / memo + ingest CLI（不起服务也能用，这就是“最后一米”那两条）
 node src/memo.js --summary        # 仪表台：意识层 + 组件链接 + 告警 + 待办 + 健康判定 + 派单 / dashboard
 node src/memo.js --peek           # 只读快拍（纯 JSON：health + todos + dispatch）/ machine-readable glance
-node src/memo.js --dispatch       # 只问要不要派神经进化团队 / should we dispatch the swarm
+node src/memo.js --dispatch       # 只问要不要派神经进化团队（守内面·自维护专用；对外派工走宿主运行时，见下节「蜂群两面」）
 node src/memo.js todo add "<用户挂着的事>" [--due YYYY-MM-DD] [--agent]   # 把待办记进备忘录（面板与仪表台同一张表）
 node src/memo.js todo list        # 看活跃待办；--all 含已销（留痕不删行）
 node src/memo.js todo done <id>    # 销办
@@ -310,8 +310,21 @@ node src/query.js "三路突击" --limit 5
 | 蒸馏债自动置位（pending） | KESPI 首评翻转（随代谢 kespi 步） |
 | 代谢步骤事件 → 意识核登记（2026-09-08 起，source=metabolism） | 意识简报 / 蜂群审议（briefing / deliberate，宿主调用） |
 | 跨进程原子锁：并发第二实例自动让位（exit 0） | LLM 调用（核心代谢环为零，宿主为可选外壳） |
-| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 神经进化团队半拉起（理论家/工程师/训练师/分析师，按指标触发） |
-| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
+| KESPI 敏感性验证（腐坏→红灯→修复→绿灯，M4 证明 I1） | 备忘录运维（agent 读 briefing 后按指标决策，非常驻自走） |
+| 意识层闭环（kernel 停滞→growth-director→full_metabolism，M4 证明 I2） | 守内面·神经进化团队派单（按 aing 自身健康读数触发，见下节） |
+
+### Swarm Two Faces / 蜂群两面（守内自维护 vs 对外派工）
+
+> 本包蜂群能力分两面，**互不桥接**（设计边界，详见 [docs/Engineering/SWARM-RESEARCH-2026-11-03.md §〇](./docs/Engineering/SWARM-RESEARCH-2026-11-03.md)）：
+>
+> | 面 | 内容 | 触发源 | 载体 | 规模 | 生命周期 |
+> |---|---|---|---|---|---|
+> | **守内面（自维护）** | 神经进化团队 5 角色（theorist/engineer/trainer/analyst + adversarial-reviewer 共识门禁）＋ 导链蜂群（`guide-chain-swarm` 3-agent 启发式投票） | aing 自身健康读数（`selfAssessment` / `verify 红` / `gaps` / `selfImprovement △` / `distillDebt` / KESPI 跌破位 / `blockedGoals`） | `assets/skills/neural-evolution-swarm/**`（包内自撰）＋ `src/guide-chain-swarm.js` | 固定 5 角色严门禁 | 常驻技能资产 + 包内代码 |
+> | **对外派工面** | 宿主运行时动态子代理（sclaw `dynamic-multi-agent-system` / ZCode Agent 工具） | 用户外部工单（非 aing 健康读数） | 宿主运行时面，**不在本包内** | 数量不限，按任务复杂度动态创建 | 完即销毁 |
+>
+> - 守内面入口：`node src/memo.js --dispatch`（健康驱动派单）＋ agent 手动；**只接 aing 自身问题，不接对外工单**。
+> - 对外派工面由宿主运行时承担；本包资产不对外派工，宿主面未装 neural-evolution-swarm 属正常（不构成缺口）。
+
 
 
 ---
