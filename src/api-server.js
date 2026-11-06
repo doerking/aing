@@ -58,6 +58,18 @@ const API_KEY = process.env.AING_API_KEY || null;
 const BODY_LIMIT = 1024 * 1024;
 const ID_PATTERN = /^[a-zA-Z0-9\-_\u4e00-\u9fff]+$/; // 实体 ID 白名单，天然阻断 ../ 穿越
 
+// 标签净化（2026-11-06 洞②收口）：标签是加载单位 + KESPI KA 加权（纪律 7），
+// API 外来写面的标签须限定：每标签 ≤100 字 / 去控制字符 / 每实体 ≤20 个。
+// 防恶意/误传标签污染 query 检索召回、自动建链加权、KA 评分。
+function sanitizeTags(raw) {
+  if (!Array.isArray(raw)) return '[]';
+  const clean = raw
+    .map(t => String(t || '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 100))
+    .filter(Boolean)
+    .slice(0, 20);
+  return JSON.stringify(clean);
+}
+
 const sessions = new SessionStore();
 let store = null;
 let vectorSearch = null;
@@ -442,6 +454,10 @@ async function handle(req, res) {
   }
 
   // ── agent 自管理：创建实体（Todo/Skill/Output，type 自由字符串零迁移）──
+  // 身份闸（2026-11-06 洞①收口）：API 写面不授予 active 身份 / 置信——旧默认
+  // status 'active' + confidence 0.7 让外来者绕开 distill.js 兑付，造出「未核验内容
+  // 带着知识资产身份」进库（与 ingest 面自报身份铁律 C10g③ 并行的侧门，已封）。
+  // 现统一落 pending-distillation / confidence 0；active 只由 distill.js 兑付。
   if (p === '/api/entity' && req.method === 'POST') {
     // 2026-09-17 F3：代谢持库时 503 拒写（常驻服务不能拿旧快照盖新盘），客户端重试即可
     if (require('./metabolism-lock.js').metabolismBusy()) {
@@ -468,13 +484,17 @@ async function handle(req, res) {
     if (store.getEntity(id)) {
       return json(res, 409, { error: `实体已存在: ${id}` });
     }
-    const tags = Array.isArray(body.tags) ? JSON.stringify(body.tags) : '[]';
+    const tags = sanitizeTags(body.tags);   // 洞②收口：tags 过净化闸再入 DB（≤100 字/个、≤20 个、去控制字符）
+    // 身份闸（2026-11-06 洞①收口）：API 写面不授予 active 身份/置信——旧默认 status 'active' +
+    // confidence 0.7 让外来者绕开 distill.js 兑付，把未核验内容抬成知识资产（与 ingest 面自报身份
+    // 铁律 C10g③ 并行的侧门，现已封）。统一落 pending-distillation / confidence 0，客户端自报的
+    // status / confidence 一律忽略；active 只由 distill.js 兑付（distill.js:263 是 active 唯一写位）。
     store.db.run(
       'INSERT INTO entities (id, name, type, content, tags, status, confidence, source_file) VALUES (?,?,?,?,?,?,?,?)',
-      [id, String(body.name), String(body.type), String(body.content || ''), tags, String(body.status || 'active'), Number(body.confidence || 0.7), body.source_file || null]
+      [id, String(body.name), String(body.type), String(body.content || ''), tags, 'pending-distillation', 0, body.source_file || null]
     );
     store._save();
-    return json(res, 201, { id, name: body.name, type: body.type, status: body.status || 'active' });
+    return json(res, 201, { id, name: body.name, type: body.type, status: 'pending-distillation', confidence: 0, note: '身份铁律：API 写面不授予 active 身份/置信（洞①收口 2026-11-06）；active 只由 distill.js 兑付' });
   }
 
   // ── agent 自管理：状态翻转（pending→active→archived 等）──
@@ -492,18 +512,28 @@ async function handle(req, res) {
     const body = await readBody(req);
     const updates = [];
     const params = [];
-    if (body.status) { updates.push('status = ?'); params.push(String(body.status)); }
+    // 身份闸（2026-11-06 洞①收口）：API PATCH 不可授予 active 身份——
+    // active 唯一写位 = distill.js:263（兑付 pending-distillation）。
+    // API 面允许降至 pending-distillation / archived / voided，但 403 拒绝抬 active。
+    if (body.status) {
+      const s = String(body.status);
+      if (s === 'active') {
+        return json(res, 403, { error: 'active 身份只由 distill.js 兑付（洞①收口 2026-11-06）；API 写面可设 pending-distillation / archived / voided，不可直接抬 active', allowedStatuses: ['pending-distillation', 'archived', 'voided'] });
+      }
+      updates.push('status = ?'); params.push(s);
+    }
     if (body.content) { updates.push('content = ?'); params.push(String(body.content)); }
-    if (body.tags) { updates.push('tags = ?'); params.push(JSON.stringify(body.tags)); }
-    if (body.confidence != null) { updates.push('confidence = ?'); params.push(Number(body.confidence)); }
+    if (body.tags) { updates.push('tags = ?'); params.push(sanitizeTags(body.tags)); }   // 洞②收口
+    // confidence 移除对外写面（2026-11-06 洞①收口）：知识置信归代谢链管（compile 默认 / distill 兑付），
+    // API 外來者唔定置信——同身份铁律並列：未験証內容唔獲知識資產數字。
     if (updates.length === 0) {
-      return json(res, 400, { error: '无更新字段（可更新 status/content/tags/confidence）' });
+      return json(res, 400, { error: '无更新字段（可更新 status/content/tags；confidence 不可经 API 修改——洞①收口 2026-11-06）' });
     }
     updates.push("updated_at = datetime('now')");
     params.push(id);
     store.db.run(`UPDATE entities SET ${updates.join(', ')} WHERE id = ?`, params);
     store._save();
-    return json(res, 200, { id, updated: Object.keys(body).filter(k => ['status','content','tags','confidence'].includes(k)) });
+    return json(res, 200, { id, updated: Object.keys(body).filter(k => ['status','content','tags'].includes(k)), note: 'confidence 不对外写（洞①收口）；status active 需走 distill.js' });
   }
 
   // ── agent 增量感知：上次会话以来变了什么 ──

@@ -142,7 +142,7 @@ function renderConversationDoc({ sessionId, messages, distillation, serverEntiti
     // ③ raw 文件名与实体 id 不一致 → consciousness-layer 拿 raw 名去 wiki/entities 找实体必然找不到，
     //    狂报「原始资料尚未编译到 wiki/」假告警（影子实测一轮入库就刷出 15 条）。
     id: safeSessionId + '-' + fileStamp,   // id 恒等于文件名干，不由客户端自报名派生（三重病害见上注）
-    tags: [...new Set([...(serverTags || []), ...proposal.tags])].map(t => String(t).trim()).filter(Boolean).slice(0, 20),
+    tags: [...new Set(serverTags || [])].map(t => String(t).trim()).filter(Boolean).slice(0, 20),   // 洞②收口(2026-11-06): 客户端自报 tags(proposal.tags, 未核验)不进 frontmatter.tags 列——防标签注入(纪律7: 标签=加载单位+KA加权); 只留服务端机械抽取的 serverTags. proposal.tags 已在「## Agent 提议(未核验)」段以文本留痕, 不升 DB 列.
     status: 'pending-distillation',
     confidence: 0,
     source: String(sessionId),
@@ -174,6 +174,8 @@ function renderConversationDoc({ sessionId, messages, distillation, serverEntiti
     for (const e of proposal.entities) {
       sections.push(`> 提议实体：[[${e.name}]] type=${e.type} confidence=${e.confidence}${e.evidence ? ' evidence=' + e.evidence : ''}`);
     }
+    // 洞②收口（2026-11-06）：自报 tags 只作引用行文本留痕（distill 不算原话、不进 frontmatter.tags 列）
+    if (Array.isArray(proposal.tags) && proposal.tags.length) sections.push('> 提议标签（未核验，不进标签列）：' + proposal.tags.join(', '));
   }
   const extracted = [...new Set((serverEntities || []).map(String).filter(Boolean))];
   sections.push('', '## 提取实体', '', extracted.length
