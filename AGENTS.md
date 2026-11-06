@@ -171,6 +171,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 而「无条件尊重档内声明 id」又会把 19 篇没有 id 的人工档并成一个 `undefined` 实体（`String(undefined)` 是真值）。
 **对策**：入库契约由 verify-deploy C10g 双向钉死（生产端节集 ⊆ 消费端白名单 + 临时库端到端真跑 + 身份/落盘/id 归属断言）；
 身份与置信一律服务端定，客户端自报内容只进「Agent 提议（未核验）」节等兑付；`accepted` 之前必须先落 WAL（`data/ingest-buffer.jsonl`，启动时重放）。
+**2026-11-06 扩到 API 写面（洞①②收口，不新增门禁编号、C19 单源不漂）**：`POST /api/entity` 一律落 `pending-distillation`/`confidence:0`（客户端自报 status/confidence 忽略）、`PATCH /api/entity` 抬 `active` 回 403 且 confidence 不对外写（active 唯一写位 = `distill.js` 兑付）；`auto-ingest` 客户端自报 `distillation.tags` 降级「## Agent 提议」段引用行留痕、不再并入 `frontmatter.tags` 列（防标签注入），API entity 写面 `tags` 经 `sanitizeTags`（≤100字/≤20个/去控制字符）。负向自证走隔离院真跑（.temp/sec-gates-behavior.js，8/8），非静态 grep。
 
 **11. 入库只存「贴出来的详情」，不存「贴出来之前干了什么」（2026-09-14 口径）。**
 `role: research` 是消息分类，不是采集流程：本包服务端**永不搜索、永不抓取、永不核验来源**（实测：`source` 填不可达 IP，107ms 返回，档里只多一行字面标注；库里 0 条 URL 链接）。

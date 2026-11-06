@@ -208,10 +208,11 @@ AIGC:
 - **日志**：`logs/scheduler.log`，代谢输出内嵌 `[metabolism]` 前缀。
 
 ### api-server.js — HTTP API 服务（零依赖）
-- **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`（字段 `sessionId`/`content`/`role`/`source`/可选 `distillation`；`metadata` 自 2026-09-14 停收；纯采集过程内容回 `422`）；端口 3789（`AING_API_PORT` 可调）。
+- **端点**：`GET /health`（公开）/ `GET /api/entities` / `GET /api/entity/<id>` / `GET /api/query?q=` / `POST /api/ingest`（字段 `sessionId`/`content`/`role`/`source`/可选 `distillation`；`metadata` 自 2026-09-14 停收；纯采集过程内容回 `422`）/ `POST /api/entity` / `PATCH /api/entity/<id>` / `GET /api/delta` / `GET /api/tags/<tag>`；端口 3789（`AING_API_PORT` 可调）。
 - **认证**：设 `AING_API_KEY` 后除 /health 外全部要求 `Authorization: Bearer`，且监听改 `0.0.0.0`；未设则仅监听 `127.0.0.1`（本机信任模式）。缺凭据返回 401。
 - ~~多租户~~（**已砍除 2026-09-14**）：原 `X-Tenant-ID` 只给会话键加 `tenant::` 前缀，共库共表不构成任何隔离，反而让「租户隔离」进入能力声明。现按单用户产品定位：会话键即 `sessionId`，文件名净化保留（客户端 ID 仍可能含非法字符）。门禁 C10f 防复活。
 - **输入防护**：实体 ID 白名单字符校验（阻断路径穿越）；请求体 1MB 上限。
+- **身份/标签闸（2026-11-06 洞①②收口）**：`POST /api/entity` 一律落 `pending-distillation`/`confidence:0`（自报 status/confidence 忽略，active 唯一写位 = `distill.js` 兑付）；`PATCH /api/entity/<id>` 抬 `active` 回 403、confidence 不对外写；`tags` 经 `sanitizeTags`（≤100字/≤20个/去控制字符），`auto-ingest` 客户端自报 `distillation.tags` 降级「## Agent 提议」段引用行留痕、不升 `frontmatter.tags` 列。负向自证走隔离院真跑（`.temp/sec-gates-behavior.js` 8/8），非静态 grep。
 - **高发问题**：宿主进程必须自备会话批冲洗定时器（10s 轮询 checkAndIngest），否则消息滞留内存永不出库。
 
 ### query.js — 查询 CLI（精排版，2026-09-03）

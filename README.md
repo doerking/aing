@@ -291,8 +291,8 @@ node src/query.js "三路突击" --limit 5
 # GET  /api/query?q=<词>&limit=<N>   full-chain search (answer-pack: snippet/kespi/neighbors/tags) / 全链检索
 # ── 入库写入 ──
 # POST /api/ingest                   session ingest (role: user/assistant/analysis/research) / 会话入库（四种角色；只入贴出来的详情，纯采集过程回 422）
-# POST /api/entity                  create entity (Todo/Skill/Output) / 创建实体
-# PATCH /api/entity/<id>            update entity status/content / 更新实体
+# POST /api/entity                  create entity → 一律 pending-distillation/confidence 0（身份闸 2026-11-06；客户端自报 status/confidence 忽略，active 只由 distill.js 兑付）/ 创建实体（洞①收口）
+# PATCH /api/entity/<id>           update status/content/tags（status=active 回 403；confidence 不可经 API 写；tags 经 sanitizeTags ≤100字/≤20个）/ 更新实体（洞①②收口）
 # GET  /api/delta?since=<ISO>        incremental awareness / 增量感知
 # GET  /api/tags/<tag>               tag-driven loading / 标签驱动加载
 ```
