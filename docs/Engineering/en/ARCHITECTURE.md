@@ -239,7 +239,7 @@ Corrected — the following **do exist** (older "not exist" list items that are 
 
 外来写面（HTTP API + 会话入库）不得把未核验内容直接抬成知识资产身份。本包两道并行闸：
 
-| 洞 | 旧风险（收口前） | 收口后行为（隔离院真跑 8/8 全绿，见 .temp/sec-gates-behavior.js） |
+| 洞 | 旧风险（收口前） | 收口后行为（门禁 C10i 隔离院真跑 8/8 全绿） |
 |---|---|---|
 | ① 身份闸 | POST /api/entity 默认 status:active + confidence:0.7；PATCH 可翻 active、confidence 任意 — 外来者绕开 distill.js 兑付 | POST 一律落 pending-distillation / confidence:0（客户端自报 status/confidence 忽略）；PATCH status=active → 403，confidence 对外写面关闭；active 唯一写位 = distill.js |
 | ② 标签闸 | 客户端自报 distillation.tags 任意字符串直入 frontmatter.tags 列，污染标签检索/建链加权/KA 分 | auto-ingest frontmatter.tags 只收服务端机械抽取的 serverTags；自报 tags 降级为「## Agent 提议（未核验）」段引用行留痕（distill 不算原话）；API entity 写面 tags 经 sanitizeTags（去控制字符 / 每标签≤100字 / 每实体≤20个） |
