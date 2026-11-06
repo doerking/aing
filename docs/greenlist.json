@@ -129,7 +129,7 @@
     {
       "id": "c10-consistency-gates",
       "cap": "一致性与写路径门禁 C10a–C10h（视图/面板读数/蒸馏写路径/配置模板/引用完整性/防复活/入库契约+role 契约/只入详情）",
-      "evidence": "verify-deploy 32 项全绿（C0–C20）；C10a–C10h 逐项负向注入各自转红、复原转绿（纪律 8）。C10g 第⑥段（role 归一/未知拒收/提议只落未核验段/门口 400/自报不抬 confidence）2026-09-14 五处注入 5/5 转红；C10h 夹具含 10 类痕迹形状 + 6 条中文反例，且把 AING_SCRUB_ASCII_MIN 调到不可达即转红（证明行内特征层非空转）",
+      "evidence": "verify-deploy 33 项全绿（C0–C20）；C10a–C10h 逐项负向注入各自转红、复原转绿（纪律 8）。C10g 第⑥段（role 归一/未知拒收/提议只落未核验段/门口 400/自报不抬 confidence）2026-09-14 五处注入 5/5 转红；C10h 夹具含 10 类痕迹形状 + 6 条中文反例，且把 AING_SCRUB_ASCII_MIN 调到不可达即转红（证明行内特征层非空转）",
       "date": "2026-09-14",
       "limits": "；C10b 口径修正（2026-09-14 由真数据撞出）：panel.health.entity_count 的口径是活跃规模（metabolism-panel.js:49 WHERE status=active），而本门原先拿全库 COUNT(*) 比 → 库里一旦出现非活跃行（归档/剪枝留痕、待办销办 status=done）就误报面板与库不符；现改为同口径比并同时印「活跃 N / 全库 M / 链接 K」，同一条数据下由红转绿即为证明",
       "note": ""

@@ -552,9 +552,9 @@ node src/setup-db.js --backup     # 手动备份
 
 ## 🔬 Verification Evidence / 验证证据
 
-> aing 的每个声称都附带可复现的验收脚本——32 项部署门禁（C0–C20，`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
+> aing 的每个声称都附带可复现的验收脚本——33 项部署门禁（C0–C20，`verify-deploy.js`）拦截部署，KESPI 敏感性验证（腐坏注入→红灯 0.37→逐步修复→绿灯 0.81），意识层闭环实测（kernel 停滞→growth-director 感知→full_metabolism 触发），检索质量 A/B 对照（语义 0.838 vs 关键词 0.428，1.96 倍）。6 项架构证明经独立核验通过，M4 五层全部解锁。
 >
-> *Every claim carries a reproducible verification script — 32-item (C0–C20) deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison (caliber-dependent, see M4 §I4/§J). 6 architectural proofs independently verified; M4 record now spans A–K (incl. OPT sandbox re-run §J and closeout §K).*
+> *Every claim carries a reproducible verification script — 33-item (C0–C20) deployment check, KESPI sensitivity test (corrupt→red→fix→green), consciousness loop test, search A/B comparison (caliber-dependent, see M4 §I4/§J). 6 architectural proofs independently verified; M4 record now spans A–K (incl. OPT sandbox re-run §J and closeout §K).*
 
 ### 报告与数据集 / Reports & Data
 

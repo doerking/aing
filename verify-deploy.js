@@ -713,6 +713,103 @@ async function main() {
     }
   });
 
+  // ── C10i. API 写面身份闸 + 标签闸（洞①②收口 2026-11-06）────────────────
+  await check('C10i API entity 写面身份闸 + 标签闸（洞①②收口，2026-11-06）', async () => {
+    // 出处：POST /api/entity 旧默认 status:active + confidence:0.7、PATCH 可翻 active / confidence 任意，
+    // 外来者绕开 distill.js 兑付直挂资产身份进库（洞①）；客户端自报 tags 任意字符串直入 entities.tags
+    // 列，污染「标签=加载单位」+ KA 资产化加权 + 检索召回（洞②）。收口后行为须在此真跑证，非静态 grep。
+    const fsx = require('fs'), sp = require('child_process'), http = require('http');
+
+    // ① 纯函数面：auto-ingest.renderConversationDoc 客户端自报 tags 不得进 frontmatter.tags 列
+    const aiMod = require('./src/auto-ingest.js');
+    const doc = aiMod.renderConversationDoc({
+      sessionId: 'c10i-probe',
+      timestamp: '2026-11-06T00:00:00.000Z',
+      messages: [{ role: 'user', content: 'C10i 探针原话：这条消息必须被保留，用于证明收口不碰详情本身。', timestamp: 't1' }],
+      distillation: { summary: 's', entities: [], tags: ['injected-poison-tag'] },
+      serverEntities: [], serverTags: ['server-true-tag']
+    });
+    if (doc.frontmatter.tags.includes('injected-poison-tag')) {
+      throw new Error('洞②回潮：客户端自报 tags 仍进 frontmatter.tags 列 → 防标签注入未收口');
+    }
+    if (!doc.frontmatter.tags.includes('server-true-tag')) {
+      throw new Error('服务端抽取 tags 丢失：frontmatter.tags 应包含 server-true-tag');
+    }
+    if (!doc.rawDoc.includes('injected-poison-tag') || !doc.rawDoc.includes('Agent 提议')) {
+      throw new Error('自报 tags 未降级到「## Agent 提议」段文本留痕 → 注释与实现脱节');
+    }
+
+    // ② 静态面：api-server.js 必须有 sanitizeTags 函数 + POST/PATCH 不得写默认 active/0.7
+    const apiSrc = fsx.readFileSync(path.join(PKG_DIR, 'src', 'api-server.js'), 'utf8').replace(/\r/g, '');
+    if (!/function sanitizeTags/.test(apiSrc)) {
+      throw new Error('api-server.js 缺 sanitizeTags 函数 → 标签净化闸未落地');
+    }
+    if (/\bstatus\s*[:=]\s*['"]active['"]/.test(apiSrc.split('/api/entity').slice(-1).join('')) &&
+        !/pending-distillation/.test(apiSrc)) {
+      throw new Error('api-server.js entity 写面仍默写 active → 洞①身份闸未收口');
+    }
+
+    // ③ HTTP 面：隔离假院真起 api-server，逐路由打真行为断言
+    const probe = path.join(PKG_DIR, '.temp', 'gate-c10i-probe');
+    fsx.rmSync(probe, { recursive: true, force: true });
+    for (const d of ['raw', 'logs', 'wiki', 'mustard-seeds', 'data']) fsx.mkdirSync(path.join(probe, d), { recursive: true });
+    fsx.cpSync(path.join(PKG_DIR, 'src'), path.join(probe, 'src'), { recursive: true });
+    fsx.copyFileSync(path.join(PKG_DIR, 'growth.config.example.js'), path.join(probe, 'src', 'growth.config.js'));
+    if (fsx.existsSync(path.join(PKG_DIR, 'knowledge.db'))) fsx.copyFileSync(path.join(PKG_DIR, 'knowledge.db'), path.join(probe, 'knowledge.db'));
+
+    let srv = null, port = 0, log = '';
+    for (let tryPort = 4220; tryPort < 4236 && !srv; tryPort++) {
+      port = tryPort;
+      srv = sp.spawn('node', [path.join(probe, 'src', 'api-server.js')], { cwd: probe, env: { ...process.env, AING_API_PORT: String(port), KB_ROOT: probe }, stdio: ['ignore', 'pipe', 'pipe'] });
+      srv.stdout.on('data', d => log += d); srv.stderr.on('data', d => log += d);
+      const t0 = Date.now(); let up = false;
+      while (Date.now() - t0 < 20000) {
+        await new Promise(r => setTimeout(r, 400));
+        if (/EADDRINUSE/.test(log)) break;
+        try { const g = await httpReq(http, port, 'GET', '/api/status'); if (g.status === 200) { up = true; break; } } catch (e) { }
+      }
+      if (up) break;
+      try { srv.kill(); } catch (e) { }
+      srv = null;
+    }
+    if (!srv) throw new Error('C10i 假院 api-server 起不来（端口 4220–4235 全试过）：' + log.replace(/\r/g, '').split('\n').filter(Boolean).slice(-3).join(' / ').slice(0, 160));
+    try {
+      // 洞①：POST /api/entity 必须 201 + status=pending-distillation + confidence=0
+      // 传明确 id:'c10i' 控制实体主键（与下方 PATCH 目标一致）
+      const p1 = await httpReq(http, port, 'POST', '/api/entity', { id: 'c10i', name: 'C10iProbe', type: 'Concept', content: 'c10i 探针', tags: ['ok-tag'], confidence: 0.99, status: 'active' });
+      if (p1.status !== 201) throw new Error('POST /api/entity 未 201（实得 ' + p1.status + '）：' + String(p1.raw).slice(0, 120));
+      if (p1.json.status !== 'pending-distillation') throw new Error('POST entity status=' + p1.json.status + '（应 pending-distillation）→ 洞①身份闸未收口');
+      if (Number(p1.json.confidence) !== 0) throw new Error('POST entity confidence=' + p1.json.confidence + '（应 0）→ 洞①置信闸未收口');
+
+      // 洞①升级面：PATCH status=active 必须 403
+      const p2 = await httpReq(http, port, 'PATCH', '/api/entity/c10i', { status: 'active' });
+      if (p2.status !== 403) throw new Error('PATCH status=active 未 403（实得 ' + p2.status + '）→ 洞①active 闸门未收口');
+
+      // 洞①confidence 关闭：PATCH confidence=0.9 后读回 DB 仍 0
+      const p3 = await httpReq(http, port, 'PATCH', '/api/entity/c10i', { confidence: 0.9, content: '改内容' });
+      if (p3.status !== 200) throw new Error('PATCH confidence+content 应 200（实得 ' + p3.status + '）');
+      const p3read = await httpReq(http, port, 'GET', '/api/entity/c10i');
+      if (Number((p3read.json.entity || {}).confidence) !== 0) throw new Error('PATCH confidence=0.9 落库了（confidence=' + p3read.json.entity.confidence + '）→ 置信闸未收口');
+
+      // 洞②标签闸：POST 25 个 tag → 库内 ≤20
+      const p4 = await httpReq(http, port, 'POST', '/api/entity', { name: 'Tag25', type: 'Concept', tags: Array.from({ length: 25 }, (_, i) => 't' + i) });
+      const p4r = await httpReq(http, port, 'GET', '/api/entity/tag25');
+      const t25 = JSON.parse((p4r.json.entity || {}).tags || '[]');
+      if (t25.length !== 20) throw new Error('POST 25 tags 应截 20（实得 ' + t25.length + '）→ 标签数量闸未收口');
+
+      // 洞②标签闸：300 字 tag 应截 100
+      const p5 = await httpReq(http, port, 'POST', '/api/entity', { name: 'TagLong', type: 'Concept', tags: ['x'.repeat(300), 'n'] });
+      const p5r = await httpReq(http, port, 'GET', '/api/entity/taglong');
+      const tL = JSON.parse((p5r.json.entity || {}).tags || '[]');
+      if (tL.length !== 2 || tL[0].length !== 100) throw new Error('300 字 tag 应截 100（实得 len=' + (tL[0] ? tL[0].length : 'n/a') + '）→ 标签限长闸未收口');
+    } finally {
+      try { srv.kill(); } catch (e) { }
+      await new Promise(r => setTimeout(r, 300));
+      fsx.rmSync(probe, { recursive: true, force: true });
+    }
+    return '纯函数：自报 tags 不进 frontmatter.tags 列（只落 Agent 提议段留痕）· 静态：sanitizeTags 在位 · HTTP 真跑：POST 强制 pending-distillation/confidence 0、PATCH active 403、confidence 不落库、25 tags 截 20、300 字截 100';
+  });
+
 
   await check('C11 最后一米（备忘录联通 + 会话入库加载，无 server 亦可用）', () => {
     // 立成此门禁的理由（2026-09-14 实测三处断裂）：全绿只证明「包是好的」，证明不了

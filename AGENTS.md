@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（32 项）、M4 组件链引导（数据报告 A–K）、已知坑 22 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（33 项）、M4 组件链引导（数据报告 A–K）、已知坑 22 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -82,6 +82,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 | C10f | Cut component cannot revive (multi-tenant) / 已砍组件防复活 | 删除 tenant 相关代码与声称文案，历史决策文档按纪律豁免 |
 | C10g | Session ingest contract end-to-end / 会话入库端到端契约 | 同步 `PRODUCED_SECTIONS` ↔ `distill.RAW_SECTIONS`；恢复 WAL 与落盘 |
 | C10h | Detail-only ingest (collection trace stripped) / 只入贴出来的详情 | 恢复 `src/ingest-scrub.js` 与 `addMessage` 入口接线；`config.ingest.scrubTrace` 不得置 0 |
+| C10i | API entity 写面身份闸 + 标签闸（洞①②收口 2026-11-06）/ API entity write-surface identity + tag gate | POST `/api/entity` 一律落 `pending-distillation`/`confidence:0`（客户端自报 status/confidence 忽略）；PATCH 抬 `active` 回 403、confidence 不对外写；标签经 `sanitizeTags`（≤100字/≤20个/去控制字符）；`auto-ingest` 客户端自报 `distillation.tags` 降级「## Agent 提议」段留痕、不升 `frontmatter.tags` 列。负向自证走隔离院真跑行为证，非静态 grep |
 | C11 | Last-mile wiring: memo reachable without a server + session ingest actually lands / 最后一米（备忘录联通 + 会话入库加载） | `node src/memo.js` 必须离线跑出纯 JSON 且组件链接六条齐全；入库 CLI 在隔离 KB_ROOT 真跑必须成档（`flushed=true`、`traceRemoved≥1`、WAL 排空）且缺参非零退出不得伪造消息；两条命令必须同时出现在 AGENTS.md 与 README（否则下一场没人做） |
 | C12 | Memo三块：用户待办可写可读 / 健康不许写死 / 派单由异常驱动 | 空库探针必须判 `broken` 并派 senior-engineer（证明健康不是写死的 ok）；待办写→读→分用户/agent→due→销办→`--all` 留痕必须全通且走同一张 `entities(type=Todo)` 表；`--peek`/`--dispatch` 必须给出 roles[].why/gate/how；AGENTS 与 README 必须登记 `memo.js todo add` |
 | C13 | 代谢与初始化都不替用户提交（git 写权归人） | `run-metabolism.js` 必须在任何步骤前默认注入 `AING_NO_AUTOCOMMIT=1`，`init-knowledge-base.js --git` 的首次 commit 必须走 `AING_AUTOCOMMIT=1` opt-in 且**不得覆写院子已有的 `.gitignore`**（opt-in：确需自动提交要显式开）。隔离假院真跑双向证明：带守卫跑 compile 步提交数不变且步骤日志见「Git commit 跳过」；假院内删守卫必须立刻多出「chore: compile knowledge base」；init --git 未 opt-in 不动提交且哨兵行存活、opt-in 后出现「chore: initial knowledge base setup」（见坑 12） |
@@ -171,7 +172,7 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 而「无条件尊重档内声明 id」又会把 19 篇没有 id 的人工档并成一个 `undefined` 实体（`String(undefined)` 是真值）。
 **对策**：入库契约由 verify-deploy C10g 双向钉死（生产端节集 ⊆ 消费端白名单 + 临时库端到端真跑 + 身份/落盘/id 归属断言）；
 身份与置信一律服务端定，客户端自报内容只进「Agent 提议（未核验）」节等兑付；`accepted` 之前必须先落 WAL（`data/ingest-buffer.jsonl`，启动时重放）。
-**2026-11-06 扩到 API 写面（洞①②收口，不新增门禁编号、C19 单源不漂）**：`POST /api/entity` 一律落 `pending-distillation`/`confidence:0`（客户端自报 status/confidence 忽略）、`PATCH /api/entity` 抬 `active` 回 403 且 confidence 不对外写（active 唯一写位 = `distill.js` 兑付）；`auto-ingest` 客户端自报 `distillation.tags` 降级「## Agent 提议」段引用行留痕、不再并入 `frontmatter.tags` 列（防标签注入），API entity 写面 `tags` 经 `sanitizeTags`（≤100字/≤20个/去控制字符）。负向自证走隔离院真跑（.temp/sec-gates-behavior.js，8/8），非静态 grep。
+**2026-11-06 扩到 API 写面（洞①②收口，已立成门禁 C10i；C10i 登记入验收器后计数 32→33，C19 单源同步）**：`POST /api/entity` 一律落 `pending-distillation`/`confidence:0`（客户端自报 status/confidence 忽略）、`PATCH /api/entity` 抬 `active` 回 403 且 confidence 不对外写（active 唯一写位 = `distill.js` 兑付）；`auto-ingest` 客户端自报 `distillation.tags` 降级「## Agent 提议」段引用行留痕、不再并入 `frontmatter.tags` 列（防标签注入），API entity 写面 `tags` 经 `sanitizeTags`（≤100字/≤20个/去控制字符）。负向自证走隔离院真跑（.temp/sec-gates-behavior.js，8/8），非静态 grep。
 
 **11. 入库只存「贴出来的详情」，不存「贴出来之前干了什么」（2026-09-14 口径）。**
 `role: research` 是消息分类，不是采集流程：本包服务端**永不搜索、永不抓取、永不核验来源**（实测：`source` 填不可达 IP，107ms 返回，档里只多一行字面标注；库里 0 条 URL 链接）。
