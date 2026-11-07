@@ -600,7 +600,7 @@ mindmap
       状态：已对齐
     🏋️ 训练层
       SkillOpt 六阶段 ReflACT
-      AlphaEvolve 血统 · OpenEvolve
+      AlphaEvolve 系（经 OpenEvolve 开源复现）
       arXiv:2605.23904
       状态：adapter 就位
     🗄️ 记忆层
@@ -618,7 +618,7 @@ mindmap
     🏗️ 工程层
       Harness Engineering：aing 即 agent 的 harness
       LangChain Harness Anatomy 2026
-      SEAGym · Browser Harness
+      翁荔博客 · SEAGym · Browser Harness
       状态：已对齐
     🚀 aing 本体
       引擎就绪
@@ -631,12 +631,12 @@ mindmap
 
 | 层 | 锚点 | 出处 | 状态 |
 |---|---|---|---|
-| 🧠 思想层 | GWT → Jacobian Lens (2026-07) | [Baars/Dehaene](https://www.transformer-circuits.pub/) · Anthropic 实证 | 已对齐 |
-| 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 血统 | [MSR SkillOpt (arXiv:2605.23904)](https://arxiv.org/abs/2605.23904) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
+| 🧠 思想层 | GWT → Jacobian Lens (2026-07) | Baars 1988《A Cognitive Theory of Consciousness》· Dehaene 全局神经工作空间（无在线版）· [Anthropic 实证](https://www.transformer-circuits.pub/) | 已对齐 |
+| 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 系（经 OpenEvolve 开源复现） | [微软研究院（Microsoft Research）· SkillOpt（arXiv:2605.23904）](https://arxiv.org/abs/2605.23904) · [代码](https://github.com/microsoft/SkillOpt) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
 | 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 （本包的双时态＝**编译时态 × 代谢时态**，不是数据库 valid-time/transaction-time 双列） | 主 agent 自收敛，非编排手写 | 迭代中 |
-| 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [MSR SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
-| 🏗️ 工程层 | Harness Engineering：aing 即 agent 的 harness | [LangChain Harness Anatomy 2026](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) · [翁荔 SEAGym 2026](https://arxiv.org/abs/2606.17546) · [Browser Harness 592 行](https://github.com/browser-use/browser-harness) | 已对齐 |
+| 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [微软研究院（Microsoft Research）· SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
+| 🏗️ 工程层 | Harness Engineering：aing 即 agent 的 harness | [LangChain Harness Anatomy 2026](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) · [翁荔《Harness Engineering for Self-Improvement》（博客）](https://lilianweng.github.io/posts/2026-07-04-harness/) · [SEAGym（清华，arXiv:2606.17546）](https://arxiv.org/abs/2606.17546) · [Browser Harness 592 行](https://github.com/browser-use/browser-harness) | 已对齐 |
 
 ## 🙏 Acknowledgments / 致谢
 
@@ -674,9 +674,10 @@ mindmap
 ### 工程实践 · 理念同构 / Engineering Practice (isomorphic, not a code dependency)
 
 - **[LangChain · The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness)**（2026）— "讲不清 harness，模型就成了你的架构"，与本包"门禁即架构"的立场相合。
-- **[翁荔 · Harness Engineering for Self-Improvement / SEAGym](https://arxiv.org/abs/2606.17546)**（清华，2026-07）— harness 层才是自我改进的真瓶颈；本包把验收器与绿名单当 harness 治理。
+- **[翁荔（Lilian Weng）· Harness Engineering for Self-Improvement](https://lilianweng.github.io/posts/2026-07-04-harness/)**（博客，2026-07-04；作者时任 Thinking Machines Lab）— 主张 harness 层优先于模型权重：近期 RSI 的路径在外部系统而非权重。本包"门禁即架构"与此相合。**此为博客观点，非论文，不作学术引用。**
+- **[SEAGym](https://arxiv.org/abs/2606.17546)**（清华大学团队，2026-06；代码 github.com/antropy-research/SEAGym）— 把自进化 agent 的评测建成动态环境：只报初末分数会掩盖中间退化。**与上条为两件事——此前本 README 曾合并为一条并误置作者，2026-11-07 拆分。**
 - **[Browser Harness](https://github.com/browser-use/browser-harness)**（Browser Use 团队，2026-04）— 极简直连、少抽象的工程口味与本包脚本面相近。
-- 以上三件**均为理念同构，本包不含其任何代码**；谱系表"工程层＝已对齐"就是这个口径（别去找一个叫 harness 的模块）。
+- 以上四件**均为理念同构，本包不含其任何代码**；谱系表"工程层＝已对齐"就是这个口径（别去找一个叫 harness 的模块）。
 
 > 灵感属于所有人，实现属于此刻。/ *If I have seen further, it is by standing on the shoulders of giants.*
 
