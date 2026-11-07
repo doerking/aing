@@ -632,7 +632,7 @@ mindmap
 | 层 | 锚点 | 出处 | 状态 |
 |---|---|---|---|
 | 🧠 思想层 | GWT → Jacobian Lens (2026-07) | Baars 1988《A Cognitive Theory of Consciousness》· Dehaene 全局神经工作空间（无在线版）· [Anthropic 实证](https://www.transformer-circuits.pub/) | 已对齐 |
-| 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 系（经 OpenEvolve 开源复现） | [微软研究院（Microsoft Research）· SkillOpt（arXiv:2605.23904）](https://arxiv.org/abs/2605.23904) · [代码](https://github.com/microsoft/SkillOpt) · [OpenEvolve](https://github.com/codelion/openevolve) | adapter 就位 |
+| 🏋️ 训练层 | SkillOpt 六阶段 (ReflACT) + AlphaEvolve 系（经 OpenEvolve 开源复现） | [微软研究院（Microsoft Research）· SkillOpt（arXiv:2605.23904）](https://arxiv.org/abs/2605.23904) · [代码](https://github.com/microsoft/SkillOpt) · [OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve) | adapter 就位 |
 | 🗄️ 记忆层 | Forms–Functions–Dynamics 三维框架 | [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) · [Agent-Memory-Paper-List](https://github.com/Shichun-Liu/Agent-Memory-Paper-List) | 双脑落地 / 双时态迭代 |
 | 🧬 结构层 | 交叉时态双脑：左右脑单交叉 × 双时态 （本包的双时态＝**编译时态 × 代谢时态**，不是数据库 valid-time/transaction-time 双列） | 主 agent 自收敛，非编排手写 | 迭代中 |
 | 🔌 生态层 | SkillOpt 源码签名核对（零 wrapper） | [微软研究院（Microsoft Research）· SkillOpt](https://microsoft.github.io/SkillOpt/) | EnvAdapter 就位，冒烟全绿 |
