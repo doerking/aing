@@ -348,7 +348,7 @@ node src/query.js "三路突击" --limit 5
 | 实体 KESPI 显示 `pending` | 编译后尚未首评（P1b 流转） | 跑 `node src/kespi-check.js` 或全量代谢；**非故障 / not a fault** |
 | 日志出现「中文 / English」双语文 | 本迭代双语输出（预期） | 无需处理；勿当乱码「修复」，勿改机器令牌 |
 | `/api/ingest` 后 raw 档无蒸馏摘要 | 请求体未带 `distillation` | 可选字段，缺省落「待生成 / pending」占位，非错误；带自报也只进提议节 |
-| `distill.js` 报 `no raw messages` | 档里没有可识别的原话节（角色节白名单没对齐） | 看 C10g 是否红；改任一节名必须同步 `auto-ingest.PRODUCED_SECTIONS` ↔ `distill.RAW_SECTIONS` |
+| `distill.js` 报 `no raw messages` | 档里没有可识别的原话节（角色节白名单没对齐） | 看 C10g 是否红；改任一节名必须同步 `auto-ingest.PRODUCED_SECTIONS` ↔ `distill.RAW_SECTIONS`。注意 dsh 能力叙事档**不走**节白名单，走 `extractCapabilityRaw` 区间捕获（锚「能力单元\|Capability Unit」双语标记、与段名/层级/locale 无关，见 AGENTS 坑 23）——这类档报 no raw messages 只可能是单元标记被剥掉或档非能力叙事 |
 | `accepted:true` 但 `raw/inbox/` 没档 | 正常：消息在 WAL 挂起，未触发 flush | 攒够批次 / 会话静默 / 定时器任一触发才落档；进程重启会从 WAL 重放 |
 | `POST /api/ingest` 回 `422 collection-trace-only` | 正文全部是采集过程行 | 预期行为（只入贴出来的详情）；把要保存的详情正文单独贴一条 |
 | 代谢提示「already running (pid=…)」且退出码 0 | 并发保护：跨进程原子锁（2026-09-08 起），第二实例自动让位 | 非故障 / not a fault：等当前代谢结束，或交给 scheduler 排程 |
