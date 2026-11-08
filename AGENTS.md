@@ -1,6 +1,6 @@
 ---
 tags: [aing, deploy, discipline, must-read]
-description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（33 项）、M4 组件链引导（数据报告 A–K）、已知坑 22 条、院际对齐与沙盒复原、汇报格式
+description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C20（33 项）、M4 组件链引导（数据报告 A–K）、已知坑 23 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
@@ -263,6 +263,14 @@ Expected last line / 预期输出末行：`🟢 ALL GREEN —— 部署验收通
 ② **K（同形 P2-4）**：`api-server.js /api/delta` 把 since 转成 ISO-T-Z 串（`...T...Z`）去跟 SQLite `datetime('now')` 嘅**空格-UTC** 串（`... ...`）做字典序比较——同刻边界实体因 `space(0x20) < T(0x54)` 被漏算。query.js 嘅 P2-4 修咗同病根喺 recency 面，但**同病根喺 api-server since 比较面漏网**——同形病根要全仓扫，唔系修一处。
 **对策**：任何「用正则提取值 / 用时间串比较」嘅地方，必须对**真实数据形状**（中文 ID、`datetime('now')` 空格 UTC、9 段 tag）跑一次真值断言（同坑 15「接线类断言必须真跑函数体」、坑 11「行首锚定」），唔系照默认 ASCII 字符集 / 默认 ISO 格式写；**破坏性操作（`unlinkSync` / 删档 / 删表）前更要对 100% 真实样本跑「误删 = 0」负向证**。证据：`docs/KESPI-READPATH-FIX-2026-11-03.md` §六-补（J）+ §八（K），探针 `.temp/probe-prune-links.js` / `.temp/probe-delta.js` / `.temp/probe-delta-fix.js`。
 / **Charset + time-format assumptions in extractors/comparators must be proven against REAL data shapes, not written against default ASCII / default ISO** — J: `\w` regex 唔匹配中文字 → 误删 80.9% 有效链档；K: ISO-T-Z since vs SQLite 空格-UTC 字典序边界漏算（同 query.js P2-4 病根，另一比较面漏网）。Prove against real data (Chinese IDs, `datetime('now')` space-UTC), and run a 100% "0 false-deletions" negative proof before any destructive op; scan the WHOLE repo for the same shape, not just the one site you just fixed.
+
+**23. 能力叙事节名契约权威在消费端（distill），不靠生产者降标题迁就（2026-11-09，层置铁律 + 探针实锤）。**
+dsh-aing-bridge 把会话组织成「一次能力显现」六段（场景/思维/手段与编排/产出/会话级校准），作单条 `role:assistant` 消息喂 `auto-ingest` → 嵌入「## Agent 回复」节后，`distill.extractRawMessages` 旧截断正则 `(?=\r?\n##\s|$)` 会在**首个嵌套 `##`** 处截断 → 隔离院探针实测：非空 18 行只留 1 行、**丢 94%**（且留 1 行不报 `no raw messages`，比坑 10 全丢更静默，埋雷更深）。
+**层置判断**：节名契约是**消费端声明**——生产者（桥侧 `capability-narrative.js`）的段名/标题层级（h2/h3）演进**不应回流改发布包**；让生产者降标题（`##`→`###`）迁就消费侧截断是**错的层**（把「某消费者的解析习惯」固化进「内容契约」，且只覆盖一条喂入路）。
+**对策（已落地）**：`distill.js` 增 `extractCapabilityRaw()` **区间捕获**——起=档内首个「`能力单元`」标题行（h1~h6 层级鲁棒），止=其后首个消费端结构节标题行（`提取实体/标签/蒸馏摘要`），区间内收所有非标题/非引用/非截断标记/非分隔线行（含未列名段落）；与既有 `RAW_SECTIONS`「## Agent 回复」捕获重叠行由 `present` 集去重。一次覆盖 dsh 两条喂入路：① feed-ingest 单条 assistant 嵌套「## Agent 回复」节 ② raw/inbox/dsh-*.md 顶层落档。段名改口（「场景」→别的）消费侧**零改动**（不靠段名白名单）。
+**门禁面**：verify-deploy **C10g** 增行为层断言——喂一份六段能力叙事档证六段原话全捕获 + **负向证**（拿掉「能力单元」标记后仍捕获 = 消费侧没靠单元标记定界、会误吞非能力档结构行 → 红）。
+**负向自证**（`.temp/probe-capability-narrative.js`，隔离院真跑）：六段内容行断言全中、结构节（`提取实体/标签`）内容零污染、拿掉「能力单元」标记后捕获 0 行（证行为非橡皮章）。
+/ **The section-name contract of the capability narrative belongs to the CONSUMER (distill), not the producer** — letting the producer drop heading levels to appease the consumer's truncation regex is the wrong layer (it hardcodes one consumer's parsing habit into the content contract and covers only one feed path). Fixed in distill via region-capture anchored on the `能力单元` unit marker (level-robust, covers both feed-ingest nested + raw/inbox top-level), gated in C10g with a behavioral assertion + a negative proof (strip the marker → 0 captured, proving it is not a rubber-stamp gate).
 
 ## Daily Operation / 日常运行（部署完成后）
 

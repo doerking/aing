@@ -573,8 +573,51 @@ async function main() {
     if (!/rejected === 'unknown-role'[\s\S]{0,260}json\(res, 400/.test(apiSrc)) {
       throw new Error('HTTP 门口不再把 unknown-role 报成 400：调用方收不到合法值清单，会继续误传');
     }
+    // 能力叙事区间捕获（2026-11-09 层置铁律落消费端）：喂一份 dsh 六段能力叙事档，证原话全捕获 + 负向证
+    const capNarrative = [
+      '# 能力单元 1', '',
+      '## 场景（触发）', '探针场景：分析 2026 中期选举舆论走向。', '',
+      '## 思维（能力内核）', '探针思维：分舆论源、要证据、不预设立场。', '',
+      '## 手段与编排（工具执行）',
+      '### 编排 · dispatch',
+      '参数: {"role":"research","task":"抓三个来源"}',
+      '结果: 来源A高/来源B中/来源C低',
+      '**审批校准**: 审批true dispatch',
+      '### 手段 · tool.search',
+      '参数: {"q":"midterms polling"}',
+      '结果: [抓取结果……]', '',
+      '## 产出', '探针产出：按判断成文模板 v2。', '',
+      '---', '',
+      '# 会话级校准', '',
+      '- **反馈**: 探针反馈，来源C不可信剔掉',
+    ].join('\n');
+    const capDoc = ingest.renderConversationDoc({
+      sessionId: 'c10g-cap', timestamp: '2026-11-09T00:00:00.000Z',
+      messages: [{ role: 'assistant', content: capNarrative, timestamp: 't3' }],
+      serverEntities: [], serverTags: [],
+    });
+    const capRaw = distill.extractRawMessages(capDoc.rawDoc);
+    const capExpected = [
+      '探针场景：分析 2026 中期选举舆论走向。',
+      '探针思维：分舆论源、要证据、不预设立场。',
+      '来源A高/来源B中/来源C低',
+      '审批true dispatch',
+      '探针产出：按判断成文模板 v2。',
+      '探针反馈，来源C不可信剔掉',
+    ];
+    const capMissing = capExpected.filter(e => !capRaw.some(r => r.includes(e) || e.includes(r.trim())));
+    if (capMissing.length) {
+      throw new Error('能力叙事六段有 ' + capMissing.length + ' 段未捕获（[' + capMissing.join(' / ') + ']）→ '
+        + 'distill 节截断把嵌套 ## 段落静默吃掉（2026-11-09 探针实测丢 94%，比坑 10 更静默）→ 走区间捕获，勿回退到节白名单');
+    }
+    const capStripped = capDoc.rawDoc.replace(/能力单元/g, '单元X');
+    const capStrippedRaw = distill.extractRawMessages(capStripped);
+    const capStill = capStrippedRaw.filter(r => capExpected.some(e => e.includes(r.trim()) && r.trim().length > 6));
+    if (capStill.length) {
+      throw new Error('拿掉「能力单元」标记后仍捕获 ' + capStill.length + ' 行能力内容 → 消费侧没靠单元标记定界，会误吞非能力档结构行');
+    }
     return '生产端 ' + ingest.PRODUCED_SECTIONS.length + ' 节全被识别 + 端到端原话 ' + raws.length + ' 条/要点 ' + dist.points.length
-      + ' 条 + id↔文件名对齐 + 自报不定身份 + role 白名单/别名 + 提议只落未核验段 + 运行态落 ' + rawDir + '（已 ignore）';
+      + ' 条 + id↔文件名对齐 + 自报不定身份 + role 白名单/别名 + 提议只落未核验段 + 能力叙事六段全捕获（负向证 0 行）+ 运行态落 ' + rawDir + '（已 ignore）';
   });
   await check('C10h 只入贴出来的详情（采集过程剥除）', () => {
     // 用户口径（2026-09-14）：入库只要「贴出来的详情」；贴出来之前为了拿到它所做的 HTTP

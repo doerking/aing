@@ -76,10 +76,53 @@ function sha16(obj) {
  * 「no raw messages」拒蒸（影子实测 3/3 FAIL、蒸馏债永久还不上）。
  * 现两侧名单都由代码导出，门禁 C10g 静态比对「生产端 ⊆ 消费端」并做端到端实测。
  * 人工档与历史档的「## 原始消息」继续兼容。
+ * 能力叙事节（2026-11-09，dsh-aing-bridge 六段「能力显现」：场景/思维/手段与编排/产出/会话级校准）
+ * 的节名契约权威在**本仓（distill 消费端）**；按「能力单元」单元标题区间捕获，h1~h4 层级鲁棒，生产者不为此降标题级
+ * （层置铁律：迁就节截断在生产者降标题是错误的层；坑 10 同族——白名单漏节名 → 该节整体静默丢弃）。
  */
 const RAW_SECTIONS = ['原始消息', '用户提问', 'Agent 回复', 'Agent 分析', '收集资料'];
 
+// 层级鲁棒：## 与 ### 标题均认（生产者无论用 h2 还是 h3 单元节都可被捕获）。
+
 function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/**
+ * 能力叙事区间捕获（dsh-aing-bridge「能力显现」六段；行式定界，2026-11-09 层置铁律落消费端）：
+ *  起 = 档内首个「能力单元」单元标题行（h1~h6 层级鲁棒）；
+ *  止 = 其後首个消费端结构节标题行（提取实体/标签/蒸馏摘要），无则至档尾。
+ *  ① 区间内收所有非标题、非引用、非截断标记、非分隔线行（含未列名段落）——不靠段名白名单，
+ *     段名演进不再静默丢整段（坑 10 同族反向：白名单漏节名 → 该节整体静默丢弃）。
+ *  ② 止边界锁消费端结构节，避免 feed-ingest 嵌套路下过捕「## 提取实体/## 标签」内容污染蒸馏。
+ *  ③ 覆盖 dsh 两条喂入路：feed-ingest 单条 assistant 嵌套包进「## Agent 回复」节 /
+ *     raw/inbox/dsh-*.md 直接落档（单元标题在顶层）。
+ *  与 RAW_SECTIONS「## Agent 回复」既有捕获重叠的行由已存集去重。
+ *  探针实锤（2026-11-09 隔离院）：旧截断正则下六段叙事作单条 assistant 消息嵌入「## Agent 回复」节
+ *  → extractRawMessages 只留 1 行、非空内容丢 94%（比坑 10 更静默：有 1 行原话不报 no raw messages）。
+ */
+function extractCapabilityRaw(body, out) {
+  const lines = String(body || '').split(/\r?\n/);
+  let startIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^#{1,6}\s*能力单元/.test(lines[i])) { startIdx = i; break; }
+  }
+  if (startIdx === -1) return;
+  let endIdx = lines.length;
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    if (/^#{1,6}\s*(?:提取实体|标签|蒸馏摘要)/.test(lines[i])) { endIdx = i; break; }
+  }
+  const present = new Set(out);
+  for (let i = startIdx + 1; i < endIdx; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (/^#{1,6}\s/.test(line)) continue;   // 标题行（段名/工具项）是结构不是原话
+    if (line === '...' || line === '…' || line.startsWith('>') || line.startsWith('（')) continue;
+    if (/^-{3,}$/.test(line) || /^\*{3,}$/.test(line) || /^_{3,}$/.test(line)) continue;  // 分隔线（--- / *** / ___）
+    if (present.has(line)) continue;
+    out.push(line);
+  }
+}
+
+
 
 /** 从档正文机械提取原话行：按节白名单取，引用行（> 时间戳/来源）不算原话 */
 function extractRawMessages(text) {
@@ -98,6 +141,8 @@ function extractRawMessages(text) {
       out.push(line);
     }
   }
+  // 能力叙事单元区间（dsh 桥六段）：层级鲁棒 + 段名演进不漏（策略见 extractCapabilityRaw 注释）
+  extractCapabilityRaw(body, out);
   return out;
 }
 
