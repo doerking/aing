@@ -610,14 +610,31 @@ async function main() {
       throw new Error('能力叙事六段有 ' + capMissing.length + ' 段未捕获（[' + capMissing.join(' / ') + ']）→ '
         + 'distill 节截断把嵌套 ## 段落静默吃掉（2026-11-09 探针实测丢 94%，比坑 10 更静默）→ 走区间捕获，勿回退到节白名单');
     }
+    // 双语锚（坑 5）：生产者 locale 漂移出英文单元标题时契约不静默断——证「Capability Unit」路真捕获
+    const capEn = capNarrative.replace('能力单元 1', 'Capability Unit 1');
+    const capEnDoc = ingest.renderConversationDoc({
+      sessionId: 'c10g-cap-en', timestamp: '2026-11-09T00:00:01.000Z',
+      messages: [{ role: 'assistant', content: capEn, timestamp: 't4' }],
+      serverEntities: [], serverTags: [],
+    });
+    const capEnMissing = capExpected.filter(e => !distill.extractRawMessages(capEnDoc.rawDoc).some(r => r.includes(e) || e.includes(r.trim())));
+    if (capEnMissing.length) {
+      throw new Error('英文 locale 单元标题（Capability Unit）有 ' + capEnMissing.length + ' 段未捕获 → 起端锚未双语化，生产者 locale 漂移即静默 0 捕获（坑 5 双语纪律）');
+    }
+    // 负向证要 strip 中/英两个标记先算干净（证行为靠单元锚定界，非橡皮章）
     const capStripped = capDoc.rawDoc.replace(/能力单元/g, '单元X');
     const capStrippedRaw = distill.extractRawMessages(capStripped);
     const capStill = capStrippedRaw.filter(r => capExpected.some(e => e.includes(r.trim()) && r.trim().length > 6));
     if (capStill.length) {
       throw new Error('拿掉「能力单元」标记后仍捕获 ' + capStill.length + ' 行能力内容 → 消费侧没靠单元标记定界，会误吞非能力档结构行');
     }
+    const capEnStripped = capEnDoc.rawDoc.replace(/(?:能力单元|Capability Unit)/gi, 'UnitX');
+    const capEnStill = distill.extractRawMessages(capEnStripped).filter(r => capExpected.some(e => e.includes(r.trim()) && r.trim().length > 6));
+    if (capEnStill.length) {
+      throw new Error('拿掉英文「Capability Unit」标记后仍捕获 ' + capEnStill.length + ' 行 → 英文路也没靠单元锚定界');
+    }
     return '生产端 ' + ingest.PRODUCED_SECTIONS.length + ' 节全被识别 + 端到端原话 ' + raws.length + ' 条/要点 ' + dist.points.length
-      + ' 条 + id↔文件名对齐 + 自报不定身份 + role 白名单/别名 + 提议只落未核验段 + 能力叙事六段全捕获（负向证 0 行）+ 运行态落 ' + rawDir + '（已 ignore）';
+      + ' 条 + id↔文件名对齐 + 自报不定身份 + role 白名单/别名 + 提议只落未核验段 + 能力叙事六段全捕获（双语锚 中/英 + 负向证 0 行）+ 运行态落 ' + rawDir + '（已 ignore）';
   });
   await check('C10h 只入贴出来的详情（采集过程剥除）', () => {
     // 用户口径（2026-09-14）：入库只要「贴出来的详情」；贴出来之前为了拿到它所做的 HTTP
