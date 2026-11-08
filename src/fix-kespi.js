@@ -73,16 +73,6 @@ const USE_CASE_TEMPLATES = {
     example: '用户对话自动入库 → 编译 → 代谢 → 质量自检',
     code: '```javascript\n// 双脑架构使用示例\nconst growth = new SelfGrowth(baseDir);\nawait growth.init();\nawait growth.enhanceKespi(true); // 批量增强\nconst results = await growth.search("自成长"); // 语义搜索\n```'
   },
-  'evox-sidecar': {
-    scenario: '独立进程桥接',
-    example: 'WeChat/WhatsApp 桥接服务独立于主应用运行，父进程死亡监控',
-    code: '```typescript\n// EvoX 侧车架构\nconst bridge = new WeixinBridge({\n  port: 8080,\n  auth: process.env.BRIDGE_TOKEN\n});\nawait bridge.start();\n```'
-  },
-  'evox-swarm': {
-    scenario: '蜂群配对协议',
-    example: 'Ed25519 节点身份 + work_claim → DISPATCHED → LLM-as-judge 流程',
-    code: '```typescript\n// 蜂群配对\nconst claim = await swarm.claimWork(taskId, nodeId);\nif (claim.status === "DISPATCHED") {\n  const result = await llmJudge(claim); }\n```'
-  },
   'kespi-gate': {
     scenario: '知识质量门禁',
     example: '入库前检查 freshness/relevance/originality/consistency/provability',

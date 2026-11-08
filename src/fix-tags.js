@@ -26,13 +26,6 @@ const TAG_TEMPLATES = {
   'consciousness-layer-conductor-model': ['consciousness', 'conductor', 'integrated-information', 'theory'],
   'moahier-architecture': ['moahier', 'swarm', 'agent', 'orchestration', 'architecture'],
   'moahier-swarm-tri-path': ['moahier', 'swarm', 'tri-path', 'orchestration', 'agent'],
-  'evox-sidecar-architecture': ['evox', 'sidecar', 'architecture', 'wechat', 'whatsapp'],
-  'evox-swarm-pairing': ['evox', 'swarm', 'pairing', 'identity'],
-  'evox-zero-dependency': ['evox', 'zero-dependency', 'portable', 'deployment'],
-  'evox-security-architecture': ['evox', 'security', 'aes-256', 'encryption'],
-  'evox-deep-architecture': ['evox', 'architecture', 'analysis'],
-  'evox-pairing-budget': ['evox', 'pairing', 'budget', 'rate-limit'],
-  'evox-supervision-watchdog': ['evox', 'supervision', 'watchdog', 'process'],
   'knowledge-graph-representation-learning': ['knowledge-graph', 'embedding', 'representation', 'learning'],
   'knowledge-metabolism-compression-pruning': ['knowledge-metabolism', 'compression', 'pruning', 'optimization'],
   'knowledge-metabolism-sprout-domain-adaptation': ['knowledge-metabolism', 'sprout', 'domain-adaptation'],
@@ -76,11 +69,6 @@ const USE_CASE_TEMPLATES = {
     scenario: '复杂任务分解',
     example: '探索-验证-优化三路并行',
     code: '```javascript\n// 三路突击编排\nconst tri = new TriPathOrchestrator();\nconst result = await tri.execute({\n  description: "知识质量评审",\n  paths: ["explore", "verify", "optimize"]\n});\n```'
-  },
-  'evox-sidecar-architecture': {
-    scenario: '独立进程桥接',
-    example: 'WeChat/WhatsApp 桥接独立进程',
-    code: '```javascript\n// EvoX 侧车架构\nconst bridge = new WeixinBridge({\n  loopback: true,\n  auth: "bearer-token"\n});\nawait bridge.start();\n```'
   },
   'kespi-check-engine': {
     scenario: '知识质量门禁',

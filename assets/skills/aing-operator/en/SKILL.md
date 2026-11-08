@@ -27,7 +27,7 @@ With this skill installed you gain a capability set: **Ops, Repair, Governance, 
 | Master package | `<repo-root>` | Read code, edit docs, run verify-deploy / metabolism / resident services | Never run training or experiments, leave no run traces (__pycache__/runs/ckpt); source changes must go through a shadow first |
 | Training copy | `<opt-copy>` | All training / simulation / experiments happen here | src frozen (read-only) during M3 shadow window |
 | Shadow dirs | `<sqa-root>/aing-shadow-*` | The site of all code changes & verification | Patch-sync only changed files back; keep shadows as audit evidence |
-| Simulator | EvoX chassis (Group A) | EvoX thinks, aing remembers | Never move EvoX run artifacts into the aing store |
+| Simulator | local simulation (Group A) | the simulator thinks, aing remembers | Never move simulator run artifacts into the aing store |
 | Second machine | Group B | Reports only, no direct access | B reports require dual-evidence arbitration before acceptance |
 
 ## 2. Truth-Source Pointers (rules live here; this skill only summarizes)
