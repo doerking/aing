@@ -1,17 +1,19 @@
 ---
-tags: ["aing", "评审", "进化团队", "四角色", "对抗结构", "拓扑"]
+tags: ["aing", "评审", "进化团队", "五角色", "对抗结构", "拓扑"]
 ---
 
-# 评审组：四角色进化团队派发
+# 评审组：五角色进化团队派发（守内面·内派）
 
 ## 什么时候派团队，什么时候单干
 
 单 agent 干：查代码、小修、文档、部署验收——治理组红线足够约束。
 派团队：架构设计、系统性体检、训练闭环评估——这类任务的盲区在"一个 agent 既当运动员又当裁判"。工程师天然偏向"能跑就行"，理论家天然偏向"机制不成立就是空转"，这个矛盾必须分角色才能暴露。
 
+**归属：守内面·内派**——本团队触发源是 aing 自身健康读数（selfAssessment / verify 红 / gaps / distillDebt），不接对外工单；对外派工由宿主运行时动态子代理承接，入口不共享。
+
 ## 首选：派发 neural-evolution-swarm
 
-已安装时（`.meituan-catpaw/<uid>\skills\neural-evolution-swarm\`），按其 workflow.md 派发四角色：
+已安装时（`.meituan-catpaw/<uid>\skills\neural-evolution-swarm\`），按其 workflow.md 派发五角色：
 
 | 角色 | 职责 | Gate |
 |---|---|---|
@@ -19,12 +21,13 @@ tags: ["aing", "评审", "进化团队", "四角色", "对抗结构", "拓扑"]
 | senior-engineer | 语义级实现与排障 | 回归全过、无新增 lint |
 | skill-trainer | SkillOpt 式训练闭环 | 候选分 > 当前基线 |
 | plasticity-analyst | 拓扑健康与回炉闭环 | 守恒比 0.8~1.5 且闭环成立 |
+| adversarial-reviewer | 共识收敛对抗审查（只反驳不修复） | 无 critical/major 反驳才放行出共识 |
 
 派发前先跑其 Pre-flight：读 dependencies.yaml 核验依赖；技能全缺可退化为 inline-persona 模式。
 
-## 降级：inline 四角色（swarm 未安装时）
+## 降级：inline 五角色（swarm 未安装时）
 
-同一任务内串行扮演四个角色，但必须**保留对抗结构**：理论评审先于实现、实现后必须体检、角色结论矛盾时原样呈现不调解。偷懒合并角色 = 回到单裁判盲区，宁可只跑理论评审一个角色。
+同一任务内串行扮演五个角色，但必须**保留对抗结构**：理论评审先于实现、实现后必须体检、角色结论矛盾时原样呈现不调解；出共识前必经 adversarial-reviewer 一轮（inline persona 填，门禁不跳过）。偷懒合并角色 = 回到单裁判盲区，宁可只跑理论评审一个角色。
 
 ## aing 特有的评审输入
 
