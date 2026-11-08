@@ -88,8 +88,9 @@ function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 /**
  * 能力叙事区间捕获（dsh-aing-bridge「能力显现」六段；行式定界，2026-11-09 层置铁律落消费端）：
- *  起 = 档内首个「能力单元」单元标题行（h1~h6 层级鲁棒）；
- *  止 = 其後首个消费端结构节标题行（提取实体/标签/蒸馏摘要），无则至档尾。
+ *  起 = 档内首个「能力单元」单元标题行（h1~h6 层级鲁棒；双语锚 能力单元|Capability Unit，
+ *       生产者 locale 漂移出英文标题时契约不静默断——坑 5 双语纪律，加 locale 只需改本行）；
+ *  止 = 其後首个消费端结构节标题行（提取实体/标签/蒸馏摘要，消费端自有节名恒中文），无则至档尾。
  *  ① 区间内收所有非标题、非引用、非截断标记、非分隔线行（含未列名段落）——不靠段名白名单，
  *     段名演进不再静默丢整段（坑 10 同族反向：白名单漏节名 → 该节整体静默丢弃）。
  *  ② 止边界锁消费端结构节，避免 feed-ingest 嵌套路下过捕「## 提取实体/## 标签」内容污染蒸馏。
@@ -101,9 +102,12 @@ function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
  */
 function extractCapabilityRaw(body, out) {
   const lines = String(body || '').split(/\r?\n/);
+  // 起端锚双语（坑 5 双语纪律）：生产者 locale 漂移出英文单元标题（Capability Unit）时
+  // 契约不静默断；区间法不靠段名白名单（段名 Scene/Thinking 等演进零影响），只认起端标记。
+  const startRe = /^#{1,6}\s*(?:能力单元|Capability Unit)/i;
   let startIdx = -1;
   for (let i = 0; i < lines.length; i++) {
-    if (/^#{1,6}\s*能力单元/.test(lines[i])) { startIdx = i; break; }
+    if (startRe.test(lines[i])) { startIdx = i; break; }
   }
   if (startIdx === -1) return;
   let endIdx = lines.length;
