@@ -21,7 +21,7 @@ status: done
 |---|---|---|
 | ① | 原「Neural Evolution Swarm」章節前 | 新增 `## Swarm Boundary / 蜂群兩面邊界（自維護 vs 對外派工）`——兩面對照表（主體/觸發源/載體/規模/生命周期），四點設計要點，回指 SWARM-RESEARCH §〇 |
 | ② | 原章節改名 + 頭注改口 | 改名 `## Self-Maintenance Swarm (Half-Lifted) / 守內面：神經進化團隊（半拉起）`；頭注加「係守內面（自維護）專用——觸發源全係 aing 自身健康讀數，唔係對外派工入口」 |
-| ③ | 「按數據指標自動維護流程」圖後、Agent Discipline 前 | 新增 `## External Dispatch Swarm / 對外派工面（宿主運行時動態子代理）`——定位宿主運行時（sclaw `dynamic-multi-agent-system` / ZCode Agent 工具），本包無代碼無承諾；機制共享（patch-12 對頭 persona）但入口唔共享 |
+| ③ | 「按數據指標自動維護流程」圖後、Agent Discipline 前 | 新增 `## External Dispatch Swarm / 對外派工面（宿主運行時動態子代理）`——定位宿主運行時動態子代理，本包無代碼無承諾；機制共享（patch-12 對頭 persona）但入口唔共享 |
 
 ### README.md（三刀）
 

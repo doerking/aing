@@ -320,7 +320,7 @@ node src/query.js "三路突击" --limit 5
 > | 面 | 内容 | 触发源 | 载体 | 规模 | 生命周期 |
 > |---|---|---|---|---|---|
 > | **守内面（自维护）** | 神经进化团队 5 角色（theorist/engineer/trainer/analyst + adversarial-reviewer 共识门禁）＋ 导链蜂群（`guide-chain-swarm` 3-agent 启发式投票） | aing 自身健康读数（`selfAssessment` / `verify 红` / `gaps` / `selfImprovement △` / `distillDebt` / KESPI 跌破位 / `blockedGoals`） | `assets/skills/neural-evolution-swarm/**`（包内自撰）＋ `src/guide-chain-swarm.js` | 固定 5 角色严门禁 | 常驻技能资产 + 包内代码 |
-> | **对外派工面** | 宿主运行时动态子代理（sclaw `dynamic-multi-agent-system` / ZCode Agent 工具） | 用户外部工单（非 aing 健康读数） | 宿主运行时面，**不在本包内** | 数量不限，按任务复杂度动态创建 | 完即销毁 |
+> | **对外派工面** | 宿主运行时动态子代理 | 用户外部工单（非 aing 健康读数） | 宿主运行时面，**不在本包内** | 数量不限，按任务复杂度动态创建 | 完即销毁 |
 >
 > - 守内面入口：`node src/memo.js --dispatch`（健康驱动派单）＋ agent 手动；**只接 aing 自身问题，不接对外工单**。
 > - 对外派工面由宿主运行时承担；本包资产不对外派工，宿主面未装 neural-evolution-swarm 属正常（不构成缺口）。
