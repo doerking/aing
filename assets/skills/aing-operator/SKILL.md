@@ -1,7 +1,7 @@
 ---
 name: aing-operator
 description: |
-  aing 知识生命体专项技能组：给任何 agent 一套操作 aing 的完整能力组——运维组（部署验收/代谢/常驻服务）、修复组（影子纪律/定点同步）、治理组（双证据/绿灯解锁/汇报面板）、训练组（SkillOpt 式技能文档训练闭环）、评审组（四角色进化团队派发）。凡任务涉及 aing、<repo-root>、<opt-copy>、影子目录、知识生命体、代谢管线、KESPI、SkillOpt、芥子回炉、意识神经（sensory-ends/guide-chain/consciousness-layer）等，必须先读本技能再动手——aing 的治理红线不在代码里，不读就动手必然踩线（历史上因此产生过 11 个 bug 与多次误报）。
+  aing 知识生命体专项技能组：给任何 agent 一套操作 aing 的完整能力组——运维组（部署验收/代谢/常驻服务）、修复组（影子纪律/定点同步）、治理组（双证据/绿灯解锁/汇报面板）、训练组（SkillOpt 式技能文档训练闭环）、评审组（五角色进化团队派发，守内面·内派）。凡任务涉及 aing、<repo-root>、<opt-copy>、影子目录、知识生命体、代谢管线、KESPI、SkillOpt、芥子回炉、意识神经（sensory-ends/guide-chain/consciousness-layer）等，必须先读本技能再动手——aing 的治理红线不在代码里，不读就动手必然踩线（历史上因此产生过 11 个 bug 与多次误报）。
   Use when 用户提到 aing 生态任何院子（主包/训练副本/影子目录/推演器/第二机），要求部署、验收、运维、修复、训练、评审 aing，或任务的写入目标在 aing 仓库内。
   Do NOT use for 与 aing 无关的普通 Node.js 项目开发（那是 senior-developer 的事）。
 version: "0.2"
@@ -55,7 +55,7 @@ AIGC:
 | 修 bug / 改代码 / 加功能 | 修复组 [tag:修复] | 五步影子 SOP + Windows 坑清单 | [shadow-sop.md](references/shadow-sop.md) |
 | 判真伪 / 写文档声明 / 汇报 / 向用户介绍组件 | 治理组 [tag:治理] | 七条红线（组件透明化 / 部署零偏移）、绿灯面板、B报告仲裁姿态 | [governance.md](references/governance.md) |
 | 训练 / 技能文档优化 / SkillOpt | 训练组 [tag:训练] | SkillOpt 闭环 + 无训练师降级路径 | [training-group.md](references/training-group.md) |
-| 架构设计 / 体检 / 对抗评审 | 评审组 [tag:评审] | 四角色进化团队派发与门禁 | [evolution-team.md](references/evolution-team.md) |
+| 架构设计 / 体检 / 对抗评审 | 评审组 [tag:评审] | 五角色进化团队派发与门禁（守内面·内派） | [evolution-team.md](references/evolution-team.md) |
 
 **标签加载（Tolaria 格式，随取随用）**：本技能全部文件带 frontmatter `tags`，标签是加载单位。行内标签支持 9 段数值 `[tag:xxx:N]`（N=1-9 关联强度，不带 `:N` 默认 5）。标签约定见 `AGENTS.md` 纪律第 7 条。**9 段容量范围**：50 类目健康 / 100 可用 / 150 退化 / 200+ 走样；50 类目为数据库软件进入时机。推演数据见 [TAG-CAPACITY-ANALYSIS.md](../../../docs/Engineering/TAG-CAPACITY-ANALYSIS.md)。
 
