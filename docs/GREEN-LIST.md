@@ -13,7 +13,7 @@ AIGC:
 > 真源：`docs/greenlist.json`（结构化）。本文件是生成视图；改动先改 JSON，再运行 `node tools/gen-greenlist.js`。
 > Agents 渲染面板请直接读 JSON；未列出的能力一律不得对外承诺。
 
-## 绿灯能力（30 项，截至 2026-11-06）
+## 绿灯能力（31 项，截至 2026-11-06）
 
 - ✅ **完整代谢（11 步，含 distill）+ --resume/--step/--smart**
   - 证据：影子回归 11 步全过 7.6s（2026-09-13 M4 验证）（2026-09-03）
@@ -51,6 +51,8 @@ AIGC:
   - 证据：影子实测（2026-09-14 真 HTTP）：5 条混合角色会话 → raw/inbox 档 status=pending-distillation / confidence=0（自报只进提议节）→ compile/import 后实体 id == 文件名干、净增 1 → distill 兑付 ok=1 / 5 points / debt=0；accepted 后杀进程 → WAL 留存 2 条 → 重启重放并落盘。同日 OPT 部署场复跑补出并修掉一个契约漏洞：调用方按直觉传 role=agent 时旧渲染器把它静默归入「用户提问」（说话人被改写、蒸馏器再也分不出谁说的），现别名归一 + 未知 role 整条拒收 + 门口 400；OPT 强杀后 WAL 重放 4 条实测成功、刷盘档零痕迹、身份字段仍 pending-distillation/0（2026-09-14）
 - ✅ **只入贴出来的详情：采集过程行（命令行/请求行/响应头/报文/工具调用回显）在入口剥除且不留存，纯过程内容 422 拒收，metadata 停收**
   - 证据：影子真 HTTP 实测（2026-09-14）：混贴 4 行详情 + 3 行过程 → 档内零过程字样、traceScrubbed=3、distill 兑付 tags=[Agent]；纯过程 → 422；source 填不可达 IP 107ms 返回且库里 0 条 URL 链接；C10h 八项负向注射各自转红。同日 OPT 真机补漏：带 "> " 前缀的请求行与 tool call: bash -c "curl … → 200 OK 12ms" 这类行内痕迹原先漏网（静态门禁全绿而活服务入库），现补行内特征层，并要求整行 ASCII 占比 ≥0.6 才触发，以免剥掉中文正文里对痕迹形状的引用；改后 OPT 复测：混合会话刷盘档仅存详情、纯痕迹 422（2026-09-14）
+- ✅ **dsh 能力叙事六段（场景/思维/手段与编排/产出/会话级校准）按区间捕获入 distill 兑付——锚「能力单元|Capability Unit」双语单元标记（h1~h6 层级鲁棒、locale 漂移不静默断），段名演进消费侧零改动；不走节白名单（区别于 auto-ingest 角色节的两套独立捕获路径）**
+  - 证据：隔离院真跑（2026-11-09）：六段能力叙事作单条 assistant 消息嵌入「## Agent 回复」节，旧截断正则只留 1 行、非空 18 行丢 94%（比坑 10 更静默——留 1 行不报 no raw messages）；extractCapabilityRaw 区间捕获后六段内容行全捕获（中/英 locale 各一组）、结构节（提取实体/标签）零污染、全链 distillContent 出 5 points / rawCount=8；负向证拿掉中/英「能力单元|Capability Unit」标记后捕获 0 行（证行为非橡皮章）。C10g 已固化行为断言 + 英文 locale 变体断言 + 双负向证（2026-11-09）
 - ✅ **院际全量同源核验：tools/verify-sibling-roots.js（`npm run verify:siblings`）逐字节比对 src/tools/包根文件并核对各院库结构（表/列/行数），只读——不写任何文件、不改任何库，退出码机器判定**
   - 证据：2026-09-14 实测：Tip→OPT 换血后报「全量同源 真实漂移 0 · 仅行尾 0 · 缺失 0 · 独有 0」；OPT 复原 L1 后报「真实漂移 15 · 仅行尾 15 · 缺失 2」，与手算 `git ls-files` + sha256 一致；据此确认 `src/sync-opt.js` 只会硬重置到 aing master、不能承载 Tip→OPT 换血。**已知边界（同步登记于 AGENTS 坑 9）**：比对面不含 `docs/` 与 `assets/`（实测 aing 比 Tip 多 24 个跟踪文件、Tip 比 aing 多 7 个，台账上不可见），扩展名白名单不含 `.ps1`（OPT 独有 `tools/verify-baseline.ps1`（**只存在于 OPT 侧**，Tip/aing 包内无此文件，在 Tip 里调用必失败） 被报成「对方独有 0」），未跟踪面依赖 `git status --porcelain` 因而遇目录会折叠 → 文件清单级缺口须手算 `git ls-files`；**2026-09-15 复核发现该工具的比对面历来不含 `docs/`**，遂扩为 src+tools+assets+docs+包根 5 档（143 文件），扩面后当场抓出 OPT 文档面 6 处代差；同日再升级为**整包面（从包根递归，170 文件）**，又抓出两院都缺 `references/` 两档与 OPT 缺 11 个 `simulation/` 证据档，全部补带后两院复测真实漂移 0（2026-09-14）
 - ✅ **最后一米联通：备忘录可离线读（npm run memo / node src/memo.js，HTTP 同口径复用 src/memo.js）+ 会话入库一次性通道真跑成档（缺参即非零退出，不伪造消息）**

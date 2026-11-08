@@ -126,7 +126,7 @@ AIGC:
 
 ### auto-ingest.js — 自动入库入口
 - **能力**：会话消息 → `raw/inbox/*.md` → compile → import → 向量链（chained，失败即断）。四个关键约束（2026-09-14 重做，见 C10g）：
-  1. **导出契约**：`PRODUCED_SECTIONS` / `ROLE_SECTION` / `renderConversationDoc`（纯函数）——蒸馏端 `RAW_SECTIONS` 必须全覆盖，改任一侧必须同步，C10g 双向校验。
+  1. **导出契约**：`PRODUCED_SECTIONS` / `ROLE_SECTION` / `renderConversationDoc`（纯函数）——蒸馏端 `RAW_SECTIONS` 必须全覆盖，改任一侧必须同步，C10g 双向校验。**例外：dsh 能力叙事档**（单元标题「能力单元\|Capability Unit」）不走节白名单，走 `distill.extractCapabilityRaw` 区间捕获（锚双语单元标记，段名/层级/locale 演进消费侧零改动，见 AGENTS 坑 23），C10g 有独立行为断言 + 双负向证。
   2. **身份由服务端定**：一律 `status: pending-distillation`、`confidence: 0`；客户端自报 `distillation` 只进「Agent 提议（未核验）」节，等 `distill.js` 兑付，绝不直接 active。
   3. **accepted 之前先落 WAL**：每条消息 append 到 `data/ingest-buffer.jsonl`，启动时重放；flush 后压缩。响应诚实回报 `buffered` / `flushed`，不假装已入库。
   4. **去重键含 sessionId**：同会话重复批丢挂起并留痕 `data/ingest-duplicates.jsonl`；跨会话同文本各自落档（旧实现只哈希正文，会静默吞掉第二个会话）。
