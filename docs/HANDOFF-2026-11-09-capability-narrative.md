@@ -45,18 +45,18 @@ dsh 桥侧（G 盘 4 件）把会话组织成六段能力叙事喂 auto-ingest�
   - `probe-capability-narrative.js`：六段内容行全捕获 PASS + 负向证 0 行 + 结构节零污染
   - `test-distill-full.js`：全链 `distillContent` 兑付 `rawCount=8 / points=5`（唔系 no raw messages）
   - `revert-g-side.js`（**未跑**，已废）：G 侧 revert 脚本，按拍板「G 唔使理」而作废——G 侧 0.4.1 保留，消费侧层级鲁棒已覆盖
-- G 盘引用面（`G:/DPD`）全仓追踪文件**零匹配**；旧 buggy 模式（`markerRe` / 未用常量 / 字符类误写）全追踪面**零残留**。
+- 本仓追踪面（src/docs/assets/...）桥侧引用全部走语义占位符 `<bridge-root>`（C8 盘符门禁钉；含本交接单自身——本单初稿曾直写 G 盘路径被 C8 当场转红，已改口，教训同坑 19）；旧 buggy 模式（`markerRe` / 未用常量 / 字符类误写）全追踪面**零残留**。
 
 ## G 侧 4 件交付物（未动，远端拿用）
 
 | 文件 | 角色 | 状态 |
 |---|---|---|
-| `G:\DPD\dsh-aing-bridge\aing-bridge.js` | claude-code mod v0.4.1：session.end 触发，六段组织 + 校准合并 | 权威 |
-| `G:\DPD\dsh-aing-bridge\aing-calibration.js` | cordis 插件：`ctx.on` 捕校准写 `feed.jsonl` | 权威 |
-| `G:\DPD\.mimosa\feed-ingest.js` | SessionStore 入库 runner（从文件读绕 argv） | 已自测 flushed:true |
-| `G:\DPD\dsh-aing-bridge\capability-narrative.js` | 六段渲染纯逻辑（0.4.1 h3 标题） | 权威 |
+| `<bridge-root>/dsh-aing-bridge/aing-bridge.js` | claude-code mod v0.4.1：session.end 触发，六段组织 + 校准合并 | 权威 |
+| `<bridge-root>/dsh-aing-bridge/aing-calibration.js` | cordis 插件：`ctx.on` 捕校准写 `feed.jsonl` | 权威 |
+| `<bridge-root>/.mimosa/feed-ingest.js` | SessionStore 入库 runner（从文件读绕 argv） | 已自测 flushed:true |
+| `<bridge-root>/dsh-aing-bridge/capability-narrative.js` | 六段渲染纯逻辑（0.4.1 h3 标题） | 权威 |
 
-**挂法**：bridge 经 claude-code-mods 桥接挂；calibration 经 cordis.yml 挂——两者挂法唔同，profile 都要配。
+**挂法**：bridge 经 claude-code-mods 桥接挂；calibration 经 cordis.yml 挂——两者挂法唔同，profile 都要配。（`<bridge-root>` = 宿主桥侧目录，即用户本机 G 盘桥件根；本仓追踪面只写相对路径唔写盘符，C8 钉）
 
 ## 远端 [CHECK] 清单（未销账前 = 试用态）
 
@@ -68,7 +68,7 @@ dsh 桥侧（G 盘 4 件）把会话组织成六段能力叙事喂 auto-ingest�
 
 ## 留档未动面
 
-- G 盘 4 件 + 设计稿 `G:\DPD\dsh-aing-硬接线-设计草稿.md` 原样保留，未改一行。
+- G 盘 4 件 + 设计稿 `<bridge-root>/dsh-aing-硬接线-设计草稿.md`（桥侧，盘符不入门面）原样保留，未改一行。
 - 本仓 `.temp/` 探针（probe-capability-narrative / test-distill-full / fix-distill-capability / refine-capability-region / revert-g-side）全 gitignore，唔跟包走。
 - 上一份交接单 `docs/HANDOFF-2026-11-09-p12-p13-closeout.md` 行 12 ZCode 系历史指令实录，按纪律 7/8 豁免保留。
 
