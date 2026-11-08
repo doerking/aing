@@ -211,10 +211,10 @@
     },
     {
       "id": "skills-bundled-in-package",
-      "cap": "`assets/skills/` 随包携带：aing-operator（中英双语 SKILL + 5 份 references）与 neural-evolution-swarm（SKILL/workflow/bind/dependencies + 四角色说明书）共 20 个文件；派单读数把「机器上有 / 本运行时装了 / 包内自带」分成三个独立布尔，只有本运行时装了才报 `swarm-skill`",
-      "evidence": "门禁 C18 静态断言 6 个资产路径在位（四角色 roles/*.md + 两套 SKILL.md，含 en 镜像）；行为①真跑 `node src/memo.js --dispatch` 断言 `inRuntimeSurface`/`bundledInPackage` 为布尔、`bundledInPackage=true`（包内确实带）、`inRuntimeSurface=false ⇒ mode≠swarm-skill`（当前实测：宿主 `.claude`/`.agents` 面装有团队，本运行时 `.sclaw/agent/skills` 无 → mode 如实报 `inline-degraded`），搜索到的每个目录都带 `[runtime|host|bundled]` 标签；行为②在 `.temp/gate-c18-yard` 造一对迷你院，把 `assets/skills/probe-skill/SKILL.md` 写成内容不同，`tools/verify-sibling-roots.js` 的「真实漂移」行必须出现该路径（证明比对面真扩到资产），且台账不得出现 node_modules。负向：把 mode 判定改回拿 `installed` 判 / 删掉资产黑名单 / 用 `process.cwd()` 扫资产 → 各自转红",
+      "cap": "`assets/skills/` 随包携带：aing-operator（中英双语 SKILL + 5 份 references）与 neural-evolution-swarm（SKILL/workflow/bind/dependencies + 五角色说明书，P12 起含 adversarial-reviewer 共识门禁角色）共 21 个文件；派单读数把「机器上有 / 本运行时装了 / 包内自带」分成三个独立布尔，只有本运行时装了才报 `swarm-skill`",
+      "evidence": "门禁 C18 静态断言 9 个资产路径在位（五角色 roles/*.md + SKILL/workflow + aing-operator 两套 SKILL.md，含 en 镜像）；行为①真跑 `node src/memo.js --dispatch` 断言 `inRuntimeSurface`/`bundledInPackage` 为布尔、`bundledInPackage=true`（包内确实带）、`inRuntimeSurface=false ⇒ mode≠swarm-skill`（当前实测：宿主 `.claude`/`.agents` 面装有团队，本运行时 `.sclaw/agent/skills` 无 → mode 如实报 `inline-degraded`），搜索到的每个目录都带 `[runtime|host|bundled]` 标签；行为②在 `.temp/gate-c18-yard` 造一对迷你院，把 `assets/skills/probe-skill/SKILL.md` 写成内容不同，`tools/verify-sibling-roots.js` 的「真实漂移」行必须出现该路径（证明比对面真扩到资产），且台账不得出现 node_modules。负向：把 mode 判定改回拿 `installed` 判 / 删掉资产黑名单 / 用 `process.cwd()` 扫资产 / 缺 `adversarial-reviewer.md` → 各自转红（2026-11-09 追平：C18 角色循环由 4 角色扩到 5 角色含 adversarial-reviewer 在位核，资产文件数 20→21）",
       "limits": "**包内有说明书 ≠ 本运行时能调用**：本声称只保证随包携带与读数诚实，不保证当前 SCNet 运行时已加载 swarm 技能（当前 `inRuntimeSurface=false`，派单按 inline 降级自办）；资产是文档而非代码，`verify:siblings` 会报出它们与 aing/OPT 的差异但不自动裁决哪侧为真源（本次 aing↔OPT 的 assets 实测 0 差异，Tip 侧新增的是宿主版 swarm 说明书）；`dependencies.yaml` 声明的 Python 依赖仍不在包内、也不随本门安装",
-      "date": "2026-09-14"
+      "date": "2026-11-09"
     },
     {
       "id": "gate-count-single-source",
