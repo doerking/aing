@@ -1548,13 +1548,13 @@ async function main() {
     }
   });
   await check('C18 技能资产随包 + 派单不虚报（包内有 ≠ 本运行时装了）', async () => {
-    // 出处（2026-09-14 W5）：四角色说明书与 aing-operator 过去只在 aing/OPT 侧和宿主技能目录里，
+    // 出处（2026-09-14 W5）：五角色说明书（P12 起含 adversarial-reviewer，Gate5 共识门禁角色）与 aing-operator 过去只在 aing/OPT 侧和宿主技能目录里，
     // Tip 包内连 assets/ 都没有 → 换院即失联（院际比对工具也不比 assets/，所以这个洞从来没人看见）。
     // 同时 swarmRolesReady() 把「机器上任何一处找得到」当成「本运行时能派」，于是 mode 长期虚报
     // swarm-skill —— 本运行时的技能面 ~/.sclaw/agent/skills 其实没有。本门钉三件事：
     //   ① 包内资产真在位；② 只有 runtime 面为真才许报 swarm-skill；③ 院际比对面真含 assets/。
     const miss = [];
-    for (const r of ['neuro-theorist', 'senior-engineer', 'skill-trainer', 'plasticity-analyst']) {
+    for (const r of ['neuro-theorist', 'senior-engineer', 'skill-trainer', 'plasticity-analyst', 'adversarial-reviewer']) {
       if (!fs.existsSync(path.join(PKG_DIR, 'assets', 'skills', 'neural-evolution-swarm', 'roles', r + '.md'))) miss.push('roles/' + r + '.md');
     }
     for (const f of ['assets/skills/neural-evolution-swarm/SKILL.md', 'assets/skills/neural-evolution-swarm/workflow.md', 'assets/skills/aing-operator/SKILL.md', 'assets/skills/aing-operator/en/SKILL.md']) {
@@ -1606,7 +1606,12 @@ async function main() {
     if (!/^\s*真实漂移（[^\n]*assets\/skills\/probe-skill\/SKILL\.md/m.test(tout)) throw new Error('assets 下的内容差异没被院际台账抓到 → 比对面未真正扩到资产');
     if (/node_modules/.test(tout)) throw new Error('台账出现 node_modules → 目录黑名单失效，比对被依赖污染');
     fs.rmSync(yard, { recursive: true, force: true });
-    return '包内 20 件技能资产在位；派单读数 inRuntime=' + dj.inRuntimeSurface + ' / bundled=' + dj.bundledInPackage + ' / mode=' + dj.mode + '；迷你院对证明 assets 差异可检出且依赖目录未入台账';
+    // 件数实算（不手抄——坑 19：手抄的「20 件」会随资产增减永久漂移）
+    const skillRoot = path.join(PKG_DIR, 'assets', 'skills');
+    let skillCount = 0;
+    const walkAssets = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walkAssets(p); else skillCount++; } };
+    if (fs.existsSync(skillRoot)) walkAssets(skillRoot);
+    return '包内 ' + skillCount + ' 件技能资产在位；派单读数 inRuntime=' + dj.inRuntimeSurface + ' / bundled=' + dj.bundledInPackage + ' / mode=' + dj.mode + '；迷你院对证明 assets 差异可检出且依赖目录未入台账';
   });
   await check('C19 门禁计数单源（文档抄的数字必须等于验收器真值）', async () => {
     // 出处（2026-09-14）：同一句「N 项门禁（C0–CMAX）」在 AGENTS frontmatter、README 部署段、
