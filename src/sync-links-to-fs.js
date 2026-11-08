@@ -2,7 +2,7 @@
 /**
  * sync-links-to-fs.js — 双脑同步：把 DB 链接镜像落盘到 wiki/links/
  *
- * 背景（2026-09-02 反向同步自 EvoX 修复，修双脑脱节 bug）：
+ * 背景（2026-09-02 反向同步修复，修双脑脱节 bug）：
  *   auto-link.js 只 INSERT 进 DB，全 src 无人写 wiki/links/index.md，
  *   而 neural-guide-chain.js / consciousness-layer.js 曾从该文件读邻居
  *   → 邻居永远为空，DB 与文件系统两个世界。
