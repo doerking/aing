@@ -15,7 +15,7 @@
 
 （以下两篇为 2026-11-01 从 DeepSeek Harness 生态 dsh-orchestrate / dsh goal 子系统吸收的机制改造设计稿；两篇均不动 C0–C20 门禁计数、不动 11 步代谢）
 
-6. [对抗审查角色并入蜂群共识收敛（dsh-orchestrate 对抗式审查+收敛）](./patch-12-adversarial-reviewer.md) ✅ 已实现（2026-11-01，分支 `feat/p12-adversarial-reviewer`：技能资产 5 角色 + Gate5 共识门禁 + memo entityNote 登记，负向自证真跑 ALL PASS）
+6. [对抗审查角色并入蜂群共识收敛（dsh-orchestrate 对抗式审查+收敛）](./patch-12-adversarial-reviewer.md) ✅ 已实现（2026-11-01，分支 `feat/p12-adversarial-reviewer`：**守内面·内派**——触发源是 aing 自身健康读数，不接对外工单；技能资产 5 角色 + Gate5 共识门禁 + memo entityNote 登记，负向自证真跑 ALL PASS）
 7. [持久化 Goal 多轮追踪与收敛判定（dsh goal 子系统 → 备忘录 Todo 面）](./patch-13-persistent-goal-loop.md) ✅ 已实现（2026-11-01，分支 `feat/p13-persistent-goal`：memo.js 8 goal 函数 + CLI 8 子命令、convergence 旋钮进 config、blocked Goal 接 goal-blocked 派单、gap-detector 排除 Goal；纠正设计稿"todos 子表加列"假前提 → Goal 走 entities(type='Goal') 不迁移；负向自证 5 档真跑全绿）
 
 ---
