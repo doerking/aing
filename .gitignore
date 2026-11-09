@@ -12,6 +12,7 @@ logs/
 snapshots/
 data/*
 !data/component-registry.json
+!data/tag-grandfather.json
 mustard-seeds/
 metabolism-state.json
 

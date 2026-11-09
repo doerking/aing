@@ -2055,6 +2055,27 @@ async function main() {
     return '院际面 本院 ' + faceCount + ' / 抄件 ' + (faceStated || '无锚点') + ' · 引用路径 ' + refChecked + ' 处逐条核在位（反例须带标记）· npm run ' + npmChecked + ' 处有名 · 外部依赖命令 ' + pyChecked + ' 处均自带执行位置 · 只读命令真跑 ' + ran + '/' + RUNNERS.length + ' 全 exit 0 且每条都能回指文档 · README 图↔表一致且旧图未复活 · ' + stepFace + ' · ' + ifaceFace + ' · 扫 ' + docs.length + ' 档';
   });
 
+  await check('C21 Tolaria 9 段标签面：自撰文档 frontmatter 必须带 tags 且 ≥1 个 9 段强度（基线台账只收窄不扩）', () => {
+    // 单一真源：tools/tag-lint.js 嘅 computeTagAudit（gate 与 tag:lint 工具同函数，唔另写实现）。
+    // 规则（AGENTS 纪律 7）：git 跟踪自撰 md（排除 raw/ 语料、docs/releases/**、THIRD-PARTY）
+    //   必须 ① frontmatter 带 tags: 数组 ② 至少一个 "name:N"（N∈1-9）9 段强度。
+    // 基线台账 data/tag-grandfather.json：存量违规 1:1 登记，**只收窄不扩**——
+    //   台账外新违规 = 新档唔带标签（红）；台账条目已不违规（修好/删档）= 台账未收窄（红，逼同 commit 销账）。
+    const lint = require(path.join(PKG_DIR, 'tools', 'tag-lint.js'));
+    if (!fs.existsSync(path.join(PKG_DIR, 'data', 'tag-grandfather.json'))) throw new Error('基线台账 data/tag-grandfather.json 缺失 → 存量违规面冇销账轨道，C21 退化成橡皮章');
+    const a = lint.computeTagAudit({ root: PKG_DIR });
+    if (!a.gitOk) throw new Error('git 取唔到跟踪面 → 标签面未核（唔算通过）');
+    if (a.ledgerBroken) throw new Error('台账损坏（不可解析 JSON）→ 销账轨道失效');
+    if (a.newViolations.length) throw new Error('台账外标签违规 ' + a.newViolations.length + ' 份（自撰文档无 frontmatter tags 或无 9 段强度）：' + a.newViolations.slice(0, 5).map(v => v.file + '(' + v.reason + ')').join(', ') + (a.newViolations.length > 5 ? ' …' : ''));
+    if (a.ledgerInvalid.length) throw new Error('台账未收窄 ' + a.ledgerInvalid.length + ' 条（已修复/已删档但未销台账，须同 commit 删）：' + a.ledgerInvalid.slice(0, 5).join(', '));
+    // 负向自证（坑 8/15 纪律：接线类断言必须真跑，唔使静态 grep）：虚拟档面证判定器两头都咬
+    const bad = lint.computeTagAudit({ root: PKG_DIR, extraFiles: { 'c21-probe/no-tags.md': '# 无 frontmatter 档\n正文\n' } });
+    if (!bad.newViolations.some(v => v.file === 'c21-probe/no-tags.md')) throw new Error('C21 判定器自身失效：无 frontmatter 虚拟档未转红');
+    const good = lint.computeTagAudit({ root: PKG_DIR, extraFiles: { 'c21-probe/ok.md': '---\ntags: [metabolism:8, kespi:6]\n---\n# 合档\n' } });
+    if (good.newViolations.some(v => v.file === 'c21-probe/ok.md')) throw new Error('C21 判定器误伤合规档（frontmatter tags + 9 段强度）→ 假红');
+    return '标签面 ' + a.gateFiles + ' 份自撰 md · 台账 ' + a.ledger.length + ' 条（全量 1:1 在册，零台账外违规 · 零未收窄）· 类目 ' + a.catCount + '（容量推演 ≤50 健康，只报告不判红）· 判定器负/正双证';
+  });
+
   // ── 报告 ─────────────────────────────────────────────────────
   console.log('\n═══ aing 部署验收报告 / Deployment Acceptance Report ═══');
   for (const r of results) {
