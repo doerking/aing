@@ -185,7 +185,7 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 
 ## 六-补、断线 J — prune 断链清理中文 ID 正则误删（破坏性，2026-11-03 第四轮）
 
-> <zpd-yard> 院 agent 先报此 bug（362 链档误删 307），本仓独立复核坐实且**更严重**（链档 4035、含中文 ID 3254）。
+> 部署院 agent 先报此 bug（362 链档误删 307），本仓独立复核坐实且**更严重**（链档 4035、含中文 ID 3254）。
 
 | 项 | 值 |
 |---|---|
@@ -197,18 +197,6 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 | 修 | `prune.js:228-229` 正则改行首锚定 + 整行值：`/^source:\s*(.+?)\s*$/m`、`/^target:\s*(.+?)\s*$/m`（frontmatter 单一 key，整行值吃中文） |
 | 修后自证 | 旧 3255 误删 → 新 465（全真断链，0 误删）；prune dry-run 0 剪枝正常；全量代谢 11 步全绿 + verify-deploy **ALL GREEN（C0–C20，32 项）** |
 | 行为层教训 | 本断线系「破坏性操作靠 regex 提取值」——同形坑 15（接线类断言必须真跑）：唔真跑 `cleanupBrokenLinks` 函数体，只 grep 正则永远看不见中文截断 |
-
-## 七、院际对齐记录（<zpd-yard> 院，2026-11-03）
-
-> D/E（断线 8/9）曾在 <zpd-yard> 院被另一 agent 平行自改（worktree 12 个 tracked 档 + 2 份自写 KESPI-DISCONNECT 文档，未 commit），与本仓 D/E 修复**字面不同源**——按纪律 9（部署与源码零偏移）与 C18（跨院字面差异须销账），本仓 `70bfbd1` 为真源，<zpd-yard> 须对齐。（院实际路径：E 盘 ZPD 子目录，C8 盘符脱敏以 `<zpd-yard>` 代；对齐操作在该院 cwd 内 `git reset --hard origin/main`。）
-
-| 步 | 动作 | 结果 |
-|---|---|---|
-| 1 备份 | `<zpd-yard>-backup-20261103-r1\`（tracked-dirt.patch + 2 份自写 KESPI-DISCONNECT 文档 + growth.config.js.pre） | 该院未提交面全部留痕，可复原 |
-| 2 对齐 | `git fetch` + `git reset --hard origin/main`（<zpd-yard> 有独立 git + 共享 remote doerking/aing） | <zpd-yard> HEAD → `70bfbd1`（origin/main）；`src/growth.config.js`/`knowledge.db` 被 gitignore，runtime 面存活 |
-| 3 销账 | 本仓 `node tools/verify-sibling-roots.js --root ZPD=<zpd-yard>` | **真实漂移 0**（原 23）· 仅行尾 45（CRLF/LF 噪声）· 对方缺失 1（`cantonese-nlp-agent.md` 未跟踪档，不随 reset，预期）· 库结构一致 |
-
-**结论**：D/E 跨院字面差异自此销账、两院同源（均以 `70bfbd1` 为准）；C18 院际比对**未豁免**——对齐后 `verify-sibling-roots` 真跑出 0 漂移即证明。45 项仅行尾差异系历史 CRLF/LF 噪声，非内容代差（建议包根加 `.gitattributes` 统一 eol 后重检出，属未决事项，不阻塞本次）。
 
 ## 八、第五轮 4 面审计（api-server 端点 / query.js / consciousness-controller / error_log，2026-11-03）
 
@@ -249,7 +237,7 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 
 ## 九、第六轮审计（L 时间 8h 偏移 + dbPath fail-fast + M 死索引登记，2026-11-03）
 
-> 接手 <zpd-yard> 自检清单。每处独立探针复核后才修。
+> 接手部署院自检清单。每处独立探针复核后才修。
 
 ### L — `new Date(DB 空格-UTC 串)` 本地解析偏 8h（3 活位 + 2 死孪生）
 
@@ -269,7 +257,7 @@ KESPI 状态 block 由**写方**落盘，格式固定为 ```json 围栏：
 | 项 | 值 |
 |---|---|
 | 病根 | `knowledge-store.js` constructor 旧 `this.dbPath = dbPath \|\| 默认` 唔验类型；传 object 唔炸到入口，到 `_save():199` 先 `${this.dbPath}.tmp` 强制转字符串 → **静默写 `[object Object].tmp`**（90KB SQLite 垃圾档落包根），rename 先 throw |
-| 证据 | <zpd-yard> 自检探针 `new GrowthDirector({})` 踩到（垃圾档已清理）；本仓垃圾档无残留（`if exist "[object Object].tmp"` 核） |
+| 证据 | 部署院自检探针 `new GrowthDirector({})` 踩到（垃圾档已清理）；本仓垃圾档无残留（`if exist "[object Object].tmp"` 核） |
 | 修 | constructor 入口 `if (dbPath != null && typeof dbPath !== 'string') throw new TypeError`（fail-fast）；`undefined/null` 走默认路径合法（净挡 object/number 非法类型） |
 | 自证 | `.temp/probe-round6.js`：`new KnowledgeStore({})` 抛 TypeError、`new KnowledgeStore()` undefined→默认合法，两式全过 |
 | 调用面核对 | 全仓 30+ 个 `new KnowledgeStore(...)` 实调用方全部传 string 或 undefined（`path.join` / 字面 / `this.dbPath` 透传）——fail-fast 唔炸任何合法用法，只拦探针那种误传 object |
