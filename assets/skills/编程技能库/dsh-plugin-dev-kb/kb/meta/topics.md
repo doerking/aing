@@ -1,0 +1,87 @@
+# 主题导航（Topics）
+
+> 用途：按**任务场景**快速定位要读的文档。路径相对于知识库根 `kb/`（知识库绝对路径见技能正文注入的 `{{KB_ROOT}}`，不在此写死机器路径）。
+> 中文优先读 `site/` 下的文件；英文原文在 `site/en/` 对应路径（如 `site/en/develop/basic/index.md`）。
+> 每个主题：**核心** = 先读这些；**扩展** = 需要细节时再读。
+
+## 1. 入门：第一个插件
+- 核心：`site/develop/basic/index.md`（插件 = 导出 `apply(ctx)` 的模块；`ctx.effect()` 自动清理；三种插件形态：函数/对象/类）
+- 扩展：`site/develop/cordis-tutorial/01-first-plugin.md`、`site/develop/framework/index.md`
+
+## 2. 开发一个 Tool
+- 核心：`site/develop/basic/tool.md`（工具定义 DSL）、`site/reference/cookbook/adding-a-tool.md`（完整步骤 + 验证）
+- 扩展：`site/reference/tool-catalog.md`（全部内置工具 schema，大文件请 grep）、`site/reference/subsystems/tools.md`（注册表与执行流水线）、`site/reference/tool-execution-pipeline.md`
+
+## 3. 插件配置
+- 核心：`site/develop/basic/config.md`、`site/develop/cordis-tutorial/05-config.md`
+- 扩展：`site/reference/config-catalog.md`（全量配置项，大文件请 grep）
+
+## 4. 服务与依赖注入
+- 核心：`site/develop/framework/service.md`、`site/develop/cordis-tutorial/03-services.md`
+- 扩展：`site/reference/cordis-api/service.md`、`site/reference/capability-seams.md`（能力三层：Service Definition / Provider / Consumer）
+
+## 5. 事件系统
+- 核心：`site/develop/framework/events.md`、`site/develop/cordis-tutorial/04-events.md`
+- 扩展：`site/reference/cordis-api/events.md`、`site/reference/persistence-catalog.md`（持久化事件目录）、`extra/event-producer-consumer.md`
+
+## 6. 生命周期与副作用
+- 核心：`site/develop/framework/index.md`、`site/develop/cordis-tutorial/02-lifecycle-and-effects.md`
+- 扩展：`site/reference/agent-lifecycle.md`、`site/reference/cordis-api/context.md`、`extra/defensive-patterns.md`（生命周期/并发/子进程防御模式）
+
+## 7. 打包与发布插件
+- 核心：`site/develop/basic/publish.md`
+- 扩展：`extra/cookbook/adding-a-vendored-package.md`（vendored 包）、`extra/cookbook/adding-a-session-format-version.md`（新增会话格式版本号）、`extra/session-format-status.md`（会话格式状态）
+
+## 8. LLM 适配器
+- 核心：`site/develop/practice/llm-adapter.md`、`site/reference/cookbook/adding-an-llm-adapter.md`
+- 扩展：`site/reference/subsystems/llm-streaming.md`（流式响应/Message/ContentBlock/StreamChunk）
+
+## 9. 扩展点与能力分层
+- 核心：`site/develop/practice/index.md`（能力三层拆分）、`site/reference/capability-seams.md`
+- 扩展：`site/reference/cookbook/extension-cookbook.md`（扩展模式）、`site/develop/practice/dynamic-cordis.md`（运行时动态装配 Cordis）
+
+## 10. 新增 Package / 设置卡片
+- 核心：`site/reference/cookbook/adding-a-package.md`、`site/reference/cookbook/adding-a-settings-card.md`
+
+## 11. 子系统能力速查（按需）
+- 总览：`site/reference/subsystems/index.md`
+- 内核与作用域：`core.md`、`scope.md`
+- 会话与持久化：`session.md`、`session-query.md`、`session-reference.md`、`session-title.md`、`session-projection.md`、`conversation.md`（Conversation Node 渲染）、`persistence.md`、`spill.md`、`session-telemetry.md`
+- 模型与上下文：`llm-streaming.md`、`token-meter.md`、`system-prompt.md`、`compaction.md`（上下文压缩）
+- 执行与工具：`tools.md`、`shell.md`（Bash）、`subprocess.md`、`terminal.md`（PTY）、`jobs.md`（后台任务）、`filesystem.md`、`lsp.md`、`ptc-runtime.md`（原 code-runtime，dsh 0.2.0 更名）、`web.md`、`skills.md`、`workflow.md`、`subagent.md`
+- 策略与交互：`approval.md`（审批）、`permission-presets.md`、`sandbox.md`、`plan.md`（计划模式）、`user-questions.md`、`commands.md`、`goal.md`、`schedule.md`
+- 平台与接入：`web-server.md`（HTTP 服务器）、`web-client.md`（Web 客户端注入）、`slots.md`（UI 插槽系统）、`typert.md`、`client-modules.md`、`client-resources.md`、`storage.md`、`workspace.md`、`settings.md`、`credentials.md`、`sidebar-right.md`
+- 以上均在 `site/reference/subsystems/` 下（如 `site/reference/subsystems/session.md`）
+
+## 12. 架构与核心概念
+- 核心：`site/reference/index.md`（架构总览：组合、核心包、循环、seam、扩展点）、`site/reference/cordis-primer.md`（Cordis 入门）
+- 扩展：`extra/glossary.md`（术语表：capability seam 等）、`extra/module-graph.md`（模块依赖全景图，大文件请 grep）、`extra/graph-atlas.md`
+
+## 12b. API Gateway 与服务接入
+- 核心：`site/reference/api-gateway.md`（Typert API Gateway：Remote 方法声明、Host/Client 约定、RPC 与 `/api` 路由复用）
+- 扩展：`extra/cookbook/adding-a-remote-api.md`（新增 Remote API 五步操作，中英各一）、`extra/subsystems/webhook.md`（webhook 接入，仓库文档）、`site/reference/subsystems/typert.md`
+
+## 13. 系统提示词 / Token / 上下文压缩
+- `site/reference/subsystems/system-prompt.md`、`token-meter.md`、`compaction.md`
+
+## 14. 测试与防御
+- `extra/testing.md`（测试策略：快照/e2e/单测边界）、`extra/defensive-patterns.md`、`extra/postmortem/`（事故复盘，含沙箱/进程故障模式）
+
+## 15. 文档规范与贡献
+- `extra/AGENTS.md`（文档分层标准：tutorial/reference、字数预算）、`extra/development.md`（开发环境与工作流）、`extra/i18n/`（双语规范与术语）
+
+## 16. 中英对照
+- 英文站：`site/en/`（结构与中文站一致：`guide/`、`develop/`、`reference/`）；`INDEX.md` 有全部 URL ↔ 文件对照
+
+## 17. 使用指南进阶（GitHub Review / 定时任务 / MCP 记忆 / 网络代理）
+- `site/guide/github-review.md`（用 dsh 做 GitHub 代码评审）、`site/guide/schedule.md`（定时任务）、`site/guide/mcp-memory.md`（MCP 与长期记忆）、`site/guide/network-proxy.md`（代理后运行：HTTPS_PROXY 等环境变量、哪些路径保持直连）、`site/guide/public-deployments.md`（公共部署）
+- 扩展：`site/reference/subsystems/schedule.md`、`extra/subsystems/todo.md`（仓库文档）
+
+## 17b. 版本升级与持久化变更（dsh 0.1.x → 0.2.x 重点）
+- `extra/upgrade-guide/`（各版本升级指南：0.1.7-rc.2 / 0.2.0-rc.2，含 schedule-bundle-retired、remove-runtime-invariants、subpath-plugin-display-manifest 等）
+- `extra/persistence-changes/`（持久化格式变更记录与历史格式，含 releases/、historical-formats/）
+
+## 检索技巧
+- 全量索引：`meta/search-index.json`（373 个文件的 path/url/title/字符数）
+- 大文件（config-catalog / tool-catalog / module-graph / subsystems/session 等 ≥100KB）先用 grep 定位关键行，再 read 局部，不要整读
+- 常用检索关键词：`ctx.effect`、`ctx.on`、`ctx.tools.register`、`inject`、`Service Definition`、`cordis.yml`、`SessionEventMap`
