@@ -1,7 +1,7 @@
 ---
 name: 折叠基础
 type: Concept
-tags: [demo, 折纸, 入门]
+tags: [demo, 折纸, 入门, demo:8]
 created: 2026-08-20
 status: active
 ---

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/07-into-the-harness.zh.md"
 rawMarkdownPath: "develop/cordis-tutorial/07-into-the-harness.md"
+tags: [kb-dsh:8]
 ---
 
 # 7. 进入 harness

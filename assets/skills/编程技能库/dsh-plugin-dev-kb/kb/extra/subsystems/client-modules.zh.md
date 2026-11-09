@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Client 模块
 
 [English](client-modules.md) | 中文

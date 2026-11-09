@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "SSH 和 Node PTC 配置改用显式启动模式，SSH 客户端要求使用匹配的协议 2 helper。"
+tags: [kb-dsh:8]
 ---
 
 # SSH helper 与 PTC 启动配置

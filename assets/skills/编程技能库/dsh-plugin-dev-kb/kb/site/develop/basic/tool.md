@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/tool.zh.md"
 rawMarkdownPath: "develop/basic/tool.md"
+tags: [kb-dsh:8]
 ---
 
 # 开发一个工具

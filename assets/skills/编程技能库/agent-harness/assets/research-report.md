@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Research Report Template
 
 > Used for WORKFLOWS/research standardized report output
@@ -98,4 +102,4 @@
 ---
 
 _Report generated: {{TIMESTAMP}}_
-_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-eng_

@@ -12,6 +12,7 @@ metadata:
   clawdbot:
     emoji: 🧠
     homepage: "https://maton.ai"
+tags: [kb-api:8]
 ---
 
 # API Gateway

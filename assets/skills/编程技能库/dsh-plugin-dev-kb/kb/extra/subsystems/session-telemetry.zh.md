@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 遥测（telemetry）
 
 [English](session-telemetry.md) | 中文

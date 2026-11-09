@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "JobId now identifies one background execution across registry lifetimes."
+tags: [kb-dsh:8]
 ---
 
 # Background job ids identify one execution

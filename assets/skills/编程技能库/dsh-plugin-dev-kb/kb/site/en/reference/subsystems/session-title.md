@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-title.md"
 rawMarkdownPath: "en/reference/subsystems/session-title.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Session Titles

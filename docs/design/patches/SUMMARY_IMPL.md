@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Tolaria(LLM) 实现细节篇
 
 > 本篇章定义了 Tolaria(LLM) 的运行逻辑、代谢管道、接口实现与审计机制。

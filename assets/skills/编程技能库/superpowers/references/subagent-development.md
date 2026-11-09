@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Subagent-Driven Development Reference
 
 Source: obra/superpowers subagent-driven-development skill

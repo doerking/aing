@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Token Meter
 
 English | [中文](token-meter.zh.md)

@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Smart Memory OpenClaw Skill
 
 This folder contains the OpenClaw-facing skill package at `skills/smart-memory-openclaw/`. It targets the Smart Memory v3.1 backend running at `http://127.0.0.1:8000`.

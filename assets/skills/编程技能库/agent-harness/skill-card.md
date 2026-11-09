@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 ## Description: <br>
 Agent Harness is a workflow framework that helps an agent choose a planning, research, analysis, context-compression, or multi-agent coordination path before executing a task. <br>
 

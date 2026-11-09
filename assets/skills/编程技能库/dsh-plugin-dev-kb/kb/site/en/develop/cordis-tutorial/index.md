@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/index.md"
 rawMarkdownPath: "en/develop/cordis-tutorial/index.md"
+tags: [kb-dsh:8]
 ---
 
 # Cordis tutorial

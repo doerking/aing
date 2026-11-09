@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 维护 dsh-code-review skill
 
 [English](maintaining-dsh-code-review.md) | 中文

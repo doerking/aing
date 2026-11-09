@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 一周剪断代谢链路 | Weekly Auto-Prune Pipeline
 
 > 补现有 Wiki「Metabolism / 代谢」章节的流程留白。补全「一周无活动 → 剪断 → 亮绿灯」完整逻辑。

@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Systematic Debugging Reference
 
 Source: obra/superpowers systematic-debugging skill

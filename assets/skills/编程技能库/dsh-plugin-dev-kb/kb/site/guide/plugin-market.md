@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/plugin-market.zh.md"
 rawMarkdownPath: "guide/plugin-market.md"
+tags: [kb-dsh:8]
 ---
 
 # 插件市场

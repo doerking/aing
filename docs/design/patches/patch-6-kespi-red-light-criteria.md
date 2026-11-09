@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # KESPI 自检红灯定义 | KESPI Red Light Criteria
 
 > 补现有 Wiki「自检层」章节的留白。明确 KESPI 触发红灯的具体指标和阈值。

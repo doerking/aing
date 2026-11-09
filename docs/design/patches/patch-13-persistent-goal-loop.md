@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Patch-13：持久化 Goal 多轮追踪与收敛判定（Persistent Goal Loop）
 
 > 定位：把 DeepSeek Harness 的「goal 子系统」（persistent, multi-round objective tracking）改造进 aing 备忘录 Todo 面，让「用户挂着的事」从一次性待办升级成**多轮目标 + 收敛判定**的一等对象。

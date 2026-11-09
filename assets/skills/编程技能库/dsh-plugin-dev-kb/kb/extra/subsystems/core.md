@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Core
 
 English | [中文](core.zh.md)

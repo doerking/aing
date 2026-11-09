@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/credentials.zh.md"
 rawMarkdownPath: "reference/subsystems/credentials.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 用户凭据

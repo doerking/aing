@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/terminal.zh.md"
 rawMarkdownPath: "reference/subsystems/terminal.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 持久 PTY 会话

@@ -1,3 +1,7 @@
+---
+tags: [docs:8]
+---
+
 # 搜索即入库系统（Search & Ingest）
 
 ## 核心理念

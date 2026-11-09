@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "指定了凭据的 pi-ai 路由在凭据配置之前隐藏其模型。"
+tags: [kb-dsh:8]
 ---
 
 # pi-ai 路由缺少凭据时的模型可见性

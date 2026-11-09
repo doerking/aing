@@ -1,5 +1,5 @@
 ---
-tags: [ticket, risk, fix, c7, patch-layer]
+tags: [ticket, risk, fix, c7, patch-layer, tickets:8]
 priority: P0
 status: open
 created: 2026-09-08

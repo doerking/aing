@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Anti-Patterns and Corrections
 
 In Loop Engineering practice, the following 6 anti-patterns are the most common and most destructive. Each entry includes symptoms, consequences, causes, and correction strategies.

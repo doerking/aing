@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Python runtime wheels require explicit downloads for Office conversion and bundled authoring environments."
+tags: [kb-dsh:8]
 ---
 
 # Download optional Python runtime resources explicitly

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/web.md"
 rawMarkdownPath: "en/reference/subsystems/web.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Web Access

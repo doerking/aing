@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/network-proxy.zh.md"
 rawMarkdownPath: "guide/network-proxy.md"
+tags: [kb-dsh:8]
 ---
 
 # 在网络代理后面运行 DSH

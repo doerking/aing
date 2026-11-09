@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/05-config.zh.md"
 rawMarkdownPath: "develop/cordis-tutorial/05-config.md"
+tags: [kb-dsh:8]
 ---
 
 # 5. 配置

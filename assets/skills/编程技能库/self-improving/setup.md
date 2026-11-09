@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Setup — Self-Improving Agent
 
 ## First-Time Setup

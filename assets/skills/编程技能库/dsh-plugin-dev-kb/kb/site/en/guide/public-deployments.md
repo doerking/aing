@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/public-deployments.md"
 rawMarkdownPath: "en/guide/public-deployments.md"
+tags: [kb-dsh:8]
 ---
 
 # Publish the Web UI behind a reverse proxy

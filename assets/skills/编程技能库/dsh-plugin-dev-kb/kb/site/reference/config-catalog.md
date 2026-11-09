@@ -1,6 +1,7 @@
 ---
 editSource: "docs/config-catalog.zh.md"
 rawMarkdownPath: "reference/config-catalog.md"
+tags: [kb-dsh:8]
 ---
 
 <!-- 由 scripts/gen-config-catalog.ts 生成——请勿手工编辑。

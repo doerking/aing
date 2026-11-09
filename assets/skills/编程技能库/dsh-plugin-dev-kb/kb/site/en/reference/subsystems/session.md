@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session.md"
 rawMarkdownPath: "en/reference/subsystems/session.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Sessions

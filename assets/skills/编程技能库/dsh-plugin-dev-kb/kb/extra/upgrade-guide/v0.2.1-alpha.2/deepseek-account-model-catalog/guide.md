@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The DeepSeek account route no longer accepts a models catalog; the account listing supplies its models and modelOverrides adjusts them."
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek account models come from the account listing

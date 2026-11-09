@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/index.zh.md"
 rawMarkdownPath: "develop/framework/index.md"
+tags: [kb-dsh:8]
 ---
 
 # 插件与生命周期

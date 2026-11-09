@@ -1,5 +1,5 @@
 ---
-tags: [handoff, swarm, boundary, deploy, must-read]
+tags: [handoff, swarm, boundary, deploy, must-read, docs:8]
 description: 蜂群两面规类收工交接——AGENTS.md + README.md 守内面/对外派工面分区写清，全量 32 项 ALL GREEN
 date: 2026-11-05
 status: done

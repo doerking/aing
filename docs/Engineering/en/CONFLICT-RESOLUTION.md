@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Conflict Resolution
 
 > Defines priority when different components or decisions conflict.

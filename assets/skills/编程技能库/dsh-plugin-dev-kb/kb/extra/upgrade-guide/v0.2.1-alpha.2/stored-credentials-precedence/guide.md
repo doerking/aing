@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Stored credentials now precede environment fallbacks when the store is mounted; the shipped headless profile omits stored authentication."
+tags: [kb-dsh:8]
 ---
 
 # A stored key takes precedence over an exported variable

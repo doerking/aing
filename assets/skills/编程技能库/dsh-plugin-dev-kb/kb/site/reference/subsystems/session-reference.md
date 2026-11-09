@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-reference.zh.md"
 rawMarkdownPath: "reference/subsystems/session-reference.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 会话引用

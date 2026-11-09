@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/github-review.md"
 rawMarkdownPath: "en/guide/github-review.md"
+tags: [kb-dsh:8]
 ---
 
 # Create review Sessions from GitHub webhooks

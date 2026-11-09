@@ -1,5 +1,5 @@
 ---
-tags: [kespi, readpath, defect-fix, kq, consistency, integrity, trend, decision-history, write-a-read-b, audit, must-read]
+tags: [kespi, readpath, defect-fix, kq, consistency, integrity, trend, decision-history, write-a-read-b, audit, must-read, docs:8]
 description: KESPI 读路径断线全系列修复记录（A 读方正则脱节 / B getEntities 列撞 / C prune 死检查 / D 趋势读错真源 / E 决策历史读错真源 / F getStats 双口径 / G panel subchain_debts 写死 / H kernel hasHistory 死旗标 / I system_log 孤写面 / J prune 中文ID正则误删 / K api-server /api/delta 时区 / L new Date(DB 空格串) 8h偏移 / dbPath fail-fast / M type_index 死索引登记）与前后证据、负向自证，跨 2026-11-03 六轮审计
 ---
 

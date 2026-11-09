@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # DSH 统一圆角规范
 
 [English](ui-radius.md) | 中文

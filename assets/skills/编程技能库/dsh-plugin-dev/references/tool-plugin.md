@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 工具插件开发记录（defineTool 契约）
 
 以 dsh-tool-csv 为模板（组织内 9 个 bundle 插件同模式，均验证可用）。

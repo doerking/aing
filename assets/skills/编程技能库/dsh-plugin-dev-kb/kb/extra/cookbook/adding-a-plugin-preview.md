@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: Add a built-in plugin feature preview
 
 English | [中文](adding-a-plugin-preview.zh.md)

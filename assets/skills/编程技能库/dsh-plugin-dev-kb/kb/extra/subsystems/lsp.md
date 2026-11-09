@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # LSP navigation
 
 English | [中文](lsp.zh.md)

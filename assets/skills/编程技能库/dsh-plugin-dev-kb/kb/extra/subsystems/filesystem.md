@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Filesystem
 
 English | [中文](filesystem.zh.md)

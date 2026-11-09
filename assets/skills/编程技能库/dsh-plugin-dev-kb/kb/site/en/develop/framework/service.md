@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/service.md"
 rawMarkdownPath: "en/develop/framework/service.md"
+tags: [kb-dsh:8]
 ---
 
 # Services and dependencies

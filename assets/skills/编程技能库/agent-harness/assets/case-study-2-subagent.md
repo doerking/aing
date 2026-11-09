@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Case Study 2: Multi-Agent Coordination Task
 
 ## Triggers

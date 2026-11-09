@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Prompt Engine
 
 This package contains the prompt composition layer used by Smart Memory v3.1.

@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Description: <br>
 Elite Longterm Memory helps AI agents preserve project context with write-ahead logs, vector search, git-notes, local memory files, and optional cloud backup. <br>
 

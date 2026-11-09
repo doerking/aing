@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # ADR-001: Compilation to Metabolism
 
 ## Status

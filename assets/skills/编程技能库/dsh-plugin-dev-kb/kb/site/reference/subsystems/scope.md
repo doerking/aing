@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/scope.zh.md"
 rawMarkdownPath: "reference/subsystems/scope.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 作用域注册

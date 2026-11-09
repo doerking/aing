@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Agent Framework Integration Guide
 
 How to wire Smart Memory v3.1 into different agent frameworks for deterministic session priming, transcript-first persistence, and rebuildable continuity.

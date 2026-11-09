@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Consciousness Neural Architecture
 
 > Implements the "感知 → 传导 → 输出" metaphor: Sensory Endings → Neural Guide Chain → Consciousness Layer.

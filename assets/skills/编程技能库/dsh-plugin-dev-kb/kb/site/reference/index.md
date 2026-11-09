@@ -1,6 +1,7 @@
 ---
 editSource: "docs/architecture.zh.md"
 rawMarkdownPath: "reference/index.md"
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek Harness 架构

@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Case Study 1: Deep Research Task
 
 ## Trigger

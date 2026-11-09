@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: adding a workspace package
 
 English | [中文](adding-a-package.zh.md)

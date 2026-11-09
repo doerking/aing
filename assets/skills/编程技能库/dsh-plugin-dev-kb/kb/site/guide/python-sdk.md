@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/python-sdk.zh.md"
 rawMarkdownPath: "guide/python-sdk.md"
+tags: [kb-dsh:8]
 ---
 
 # Python SDK 入门

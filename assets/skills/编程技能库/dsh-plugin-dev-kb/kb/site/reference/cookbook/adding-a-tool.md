@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-a-tool.zh.md"
 rawMarkdownPath: "reference/cookbook/adding-a-tool.md"
+tags: [kb-dsh:8]
 ---
 
 # 工具编写参考

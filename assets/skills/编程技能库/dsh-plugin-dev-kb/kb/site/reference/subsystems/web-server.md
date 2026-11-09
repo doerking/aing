@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/web-server.zh.md"
 rawMarkdownPath: "reference/subsystems/web-server.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # HTTP 服务器

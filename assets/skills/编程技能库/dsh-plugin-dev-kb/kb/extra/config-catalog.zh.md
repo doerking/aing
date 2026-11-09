@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 <!-- 由 scripts/gen-config-catalog.ts 生成——请勿手工编辑。
      运行 `pnpm run gen-config-catalog` 重新生成。 -->
 

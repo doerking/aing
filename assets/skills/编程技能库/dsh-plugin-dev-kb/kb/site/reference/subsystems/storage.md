@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/storage.zh.md"
 rawMarkdownPath: "reference/subsystems/storage.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 存储

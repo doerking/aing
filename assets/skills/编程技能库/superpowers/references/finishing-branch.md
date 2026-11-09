@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Finishing a Development Branch Reference
 
 Source: obra/superpowers finishing-a-development-branch skill

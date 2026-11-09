@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/plugin-market.md"
 rawMarkdownPath: "en/guide/plugin-market.md"
+tags: [kb-dsh:8]
 ---
 
 # Plugin markets

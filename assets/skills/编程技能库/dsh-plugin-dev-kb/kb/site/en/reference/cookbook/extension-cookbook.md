@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/extension-cookbook.md"
 rawMarkdownPath: "en/reference/cookbook/extension-cookbook.md"
+tags: [kb-dsh:8]
 ---
 
 # Cookbook: extension plugin shapes

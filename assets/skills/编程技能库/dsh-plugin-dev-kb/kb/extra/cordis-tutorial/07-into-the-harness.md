@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 7. Into the harness
 
 English | [中文](07-into-the-harness.zh.md)

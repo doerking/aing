@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Memory Recall - Smart Memory v3.1
 
 Before answering questions about prior work, preferences, decisions, or project history:

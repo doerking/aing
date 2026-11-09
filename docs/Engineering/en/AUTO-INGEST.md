@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Auto-Ingest / 会话自动入库
 
 > Every Q&A in a session is automatically ingested as evidence.

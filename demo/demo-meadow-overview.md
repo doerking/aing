@@ -1,7 +1,7 @@
 ---
 name: 云杉折纸社
 type: Concept
-tags: [demo, 折纸, 社团]
+tags: [demo, 折纸, 社团, demo:8]
 created: 2026-08-10
 status: active
 ---

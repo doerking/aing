@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Brainstorming Reference
 
 Source: obra/superpowers brainstorming skill

@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Heartbeat State Template
 
 Use this file as the baseline for `~/self-improving/heartbeat-state.md`.

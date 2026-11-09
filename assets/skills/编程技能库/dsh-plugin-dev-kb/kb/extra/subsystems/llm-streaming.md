@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # LLM Streaming
 
 English | [中文](llm-streaming.zh.md)

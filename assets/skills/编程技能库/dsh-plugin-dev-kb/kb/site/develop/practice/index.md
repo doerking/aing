@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/practice/index.zh.md"
 rawMarkdownPath: "develop/practice/index.md"
+tags: [kb-dsh:8]
 ---
 
 # 能力的三种角色设计

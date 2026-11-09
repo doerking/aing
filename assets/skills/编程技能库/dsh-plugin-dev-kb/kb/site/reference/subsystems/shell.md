@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/shell.zh.md"
 rawMarkdownPath: "reference/subsystems/shell.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Shell 执行器

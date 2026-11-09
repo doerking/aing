@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/network-proxy.md"
 rawMarkdownPath: "en/guide/network-proxy.md"
+tags: [kb-dsh:8]
 ---
 
 # Run DSH behind a network proxy

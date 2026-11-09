@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # OpenClaw Integration
 
 Complete setup and usage guide for integrating the self-improvement skill with OpenClaw.

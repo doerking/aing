@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "启用 HMR 时，安装已安装的包会以 already-installed 失败；升级需要先移除该包。"
+tags: [kb-dsh:8]
 ---
 
 # 启用 HMR 时拒绝在已安装的插件包上再次安装

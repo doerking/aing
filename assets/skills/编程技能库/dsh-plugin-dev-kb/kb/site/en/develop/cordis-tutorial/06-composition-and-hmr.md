@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/06-composition-and-hmr.md"
 rawMarkdownPath: "en/develop/cordis-tutorial/06-composition-and-hmr.md"
+tags: [kb-dsh:8]
 ---
 
 # 6. Composition and HMR

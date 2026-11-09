@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Analysis Report Template
 
 > Used for WORKFLOWS/analysis standardized report output
@@ -93,4 +97,4 @@
 ---
 
 _Report generated: {{TIMESTAMP}}_
-_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-eng_

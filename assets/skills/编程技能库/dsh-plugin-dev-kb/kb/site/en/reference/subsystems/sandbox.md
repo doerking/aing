@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/sandbox.md"
 rawMarkdownPath: "en/reference/subsystems/sandbox.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Process Sandbox

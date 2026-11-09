@@ -1,3 +1,7 @@
+---
+tags: [user-guide:8]
+---
+
 # FAQ
 
 > The 10 most-asked questions. Still stuck? Open an Issue on the repo.

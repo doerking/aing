@@ -1,5 +1,6 @@
 ---
 description: "Generate, acknowledge, and verify Session persistence-type changes locally before opening a pull request."
+tags: [kb-dsh:8]
 ---
 
 # Cookbook: reviewing persistence-type changes

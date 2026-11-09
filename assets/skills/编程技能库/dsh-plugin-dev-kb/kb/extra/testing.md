@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Testing policy
 
 English | [中文](testing.zh.md)

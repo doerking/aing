@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "JSONL 持久化使用插件命名空间导入；直接构造服务类和类类型标注需要改用持久化服务。"
+tags: [kb-dsh:8]
 ---
 
 # 通过插件挂载 JSONL 持久化

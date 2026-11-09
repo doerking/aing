@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-telemetry.zh.md"
 rawMarkdownPath: "reference/subsystems/session-telemetry.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 遥测（telemetry）

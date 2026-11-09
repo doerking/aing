@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/scope.md"
 rawMarkdownPath: "en/reference/subsystems/scope.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Scoped Registration

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Product telemetry
 
 English | [中文](product-telemetry.zh.md)

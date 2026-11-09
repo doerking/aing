@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Description: <br>
 Captures learnings, errors, feature requests, and corrections so agents can preserve useful lessons across sessions. <br>
 

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 <p align="center">
   <img src="docs/banner.svg" alt="dsh-plugin-dev-kb banner" width="100%">
 </p>

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 用户命令
 
 [English](commands.md) | 中文

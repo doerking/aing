@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Messages mock streams publish named SSE events for native SDK consumers."
+tags: [kb-dsh:8]
 ---
 
 # Read named events from the Messages mock server

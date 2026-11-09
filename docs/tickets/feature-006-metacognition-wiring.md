@@ -1,5 +1,5 @@
 ---
-tags: [ticket, feature, metacognition, phase-2.6]
+tags: [ticket, feature, metacognition, phase-2.6, tickets:8]
 priority: P2
 status: open
 created: 2026-09-08

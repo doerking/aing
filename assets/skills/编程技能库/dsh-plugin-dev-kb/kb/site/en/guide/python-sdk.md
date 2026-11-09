@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/python-sdk.md"
 rawMarkdownPath: "en/guide/python-sdk.md"
+tags: [kb-dsh:8]
 ---
 
 # Get started with the Python SDK

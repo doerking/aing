@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Claude Code 与 Codex bundle 添加全局委派工具，同时保留包名和行标识。"
+tags: [kb-dsh:8]
 ---
 
 # 原生子代理 bundle 包含全局工具

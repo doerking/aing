@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Session-title providers register directly, own their strategy settings, and share only prepared execution."
+tags: [kb-dsh:8]
 ---
 
 # Migrate session-title providers

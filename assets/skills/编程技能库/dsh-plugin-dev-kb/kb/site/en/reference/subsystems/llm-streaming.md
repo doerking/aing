@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/llm-streaming.md"
 rawMarkdownPath: "en/reference/subsystems/llm-streaming.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # LLM Streaming

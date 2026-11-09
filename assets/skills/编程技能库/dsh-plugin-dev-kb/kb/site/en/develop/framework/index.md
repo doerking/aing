@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/index.md"
 rawMarkdownPath: "en/develop/framework/index.md"
+tags: [kb-dsh:8]
 ---
 
 # Plugins and lifecycle

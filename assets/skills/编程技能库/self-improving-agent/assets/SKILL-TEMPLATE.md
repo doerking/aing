@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Skill Template
 
 Template for creating skills extracted from learnings. Copy and customize.

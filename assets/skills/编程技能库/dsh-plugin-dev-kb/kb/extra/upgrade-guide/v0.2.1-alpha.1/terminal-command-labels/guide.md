@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Custom TerminalBlock consumers must provide localized accessible names for overflowing command lines."
+tags: [kb-dsh:8]
 ---
 
 # Terminal command labels

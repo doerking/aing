@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Self-Reflections Log
 
 Track self-reflections from completed work. Each entry captures what the agent learned from evaluating its own output.

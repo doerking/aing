@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Agent Teams
 
 English | [中文](agent-team.zh.md)

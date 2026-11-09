@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/publish.zh.md"
 rawMarkdownPath: "develop/basic/publish.md"
+tags: [kb-dsh:8]
 ---
 
 # 打包与安装插件

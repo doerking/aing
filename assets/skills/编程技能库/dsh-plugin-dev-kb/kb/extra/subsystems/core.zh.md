@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 核心
 
 [English](core.md) | 中文

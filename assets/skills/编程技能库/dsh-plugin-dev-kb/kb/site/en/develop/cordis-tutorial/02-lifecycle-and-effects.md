@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/02-lifecycle-and-effects.md"
 rawMarkdownPath: "en/develop/cordis-tutorial/02-lifecycle-and-effects.md"
+tags: [kb-dsh:8]
 ---
 
 # 2. Lifecycle and effects

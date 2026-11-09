@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-primer.zh.md"
 rawMarkdownPath: "reference/cordis-primer.md"
+tags: [kb-dsh:8]
 ---
 
 # Cordis 入门

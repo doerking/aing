@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 实操手册：新增一个 Remote API
 
 [English](adding-a-remote-api.md) | 中文

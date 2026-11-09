@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 在堆叠 PR 链中回应评审意见
 
 [English](responding-to-pr-review-on-a-stack.md) | 中文

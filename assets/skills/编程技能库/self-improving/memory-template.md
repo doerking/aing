@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Memory Template
 
 Copy this structure to `~/self-improving/memory.md` on first use.

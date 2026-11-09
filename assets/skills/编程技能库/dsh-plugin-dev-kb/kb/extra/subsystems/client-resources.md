@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Client Resources
 
 English | [中文](client-resources.zh.md)

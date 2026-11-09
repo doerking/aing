@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/typert.zh.md"
 rawMarkdownPath: "reference/subsystems/typert.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Typert 远程调用

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "DeepSeek 账号路由不再接受 models 目录；模型由账号的模型列表提供，单个模型通过 modelOverrides 调整。"
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek 账号模型改由账号的模型列表提供

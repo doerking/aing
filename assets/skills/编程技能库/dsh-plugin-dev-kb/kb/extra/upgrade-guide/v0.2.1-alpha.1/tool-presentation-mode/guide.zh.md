@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "工具呈现方式仅接受 native 或 ptc；混合的 both 模式会被拒绝。"
+tags: [kb-dsh:8]
 ---
 
 # 选择原生或 PTC 工具呈现方式

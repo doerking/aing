@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 1. 编写第一个插件
 
 [English](01-first-plugin.md) | 中文

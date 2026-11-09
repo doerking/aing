@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "桌面测试包需要在本地显式开启后，才能显示飞书更新策略鉴权弹窗。"
+tags: [kb-dsh:8]
 ---
 
 # 在本地开启测试更新策略鉴权弹窗

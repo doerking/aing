@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # API Gateway
 
 English | [中文](api-gateway.zh.md)

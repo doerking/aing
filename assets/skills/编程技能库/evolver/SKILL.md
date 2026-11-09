@@ -2,6 +2,7 @@
 name: evolver
 description: "Use EvoX/Evolver durable memory (genes and capsules) when the user wants to remember a proven approach, recall past work, or save a lesson. Trigger: remember this, what did we learn, evolver, EvoMap, gene, capsule, 记住, 沉淀."
 version: 1.0.0
+tags: [skill-mem:8]
 ---
 
 # Evolver memory

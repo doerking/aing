@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Python PTC 组合需要沙箱服务，且直接 Python 文件操作遵循已解析文件策略。"
+tags: [kb-dsh:8]
 ---
 
 # Python PTC 应用共享文件沙箱

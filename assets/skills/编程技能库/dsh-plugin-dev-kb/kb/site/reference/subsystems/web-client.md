@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/web-client.zh.md"
 rawMarkdownPath: "reference/subsystems/web-client.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Web Client 架构

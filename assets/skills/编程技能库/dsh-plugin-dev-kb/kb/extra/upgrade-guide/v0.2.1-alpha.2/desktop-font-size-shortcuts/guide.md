@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Desktop font-size shortcuts reserve key combinations previously available to custom shortcuts."
+tags: [kb-dsh:8]
 ---
 
 # Desktop font-size shortcuts reserve custom key combinations

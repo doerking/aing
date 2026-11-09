@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "部署", "运维", "SOP", "验收", "手册"]
+tags: [aing, 部署, 运维, SOP, 验收, 手册, docs:8]
 ---
 
 # DEPLOY-PLAYBOOK — aing 部署实操手册（Ops Doc, Chinese-primary）

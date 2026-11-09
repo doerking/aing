@@ -9,6 +9,7 @@ description: >
   (4) completing a feature branch — triggers test verification + merge/PR options.
   NOT for: one-liner fixes (just edit), reading code, or non-code tasks.
   Requires exec tool and sessions_spawn.
+tags: [skill-superpowers:8]
 ---
 
 # Superpowers — OpenClaw Edition

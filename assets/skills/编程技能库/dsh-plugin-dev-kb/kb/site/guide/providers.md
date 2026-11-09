@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/providers.zh.md"
 rawMarkdownPath: "guide/providers.md"
+tags: [kb-dsh:8]
 ---
 
 # 配置模型

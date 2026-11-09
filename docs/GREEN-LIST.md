@@ -7,6 +7,7 @@ AIGC:
   PropagateID: 'e0868bc4-799f-4361-bc07-c4c86e242ba0'
   ReservedCode1: 'f8bb2609-3e7a-4c4a-9e50-d093b926c878'
   ReservedCode2: 'f8bb2609-3e7a-4c4a-9e50-d093b926c878'
+tags: [docs:8]
 ---
 # aing 绿灯清单 / Green List（自动生成，勿手改）
 

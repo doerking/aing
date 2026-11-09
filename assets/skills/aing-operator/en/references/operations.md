@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "运维", "部署", "验收", "代谢", "常驻服务", "冒烟"]
+tags: [aing, 运维, 部署, 验收, 代谢, 常驻服务, 冒烟, subdir-docs:8]
 ---
 
 # Ops Group: Deploy, Verify & Daily Running

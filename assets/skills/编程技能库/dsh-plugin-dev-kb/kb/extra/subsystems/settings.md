@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Plugin Configuration Forms
 
 English | [中文](settings.zh.md)

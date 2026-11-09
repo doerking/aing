@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: adding a Session log format version
 
 English | [中文](adding-a-session-format-version.zh.md)

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/ptc-runtime.zh.md"
 rawMarkdownPath: "reference/subsystems/ptc-runtime.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # PTC 运行时

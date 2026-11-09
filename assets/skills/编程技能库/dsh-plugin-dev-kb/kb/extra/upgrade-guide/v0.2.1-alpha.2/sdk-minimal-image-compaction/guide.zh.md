@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "sdk-minimal 默认工具清单新增 read_image，并自动生成较早上下文的摘要。"
+tags: [kb-dsh:8]
 ---
 
 # SDK-minimal 图片读取与自动压缩

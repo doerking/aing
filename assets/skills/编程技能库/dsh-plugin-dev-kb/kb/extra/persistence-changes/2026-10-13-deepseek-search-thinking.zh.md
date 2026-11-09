@@ -1,6 +1,7 @@
 ---
 description: "记录持久化类型更改及其兼容性确认。"
 kind: persistence-change
+tags: [kb-dsh:8]
 ---
 
 # 2026-10-13-deepseek-search-thinking

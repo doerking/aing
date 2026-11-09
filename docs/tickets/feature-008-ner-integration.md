@@ -1,5 +1,5 @@
 ---
-tags: [ticket, feature, ner, auto-ingest, transformers]
+tags: [ticket, feature, ner, auto-ingest, transformers, tickets:8]
 priority: P2
 status: open
 created: 2026-09-08

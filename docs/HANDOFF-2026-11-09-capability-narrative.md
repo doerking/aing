@@ -1,5 +1,5 @@
 ---
-tags: [aing, handoff, capability-narrative, distill, c10g, must-read]
+tags: [aing, handoff, capability-narrative, distill, c10g, must-read, docs:8]
 description: 2026-11-09 能力叙事六段入库硬接线交接单——本仓消费侧落地 4 commit（ad47ae2..b64375e 已推）+ G 侧 4 件交付物 + 远端 [CHECK] 清单 + 未处理账（仪表台 2 项 degraded）
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Working Directory
 
 English | [中文](working-directory.zh.md)

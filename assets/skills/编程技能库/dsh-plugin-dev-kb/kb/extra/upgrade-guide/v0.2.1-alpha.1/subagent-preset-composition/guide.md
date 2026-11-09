@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Subagent persona and toolFilter configuration is replaced by Agent Preset composition."
+tags: [kb-dsh:8]
 ---
 
 # Configure subagent composition through presets

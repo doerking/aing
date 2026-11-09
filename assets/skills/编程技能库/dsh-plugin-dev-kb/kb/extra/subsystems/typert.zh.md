@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Typert 远程调用
 
 [English](typert.md) | 中文

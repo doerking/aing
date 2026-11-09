@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "pi-ai routes that name a credential hide their models until the credential is configured."
+tags: [kb-dsh:8]
 ---
 
 # pi-ai model visibility without a credential

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/conversation.md"
 rawMarkdownPath: "en/reference/subsystems/conversation.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Conversation assembly

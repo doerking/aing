@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/mcp-memory.zh.md"
 rawMarkdownPath: "guide/mcp-memory.md"
+tags: [kb-dsh:8]
 ---
 
 # 连接第三方记忆 MCP 服务

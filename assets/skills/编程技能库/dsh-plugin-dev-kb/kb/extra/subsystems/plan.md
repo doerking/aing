@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Plan Mode
 
 English | [中文](plan.zh.md)

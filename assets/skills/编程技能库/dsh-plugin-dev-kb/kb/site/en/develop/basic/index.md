@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/index.md"
 rawMarkdownPath: "en/develop/basic/index.md"
+tags: [kb-dsh:8]
 ---
 
 # Your first plugin

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Custom primary-runtime payloads require relocatable Python interpreter aliases."
+tags: [kb-dsh:8]
 ---
 
 # Custom Python runtime aliases must target a sibling interpreter

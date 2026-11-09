@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/persistence.md"
 rawMarkdownPath: "en/reference/subsystems/persistence.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Session Persistence

@@ -12,6 +12,7 @@ metadata:
         - OPENAI_API_KEY
       plugins:
         - memory-lancedb
+tags: [skill-mem:8]
 ---
 
 # Elite Longterm Memory 🧠

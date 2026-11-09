@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Hot Memory and Working Context in v3.1
 
 Smart Memory v3.1 keeps the existing hot-memory file, but its role is now explicitly downstream of transcript-backed derived memory.

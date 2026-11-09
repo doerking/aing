@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 客户端资源
 
 [English](client-resources.md) | 中文

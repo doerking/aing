@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Session working directories replace built-in cwd configuration, and tool presentation metadata also runs for nested PTC calls."
+tags: [kb-dsh:8]
 ---
 
 # Migrate working-directory configuration and tool presentation

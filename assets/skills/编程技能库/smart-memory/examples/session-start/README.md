@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Session Start Examples
 
 These examples show how to prime Smart Memory v3.1 before the first response of a new session.

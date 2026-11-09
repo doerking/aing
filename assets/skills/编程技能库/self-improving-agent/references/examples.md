@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Entry Examples
 
 Concrete examples of well-formatted entries with all fields.

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/client-resources.md"
 rawMarkdownPath: "en/reference/subsystems/client-resources.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Client Resources

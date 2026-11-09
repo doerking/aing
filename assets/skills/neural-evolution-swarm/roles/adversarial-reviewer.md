@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Role: 共识对抗审查者（Adversarial Reviewer）
 
 ## Identity

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/conversation.zh.md"
 rawMarkdownPath: "reference/subsystems/conversation.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Conversation 组装

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "New Session creates a fresh Agent instead of reusing an existing empty Session."
+tags: [kb-dsh:8]
 ---
 
 # Start a fresh Agent with New Session

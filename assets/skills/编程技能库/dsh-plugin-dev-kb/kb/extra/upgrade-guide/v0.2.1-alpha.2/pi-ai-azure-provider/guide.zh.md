@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "pi-ai 的 Azure 提供方路由从 azure-openai-responses 更名为 azure。"
+tags: [kb-dsh:8]
 ---
 
 # Azure 提供方路由更名

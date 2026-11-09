@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "插件兼容性检查先读 engines.dsh，再读 DSH peerDependencies；拒绝记录改用 requirements 代替 peers。"
+tags: [kb-dsh:8]
 ---
 
 # 插件兼容性先读 `engines.dsh`

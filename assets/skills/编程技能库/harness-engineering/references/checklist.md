@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Harness Template Checklist
 
 Use this list when evolving an existing repository toward Harness Engineering.

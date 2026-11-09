@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Scoped Registration
 
 English | [中文](scope.zh.md)

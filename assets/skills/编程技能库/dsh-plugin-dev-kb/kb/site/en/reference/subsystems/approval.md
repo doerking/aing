@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/approval.md"
 rawMarkdownPath: "en/reference/subsystems/approval.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # User Approval

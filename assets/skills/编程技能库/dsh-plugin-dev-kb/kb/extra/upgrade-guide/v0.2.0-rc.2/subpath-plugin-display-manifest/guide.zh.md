@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "子路径插件不再从导出的 <子路径>/package.json 读取展示文本和图标，改用 locale meta 和 <子路径>/icon。"
+tags: [kb-dsh:8]
 ---
 
 # 子路径插件改读 `<子路径>/icon`，不再读 `<子路径>/package.json`

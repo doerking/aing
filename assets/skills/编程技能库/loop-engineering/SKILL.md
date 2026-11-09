@@ -2,6 +2,7 @@
 name: loop-engineering
 default-enabled: false
 description: Loop Engineering AI programming paradigm guide. Covers the core concepts of transitioning from single prompt calls to autonomous loop systems, key components, loop patterns, configuration examples, and anti-patterns. 
+tags: [skill-eng:8]
 ---
 
 # Loop Engineering

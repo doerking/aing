@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "JSONL persistence uses a namespace plugin import; direct service-class construction and class type annotations must use the persistence service instead."
+tags: [kb-dsh:8]
 ---
 
 # Mount JSONL persistence through its plugin

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "挂载存储时，已保存凭据现在优先于环境后备；随附 headless profile 不挂载存储认证。"
+tags: [kb-dsh:8]
 ---
 
 # 存储的密钥优先于导出的变量

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/03-services.md"
 rawMarkdownPath: "en/develop/cordis-tutorial/03-services.md"
+tags: [kb-dsh:8]
 ---
 
 # 3. Services

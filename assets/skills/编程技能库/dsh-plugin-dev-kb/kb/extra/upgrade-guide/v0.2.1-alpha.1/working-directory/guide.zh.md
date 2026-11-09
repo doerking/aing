@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Session 工作目录替代内置 cwd 配置，工具展示元数据也会在嵌套 PTC 调用中生成。"
+tags: [kb-dsh:8]
 ---
 
 # 迁移工作目录配置与工具展示

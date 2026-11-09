@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # DeepSeek Harness 文档索引
 
 > 由 `scripts/rebuild-index.mjs` 自动生成。共 192 个站点页面（中英双语），另有 439 个补充文档在 `extra/`。

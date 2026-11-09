@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 开发指南
 
 [English](development.md) | 中文

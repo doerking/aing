@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Tolaria(LLM) 核心架构篇
 
 > 本篇章定义了 Tolaria(LLM) 的核心架构、存储基石、权力法则与自检体系。

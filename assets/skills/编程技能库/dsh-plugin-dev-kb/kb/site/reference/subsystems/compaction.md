@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/compaction.zh.md"
 rawMarkdownPath: "reference/subsystems/compaction.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 压缩（compaction）

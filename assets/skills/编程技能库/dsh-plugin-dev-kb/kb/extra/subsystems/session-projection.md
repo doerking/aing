@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Session Projections
 
 English | [中文](session-projection.zh.md)

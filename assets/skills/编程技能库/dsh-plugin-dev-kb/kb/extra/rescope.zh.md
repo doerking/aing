@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Vendored 包改名
 
 [English](rescope.md) | 中文

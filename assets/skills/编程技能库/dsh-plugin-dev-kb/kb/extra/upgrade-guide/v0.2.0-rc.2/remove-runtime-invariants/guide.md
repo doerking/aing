@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The runtime invariant registry package and every package's `./invariant` subpath export are removed."
+tags: [kb-dsh:8]
 ---
 
 # Runtime invariant plugins are removed

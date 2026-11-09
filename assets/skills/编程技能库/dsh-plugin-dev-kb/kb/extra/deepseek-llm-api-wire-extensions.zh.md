@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # DeepSeek 官方 LLM API 协议扩展
 
 [English](deepseek-llm-api-wire-extensions.md) | 中文

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 防御性模式
 
 [English](README.md) | 中文

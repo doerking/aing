@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Same-session goals
 
 English | [中文](goal.zh.md)

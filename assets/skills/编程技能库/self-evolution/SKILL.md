@@ -6,6 +6,7 @@ metadata:
   openclaw:
     emoji: "🧬"
     os: ["darwin", "linux", "win32"]
+tags: [skill-mem:8]
 ---
 
 # Self-Evolution System v2.0 - Research-Backed Autonomous Improvement

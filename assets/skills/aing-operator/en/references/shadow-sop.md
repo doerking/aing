@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "修复", "影子", "SOP", "定点同步", "Windows坑"]
+tags: [aing, 修复, 影子, SOP, 定点同步, Windows坑, subdir-docs:8]
 ---
 
 # Repair Group: Shadow Discipline SOP

@@ -5,7 +5,7 @@ description: |
   Use when: the user mentions any yard of the aing ecosystem (master package / training copy / shadow directory / simulator / second machine), asks to deploy, verify, operate, repair, train, or review aing, or the write target is inside an aing repo.
   Do NOT use for ordinary Node.js projects unrelated to aing (that's senior-developer's job).
 version: "0.2"
-tags: ["aing", "技能组", "院子地图", "治理", "训练", "评审", "运维", "修复"]
+tags: [aing, 技能组, 院子地图, 治理, 训练, 评审, 运维, 修复, subdir-docs:8]
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'

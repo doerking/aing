@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "受管理的子 agent activation 替代前台与 Job 后台委派、相关配置键和已发布的进程内驱动包。"
+tags: [kb-dsh:8]
 ---
 
 # 将委派迁移到受管理的子 agent activation

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 实践指南：即时配置表单
 
 [English](adding-a-settings-card.md) | 中文

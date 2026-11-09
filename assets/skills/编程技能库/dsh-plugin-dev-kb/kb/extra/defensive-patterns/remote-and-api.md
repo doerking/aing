@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Remote and API rules
 
 English | [中文](remote-and-api.zh.md)

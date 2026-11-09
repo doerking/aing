@@ -3,6 +3,7 @@ name: smart-memory
 description: "Persistent local transcript-first memory via FastAPI (127.0.0.1:8000). Use for semantic recall, durable memory commits, transcript inspection, and pending insight retrieval through the Smart Memory v3.1 backend."
 metadata:
   {"openclaw":{"emoji":"??","requires":{"bins":["curl"]}}}
+tags: [skill-mem:8]
 ---
 
 # Smart Memory OpenClaw Skill

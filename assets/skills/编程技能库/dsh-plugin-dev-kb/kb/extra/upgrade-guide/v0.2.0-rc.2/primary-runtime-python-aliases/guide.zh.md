@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "自定义 primary-runtime payload 的 Python 解释器别名必须支持目录迁移。"
+tags: [kb-dsh:8]
 ---
 
 # 自定义 Python 运行时别名必须指向同目录解释器

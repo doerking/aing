@@ -2,6 +2,7 @@
 name: dsh-dev-sandbox
 description: dsh 插件开发沙箱：agent 自建独立沙箱 profile 隔离开发中的插件，插件崩了只崩沙箱、绝不影响主力 dsh。所有启动 / 重启 / 看日志 / 冒烟验证都由 agent 自己完成，不要求用户重启。开发或调试 dsh 插件、需要验证插件能否加载、插件改完要重启验证时加载本技能。
 whenToUse: 开发/调试 dsh 插件需要启动、重启、验证插件加载，或插件疑似把 dsh 搞挂时
+tags: [kb-dsh:8]
 ---
 # dsh 插件开发沙箱（dsh-dev-sandbox）
 

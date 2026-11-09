@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 同会话目标
 
 [English](goal.md) | 中文

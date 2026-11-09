@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The `agent-instructions` row no longer accepts `dshHome`; instruction loading always resolves the harness home from `$DSH_HOME` or `~/.dsh`."
+tags: [kb-dsh:8]
 ---
 
 # Instruction loading resolves one harness home

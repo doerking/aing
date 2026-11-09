@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: 添加内置插件功能配图
 
 [English](adding-a-plugin-preview.md) | 中文

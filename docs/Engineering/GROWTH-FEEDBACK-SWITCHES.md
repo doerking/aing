@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # GROWTH-FEEDBACK-SWITCHES：成长与反馈开关核对记录
 
 > **占位符图例**：`<repo-root>` = 主包发布仓库根目录（本 aing 院），`<exp-yard>` = 实验场副本（Tip），`<opt-copy>` = 训练副本（OPT），`<dd-root>` = SkillOpt 检出所在根目录。**文档一律不写盘符字面量**（门禁 C8）。

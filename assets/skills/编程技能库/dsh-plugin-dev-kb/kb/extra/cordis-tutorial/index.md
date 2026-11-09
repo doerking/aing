@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cordis tutorial
 
 English | [中文](index.zh.md)

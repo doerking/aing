@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/skills.zh.md"
 rawMarkdownPath: "reference/subsystems/skills.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Skills

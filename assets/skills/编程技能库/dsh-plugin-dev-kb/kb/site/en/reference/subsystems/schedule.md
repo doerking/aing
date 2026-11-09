@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/schedule.md"
 rawMarkdownPath: "en/reference/subsystems/schedule.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Host-wide Schedule

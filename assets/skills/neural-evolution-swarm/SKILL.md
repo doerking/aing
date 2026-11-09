@@ -33,6 +33,7 @@ roles:
     purpose: 共识收敛阶段专门挑刺（只反驳不修复），暴露共识的假前提与未检验假设，挡下带 critical 的共识
     skills: [consciousness-neural-methodology]
     tools: []
+tags: [subdir-docs:8]
 ---
 
 # 神经进化团队（Neural Evolution Swarm）

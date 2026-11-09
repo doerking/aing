@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/schedule.md"
 rawMarkdownPath: "en/guide/schedule.md"
+tags: [kb-dsh:8]
 ---
 
 # Schedule reminders

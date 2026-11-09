@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Patch-12：对抗审查角色（Adversarial Reviewer）并入蜂群共识收敛
 
 > 定位：把 DeepSeek Harness 生态 `dsh-orchestrate` 的「对抗式审查 + 收敛」机制，改造进 aing 神经进化蜂群（`assets/skills/neural-evolution-swarm`）的**共识收敛阶段**。

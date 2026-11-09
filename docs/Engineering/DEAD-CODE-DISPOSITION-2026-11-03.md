@@ -1,5 +1,5 @@
 ---
-tags: [aing, 死码处置, 孤悬, W9, 归档登记, origin-trust]
+tags: [aing, 死码处置, 孤悬, W9, 归档登记, origin-trust, engineering-docs:8]
 description: W9 两处死码处置记录——boot-sequence 修 .default 接线（有真互补面，取「修并接线」）+ interchange-router 归档登记（0 调用 + 构造即抛，取「归档不删」学 db-time 死孪生先例）
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'

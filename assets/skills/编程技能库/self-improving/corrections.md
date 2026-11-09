@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Corrections Log — Template
 
 > This file is created in `~/self-improving/corrections.md` when you first use the skill.

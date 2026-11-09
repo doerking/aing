@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/filesystem.zh.md"
 rawMarkdownPath: "reference/subsystems/filesystem.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 文件系统

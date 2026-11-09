@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 计划模式
 
 [English](plan.md) | 中文

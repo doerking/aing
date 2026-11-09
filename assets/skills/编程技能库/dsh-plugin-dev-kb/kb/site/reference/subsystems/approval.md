@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/approval.zh.md"
 rawMarkdownPath: "reference/subsystems/approval.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 用户审批

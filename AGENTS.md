@@ -1,5 +1,5 @@
 ---
-tags: [aing, deploy, discipline, must-read]
+tags: [aing, deploy, discipline, must-read, repo-root-docs:8]
 description: aing 部署必读：一键部署流程（含最后一米 L1-L3）、验收清单 C0-C21（34 项）、M4 组件链引导（数据报告 A–K）、已知坑 23 条、院际对齐与沙盒复原、汇报格式
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'

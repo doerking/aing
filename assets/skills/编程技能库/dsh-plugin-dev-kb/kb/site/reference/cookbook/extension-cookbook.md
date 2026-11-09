@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/extension-cookbook.zh.md"
 rawMarkdownPath: "reference/cookbook/extension-cookbook.md"
+tags: [kb-dsh:8]
 ---
 
 # 实操手册：扩展插件形态

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/core.zh.md"
 rawMarkdownPath: "reference/subsystems/core.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 核心

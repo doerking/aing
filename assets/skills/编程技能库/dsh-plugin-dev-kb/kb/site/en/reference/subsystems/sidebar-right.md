@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/sidebar-right.md"
 rawMarkdownPath: "en/reference/subsystems/sidebar-right.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Right Sidebar

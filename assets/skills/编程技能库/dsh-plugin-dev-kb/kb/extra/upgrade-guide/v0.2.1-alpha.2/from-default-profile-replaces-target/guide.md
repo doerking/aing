@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "`--from-default-profile` now replaces an existing custom profile instead of refusing it."
+tags: [kb-dsh:8]
 ---
 
 # `--from-default-profile` replaces an existing profile

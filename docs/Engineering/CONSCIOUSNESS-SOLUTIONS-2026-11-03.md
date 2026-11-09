@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # 意识神经模块缺口·外部解法研究（2026-11-03）
 
 > 承接 COMPONENT-RESEARCH-2026-11-03.md 的三个真缺口 + selfImprovement 轨迹缺口。解法全部来自外部系统与论文，落地设计对齐 aing 现有纪律（证据优先、影子先行、门禁不跳过）。

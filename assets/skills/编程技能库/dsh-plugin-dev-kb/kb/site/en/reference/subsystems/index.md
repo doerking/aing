@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/README.md"
 rawMarkdownPath: "en/reference/subsystems/index.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Subsystems

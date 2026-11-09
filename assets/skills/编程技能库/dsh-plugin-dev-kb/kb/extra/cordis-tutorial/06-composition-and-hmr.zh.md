@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 6. 组合与 HMR（热模块替换）
 
 [English](06-composition-and-hmr.md) | 中文

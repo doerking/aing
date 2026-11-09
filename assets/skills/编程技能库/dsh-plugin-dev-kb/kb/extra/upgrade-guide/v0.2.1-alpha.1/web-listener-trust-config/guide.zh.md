@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Web profile 用 `webStartup` 取代 `webRuntime` 服务与 `web-runtime` 行的 `trustedHosts` 配置，并拒绝通配监听地址。"
+tags: [kb-dsh:8]
 ---
 
 # Web 监听与信任配置迁移到 `webStartup`

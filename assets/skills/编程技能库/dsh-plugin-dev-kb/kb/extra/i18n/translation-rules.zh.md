@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 翻译规则
 
 [English](translation-rules.md) | 中文

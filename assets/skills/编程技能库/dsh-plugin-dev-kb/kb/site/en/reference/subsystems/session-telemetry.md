@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-telemetry.md"
 rawMarkdownPath: "en/reference/subsystems/session-telemetry.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # SessionTelemetryBackend

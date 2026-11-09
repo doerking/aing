@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/token-meter.zh.md"
 rawMarkdownPath: "reference/subsystems/token-meter.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Token 计量

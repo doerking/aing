@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The Web composition no longer carries the Schedule rows; the Automation tasks optional bundle inserts them."
+tags: [kb-dsh:8]
 ---
 
 # Schedule moves into the Automation tasks optional bundle

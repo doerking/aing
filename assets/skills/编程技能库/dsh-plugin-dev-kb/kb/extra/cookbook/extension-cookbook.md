@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: extension plugin shapes
 
 English | [中文](extension-cookbook.zh.md)

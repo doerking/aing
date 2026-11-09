@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Agent Integration Guide
 
 Smart Memory v3.1 is transcript-first. Your agent should treat transcript append as the durable write, and treat memory retrieval as a derived convenience layer.

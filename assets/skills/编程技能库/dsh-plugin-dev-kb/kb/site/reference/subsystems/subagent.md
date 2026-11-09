@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/subagent.zh.md"
 rawMarkdownPath: "reference/subsystems/subagent.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 子代理

@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Description: <br>
 Self-reflection, self-criticism, self-learning, and self-organizing memory help an agent evaluate its own work, catch mistakes, and improve permanently. <br>
 

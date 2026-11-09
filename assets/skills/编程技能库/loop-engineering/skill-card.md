@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 ## Description: <br>
 Loop Engineering AI programming paradigm guide covering the transition from single prompt calls to autonomous loop systems, key components, loop patterns, configuration examples, and anti-patterns. <br>
 

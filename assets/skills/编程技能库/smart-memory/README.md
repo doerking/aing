@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Smart Memory v3.1
 
 Smart Memory is a single-user, fully local, transcript-first memory backend for agents and OpenClaw-style runtimes.

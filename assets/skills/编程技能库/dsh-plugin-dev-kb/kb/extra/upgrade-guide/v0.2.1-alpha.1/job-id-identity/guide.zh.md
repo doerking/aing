@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "JobId 现在跨注册表生命周期标识一次后台执行。"
+tags: [kb-dsh:8]
 ---
 
 # 后台 job id 标识一次执行

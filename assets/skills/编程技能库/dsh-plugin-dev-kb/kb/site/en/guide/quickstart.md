@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/index.md"
 rawMarkdownPath: "en/guide/quickstart.md"
+tags: [kb-dsh:8]
 ---
 
 # Use the Web UI

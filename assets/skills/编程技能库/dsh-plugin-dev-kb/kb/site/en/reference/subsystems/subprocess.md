@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/subprocess.md"
 rawMarkdownPath: "en/reference/subsystems/subprocess.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Subprocess

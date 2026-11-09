@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Messages 模拟流为原生 SDK 消费方发布具名 SSE 事件。"
+tags: [kb-dsh:8]
 ---
 
 # 读取 Messages 模拟服务器的具名事件

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-an-llm-adapter.zh.md"
 rawMarkdownPath: "reference/cookbook/adding-an-llm-adapter.md"
+tags: [kb-dsh:8]
 ---
 
 # 实操手册：添加 LLM（大语言模型）适配器

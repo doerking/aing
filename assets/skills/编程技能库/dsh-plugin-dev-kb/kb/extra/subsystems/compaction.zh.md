@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 压缩（compaction）
 
 [English](compaction.md) | 中文

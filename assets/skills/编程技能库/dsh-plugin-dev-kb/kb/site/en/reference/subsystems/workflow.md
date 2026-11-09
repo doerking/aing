@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/workflow.md"
 rawMarkdownPath: "en/reference/subsystems/workflow.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Workflow

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "dsh plugin 只在被转发的 pnpm 参数之前读取 --profile，并提供自己的帮助。"
+tags: [kb-dsh:8]
 ---
 
 # `dsh plugin` 选项位置

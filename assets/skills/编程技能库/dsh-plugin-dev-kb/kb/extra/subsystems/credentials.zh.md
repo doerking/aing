@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 用户凭据
 
 [English](credentials.md) | 中文

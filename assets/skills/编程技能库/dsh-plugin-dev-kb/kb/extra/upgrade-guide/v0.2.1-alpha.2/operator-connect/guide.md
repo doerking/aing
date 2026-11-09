@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Non-page Clients default to no forwarded interactions and use raw streams without browser recovery."
+tags: [kb-dsh:8]
 ---
 
 # Select interaction participation for non-page clients

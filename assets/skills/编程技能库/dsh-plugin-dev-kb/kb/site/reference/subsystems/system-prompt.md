@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/system-prompt.zh.md"
 rawMarkdownPath: "reference/subsystems/system-prompt.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 系统提示词组装

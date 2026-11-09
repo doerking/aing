@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The Automation tasks optional bundle is removed; the Web composition mounts Schedule itself."
+tags: [kb-dsh:8]
 ---
 
 # Automation tasks bundle removed

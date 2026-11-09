@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/workspace.md"
 rawMarkdownPath: "en/reference/subsystems/workspace.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Workspaces

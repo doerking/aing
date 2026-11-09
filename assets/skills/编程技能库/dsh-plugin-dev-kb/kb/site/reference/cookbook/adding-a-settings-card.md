@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-a-settings-card.zh.md"
 rawMarkdownPath: "reference/cookbook/adding-a-settings-card.md"
+tags: [kb-dsh:8]
 ---
 
 # 实践指南：即时配置表单

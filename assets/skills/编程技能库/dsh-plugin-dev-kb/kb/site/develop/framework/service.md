@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/service.zh.md"
 rawMarkdownPath: "develop/framework/service.md"
+tags: [kb-dsh:8]
 ---
 
 # 服务与依赖

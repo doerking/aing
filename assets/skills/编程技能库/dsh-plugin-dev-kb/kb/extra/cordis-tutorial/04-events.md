@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 4. Events
 
 English | [中文](04-events.zh.md)

@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Hook Setup Guide
 
 Configure automatic self-improvement triggers for AI coding agents.

@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Quality Checklist (Layer 5)
 
 > **Role**: Final quality gate
@@ -90,4 +94,4 @@ Step 1 ──→ Step 2 ──→ Step 3 ──→ Step 4
 
 ---
 
-_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-eng_

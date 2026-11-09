@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # OTel reporting
 
 English | [中文](otel.zh.md)

@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Bind — 神经进化团队约束
 
 ## Resource Constraints

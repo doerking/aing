@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Analysis Report Template
 
 > For Pipeline + analysis final output
@@ -55,4 +59,4 @@
 
 ---
 
-_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Generated with agent-harness skill | by neltharion11 | https://github.com/neltharion11/skill-eng_

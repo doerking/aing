@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/config.md"
 rawMarkdownPath: "en/develop/basic/config.md"
+tags: [kb-dsh:8]
 ---
 
 # Plugin configuration

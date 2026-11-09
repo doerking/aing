@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Session Persistence
 
 English | [中文](persistence.zh.md)

@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 芥子压缩差异化策略 | Mustard Seed Compression Tuning
 
 > 补现有 Wiki「代谢层」章节的留白。明确 500 tokens 压缩上限的领域差异化调参方案。
