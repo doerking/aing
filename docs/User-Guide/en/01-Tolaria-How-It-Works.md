@@ -1,3 +1,7 @@
+---
+tags: [user-guide:8]
+---
+
 # How the Knowledge Base Cleans Up After Itself
 
 > For people who don't want to read the architecture. After this you'll know why you never have to babysit it.

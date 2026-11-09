@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 插件配置表单
 
 [English](settings.md) | 中文

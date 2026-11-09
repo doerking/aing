@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/tools.zh.md"
 rawMarkdownPath: "reference/subsystems/tools.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 工具

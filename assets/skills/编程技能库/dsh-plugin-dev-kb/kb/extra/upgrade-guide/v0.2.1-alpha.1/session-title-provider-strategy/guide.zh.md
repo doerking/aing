@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "会话标题提供方直接注册、拥有自己的策略设置，并只共享准备好的执行。"
+tags: [kb-dsh:8]
 ---
 
 # 迁移会话标题提供方

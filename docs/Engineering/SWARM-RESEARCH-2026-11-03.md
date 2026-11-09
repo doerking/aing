@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # aing 蜂群功能专题研究（2026-11-03）
 
 > 承接 COMPONENT-RESEARCH-2026-11-03.md，应所有者点单「尤其系蜂群功能」下钻。

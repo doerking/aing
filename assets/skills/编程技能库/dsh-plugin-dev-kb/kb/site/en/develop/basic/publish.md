@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/publish.md"
 rawMarkdownPath: "en/develop/basic/publish.md"
+tags: [kb-dsh:8]
 ---
 
 # Package and install a plugin

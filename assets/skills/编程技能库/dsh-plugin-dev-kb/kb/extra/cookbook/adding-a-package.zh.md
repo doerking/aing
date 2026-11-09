@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 实操手册：添加 workspace 包
 
 [English](adding-a-package.md) | 中文

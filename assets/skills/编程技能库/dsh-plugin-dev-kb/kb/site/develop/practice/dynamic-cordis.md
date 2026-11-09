@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/practice/dynamic-cordis.zh.md"
 rawMarkdownPath: "develop/practice/dynamic-cordis.md"
+tags: [kb-dsh:8]
 ---
 
 # 通过提示词配置持久化插件

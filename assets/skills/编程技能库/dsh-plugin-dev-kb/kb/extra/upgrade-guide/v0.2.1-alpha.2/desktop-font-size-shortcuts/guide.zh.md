@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "桌面端字号快捷键占用了原先可用于自定义快捷键的组合键。"
+tags: [kb-dsh:8]
 ---
 
 # 桌面端字号快捷键占用部分自定义组合键

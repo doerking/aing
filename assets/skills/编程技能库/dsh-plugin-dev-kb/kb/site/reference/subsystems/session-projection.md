@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-projection.zh.md"
 rawMarkdownPath: "reference/subsystems/session-projection.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 会话投影

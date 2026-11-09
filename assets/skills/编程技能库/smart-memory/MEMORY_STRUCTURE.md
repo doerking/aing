@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Memory Structure (Smart Memory v3.1)
 
 Smart Memory v3.1 is transcript-first and SQLite-only at runtime.

@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Test-Driven Development Reference
 
 Source: obra/superpowers test-driven-development skill

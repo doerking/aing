@@ -1,6 +1,7 @@
 ---
 description: "Records a persistence type transition and its compatibility acknowledgement."
 kind: persistence-change
+tags: [kb-dsh:8]
 ---
 
 # 2026-10-05-working-directory-attribution

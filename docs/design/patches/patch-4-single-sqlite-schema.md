@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 单 SQLite 存储架构 | Single SQLite Schema
 
 > 补现有 Wiki「Tech Stack / 技术栈」章节的实现留白。明确零外部依赖的单文件存储方案，适配丐版。

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "可选 hooks、webhooks、工具与技能所需的显式安装、peer 依赖和配置。"
+tags: [kb-dsh:8]
 ---
 
 # 可选能力的显式安装与组合

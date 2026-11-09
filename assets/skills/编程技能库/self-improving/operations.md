@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Memory Operations
 
 ## User Commands

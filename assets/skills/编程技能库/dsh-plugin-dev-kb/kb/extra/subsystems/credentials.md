@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # User Credentials
 
 English | [中文](credentials.zh.md)

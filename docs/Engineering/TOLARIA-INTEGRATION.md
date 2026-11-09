@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Shell-Agnostic Integration
 
 > aing is **shell-agnostic**: it does not depend on Tolaria, Obsidian, or any specific note-taking app.

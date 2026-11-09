@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/settings.md"
 rawMarkdownPath: "en/reference/subsystems/settings.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Plugin Configuration Forms

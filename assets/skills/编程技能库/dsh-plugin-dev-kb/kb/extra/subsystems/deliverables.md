@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Deliverables
 
 English | [中文](deliverables.zh.md)

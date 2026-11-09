@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Scaling Patterns
 
 ## Volume Thresholds

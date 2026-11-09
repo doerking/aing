@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Sessions
 
 English | [中文](session.zh.md)

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "账号登录传输失败现在报告 no-response，而非 network。"
+tags: [kb-dsh:8]
 ---
 
 # 账号登录错误码

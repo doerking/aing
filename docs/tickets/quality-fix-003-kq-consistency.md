@@ -1,5 +1,5 @@
 ---
-tags: [ticket, quality, fix, kespi, consistency]
+tags: [ticket, quality, fix, kespi, consistency, tickets:8]
 priority: P1
 status: open
 created: 2026-09-08

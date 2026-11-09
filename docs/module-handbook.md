@@ -7,6 +7,7 @@ AIGC:
   PropagateID: 'db74651c-aad8-49dd-9d53-2e9f7fa778ac'
   ReservedCode1: '318817aa-b15e-4f98-b2a8-b667f563a3bf'
   ReservedCode2: '318817aa-b15e-4f98-b2a8-b667f563a3bf'
+tags: [docs:8]
 ---
 
 # aing 部署包模块手册 / Module Handbook (Ops Doc, Chinese-primary)

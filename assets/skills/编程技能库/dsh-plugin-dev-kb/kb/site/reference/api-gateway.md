@@ -1,6 +1,7 @@
 ---
 editSource: "docs/api-gateway.zh.md"
 rawMarkdownPath: "reference/api-gateway.md"
+tags: [kb-dsh:8]
 ---
 
 # API Gateway

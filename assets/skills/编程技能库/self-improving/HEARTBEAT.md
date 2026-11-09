@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Self-Improving Check
 
 - Read `./skills/self-improving/heartbeat-rules.md`

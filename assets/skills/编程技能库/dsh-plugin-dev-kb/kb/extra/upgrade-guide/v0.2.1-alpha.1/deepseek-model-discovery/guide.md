@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "DeepSeek API-key model discovery requires a configured credential."
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek API-key model visibility

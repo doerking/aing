@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Heartbeat Rules
 
 Use heartbeat to keep `~/self-improving/` organized without creating churn or losing data.

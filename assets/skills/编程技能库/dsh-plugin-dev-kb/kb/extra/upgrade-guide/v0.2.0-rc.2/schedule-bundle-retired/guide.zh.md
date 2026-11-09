@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "“自动化任务”可选 bundle 已移除；Web 组合自行挂载 Schedule。"
+tags: [kb-dsh:8]
 ---
 
 # “自动化任务” bundle 已移除

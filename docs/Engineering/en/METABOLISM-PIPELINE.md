@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Metabolism Pipeline
 
 > run-metabolism.js orchestrates the metabolism pipeline by **shelling out to individual scripts** via `execSync`.

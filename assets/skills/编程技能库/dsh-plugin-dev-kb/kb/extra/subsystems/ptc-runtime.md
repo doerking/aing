@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # PTC runtime
 
 English | [中文](ptc-runtime.zh.md)

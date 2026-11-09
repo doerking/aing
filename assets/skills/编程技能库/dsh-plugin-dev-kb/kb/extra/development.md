@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Development guide
 
 English | [中文](development.zh.md)

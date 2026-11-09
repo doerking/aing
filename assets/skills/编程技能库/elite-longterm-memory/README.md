@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # Elite Longterm Memory 🧠
 
 **The ultimate memory system for AI agents.** Never lose context again.

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "dsh plugin reads --profile only before the forwarded pnpm arguments and prints its own help."
+tags: [kb-dsh:8]
 ---
 
 # `dsh plugin` option placement

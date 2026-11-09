@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "旧值 ui-chat.transcriptView: normal，以及非 Desktop Web 中未设置的值，改为按“详细”而非“标准”展示。"
+tags: [kb-dsh:8]
 ---
 
 # 旧值 `normal` 的工作步骤展示改为“详细”

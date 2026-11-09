@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/persistence.zh.md"
 rawMarkdownPath: "reference/subsystems/persistence.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 会话持久化

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/architecture.md"
 rawMarkdownPath: "en/reference/index.md"
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek Harness Architecture

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/providers.md"
 rawMarkdownPath: "en/guide/providers.md"
+tags: [kb-dsh:8]
 ---
 
 # Configure models

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 远程与 API 规则
 
 [English](remote-and-api.md) | 中文

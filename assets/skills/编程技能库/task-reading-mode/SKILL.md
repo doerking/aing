@@ -15,6 +15,7 @@ description: |
   - 純執行操作（跑腳本、改錯字、搬檔）
   - 已經讀透結構、進入第二輪優化（改用 `core/36-心得.md` 心法）
   - 有現成 baseline 且已驗證（直接對照，唔需要重新審題）
+tags: [skill-eng:8]
 ---
 
 # 審題模式（Task Reading Mode）

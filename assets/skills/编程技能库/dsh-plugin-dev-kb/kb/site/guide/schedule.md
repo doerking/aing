@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/schedule.zh.md"
 rawMarkdownPath: "guide/schedule.md"
+tags: [kb-dsh:8]
 ---
 
 # Schedule 提醒

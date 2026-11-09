@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/lsp.zh.md"
 rawMarkdownPath: "reference/subsystems/lsp.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # LSP 导航

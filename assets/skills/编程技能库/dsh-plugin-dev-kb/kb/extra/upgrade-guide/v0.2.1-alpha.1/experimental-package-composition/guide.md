@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Explicit installation, peer dependencies, and configuration for optional hooks, webhooks, tools, and skills."
+tags: [kb-dsh:8]
 ---
 
 # Explicit installation and composition for optional capabilities

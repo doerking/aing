@@ -7,6 +7,7 @@ AIGC:
   PropagateID: '7e7f89b8-77cb-488c-8e2d-d6ebb694690f'
   ReservedCode1: 'fbff9954-722f-4156-8869-6a45a32182a0'
   ReservedCode2: 'fbff9954-722f-4156-8869-6a45a32182a0'
+tags: [docs:8]
 ---
 
 # M4 数据采集表（实测填写）

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 产出物
 
 [English](deliverables.md) | 中文

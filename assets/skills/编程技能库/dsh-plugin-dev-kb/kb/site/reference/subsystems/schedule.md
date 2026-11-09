@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/schedule.zh.md"
 rawMarkdownPath: "reference/subsystems/schedule.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 宿主级 Schedule

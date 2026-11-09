@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/slots.zh.md"
 rawMarkdownPath: "reference/subsystems/slots.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Web Client Slots

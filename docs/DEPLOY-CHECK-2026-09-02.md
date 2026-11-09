@@ -7,6 +7,7 @@ AIGC:
   PropagateID: 'd58bea82-a5a6-4d34-9d25-d540faa2b093'
   ReservedCode1: '85878497-967f-4edb-ad2d-dc80da17a392'
   ReservedCode2: '85878497-967f-4edb-ad2d-dc80da17a392'
+tags: [docs:8]
 ---
 
 # 部署验证清单与常见问题处理（2026-09-02） / Deploy Checklist & Troubleshooting (Chinese-primary)

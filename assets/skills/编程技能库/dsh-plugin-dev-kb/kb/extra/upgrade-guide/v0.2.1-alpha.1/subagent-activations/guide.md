@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Managed subagent activations replace foreground and Job-backed delegation, its configuration keys, and the published in-process driver."
+tags: [kb-dsh:8]
 ---
 
 # Migrate delegation to managed subagent activations

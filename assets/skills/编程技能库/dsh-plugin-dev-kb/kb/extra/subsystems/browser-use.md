@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Browser use
 
 English | [中文](browser-use.zh.md)

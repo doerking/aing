@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/llm-streaming.zh.md"
 rawMarkdownPath: "reference/subsystems/llm-streaming.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # LLM（大语言模型）流式输出

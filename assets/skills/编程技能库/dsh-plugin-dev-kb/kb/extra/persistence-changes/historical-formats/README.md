@@ -1,5 +1,6 @@
 ---
 description: "Find the complete declared persistence types for every Session format from V0 through the checkout writer."
+tags: [kb-dsh:8]
 ---
 
 # Session persistence formats

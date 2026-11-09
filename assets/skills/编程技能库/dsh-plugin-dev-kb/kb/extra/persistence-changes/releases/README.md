@@ -1,5 +1,6 @@
 ---
 description: "Browse Session persistence-type changes across every captured DSH alpha/RC tag and validate the historical snapshots offline."
+tags: [kb-dsh:8]
 ---
 
 # Persistence changes across DSH prereleases

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Voice input
 
 English | [中文](voice-input.zh.md)

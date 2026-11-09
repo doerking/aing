@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # ADR-001: From Compilation to Metabolism
 
 - **Status:** Accepted (2026-07)

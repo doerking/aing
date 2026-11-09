@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Harness Engineering Skill
 
 `harness-engineering` is a Codex skill for evolving an existing repository toward Harness Engineering.

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/client-modules.md"
 rawMarkdownPath: "en/reference/subsystems/client-modules.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Client Modules

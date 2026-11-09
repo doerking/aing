@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Tolarian：宿主系统 + 内化生长引擎
 
 > 定位：aing 的正式命名。取代「Tolaria+LLM」双脑表述，确立「单一系统、内化代谢」的架构认知。

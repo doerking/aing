@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The sdk-minimal default tool roster adds read_image and automatically summarizes older context."
+tags: [kb-dsh:8]
 ---
 
 # SDK-minimal image reading and automatic compaction

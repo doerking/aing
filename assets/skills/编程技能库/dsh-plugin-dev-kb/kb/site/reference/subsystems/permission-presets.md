@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/permission-presets.zh.md"
 rawMarkdownPath: "reference/subsystems/permission-presets.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 权限预设

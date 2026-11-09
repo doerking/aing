@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Config Reference / 配置参考
 
 > Actual config file: `src/growth.config.js` (CommonJS).

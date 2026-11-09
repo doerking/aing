@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # SSH
 
 [English](ssh.md) | 中文

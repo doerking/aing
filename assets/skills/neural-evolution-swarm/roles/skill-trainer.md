@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Role: 技能训练师（Skill Trainer）
 
 ## Identity

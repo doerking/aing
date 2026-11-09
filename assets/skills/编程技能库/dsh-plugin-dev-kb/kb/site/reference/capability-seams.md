@@ -1,6 +1,7 @@
 ---
 editSource: "docs/capability-seams.zh.md"
 rawMarkdownPath: "reference/capability-seams.md"
+tags: [kb-dsh:8]
 ---
 
 <!-- 英文源文件由 scripts/gen-doc-graphs.ts 生成；本中文文件是通过双语配对维护的经评审对侧。

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-a-package.md"
 rawMarkdownPath: "en/reference/cookbook/adding-a-package.md"
+tags: [kb-dsh:8]
 ---
 
 # Cookbook: adding a workspace package

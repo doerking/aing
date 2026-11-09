@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Python 运行时 wheel 的 Office 转换与内置创作环境需要显式下载。"
+tags: [kb-dsh:8]
 ---
 
 # 显式下载可选 Python 运行时资源

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/plan.zh.md"
 rawMarkdownPath: "reference/subsystems/plan.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 计划模式

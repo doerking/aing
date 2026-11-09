@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Data Model
 
 > aing uses **dual storage**: fs-based Markdown files (primary) + sql.js in-memory SQLite (secondary).

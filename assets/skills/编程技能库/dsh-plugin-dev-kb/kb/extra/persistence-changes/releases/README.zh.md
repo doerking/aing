@@ -1,5 +1,6 @@
 ---
 description: "浏览全部已捕获 DSH alpha/RC tag 之间的 Session 持久化类型变化，并离线校验历史快照。"
+tags: [kb-dsh:8]
 ---
 
 # DSH 预发行版本的持久化变化

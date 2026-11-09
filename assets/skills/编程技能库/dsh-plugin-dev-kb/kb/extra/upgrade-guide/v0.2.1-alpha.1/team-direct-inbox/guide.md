@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Agent Teams removes its pending-message limit and stops delivering historical queued mail."
+tags: [kb-dsh:8]
 ---
 
 # Agent Teams messages use target inboxes

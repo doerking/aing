@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Inversion (Requirements Clarification Workflow)
 
 > **Role**: When requirements are unclear, gather requirements before action
@@ -110,4 +114,4 @@ Inversion Quick Execution Checklist:
 
 ---
 
-_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-eng_

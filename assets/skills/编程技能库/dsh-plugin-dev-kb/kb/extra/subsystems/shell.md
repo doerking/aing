@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Shell Executor
 
 English | [中文](shell.zh.md)

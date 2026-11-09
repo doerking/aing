@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Python PTC compositions require sandbox services, and direct Python file operations follow the resolved file policy."
+tags: [kb-dsh:8]
 ---
 
 # Python PTC applies the shared file sandbox

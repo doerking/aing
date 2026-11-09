@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 包面规则
 
 [English](package-surface.md) | 中文

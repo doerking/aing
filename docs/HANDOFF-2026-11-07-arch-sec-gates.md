@@ -1,5 +1,5 @@
 ---
-tags: [handoff, security, c10i, architecture, evidence]
+tags: [handoff, security, c10i, architecture, evidence, docs:8]
 description: 2026-11-07 收队交接：ARCHITECTURE.md 偏差重写 + api-server 洞①②收口 + C10i 门禁化 + 证据留底——逐 commit 清账、行为基线、未决事项、踩坑教训、入场验证法
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'

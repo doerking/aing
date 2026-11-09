@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "评审", "进化团队", "五角色", "对抗结构", "拓扑"]
+tags: [aing, 评审, 进化团队, 五角色, 对抗结构, 拓扑, subdir-docs:8]
 ---
 
 # Review Group: 5-Role Evolution Team Dispatch (internal/self-maintenance face)

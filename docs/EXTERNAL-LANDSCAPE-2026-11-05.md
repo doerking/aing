@@ -1,5 +1,5 @@
 ---
-tags: [landscape, benchmark, skill-evolution, local-first, consciousness-layer, gate-discipline]
+tags: [landscape, benchmark, skill-evolution, local-first, consciousness-layer, gate-discipline, docs:8]
 description: aing 与外网 30+ 同类项目/论文的结构同形对照——四件独占面判定（2026-11-05）
 date: 2026-11-05
 baseline: aing @ f9313f5 (origin/main)

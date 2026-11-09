@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # HOT Memory — Template
 
 > This file is created in `~/self-improving/memory.md` when you first use the skill.

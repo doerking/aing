@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/compaction.md"
 rawMarkdownPath: "en/reference/subsystems/compaction.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Compaction

@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # KESPI 八维自检 | KESPI-8D Self-Check
 
 > **Knowledge Ecosystem Self-Inspection Index**

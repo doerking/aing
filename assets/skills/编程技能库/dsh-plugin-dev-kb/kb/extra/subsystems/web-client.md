@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Web Client architecture
 
 English | [中文](web-client.zh.md)

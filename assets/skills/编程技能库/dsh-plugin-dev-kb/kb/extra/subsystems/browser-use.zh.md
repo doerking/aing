@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 浏览器操作
 
 [English](browser-use.md) | 中文

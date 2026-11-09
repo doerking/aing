@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/06-composition-and-hmr.zh.md"
 rawMarkdownPath: "develop/cordis-tutorial/06-composition-and-hmr.md"
+tags: [kb-dsh:8]
 ---
 
 # 6. 组合与 HMR（热模块替换）

@@ -10,6 +10,7 @@ description: |
   research report, task decomposition, multi-agent, parallel execution,
   context compression, long-task planning
 default-enabled: true
+tags: [skill-eng:8]
 ---
 
 # Agent Harness + 三合一协议
@@ -252,4 +253,4 @@ Review: anchor for next round
 
 ---
 
-_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-eng_

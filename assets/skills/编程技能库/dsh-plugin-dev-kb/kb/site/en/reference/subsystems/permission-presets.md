@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/permission-presets.md"
 rawMarkdownPath: "en/reference/subsystems/permission-presets.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Permission Presets

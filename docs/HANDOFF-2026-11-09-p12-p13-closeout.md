@@ -1,5 +1,5 @@
 ---
-tags: [handoff, swarm, p12, p13, c18, deploy, must-read]
+tags: [handoff, swarm, p12, p13, c18, deploy, must-read, docs:8]
 description: P12/P13 两套功能设定收口交接——宿主载体括注清除、P12 归守内面·内派、C18 五角色+实测件数追平，全量 33 项 ALL GREEN @fa65d1b
 date: 2026-11-09
 status: done

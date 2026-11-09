@@ -1,5 +1,5 @@
 ---
-tags: [ticket, quality, fix, yaml, parse]
+tags: [ticket, quality, fix, yaml, parse, tickets:8]
 priority: P2
 status: open
 created: 2026-09-08

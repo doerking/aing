@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Platform Integration Guide
 
 Concrete methods for implementing Loop Engineering design principles on the OpenClaw platform. Covers scheduling, skill modules, sub-agent dispatching, and persistence engine integration.

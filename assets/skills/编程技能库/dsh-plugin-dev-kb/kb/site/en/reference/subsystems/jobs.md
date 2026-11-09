@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/jobs.md"
 rawMarkdownPath: "en/reference/subsystems/jobs.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Background Job Runtime

@@ -1,5 +1,6 @@
 ---
 description: "查找从 V0 到工作区写入器版本的每个 Session 格式的完整持久化类型声明。"
+tags: [kb-dsh:8]
 ---
 
 # Session 持久化格式

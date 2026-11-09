@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Profile management
 
 English | [中文](boot.zh.md)

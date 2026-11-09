@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 会话投影
 
 [English](session-projection.md) | 中文

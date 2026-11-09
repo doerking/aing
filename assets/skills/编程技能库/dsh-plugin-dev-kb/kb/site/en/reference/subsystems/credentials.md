@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/credentials.md"
 rawMarkdownPath: "en/reference/subsystems/credentials.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # User Credentials

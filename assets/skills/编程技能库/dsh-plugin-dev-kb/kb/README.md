@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # DeepSeek Harness 文档知识库
 
 本地镜像的 DeepSeek Harness 官方文档知识库，用于辅助 Harness **插件开发**。内容抓取自官方文档站点

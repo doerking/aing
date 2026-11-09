@@ -1,5 +1,6 @@
 ---
 description: "Review and maintain recorded Session persistence-type changes, their schema snapshots, and compatibility decisions."
+tags: [kb-dsh:8]
 ---
 
 # Persistence-type change records

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "AccountBonusNotification 提供未经校验的可选元数据，并允许通知永不过期。"
+tags: [kb-dsh:8]
 ---
 
 # 更新账号通知使用方

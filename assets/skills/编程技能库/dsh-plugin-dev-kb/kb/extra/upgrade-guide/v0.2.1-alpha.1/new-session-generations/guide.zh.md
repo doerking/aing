@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "新会话会创建新的 Agent，不再复用已有空 Session。"
+tags: [kb-dsh:8]
 ---
 
 # 通过新会话创建新的 Agent

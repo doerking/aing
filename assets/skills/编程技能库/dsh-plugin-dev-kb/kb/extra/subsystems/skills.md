@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Skills
 
 English | [中文](skills.zh.md)

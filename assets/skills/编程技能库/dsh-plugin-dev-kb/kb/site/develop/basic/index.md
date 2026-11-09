@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/index.zh.md"
 rawMarkdownPath: "develop/basic/index.md"
+tags: [kb-dsh:8]
 ---
 
 # 第一个插件

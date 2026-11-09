@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Agent Teams 移除待投递消息数量限制，并停止投递历史排队消息。"
+tags: [kb-dsh:8]
 ---
 
 # Agent Teams 消息使用目标收件箱

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Human Commands
 
 English | [中文](commands.zh.md)

@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/user-questions.zh.md"
 rawMarkdownPath: "reference/subsystems/user-questions.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 用户交互

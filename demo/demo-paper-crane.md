@@ -1,7 +1,7 @@
 ---
 name: 千纸鹤
 type: Concept
-tags: [demo, 折纸, 作品]
+tags: [demo, 折纸, 作品, demo:8]
 created: 2026-08-12
 status: active
 ---

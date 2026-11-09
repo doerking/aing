@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Computer use
 
 English | [中文](computer-use.zh.md)

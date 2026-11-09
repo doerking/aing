@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/settings.zh.md"
 rawMarkdownPath: "reference/subsystems/settings.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 插件配置表单

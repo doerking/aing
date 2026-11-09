@@ -2,6 +2,7 @@
 name: harness-engineering
 default-enabled: false
 description: Evolve an existing repository toward Harness Engineering by making it more legible to agents, moving critical knowledge into repo-local artifacts, adding predictable structure, and replacing policy-only documentation with executable checks. Use when Codex is asked to audit a live codebase against Harness Engineering ideas, strengthen AGENTS.md and docs, add runnable governance and CI checks, or incrementally reduce hidden context and architectural drift without rewriting the project from scratch.
+tags: [skill-eng:8]
 ---
 
 # Harness Engineering

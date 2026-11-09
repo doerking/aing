@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 系统提示词组装
 
 [English](system-prompt.md) | 中文

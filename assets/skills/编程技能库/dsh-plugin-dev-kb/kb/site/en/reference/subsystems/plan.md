@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/plan.md"
 rawMarkdownPath: "en/reference/subsystems/plan.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Plan Mode

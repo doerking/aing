@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # 🎯 Agent Harness
 
 > **Unified Thinking Framework + Workflow Skill for Agents**
@@ -30,7 +34,7 @@ context compression, long-task planning
 | **Name** | agent-harness |
 | **License** | MIT |
 | **Author** | neltharion11 |
-| **Repository** | https://github.com/neltharion11/skill-agent-harness |
+| **Repository** | https://github.com/neltharion11/skill-eng |
 
 ---
 

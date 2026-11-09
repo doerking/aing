@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/system-prompt.md"
 rawMarkdownPath: "en/reference/subsystems/system-prompt.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # System Prompt Assembly

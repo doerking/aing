@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The pi-ai Azure provider route is renamed from azure-openai-responses to azure."
+tags: [kb-dsh:8]
 ---
 
 # Azure provider route rename

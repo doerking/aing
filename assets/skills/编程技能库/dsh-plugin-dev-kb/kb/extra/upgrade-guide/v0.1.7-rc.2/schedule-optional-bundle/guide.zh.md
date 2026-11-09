@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Web 组合不再包含 Schedule 的三行；改由“自动化任务”可选 bundle 插入。"
+tags: [kb-dsh:8]
 ---
 
 # Schedule 移入“自动化任务”可选 bundle

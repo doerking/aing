@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 产品埋点
 
 [English](product-telemetry.md) | 中文

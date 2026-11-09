@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "`--from-default-profile` 现在会替换已存在的自定义 profile，而不是拒绝执行。"
+tags: [kb-dsh:8]
 ---
 
 # `--from-default-profile` 会替换已存在的 profile

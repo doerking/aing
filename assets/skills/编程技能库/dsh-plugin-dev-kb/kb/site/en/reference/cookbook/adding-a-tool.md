@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-a-tool.md"
 rawMarkdownPath: "en/reference/cookbook/adding-a-tool.md"
+tags: [kb-dsh:8]
 ---
 
 # Tool authoring reference

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Subagent 的 persona 与 toolFilter 配置由 Agent Preset 组装替代。"
+tags: [kb-dsh:8]
 ---
 
 # 通过 preset 配置子 Agent 组装

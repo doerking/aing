@@ -1,5 +1,5 @@
 ---
-tags: [aing, agent引导, 上手, 院子地图, 纪律, 绿灯]
+tags: [aing, agent引导, 上手, 院子地图, 纪律, 绿灯, docs:8]
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'

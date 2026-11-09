@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 芥子组培完整逻辑 | Mustard Seed & Tissue Culture
 
 > 补现有 Wiki「Growth Brain / 生长脑」章节的过程定义留白。明确低频知识 → 芥子 → 再生资产的完整链路。

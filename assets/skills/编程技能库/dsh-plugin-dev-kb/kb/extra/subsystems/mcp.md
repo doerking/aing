@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # MCP
 
 English | [中文](mcp.zh.md)

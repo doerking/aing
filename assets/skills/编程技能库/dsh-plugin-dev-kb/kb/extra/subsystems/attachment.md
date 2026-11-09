@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Durable Attachments
 
 English | [中文](attachment.zh.md)

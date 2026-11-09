@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: adding a vendored package
 
 English | [中文](adding-a-vendored-package.zh.md)

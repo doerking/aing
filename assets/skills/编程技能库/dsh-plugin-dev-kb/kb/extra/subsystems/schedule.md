@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Host-wide Schedule
 
 English | [中文](schedule.zh.md)

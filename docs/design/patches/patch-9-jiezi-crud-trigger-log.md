@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 实现细节 | Jiezi CRUD & Trigger Log
 
 > 适配丐版单 SQLite 架构，全链路可追溯，无人工介入设计，对齐双脑代谢全流程。

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Compaction
 
 English | [中文](compaction.zh.md)

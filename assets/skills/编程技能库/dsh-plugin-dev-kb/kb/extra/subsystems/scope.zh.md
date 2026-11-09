@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 作用域注册
 
 [English](scope.md) | 中文

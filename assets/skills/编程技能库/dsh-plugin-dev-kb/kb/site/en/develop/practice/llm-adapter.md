@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/practice/llm-adapter.md"
 rawMarkdownPath: "en/develop/practice/llm-adapter.md"
+tags: [kb-dsh:8]
 ---
 
 # LLM adapters

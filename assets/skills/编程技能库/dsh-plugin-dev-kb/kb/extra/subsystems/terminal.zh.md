@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 持久 PTY 会话
 
 [English](terminal.md) | 中文

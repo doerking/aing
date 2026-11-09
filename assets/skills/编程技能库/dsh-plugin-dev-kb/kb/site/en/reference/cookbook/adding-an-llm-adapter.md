@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-an-llm-adapter.md"
 rawMarkdownPath: "en/reference/cookbook/adding-an-llm-adapter.md"
+tags: [kb-dsh:8]
 ---
 
 # Cookbook: adding an LLM adapter

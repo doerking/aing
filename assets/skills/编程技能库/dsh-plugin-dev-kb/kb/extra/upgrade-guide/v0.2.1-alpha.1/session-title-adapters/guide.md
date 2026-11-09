@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Custom title routes require registered adapters and reasoning efforts in increasing order."
+tags: [kb-dsh:8]
 ---
 
 # Prepare custom title routes

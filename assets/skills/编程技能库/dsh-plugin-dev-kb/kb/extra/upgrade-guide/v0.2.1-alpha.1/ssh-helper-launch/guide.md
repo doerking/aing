@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "SSH and Node PTC configurations use explicit launch modes, and SSH clients require a matching protocol-2 helper."
+tags: [kb-dsh:8]
 ---
 
 # SSH helper and PTC launch configuration

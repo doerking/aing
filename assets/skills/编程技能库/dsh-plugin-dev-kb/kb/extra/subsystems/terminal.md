@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Persistent PTY Sessions
 
 English | [中文](terminal.zh.md)

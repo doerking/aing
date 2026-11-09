@@ -1,7 +1,7 @@
 ---
 name: 制图符号规范（简化派）
 type: Concept
-tags: [demo, 折纸, 图解, 争议]
+tags: [demo, 折纸, 图解, 争议, demo:8]
 created: 2026-08-15
 status: active
 ---

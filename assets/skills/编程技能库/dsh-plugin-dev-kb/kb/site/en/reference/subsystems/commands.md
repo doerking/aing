@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/commands.md"
 rawMarkdownPath: "en/reference/subsystems/commands.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Human Commands

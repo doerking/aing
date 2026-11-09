@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "With HMR, installing a package that is already installed fails with already-installed; an upgrade removes the package first."
+tags: [kb-dsh:8]
 ---
 
 # Installing over an installed plugin package is refused with HMR

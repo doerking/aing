@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # ADR-002: Single SQLite, Zero External Dependencies
 
 - **Status:** Accepted (2026-07)

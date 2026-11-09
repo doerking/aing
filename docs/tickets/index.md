@@ -1,5 +1,5 @@
 ---
-tags: [ticket, index, tracking]
+tags: [ticket, index, tracking, tickets:8]
 status: active
 created: 2026-09-08
 ---

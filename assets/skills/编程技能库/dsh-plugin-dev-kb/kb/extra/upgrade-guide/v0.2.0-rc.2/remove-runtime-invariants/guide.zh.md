@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "运行时不变式注册表包和每个包的 `./invariant` 子路径导出均被移除。"
+tags: [kb-dsh:8]
 ---
 
 # 运行时不变式插件被移除

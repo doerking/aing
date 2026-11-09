@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Typert remote calls
 
 English | [中文](typert.zh.md)

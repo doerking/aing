@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Web Client Slots
 
 [English](slots.md) | 中文

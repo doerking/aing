@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Tool presentation accepts native or ptc; the mixed both mode is rejected."
+tags: [kb-dsh:8]
 ---
 
 # Select native or PTC tool presentation

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/config.zh.md"
 rawMarkdownPath: "develop/basic/config.md"
+tags: [kb-dsh:8]
 ---
 
 # 插件配置

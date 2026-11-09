@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "DeepSeek API Key 模型发现要求已配置凭据。"
+tags: [kb-dsh:8]
 ---
 
 # DeepSeek API Key 模型可见性

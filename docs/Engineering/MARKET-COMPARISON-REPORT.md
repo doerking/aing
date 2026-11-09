@@ -7,6 +7,7 @@ AIGC:
   PropagateID: '60fd9281-29fd-499b-8cd1-d19edbae7147'
   ReservedCode1: '924fc78a-a44d-4fcb-bf81-dae52d1811f5'
   ReservedCode2: '924fc78a-a44d-4fcb-bf81-dae52d1811f5'
+tags: [engineering-docs:8]
 ---
 
 # aing 市场定位与竞争分析报告 / Market Positioning & Competition Analysis (Chinese-primary)

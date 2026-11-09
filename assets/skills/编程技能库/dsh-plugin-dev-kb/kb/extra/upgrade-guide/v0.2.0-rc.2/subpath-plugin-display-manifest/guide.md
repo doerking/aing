@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Subpath plugins no longer read display text or icons from an exported <subpath>/package.json; they use locale meta and <subpath>/icon."
+tags: [kb-dsh:8]
 ---
 
 # Subpath plugins read `<subpath>/icon` instead of `<subpath>/package.json`

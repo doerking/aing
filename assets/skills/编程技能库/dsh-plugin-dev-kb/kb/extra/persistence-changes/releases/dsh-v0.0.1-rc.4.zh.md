@@ -1,6 +1,7 @@
 ---
 description: "回溯 dsh-v0.0.1-rc.4 的已声明 Session 持久化类型及相邻版本变化。"
 kind: persistence-release
+tags: [kb-dsh:8]
 ---
 
 # 持久化版本回溯: dsh-v0.0.1-rc.4

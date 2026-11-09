@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/basic/tool.md"
 rawMarkdownPath: "en/develop/basic/tool.md"
+tags: [kb-dsh:8]
 ---
 
 # Build a tool

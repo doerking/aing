@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # SessionTelemetryBackend
 
 English | [中文](session-telemetry.zh.md)

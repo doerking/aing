@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "内置 NumPy 和 pandas 不包含其上游测试套件。"
+tags: [kb-dsh:8]
 ---
 
 # NumPy 和 pandas 上游测试需要独立环境

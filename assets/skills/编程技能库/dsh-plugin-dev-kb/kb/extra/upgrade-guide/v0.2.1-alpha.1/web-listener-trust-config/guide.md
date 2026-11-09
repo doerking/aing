@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The Web profile replaces the `webRuntime` service and the `web-runtime` row's `trustedHosts` config with `webStartup`, and rejects a wildcard listener host."
+tags: [kb-dsh:8]
 ---
 
 # Web listener and trust configuration moves to `webStartup`

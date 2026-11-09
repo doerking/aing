@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "训练", "SkillOpt", "技能文档", "KESPI", "训练副本"]
+tags: [aing, 训练, SkillOpt, 技能文档, KESPI, 训练副本, subdir-docs:8]
 ---
 
 # Training Group: SkillOpt-Style Training Loop

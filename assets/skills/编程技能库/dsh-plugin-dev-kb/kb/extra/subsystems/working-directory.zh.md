@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 工作目录
 
 [English](working-directory.md) | 中文

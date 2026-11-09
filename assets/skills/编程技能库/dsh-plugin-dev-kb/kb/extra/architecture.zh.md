@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # DeepSeek Harness 架构
 
 [English](architecture.md) | 中文

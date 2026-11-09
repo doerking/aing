@@ -1,6 +1,7 @@
 ---
 name: smart-memory
 description: Persistent local transcript-first memory for OpenClaw via a Node adapter and FastAPI engine.
+tags: [skill-mem:8]
 ---
 
 # Smart Memory v3.1 Skill

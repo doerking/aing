@@ -1,5 +1,5 @@
 ---
-tags: [aing, 记忆研究, 论文归档, origin-trust, 合道, 路线图]
+tags: [aing, 记忆研究, 论文归档, origin-trust, 合道, 路线图, engineering-docs:8]
 ---
 
 # Agent Memory 研究归档 — 2026-09

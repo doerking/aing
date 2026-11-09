@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Two-Brain Bodies: Tolaria + LLM Wiki Setup Guide / 两脑实体软件实装建议
 
 > The release is the **plain-Markdown edition** — nothing in this guide is required to run aing.

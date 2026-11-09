@@ -1,7 +1,7 @@
 ---
 name: 湿折法
 type: Concept
-tags: [demo, 折纸, 进阶]
+tags: [demo, 折纸, 进阶, demo:8]
 created: 2026-08-25
 status: active
 ---

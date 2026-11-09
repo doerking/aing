@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "自定义 TerminalBlock 消费者必须为横向溢出的命令行提供本地化的无障碍名称。"
+tags: [kb-dsh:8]
 ---
 
 # 终端命令标签

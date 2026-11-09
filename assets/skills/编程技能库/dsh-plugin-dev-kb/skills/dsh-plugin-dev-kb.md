@@ -2,6 +2,7 @@
 name: dsh-plugin-dev-kb
 description: DeepSeek Harness 官方文档知识库的使用指南：知识库位置与结构、按任务场景的阅读路径、检索策略。写 dsh 插件 / Tool / 配置 / 服务 / 事件 / 打包发布 / LLM 适配器时先加载本技能定位文档。注意：本技能仅限 dsh（DeepSeek Harness）插件开发；写 NoneBot 插件时请加载 nonebot-plugin-dev-kb，勿用本技能。
 whenToUse: 开发 dsh 插件、查询 dsh 能力与 API、写 Tool、配置 cordis.yml、扩展 Harness 时
+tags: [kb-dsh:8]
 ---
 # dsh 插件开发知识库使用指南（dsh-plugin-dev-kb）
 

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 工具
 
 [English](tools.md) | 中文

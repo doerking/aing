@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Git Worktrees
 
 English | [中文](worktrees.zh.md)

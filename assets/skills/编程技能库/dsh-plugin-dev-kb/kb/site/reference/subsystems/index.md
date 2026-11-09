@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/README.zh.md"
 rawMarkdownPath: "reference/subsystems/index.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 子系统

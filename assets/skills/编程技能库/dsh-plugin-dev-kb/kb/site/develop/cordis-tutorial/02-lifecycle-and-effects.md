@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/02-lifecycle-and-effects.zh.md"
 rawMarkdownPath: "develop/cordis-tutorial/02-lifecycle-and-effects.md"
+tags: [kb-dsh:8]
 ---
 
 # 2. 生命周期与 effect

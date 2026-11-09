@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 测试策略
 
 [English](testing.md) | 中文

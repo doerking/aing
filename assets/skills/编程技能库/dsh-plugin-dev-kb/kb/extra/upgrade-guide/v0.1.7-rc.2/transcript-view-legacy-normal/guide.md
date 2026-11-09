@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "The legacy ui-chat.transcriptView value normal, and an unset value in non-Desktop Web, now display Detailed instead of Standard."
+tags: [kb-dsh:8]
 ---
 
 # Legacy `normal` work details display as Detailed

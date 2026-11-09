@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/04-events.zh.md"
 rawMarkdownPath: "develop/cordis-tutorial/04-events.md"
+tags: [kb-dsh:8]
 ---
 
 # 4. 事件

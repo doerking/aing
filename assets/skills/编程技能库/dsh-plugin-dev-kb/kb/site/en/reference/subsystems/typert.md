@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/typert.md"
 rawMarkdownPath: "en/reference/subsystems/typert.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Typert remote calls

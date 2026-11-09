@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "自定义标题路由要求注册适配器，并按递增顺序排列推理强度。"
+tags: [kb-dsh:8]
 ---
 
 # 准备自定义标题路由

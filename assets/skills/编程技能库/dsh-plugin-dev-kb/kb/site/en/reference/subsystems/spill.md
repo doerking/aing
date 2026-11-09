@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/spill.md"
 rawMarkdownPath: "en/reference/subsystems/spill.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Spill Storage

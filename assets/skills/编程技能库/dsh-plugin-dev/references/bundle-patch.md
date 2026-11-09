@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 挂载与验证（profile / bundle / dsh run）
 
 ## Profile 机制（0806+）

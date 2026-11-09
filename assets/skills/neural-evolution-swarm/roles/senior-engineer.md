@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Role: 资深工程师（Senior Engineer）
 
 ## Identity

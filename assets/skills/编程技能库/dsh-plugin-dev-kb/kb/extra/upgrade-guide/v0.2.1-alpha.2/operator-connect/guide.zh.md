@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "非页面 Client 默认不参与转发交互，并使用不带浏览器恢复的原始流。"
+tags: [kb-dsh:8]
 ---
 
 # 为非页面客户端选择交互参与模式

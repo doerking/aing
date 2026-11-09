@@ -1,3 +1,7 @@
+---
+tags: [user-guide:8]
+---
+
 # The Knowledge Base That Perceives, Thinks, and Reports
 
 > "Consciousness neural" sounds mystical. It's really just three things: it notices changes, it prioritizes, it tells you the conclusion.

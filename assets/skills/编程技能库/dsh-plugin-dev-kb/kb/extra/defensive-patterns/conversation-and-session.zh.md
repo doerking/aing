@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 会话与 Session 规则
 
 [English](conversation-and-session.md) | 中文

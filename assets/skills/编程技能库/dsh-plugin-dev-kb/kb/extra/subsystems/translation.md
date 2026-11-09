@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Text translation
 
 English | [中文](translation.zh.md)

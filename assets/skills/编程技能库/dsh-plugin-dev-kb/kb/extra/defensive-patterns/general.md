@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Defensive patterns
 
 English | [中文](general.zh.md)

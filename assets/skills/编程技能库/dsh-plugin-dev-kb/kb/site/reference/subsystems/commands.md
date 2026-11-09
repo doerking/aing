@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/commands.zh.md"
 rawMarkdownPath: "reference/subsystems/commands.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 用户命令

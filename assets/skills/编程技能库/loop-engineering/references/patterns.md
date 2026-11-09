@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Common Loop Patterns
 
 > Reusable loop patterns in Loop Engineering, each with applicable scenarios, workflow, and key points.

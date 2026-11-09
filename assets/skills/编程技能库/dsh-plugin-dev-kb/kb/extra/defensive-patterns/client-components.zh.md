@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 客户端组件规则
 
 [English](client-components.md) | 中文

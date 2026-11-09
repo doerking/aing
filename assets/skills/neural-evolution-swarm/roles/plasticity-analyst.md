@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Role: 可塑性分析师（Plasticity Analyst）
 
 ## Identity

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 双语文档
 
 [English](README.md) | 中文

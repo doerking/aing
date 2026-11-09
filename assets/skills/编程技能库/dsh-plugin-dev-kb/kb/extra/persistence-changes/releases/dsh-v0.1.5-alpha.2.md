@@ -1,6 +1,7 @@
 ---
 description: "Retrospective Session persistence types and adjacent-release changes for dsh-v0.1.5-alpha.2."
 kind: persistence-release
+tags: [kb-dsh:8]
 ---
 
 # Persistence release: dsh-v0.1.5-alpha.2

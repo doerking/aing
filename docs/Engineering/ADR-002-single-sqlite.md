@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # ADR-002: Single SQLite Storage
 
 ## Status

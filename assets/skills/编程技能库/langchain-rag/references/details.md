@@ -1,3 +1,7 @@
+---
+tags: [skill-langchain-rag:8]
+---
+
 # rag-implementation — detailed patterns and worked examples
 
 ## Advanced RAG Patterns

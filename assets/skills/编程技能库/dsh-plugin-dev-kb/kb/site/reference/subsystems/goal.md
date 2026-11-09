@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/goal.zh.md"
 rawMarkdownPath: "reference/subsystems/goal.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 同会话目标

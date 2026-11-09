@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/session-query.zh.md"
 rawMarkdownPath: "reference/subsystems/session-query.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 会话查询

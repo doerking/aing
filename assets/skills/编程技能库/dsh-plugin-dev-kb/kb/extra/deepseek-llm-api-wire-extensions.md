@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Official DeepSeek LLM API wire extensions
 
 English | [中文](deepseek-llm-api-wire-extensions.zh.md)

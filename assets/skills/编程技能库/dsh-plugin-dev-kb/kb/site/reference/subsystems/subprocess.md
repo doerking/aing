@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/subprocess.zh.md"
 rawMarkdownPath: "reference/subsystems/subprocess.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 子进程

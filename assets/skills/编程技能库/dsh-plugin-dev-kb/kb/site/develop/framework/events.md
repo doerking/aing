@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/events.zh.md"
 rawMarkdownPath: "develop/framework/events.md"
+tags: [kb-dsh:8]
 ---
 
 # 事件系统

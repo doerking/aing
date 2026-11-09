@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/goal.md"
 rawMarkdownPath: "en/reference/subsystems/goal.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # Same-session goals

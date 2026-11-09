@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Architecture / 架构
 
 > aing is a collection of standalone Node.js scripts (CommonJS `.js`), not a TypeScript project. No build step. But it **does** ship a `package.json` with npm scripts (`src/`, `tools/`, `verify-deploy.js` at root) — the older "no src/ directory, no package.json" note was a stale snapshot of a bare copy.

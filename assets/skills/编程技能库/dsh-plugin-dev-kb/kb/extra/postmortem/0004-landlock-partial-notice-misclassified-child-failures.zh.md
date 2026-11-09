@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 事故复盘（postmortem） 0004：Landlock 部分强制执行通知导致子进程失败被误归类
 
 [English](0004-landlock-partial-notice-misclassified-child-failures.md) | 中文

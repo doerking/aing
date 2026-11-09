@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 持久附件
 
 [English](attachment.md) | 中文

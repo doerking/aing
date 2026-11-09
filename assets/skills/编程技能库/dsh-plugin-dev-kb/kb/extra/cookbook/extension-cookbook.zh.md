@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 实操手册：扩展插件形态
 
 [English](extension-cookbook.md) | 中文

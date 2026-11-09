@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # Core Interfaces
 
 > aing is a collection of standalone Node.js scripts. There is no shared interface like `IGrowthEngine`.

@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Claude Code and Codex bundles add global delegation tools while retaining their package and row identities."
+tags: [kb-dsh:8]
 ---
 
 # Native subagent bundles include global tools

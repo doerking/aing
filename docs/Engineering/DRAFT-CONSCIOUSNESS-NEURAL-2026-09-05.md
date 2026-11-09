@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "意识神经", "Tolaria", "内部协议", "设计稿", "多通道", "共振", "状态机"]
+tags: [aing, 意识神经, Tolaria, 内部协议, 设计稿, 多通道, 共振, 状态机, engineering-docs:8]
 ---
 
 # DRAFT：意识神经独立层 × Tolaria 内部协议（2026-09-05 设计稿）

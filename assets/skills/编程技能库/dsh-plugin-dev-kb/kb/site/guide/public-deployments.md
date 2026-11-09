@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/public-deployments.zh.md"
 rawMarkdownPath: "guide/public-deployments.md"
+tags: [kb-dsh:8]
 ---
 
 # 在反向代理之后发布 Web UI

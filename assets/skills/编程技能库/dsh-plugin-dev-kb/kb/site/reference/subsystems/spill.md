@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/spill.zh.md"
 rawMarkdownPath: "reference/subsystems/spill.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # spill 存储

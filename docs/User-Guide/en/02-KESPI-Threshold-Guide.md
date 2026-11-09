@@ -1,3 +1,7 @@
+---
+tags: [user-guide:8]
+---
+
 # KESPI Threshold Guide: The Two Numbers 80 and 65
 
 > Ordinary users only need to remember two numbers. This explains what they control, where to change them, and what happens when you raise or lower them.

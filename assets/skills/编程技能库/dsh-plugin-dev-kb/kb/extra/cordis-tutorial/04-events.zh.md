@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 4. 事件
 
 [English](04-events.md) | 中文

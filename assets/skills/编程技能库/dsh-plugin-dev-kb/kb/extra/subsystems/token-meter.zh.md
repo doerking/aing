@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Token 计量
 
 [English](token-meter.md) | 中文

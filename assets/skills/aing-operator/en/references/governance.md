@@ -1,5 +1,5 @@
 ---
-tags: ["aing", "治理", "红线", "双证据", "绿灯解锁", "汇报面板"]
+tags: [aing, 治理, 红线, 双证据, 绿灯解锁, 汇报面板, subdir-docs:8]
 ---
 
 # Governance Group: Red Lines, Dual Evidence & Report Panels

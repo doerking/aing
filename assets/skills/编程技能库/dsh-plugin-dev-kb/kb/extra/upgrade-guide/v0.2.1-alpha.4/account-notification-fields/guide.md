@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "AccountBonusNotification exposes unvalidated optional metadata and permits notices without an expiry."
+tags: [kb-dsh:8]
 ---
 
 # Update account notification consumers

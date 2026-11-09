@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Plugin compatibility checks read engines.dsh before DSH peerDependencies, and refusals report requirements instead of peers."
+tags: [kb-dsh:8]
 ---
 
 # Plugin compatibility reads `engines.dsh` first

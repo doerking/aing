@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "DeepSeekAccount.watch no longer includes Platform identity changes unless explicitly requested."
+tags: [kb-dsh:8]
 ---
 
 # Explicitly subscribe to account identity changes

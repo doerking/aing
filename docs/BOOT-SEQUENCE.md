@@ -1,3 +1,7 @@
+---
+tags: [docs:8]
+---
+
 # 开机自检系统（Boot Sequence）
 
 ## 核心概念

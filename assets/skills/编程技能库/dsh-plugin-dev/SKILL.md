@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: whiteicey
   version: "0.1.0"
+tags: [kb-dsh:8]
 ---
 
 # DSH 插件开发记录（dsh-plugin-dev）

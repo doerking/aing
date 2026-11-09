@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 ## Description: <br>
 Spec-first, TDD, subagent-driven software development workflow for building features, debugging issues, and finishing development branches. <br>
 

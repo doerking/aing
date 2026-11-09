@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 ## Description: <br>
 Persistent local transcript-first memory for OpenClaw via a Node adapter and FastAPI engine. <br>
 

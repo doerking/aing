@@ -1,3 +1,7 @@
+---
+tags: [engineering-docs:8]
+---
+
 # 会话自动入库 / Auto-Ingest
 
 > 会话中一问一答即刻入库，作为呈堂证供。

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/guide/github-review.zh.md"
 rawMarkdownPath: "guide/github-review.md"
+tags: [kb-dsh:8]
 ---
 
 # 通过 GitHub Webhook 创建评审会话

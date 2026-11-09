@@ -1,3 +1,7 @@
+---
+tags: [skill-mem:8]
+---
+
 # self-improvement
 
 Self-improvement skill for OpenClaw. It captures learnings, errors, and feature requests to support continuous improvement across sessions.

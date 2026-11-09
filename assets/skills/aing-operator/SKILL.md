@@ -5,7 +5,7 @@ description: |
   Use when 用户提到 aing 生态任何院子（主包/训练副本/影子目录/推演器/第二机），要求部署、验收、运维、修复、训练、评审 aing，或任务的写入目标在 aing 仓库内。
   Do NOT use for 与 aing 无关的普通 Node.js 项目开发（那是 senior-developer 的事）。
 version: "0.2"
-tags: ["aing", "技能组", "院子地图", "治理", "训练", "评审", "运维", "修复"]
+tags: [aing, 技能组, 院子地图, 治理, 训练, 评审, 运维, 修复, subdir-docs:8]
 AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Glossary
 
 English | [中文](glossary.zh.md)

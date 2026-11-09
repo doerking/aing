@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cordis-tutorial/01-first-plugin.md"
 rawMarkdownPath: "en/develop/cordis-tutorial/01-first-plugin.md"
+tags: [kb-dsh:8]
 ---
 
 # 1. Your first plugin

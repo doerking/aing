@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Permission Presets
 
 English | [中文](permission-presets.zh.md)

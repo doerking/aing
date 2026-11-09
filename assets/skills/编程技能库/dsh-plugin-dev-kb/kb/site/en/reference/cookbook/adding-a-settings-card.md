@@ -1,6 +1,7 @@
 ---
 editSource: "docs/cookbook/adding-a-settings-card.md"
 rawMarkdownPath: "en/reference/cookbook/adding-a-settings-card.md"
+tags: [kb-dsh:8]
 ---
 
 # Cookbook: live configuration forms

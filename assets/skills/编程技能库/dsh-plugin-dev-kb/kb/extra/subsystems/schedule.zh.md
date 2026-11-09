@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 宿主级 Schedule
 
 [English](schedule.md) | 中文

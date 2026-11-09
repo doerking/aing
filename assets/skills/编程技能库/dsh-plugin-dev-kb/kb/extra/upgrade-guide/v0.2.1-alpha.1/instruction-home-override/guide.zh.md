@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "`agent-instructions` 行不再接受 `dshHome`；指令加载始终从 `$DSH_HOME` 或 `~/.dsh` 解析 harness home。"
+tags: [kb-dsh:8]
 ---
 
 # 指令加载只解析一个 harness home

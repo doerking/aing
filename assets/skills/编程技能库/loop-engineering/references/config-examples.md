@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Configuration Examples
 
 > Configuration and orchestration examples for common components in Loop Engineering, using pseudo-code style without binding to any specific platform or language.

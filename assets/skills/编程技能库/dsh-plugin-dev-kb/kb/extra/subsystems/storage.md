@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Storage
 
 English | [中文](storage.zh.md)

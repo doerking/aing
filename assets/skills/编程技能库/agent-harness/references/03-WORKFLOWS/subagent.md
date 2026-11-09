@@ -1,3 +1,7 @@
+---
+tags: [skill-eng:8]
+---
+
 # Subagent Workflow (Step 3 Content)
 
 > **Role**: Pipeline's "specific work content" layer
@@ -193,4 +197,4 @@ Parent Agent after receiving notification:
 
 ---
 
-_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-agent-harness_
+_Last updated: 2026-04-07 by neltharion11 | https://github.com/neltharion11/skill-eng_

@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/framework/events.md"
 rawMarkdownPath: "en/develop/framework/events.md"
+tags: [kb-dsh:8]
 ---
 
 # Event system

@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Cookbook: live configuration forms
 
 English | [中文](adding-a-settings-card.zh.md)

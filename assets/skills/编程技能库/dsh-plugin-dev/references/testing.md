@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 测试做法（9 个插件沿用的模式）
 
 ## 1. 注册契约测试（tests/register.spec.ts）

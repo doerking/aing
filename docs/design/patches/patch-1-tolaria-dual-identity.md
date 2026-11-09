@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # Tolaria 双重身份与集成指南
 
 > 补现有 Wiki「Order Brain / 秩序脑」章节的模糊点。明确 Tolaria 的「意象层 + 实底层」，以及 aing 和 Tolaria 的集成方式。

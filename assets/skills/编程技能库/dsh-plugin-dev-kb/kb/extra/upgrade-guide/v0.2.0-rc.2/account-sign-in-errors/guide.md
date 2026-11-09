@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Account sign-in transport failures now report no-response instead of network."
+tags: [kb-dsh:8]
 ---
 
 # Account sign-in error codes

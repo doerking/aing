@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Claude Code mods: compatibility
 
 English | [中文](claude-code-mods.zh.md)

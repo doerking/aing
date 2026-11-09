@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Package surface rules
 
 English | [中文](package-surface.zh.md)

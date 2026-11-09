@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Web Client 架构
 
 [English](web-client.md) | 中文

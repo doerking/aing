@@ -2,6 +2,7 @@
 editSource: "docs/subsystems/client-resources.zh.md"
 rawMarkdownPath: "reference/subsystems/client-resources.md"
 outline: [2,3]
+tags: [kb-dsh:8]
 ---
 
 # 客户端资源

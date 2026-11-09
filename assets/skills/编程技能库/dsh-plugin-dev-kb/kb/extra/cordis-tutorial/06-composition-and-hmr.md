@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 6. Composition and HMR
 
 English | [中文](06-composition-and-hmr.zh.md)

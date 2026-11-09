@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 计算机操作
 
 [English](computer-use.md) | 中文

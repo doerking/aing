@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # 右侧 Sidebar
 
 [English](sidebar-right.md) | 中文

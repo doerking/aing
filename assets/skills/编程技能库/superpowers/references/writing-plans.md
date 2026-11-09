@@ -1,3 +1,7 @@
+---
+tags: [skill-superpowers:8]
+---
+
 # Writing Plans Reference
 
 Source: obra/superpowers writing-plans skill

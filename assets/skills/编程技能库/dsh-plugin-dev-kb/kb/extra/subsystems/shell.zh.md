@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Shell 执行器
 
 [English](shell.md) | 中文

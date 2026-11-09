@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # Session 格式版本与发布状态
 
 [English](session-format-status.md) | 中文

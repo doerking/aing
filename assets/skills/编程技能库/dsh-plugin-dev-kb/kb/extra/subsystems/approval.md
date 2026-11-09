@@ -1,3 +1,7 @@
+---
+tags: [kb-dsh:8]
+---
+
 # User Approval
 
 English | [中文](approval.zh.md)

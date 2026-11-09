@@ -1,3 +1,7 @@
+---
+tags: [design-docs:8]
+---
+
 # 双脑冲突仲裁规则 | Conflict Resolution Protocol
 
 > 补现有 Wiki「Dual-Brain Workflow / 双脑协作流程」的权责留白。明确双脑冲突时的处理优先级，落实「人在循环中补足深层计算」。

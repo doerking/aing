@@ -1,6 +1,7 @@
 ---
 editSource: "docs/user/develop/practice/dynamic-cordis.md"
 rawMarkdownPath: "en/develop/practice/dynamic-cordis.md"
+tags: [kb-dsh:8]
 ---
 
 # Configure persistent plugins from a prompt

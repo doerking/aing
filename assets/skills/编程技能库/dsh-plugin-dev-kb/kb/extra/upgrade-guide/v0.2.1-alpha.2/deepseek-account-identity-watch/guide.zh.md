@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "DeepSeekAccount.watch 默认不再通知 Platform 身份变化，订阅者必须显式启用。"
+tags: [kb-dsh:8]
 ---
 
 # 显式订阅账号身份变化

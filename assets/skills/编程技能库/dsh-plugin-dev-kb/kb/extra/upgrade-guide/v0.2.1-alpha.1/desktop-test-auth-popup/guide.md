@@ -1,6 +1,7 @@
 ---
 kind: upgrade-guide
 description: "Desktop test builds require local opt-in before showing any Feishu update-policy authentication dialogs."
+tags: [kb-dsh:8]
 ---
 
 # Enable test update-policy authentication dialogs locally

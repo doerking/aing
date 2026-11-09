@@ -1,3 +1,7 @@
+---
+tags: [subdir-docs:8]
+---
+
 # Role: 神经意识理论家（Neuro-Theorist）
 
 ## Identity
