@@ -62,10 +62,10 @@ Copy this folder into your Codex skills directory:
 $CODEX_HOME/skills/harness-engineering
 ```
 
-On this machine, that path is:
+On this machine, that path is of the form:
 
 ```text
-<drive-c>\Users\kisde\.codex\skills\harness-engineering
+<drive-c>\Users\<username>\.codex\skills\harness-engineering
 ```
 
 ## License
