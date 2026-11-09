@@ -175,7 +175,7 @@ async function main() {
   await check('C8 硬编码盘符扫描 (redaction gate)', async () => {
     // 2026-11-03 安全债修复：execSync('git ls-files') shell 语义 → spawnSync 参数数组。
     // 命令为文件内常量、无外部输入，行为等价（失败仍抛错中断 C8 检查）。
-    // 2026-11-09 增 -z：git 对非 ASCII 档名（中文技能库 assets/skills/编程技能库/**）做 octal 转义，
+    // 2026-11-09 增 -z：git 对非 ASCII 档名做 octal 转义（2026-11-09 中文技能库批次实测，该库已于 v0.9.8 撤回主仓；-z 作为非 ASCII 档名通修保留）
     // 旧法 `\n` split 后 readFileSync 全失败被 catch 静默跳过 → 1104 件档全落 C8 扫之外（假绿）。
     // -z NUL 分隔 + -co --exclude-standard 取可交付档面，与院际面 §7.9 同口径。
     const gl = spawnSync('git', ['ls-files', '-z', '-co', '--exclude-standard'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 });
