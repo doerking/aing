@@ -1647,7 +1647,9 @@ async function main() {
     if (typeof dj.inRuntimeSurface !== 'boolean' || typeof dj.bundledInPackage !== 'boolean') throw new Error('派单读数缺 inRuntimeSurface/bundledInPackage 两个布尔 → 「三种有」又混成一个');
     if (dj.bundledInPackage !== true) throw new Error('包内明明带着说明书，读数却说不带 → 资产面读数失真');
     if (dj.inRuntimeSurface === false && dj.mode === 'swarm-skill') throw new Error('本运行时未加载却报 swarm-skill → 虚报能派');
-    if (dj.inRuntimeSurface === true && dj.mode !== 'swarm-skill') throw new Error('本运行时已加载却不报 swarm-skill → 反向误报，白降级');
+    // mode 只系「确实需派单」时唔该系 swarm-skill；派单由异常驱动（C12 域：needed=false 时 mode=none 系正确，健康院唔派）。
+    // 健康院把 inRuntimeSurface=true 误判成「必须 swarm-skill」= 把能力面错当派单中，系本门 2026-11-09 清 gaps 后暴露嘅隐性 bug。
+    if (dj.inRuntimeSurface === true && dj.needed === true && dj.mode !== 'swarm-skill') throw new Error('本运行时已加载且确实需派单，却未报 swarm-skill → 反向误报，白降级');
     if (dj.swarmSearch && dj.swarmSearch.where.length && !/\[(runtime|host|bundled)\]/.test(dj.swarmSearch.where.join(' '))) throw new Error('搜到的目录没标注属于哪种「有」→ 读者无法判断可信度');
 
     // ── 行为②：迷你院对，证明 assets/ 真的进了比对面（且依赖目录没被吞进来）──
