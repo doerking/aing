@@ -303,6 +303,8 @@ npm run verify:siblings                     # 院际代差台账（只读）：T
 
 > 分工：<tip-root> 是源码真源与修复落点，<opt-copy> 是部署沙盒（换血验证），验证完复原。**`src/sync-opt.js` 只会把 OPT 硬重置到 aing master**（且 `data/opt-root.json` 标记 `enabled:false`）→ 它不能把 Tip 的改动带进 OPT，Tip→OPT 必须走下面的手工换血。
 
+> **单向拉取铁律（2026-11-09 锁定）：只有主仓（`<tip-root>`）有 push 面；各部署院（`<deploy-yard>`，如 G 盘那院）一律 fetch-only，push URL 封死。** 部署院 agent 干完自己加嘅野（doctrine/ticket/README 改动）都想顺手上传，但真源只认主仓，院属稿一律留院——要上云须由人工回主仓按纪律 10 走完整谱系上推，唔得院侧直推。封法：`git -C <院> remote set-url --push origin disabled`（fetch 保留、push 面死），负向证 `git -C <院> push` 必报 `fatal: 'disabled'`。新院部署完即做封口；`git remote -v` 搵到任一非主仓院有可推 URL 即属未封，须即补。**服务端面另设 GitHub 分支保护（main 禁直推、须经主仓发起）**——本地封 push 管住 fetch-only 院，分支保护管住「有人改 local git config 绕过 disabled」嘅极端情形，两面缺一不可（服务端面俾用户拍，本包只钉本地面）。
+
 | 步 | 动作 | 要点（漏做会有什么后果） |
 |---|---|---|
 | 1 备份 | 覆盖前把 OPT 原件 + `git diff` 存到 `<backup-root>\OPT-<date>\` | 另存 `README.md.pre`、`growth.config.js.pre`、`tracked-dirt.patch`；OPT 的 README 换血前自带 AIGC 水印轮换，别拿 HEAD 版抹掉所有者原有脏态 |
