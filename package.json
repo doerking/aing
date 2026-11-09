@@ -32,7 +32,8 @@
     "unseed:demo": "node src/unseed-demo.js",
     "sync:opt": "node src/sync-opt.js",
     "verify:siblings": "node tools/verify-sibling-roots.js",
-    "gate-counts": "node tools/gate-counts.js"
+    "gate-counts": "node tools/gate-counts.js",
+    "tag:lint": "node tools/tag-lint.js"
   },
   "allowScripts": {
     "sharp@0.32.6": true,
