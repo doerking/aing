@@ -144,10 +144,6 @@ aing 不是对 LLM Wiki 范式（Karpathy 2026 年提出的概念及其社区实
 git clone https://github.com/doerking/aing.git
 cd aing
 
-# 单向拉取：本仓是真源，部署院（各院目录）一律 fetch-only。
-# 部署完在该院封 push：git remote set-url --push origin disabled
-# （院属改动要上云 → 由人工回主仓按 AGENTS 纪律 10 走完整谱系上推，院侧不直推）
-
 # 2. Install dependencies（核心：sql.js / transformers；sharp 可选，非核心管道所需）
 npm install
 
