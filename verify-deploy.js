@@ -175,11 +175,14 @@ async function main() {
   await check('C8 硬编码盘符扫描 (redaction gate)', async () => {
     // 2026-11-03 安全债修复：execSync('git ls-files') shell 语义 → spawnSync 参数数组。
     // 命令为文件内常量、无外部输入，行为等价（失败仍抛错中断 C8 检查）。
-    const gl = spawnSync('git', ['ls-files'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 });
+    // 2026-11-09 增 -z：git 对非 ASCII 档名（中文技能库 assets/skills/编程技能库/**）做 octal 转义，
+    // 旧法 `\n` split 后 readFileSync 全失败被 catch 静默跳过 → 1104 件档全落 C8 扫之外（假绿）。
+    // -z NUL 分隔 + -co --exclude-standard 取可交付档面，与院际面 §7.9 同口径。
+    const gl = spawnSync('git', ['ls-files', '-z', '-co', '--exclude-standard'], { cwd: PKG_DIR, encoding: 'utf8', timeout: 60000 });
     if (gl.error) throw gl.error;
     if (gl.status !== 0) throw new Error('git ls-files 失败: ' + String(gl.stderr || '').slice(0, 200));
     const tracked = String(gl.stdout)
-      .split('\n').map(s => s.trim()).filter(Boolean);
+      .split('\0').map(s => s.trim()).filter(Boolean);
     const scope = tracked.filter(f => /\.(js|json|md|ps1)$/i.test(f) && !/^raw\//.test(f));
     const driveRe = /(?<![A-Za-z])[A-Za-z]:[\\/]/;
     const hits = [];
