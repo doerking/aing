@@ -22,7 +22,8 @@ const DDL = [
     last_access DATETIME,
     created_at DATETIME,
     updated_at DATETIME,
-    invalid_at DATETIME
+    invalid_at DATETIME,
+    invalid_reason TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS links (
     source_id TEXT,
@@ -70,7 +71,18 @@ const DDL = [
     vector TEXT,
     checksum TEXT,
     updated_at DATETIME
-  )`
+  )`,
+  `CREATE TABLE IF NOT EXISTS field_actions (
+    id TEXT PRIMARY KEY,
+    action TEXT,                  -- rebond/unwind/reconcile/demote/promote
+    target TEXT,                  -- 实体 id 或 src->dst
+    before_json TEXT,
+    after_json TEXT,
+    cycle_id TEXT,
+    reversible INTEGER DEFAULT 1,
+    reversed_at DATETIME,
+    created_at DATETIME
+  )`,
 ];
 
 let SQL = null;      // sql.js 模块
