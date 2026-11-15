@@ -1,0 +1,141 @@
+'use strict';
+// aing-v2 compile.js —— M1 任务 1.1 实现（SPEC-1.1 compile 编译步）
+// spec-first：本文件是 SPEC-1.1 的代码结果，契约在 spec/SPEC-1.1-compile编译步.md，勿在此改语义（改 spec 再回填）。
+// 双铰链定位：raw 链解旋-复制——扫 raw/*.md → 实体 upsert 入 entities 表（wiki 链以 entities 表为真源）。
+// P0 换锚铁律（图纸 line85 / SPEC-0.4 AC-6）：last_access 检索命中写，compile 永不碰；invalid_at/created_at/tolaria_strength 同样不碰。
+
+const fs = require('fs');
+const path = require('path');
+const store = require('./knowledge-store.js');
+
+// ---------- 解旋：frontmatter 解析（平铺 key: value + 行内数组；完整 YAML 面见 spec Non-Goals） ----------
+
+function stripQuotes(v) {
+  if (v.length >= 2 && ((v[0] === '"' && v.endsWith('"')) || (v[0] === "'" && v.endsWith("'")))) {
+    return v.slice(1, -1);
+  }
+  return v;
+}
+
+function parseYamlFlat(block) {
+  const meta = {};
+  for (const rawLine of block.split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const m = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1];
+    let val = m[2].trim();
+    if (val.startsWith('[') && val.endsWith(']')) {
+      const inner = val.slice(1, -1).trim();
+      meta[key] = inner === '' ? [] : inner.split(',').map(s => stripQuotes(s.trim())).filter(s => s !== '');
+    } else {
+      meta[key] = stripQuotes(val);
+    }
+  }
+  return meta;
+}
+
+function parseFrontmatter(text) {
+  // 真实数据形状兜底（坑22）：BOM / CRLF 归一后再定界
+  const content = String(text).replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { metadata: {}, content };
+  return { metadata: parseYamlFlat(match[1]), content: match[2].trim() };
+}
+
+// ---------- id 锚定：声明 id 原样用；无声明按相对路径推导（分隔符统一，Windows 反斜杠不算数） ----------
+
+function deriveEntityId(rawDir, filePath) {
+  const rel = path.relative(rawDir, filePath).replace(/\\/g, '/');
+  return rel.replace(/\.md$/i, '').replace(/\//g, '-');
+}
+
+// ---------- 复制：实体 upsert ----------
+
+function toContentRow(metadata, body) {
+  const confRaw = metadata.confidence;
+  const confidence = confRaw == null || confRaw === '' ? null : (Number.isFinite(Number(confRaw)) ? Number(confRaw) : null);
+  const tags = metadata.tags == null ? null : JSON.stringify(metadata.tags);
+  return {
+    name: metadata.name == null || metadata.name === '' ? null : metadata.name,
+    type: metadata.type == null || metadata.type === '' ? null : metadata.type,
+    content: body,
+    tags,
+    status: metadata.status == null || metadata.status === '' ? 'active' : metadata.status,
+    confidence
+  };
+}
+
+function rowEquals(existing, row) {
+  const norm = v => (v == null ? null : v);
+  return (
+    norm(existing.name) === norm(row.name) &&
+    norm(existing.type) === norm(row.type) &&
+    norm(existing.content) === norm(row.content) &&
+    norm(existing.tags) === norm(row.tags) &&
+    norm(existing.status) === norm(row.status) &&
+    norm(existing.confidence) === norm(row.confidence)
+  );
+}
+
+function walkMarkdown(dir, out) {
+  for (const name of fs.readdirSync(dir)) {
+    if (name.startsWith('.')) continue; // 隐藏目录/文件跳过
+    const full = path.join(dir, name);
+    if (fs.statSync(full).isDirectory()) {
+      walkMarkdown(full, out);
+    } else if (name.toLowerCase().endsWith('.md')) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+// ---------- 主步：compile(rawDir) ----------
+
+async function compile(rawDir) {
+  const stats = { scanned: 0, created: 0, updated: 0, skipped: 0 };
+  if (!fs.existsSync(rawDir)) return stats;
+
+  const files = walkMarkdown(rawDir, []);
+  const db = store._getDb();
+  let dirty = false;
+
+  const insertStmt = db.prepare(
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+  );
+  const updateStmt = db.prepare(
+    `UPDATE entities SET name = ?, type = ?, content = ?, tags = ?, status = ?, confidence = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  );
+
+  for (const filePath of files) {
+    stats.scanned++;
+    const text = fs.readFileSync(filePath, 'utf8');
+    const { metadata, content } = parseFrontmatter(text);
+    const id = (metadata.id != null && String(metadata.id).trim() !== '') ? String(metadata.id).trim() : deriveEntityId(rawDir, filePath);
+    const row = toContentRow(metadata, content);
+    const existing = store.getEntity(id);
+
+    if (!existing) {
+      insertStmt.run([id, row.name, row.type, row.content, row.tags, row.status, row.confidence]);
+      stats.created++;
+      dirty = true;
+    } else if (!rowEquals(existing, row)) {
+      updateStmt.run([row.name, row.type, row.content, row.tags, row.status, row.confidence, id]);
+      stats.updated++;
+      dirty = true;
+    } else {
+      stats.skipped++;
+    }
+  }
+
+  insertStmt.free();
+  updateStmt.free();
+  if (dirty) store._persist();
+  return stats;
+}
+
+module.exports = { compile, parseFrontmatter, deriveEntityId };

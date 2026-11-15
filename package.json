@@ -1,0 +1,15 @@
+{
+  "name": "aing-v2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "aing-v2 知识代谢引擎（DNA 双铰链版）",
+  "main": "src/knowledge-store.js",
+  "scripts": {
+    "test": "node test/run-all.js",
+    "test:guard": "node test/count-guard.js",
+    "verify": "node verify-deploy.js"
+  },
+  "dependencies": {
+    "sql.js": "^1.8.0"
+  }
+}
