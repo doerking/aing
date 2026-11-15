@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 20 档 / 126 条断言全绿 |
+| 测试 | `npm test` → 21 档 / 133 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -75,7 +75,7 @@ status: active
 | 2.8 | ④ HelixCrosscheck | 🟡 接口行为 | 0.2 | reconcile=0 占位，完整互校待补 |
 | **2.9** | **回炉接线 P6（recycle-seeds 入 STEPS + 门禁断言）** | ✅ | `spec/SPEC-2.9-回炉接线.md` | test-2.9-recycle 6/6；`metabolism.DEFAULT_STEPS` 含 recycle + 编排器真收契约 |
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ✅ | `spec/SPEC-2.10-守恒闸.md` | test-2.10-conservation 6/6；36 轮每轮产出 2–4、累计比 1.0；每轮落 meko_cycles 三列 |
-| **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ⬜ | 待写 | **首战共识 major** |
+| **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ✅ | `spec/SPEC-2.11-存量hub裁剪.md` | test-2.11-hub-trim 7/7；只剪弱边(<5)、强边零退、原因码可逆 |
 | **2.12** | **场域维护动作（rebond/unwind/reconcile/demote，全可逆）** | ⬜ | **0.6** | 场域带 6/5/4 内跑，I1/I3 断言 |
 | **2.13** | **场域提升动作（promote/sprout/pollinate，≥2 证据）** | ⬜ | **0.6**、2.12 | I2 断言 + 守恒闸 I5 |
 | **2.14** | **进化团入驻：五成员契约注册 + 蜂巢成员池** | ⬜ | **0.8** | I7（成员唔直写双链）|

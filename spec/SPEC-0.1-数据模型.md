@@ -108,6 +108,9 @@ pruned INTEGER,                 -- 本窗口退场数
 conservation_ratio REAL         -- growth/pruned（pruned=0 时见 SPEC-2.10 §2.1）
 ```
 
+修订 F（2026-11-16）：`links` 补 `invalid_reason TEXT`——存量 hub 裁剪须可辨识、可撤销（2.11），
+唔可以靠猜边点解退役；原因码只写枚举值（`hub-trim` / `admission` / `prune`）。
+
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
 | # | 判据 | 检验方式（隔离假院真跑） |
