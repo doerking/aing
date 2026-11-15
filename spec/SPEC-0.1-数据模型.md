@@ -81,7 +81,24 @@ CREATE TABLE IF NOT EXISTS entity_vectors (
 
 links 表补 `evidence TEXT`（JSON：候选边证据列表，1.9/1.10 用；修订 B，2026-11-16）。
 
-后续步（1.12 KESPI、1.11 压缩籽）按同模式另立表，均以 `entity_id` 为主键、均不反写 `entities`。
+修订 C（2026-11-16）：另立 `compressed_seeds`（1.11）与 `kespi_scores`（1.12）两表，均以 `entity_id` 为主键、均不反写 `entities`：
+
+```sql
+CREATE TABLE IF NOT EXISTS compressed_seeds (
+  entity_id TEXT PRIMARY KEY,
+  content_hash TEXT,
+  last_access_at DATETIME,
+  active INTEGER DEFAULT 1,      -- 1=已压缩为籽；0=被重新访问，已解压
+  compressed_at DATETIME
+);
+CREATE TABLE IF NOT EXISTS kespi_scores (
+  entity_id TEXT PRIMARY KEY,
+  kq REAL, kg REAL, ka REAL, km REAL,
+  kd REAL, kc REAL, kr REAL, kb REAL,
+  overall REAL,
+  computed_at DATETIME
+);
+```
 
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 

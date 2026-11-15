@@ -38,6 +38,7 @@ owner: ring
 | 1.8 | [vector 强度加权](./SPEC-1.8-vector强度加权.md) | 64 维哈希向量 + 余弦×强度权重，内容变才重建 | 实现绿 |
 | 1.9 | [sprout 发芽](./SPEC-1.9-sprout发芽.md) | 三类证据成种，场域带 4–6 段，每轮 2–4 粒 | 实现绿 |
 | 1.10 | [pollinate 授粉](./SPEC-1.10-pollinate授粉.md) | 跨类型按跨域+标签/关键词成粒，4–6 段 | 实现绿 |
+| 1.11 | [compress 换锚](./SPEC-1.11-compress换锚.md) | last_access 锚定，压成籽可逆（重新访问解压）| 实现绿 |
 | 1.13 | [prune 逻辑退役](./SPEC-1.13-prune逻辑退役.md) | 三条件 AND + 可逆退役 | 实现绿 |
 | 1.14 | [meko 螺旋编排](./SPEC-1.14-meko编排螺旋推进.md) | raw→cross→wiki 逐轮，meko_cycles | 实现绿 |
 | 1.15 | [场域骨架 + 组件契约门禁](./SPEC-1.15-场域骨架与组件契约门禁.md) | 契约注册 + C5 arch-lint | 实现绿 |
