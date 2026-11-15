@@ -49,6 +49,7 @@ const DDL = [
     content_hash TEXT,
     last_access_at DATETIME,
     active INTEGER DEFAULT 1,
+    recycled INTEGER DEFAULT 0,
     compressed_at DATETIME
   )`,
   `CREATE TABLE IF NOT EXISTS kespi_scores (
