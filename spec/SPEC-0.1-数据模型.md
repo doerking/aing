@@ -65,6 +65,22 @@ CREATE TABLE IF NOT EXISTS meko_cycles (
 );
 ```
 
+### 2.4 修订 A（2026-11-16）：派生表
+向量、KESPI、压缩籽需要各自的落点，不塞入 entities 列（避免主表膨胀与写放大）：
+
+```sql
+CREATE TABLE IF NOT EXISTS entity_vectors (
+  entity_id TEXT PRIMARY KEY,
+  dim INTEGER,
+  model TEXT,             -- hash-64（无外部模型依赖）
+  vector TEXT,            -- JSON 数组
+  checksum TEXT,          -- 源内容指纹，变化才重建
+  updated_at DATETIME
+);
+```
+
+后续步（1.12 KESPI、1.11 压缩籽）按同模式另立表，均以 `entity_id` 为主键、均不反写 `entities`。
+
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
 | # | 判据 | 检验方式（隔离假院真跑） |

@@ -42,6 +42,14 @@ const DDL = [
     executed_at DATETIME,
     status TEXT,
     kespi_snapshot REAL
+  )`,
+  `CREATE TABLE IF NOT EXISTS entity_vectors (
+    entity_id TEXT PRIMARY KEY,
+    dim INTEGER,
+    model TEXT,
+    vector TEXT,
+    checksum TEXT,
+    updated_at DATETIME
   )`
 ];
 
