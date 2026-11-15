@@ -42,7 +42,10 @@ const DDL = [
     scheduled_at DATETIME,
     executed_at DATETIME,
     status TEXT,
-    kespi_snapshot REAL
+    kespi_snapshot REAL,
+    growth INTEGER,
+    pruned INTEGER,
+    conservation_ratio REAL
   )`,
   `CREATE TABLE IF NOT EXISTS compressed_seeds (
     entity_id TEXT PRIMARY KEY,

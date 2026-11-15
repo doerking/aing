@@ -44,14 +44,18 @@ class MekoOrchestrator {
   _writeCycle(cycleType, round, status, kespi) {
     const db = this.store._getDb();
     const id = `cyc-${Date.now()}-${round}-${Math.floor(Math.random() * 1e6)}`;
+    // 守恒闸（SPEC-2.10 §2.3 / I9）：每轮必带 growth/pruned/ratio 三列快照
+    let cons = { growth: 0, pruned: 0, ratio: 1, inBand: true, verdict: 'balanced', idle: true };
+    try { cons = require('./conservation.js').measureConservation(this.store, {}); } catch (_) { /* 读数失败不阻断本轮 */ }
     const stmt = db.prepare(
-      `INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot)
-       VALUES (?, ?, 'both', ?, ?, ?, ?)`
+      `INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot, growth, pruned, conservation_ratio)
+       VALUES (?, ?, 'both', ?, ?, ?, ?, ?, ?, ?)`
     );
     const now = new Date().toISOString();
-    stmt.run([id, `${cycleType}:round${round}`, now, now, status, kespi]);
+    stmt.run([id, `${cycleType}:round${round}`, now, now, status, kespi, cons.growth, cons.pruned, cons.ratio]);
     stmt.free();
     this.store._persist();
+    return cons;
   }
 
   async runCycle(cycleType = '代谢', opts = {}) {

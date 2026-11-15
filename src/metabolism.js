@@ -15,7 +15,8 @@ const DEFAULT_STEPS = [
   'compress',
   'recycle',
   'kespi',
-  'prune'
+  'prune',
+  'conservation'
 ];
 
 // id → { strand, band, reads, writes, reversible, module, fn }
@@ -30,7 +31,8 @@ const REGISTRY = {
   compress:    { strand: 'wiki',  band: 'field',      reads: ['entities'],            writes: ['compressed_seeds'],    reversible: true,  module: './compress.js',    fn: 'compressStep' },
   recycle:     { strand: 'raw',   band: 'field',      reads: ['compressed_seeds'],    writes: ['entities'],            reversible: true,  module: './recycle.js',     fn: 'recycleStep' },
   kespi:       { strand: 'cross', band: 'background', reads: ['entities', 'links'],   writes: ['kespi_scores'],        reversible: true,  module: './kespi.js',       fn: 'kespiStep' },
-  prune:       { strand: 'wiki',  band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './prune.js',       fn: 'pruneCycle' }
+  prune:       { strand: 'wiki',  band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './prune.js',       fn: 'pruneCycle' },
+  conservation:{ strand: 'cross', band: 'background', reads: ['links', 'entities'],   writes: ['meko_cycles'],         reversible: true,  module: './conservation.js', fn: 'conservationStep' }
 };
 
 // 生成可注册契约（onCycle 由编排器回调，store 注入）
