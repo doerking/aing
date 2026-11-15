@@ -99,6 +99,13 @@ CREATE TABLE IF NOT EXISTS kespi_scores (
   overall REAL,
   computed_at DATETIME
 );
+修订 E（2026-11-16）：`meko_cycles` 补三列度量，供守恒闸（2.10）与 T2 轮尾度量落盘（I9）；
+
+```sql
+-- meko_cycles 补列
+growth INTEGER,                 -- 本窗口发芽/授粉产出数
+pruned INTEGER,                 -- 本窗口退场数
+conservation_ratio REAL         -- growth/pruned（pruned=0 时见 SPEC-2.10 §2.1）
 ```
 
 ## 三、Acceptance Criteria（可客观检验，非主观词）
