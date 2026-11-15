@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const store = require('./knowledge-store.js');
+// SPEC-0.6/1.15 铁律：本组件唔直连 knowledge-store，store 由编排器注入（arch-lint C5 守）。
 
 // ---------- 解旋：frontmatter 解析（平铺 key: value + 行内数组；完整 YAML 面见 spec Non-Goals） ----------
 
@@ -94,7 +94,8 @@ function walkMarkdown(dir, out) {
 
 // ---------- 主步：compile(rawDir) ----------
 
-async function compile(rawDir) {
+async function compile(rawDir, store) {
+  if (!store || typeof store._getDb !== 'function') throw new Error('compile 需要 store 注入（SPEC-1.14 契约）');
   const stats = { scanned: 0, created: 0, updated: 0, skipped: 0 };
   if (!fs.existsSync(rawDir)) return stats;
 
