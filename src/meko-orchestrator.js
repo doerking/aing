@@ -61,7 +61,8 @@ class MekoOrchestrator {
   async runCycle(cycleType = '代谢', opts = {}) {
     const rounds = Math.max(1, opts.rounds || 2);
     const pendingEdges = opts.pendingEdges || 0;
-    const budgetMs = this._deadlineMs(cycleType, pendingEdges);
+    // 迁移首跑等批处理场景可显式给预算；缺省仍走 T_bound（SPEC-0.3）
+    const budgetMs = opts.budgetMs ? Math.max(1, Number(opts.budgetMs)) : this._deadlineMs(cycleType, pendingEdges);
     const startedAt = _nowMs();
     const endsAt = startedAt + budgetMs;
     const cycleId = `cyc-${startedAt}-${Math.floor(Math.random() * 1e6)}`;

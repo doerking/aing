@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 40 档 / 241 条断言全绿 |
+| 测试 | `npm test` → 41 档 / 247 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -104,16 +104,16 @@ status: active
 | **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」 |
 | **3.13** | **会话三源入库闭环（reply/search/rationale）** | ✅ | `spec/SPEC-3.13-三源入库闭环.md` | test-3.13-session-ingest 5/5；plan-hit/miss 反馈边 |
 
-## 五、M4 数据迁移 + 总验收（0/6）
+## 五、M4 数据迁移 + 总验收（6/6 已落地）
 
 | # | 任务 | 状态 |
 |---|---|---|
-| 4.1 | 迁移前冷备份 | ⬜ |
-| 4.2 | failing test：迁移无损 | ⬜ |
-| 4.3 | 实体迁移（110 实体零丢失）| ⬜ |
-| 4.4 | 边迁移（strength/invalid_at 映射）| ⬜ |
-| 4.5 | 全量代谢新架构首跑 | ⬜ |
-| 4.6 | 旧库归档 + 总验收 | ⬜ |
+| 4.1 | 迁移前冷备份 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-1：备份 SHA-256 == 源 |
+| 4.2 | failing test：迁移无损 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 先红（模块缺失）后 6/6 绿 |
+| 4.3 | 实体迁移（117 实体零丢失）| ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-2：排序 (id,content) 全等 |
+| 4.4 | 边迁移（1009 边零丢失，强度/失效期原样）| ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-3：排序四元组全等 |
+| 4.5 | 全量代谢新架构首跑 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-5 + `node tools/migrate-run.js`：14 步首跑绿 |
+| 4.6 | 旧库归档 + 总验收 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-6：旧库 SHA/mtime 不变、报告 archived=true；C0–C21 全绿 |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
