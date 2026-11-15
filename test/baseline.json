@@ -27,6 +27,7 @@
   "test-2.4-timebound.js": 5,
   "test-2.8-meko-four.js": 5,
   "test-2.9-recycle.js": 6,
+  "test-3.1-consciousness-kernel.js": 6,
   "test-3.11-memo.js": 8,
   "test-3.12-predict.js": 7,
   "test-3.13-session-ingest.js": 5

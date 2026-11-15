@@ -115,6 +115,20 @@ const DDL = [
     status TEXT DEFAULT 'pending',
     created_at DATETIME,
     decided_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS kernel_state (
+    id TEXT PRIMARY KEY,
+    state TEXT,
+    attention REAL,
+    stagnation_count INTEGER DEFAULT 0,
+    breaker_json TEXT,
+    last_cycle_id TEXT,
+    updated_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS config (
+    key TEXT PRIMARY KEY,
+    value_json TEXT,
+    updated_at DATETIME
   )`
 ];
 
