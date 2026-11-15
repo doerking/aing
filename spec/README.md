@@ -1,6 +1,6 @@
 ---
 tags: [aing-v2, spec, M0, index, spec:9, must-read:9, dna:7]
-description: aing-v2 M0 spec 索引——四份 spec 串成完整 M0 交付包，owner 拍板入口
+description: aing-v2 spec 索引——M0 架构 spec（0.1-0.8）与 M1 代谢步 spec（1.1/1.2/1.4/1.13-1.15），每份含 AC/Non-Goals
 date: 2026-11-13
 status: draft（待 owner 拍板）
 owner: ring
@@ -24,6 +24,18 @@ owner: ring
 | 0.5 | [内外蜂群接线](./SPEC-0.5-内外蜂群接线与部署重设.md) | 两套不桥接 + 内蜂群自洽部署 | 0.1,0.2 | draft |
 | **0.6** | **[meko 贯彻全架构 × 中间三段星闪场域](./SPEC-0.6-meko贯彻全架构-中间三段星闪场域.md)** | 组件契约 + 三带 + 场域动作/不变量 + Tolaria 9 段 | 0.1-0.4 | **拍板（2026-11-16 owner）** |
 | **0.7** | **[双系统运行协议](./SPEC-0.7-双系统运行协议-成长闭环与预案.md)** | 本能/决策/预判 + 会话三源成长闭环 + memo 用户面 + 预案 | 0.6 | **拍板（2026-11-16 缘起）** |
+| **0.8** | **[进化团入驻 meko × 全程多维维护](./SPEC-0.8-进化团入驻meko-全程多维维护.md)** | 五成员契约注册 + 四时点×六维 + 外派三三制 + 轮阵/沙漏对齐 | 0.6,0.7 | **拍板（2026-11-16）** |
+
+## 一乙、M1 代谢步 spec（垂直切片，每步 spec + failing test + ALL GREEN）
+
+| # | Spec | 内容 | 状态 |
+|---|---|---|---|
+| 1.1 | [compile 编译步](./SPEC-1.1-compile编译步.md) | raw 解旋入 entities，幂等，不碰 last_access | 实现绿 |
+| 1.2 | [link 同步步](./SPEC-1.2-link同步步.md) | 三轴夹出建边 + invalid_at 退役 | 实现绿 |
+| 1.4 | [import 双链写入](./SPEC-1.4-import双链写入.md) | raw→wiki 镜像 + 氢键，保差分，幂等 | 实现绿 |
+| 1.13 | [prune 逻辑退役](./SPEC-1.13-prune逻辑退役.md) | 三条件 AND + 可逆退役 | 实现绿 |
+| 1.14 | [meko 螺旋编排](./SPEC-1.14-meko编排螺旋推进.md) | raw→cross→wiki 逐轮，meko_cycles | 实现绿 |
+| 1.15 | [场域骨架 + 组件契约门禁](./SPEC-1.15-场域骨架与组件契约门禁.md) | 契约注册 + C5 arch-lint | 实现绿 |
 
 ## 二、每份 spec 的结构契约（工程规范 §三 spec quality = output quality）
 
