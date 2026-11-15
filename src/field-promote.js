@@ -89,10 +89,18 @@ async function promoteEntity(store, opts = {}) {
   const ev = await evidenceFor(store, id);
   if (ev.kinds.length < 2) return { refused: { id, reason: 'insufficient-evidence', evidence: ev } };
 
+  const targetStrength = from === 4 ? 6 : 7;
+  // 闸东真接（I8）：promote 必过三闸并留痕，唔过即拒
+  const gate = await require('./omni-gate.js').runGates(store, {
+    subject: id, kind: 'promote', evidence: ev.kinds,
+    baseline: opts.baseline || null, targetStrength, cycleId: opts.cycleId
+  });
+  if (!gate.passed) return { refused: { id, reason: 'gate-rejected', failed: gate.failed, evidence: ev } };
+
   const m = _conservation(db, store);
   if (m.verdict === 'growth-only') return { refused: { id, reason: 'conservation-band', evidence: ev } };
 
-  const to = from === 4 ? 6 : 7;
+  const to = targetStrength;
   const stmt = db.prepare('UPDATE entities SET tolaria_strength = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
   stmt.run([to, id]);
   stmt.free();

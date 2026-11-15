@@ -142,6 +142,20 @@ CREATE TABLE IF NOT EXISTS genes (
 );
 ```
 
+修订 I（2026-11-16）：另立 `gate_records`（闸东三闸留痕，2.16）与 `approval_queue`（W2 审批队列，2.16）；
+两表只增不改业务表，`gate_records` 是 I8「无闸记录 promote 必拒」的凭据。
+
+```sql
+CREATE TABLE IF NOT EXISTS gate_records (
+  id TEXT PRIMARY KEY, subject TEXT, kind TEXT, passed INTEGER DEFAULT 0,
+  gates_json TEXT, evidence_json TEXT, baseline_json TEXT, cycle_id TEXT, created_at DATETIME
+);
+CREATE TABLE IF NOT EXISTS approval_queue (
+  id TEXT PRIMARY KEY, kind TEXT, payload_json TEXT, reason TEXT,
+  status TEXT DEFAULT 'pending', created_at DATETIME, decided_at DATETIME
+);
+```
+
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
 | # | 判据 | 检验方式（隔离假院真跑） |
