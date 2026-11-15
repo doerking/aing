@@ -156,6 +156,17 @@ CREATE TABLE IF NOT EXISTS approval_queue (
 );
 ```
 
+修订 J（2026-11-16）：另立 `kernel_state`（意识层内核单行状态，3.1）与 `config`（离散旋钮单源，3.4）；
+`kernel_state` 的 `stagnation_count` 只有 `recordCycleResult` 一个写者（原院教训 C16/C17）。
+
+```sql
+CREATE TABLE IF NOT EXISTS kernel_state (
+  id TEXT PRIMARY KEY, state TEXT, attention REAL,
+  stagnation_count INTEGER DEFAULT 0, breaker_json TEXT, last_cycle_id TEXT, updated_at DATETIME
+);
+CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value_json TEXT, updated_at DATETIME);
+```
+
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
 | # | 判据 | 检验方式（隔离假院真跑） |
