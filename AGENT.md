@@ -15,13 +15,13 @@ status: draft（改写版）
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `npm test` / `node test/run-all.js` | ✅ 可用 | 6 档 / 35 条断言 |
+| `npm test` / `node test/run-all.js` | ✅ 可用 | 36 档 / 229 条断言 |
 | `npm run test:guard` | ✅ 可用 | test 计数只加唔减（R4）|
-| `node verify-deploy.js` | ✅ 可用 | C0–C3 门禁 |
-| `node src/memo.js` | ⬜ M3 前不可用 | 意识层读端（3.3）|
-| `node src/neural.js` | ⬜ M3 前不可用 | 神经事件（3.2）|
+| `node verify-deploy.js` | ✅ 可用 | C0–C5 门禁 |
+| `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
+| `node src/neural.js` | ✅ 可用 | 控制面四动作 event/inhibit/status/verify（3.2）|
 | `node src/query.js` | ⬜ M1 后（1.8/1.14）| 检索面 |
-| `node src/auto-ingest.js` | ⬜ M3 前不可用 | 入库（3.5）|
+| `node src/auto-ingest.js` | ⬜ CLI 未接 | 入库模块已实现（3.5），命令行入口待接 |
 | `node src/meko-orchestrator.js` | ⬜ M1 关键路径尾（1.14）| 编排 |
 
 **过渡期纪律**：v2 未有仪表台之前，出场接线（读 memo / 喂 event）**照旧用旧库** `G:\DPD\aing`，两库唔互写。

@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 35 档 / 221 条断言全绿 |
+| 测试 | `npm test` → 36 档 / 229 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -86,12 +86,12 @@ status: active
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
-## 四、M3 意识层 + 入库 + 门禁（8/13 已落地）
+## 四、M3 意识层 + 入库 + 门禁（9/13 已落地）
 
 | # | 任务 | 状态 |
 |---|---|---|
 | 3.1 | 意识层闭环 W3 | ✅ | `spec/SPEC-3.1-意识层闭环.md` | test-3.1-consciousness-kernel 6/6；五因子注意力 + stagnation≥3 断流 |
-| 3.2 | 控制面 W2（CLI+HTTP）| ⬜ |
+| 3.2 | 控制面 W2（CLI+HTTP）| ✅ | `spec/SPEC-3.2-意识层控制面.md` | test-3.2-control-plane 8/8；四路由 CLI/HTTP 同源、inhibit 到期自解、status/verify 纯读 |
 | 3.3 | 读端纯读（C16）| ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo AC-6/AC-6c：纯读前后库指纹一致、源码无写语句 |
 | 3.4 | 离散旋钮单源（C17）| ✅ | `spec/SPEC-3.4-离散旋钮单源.md` | test-3.4-config-runtime 5/5；四组件共用 DEFAULTS |
 | 3.5 | 入库主线（C10g/h）| ✅ | `spec/SPEC-3.5-入库主线.md` | test-3.5-auto-ingest 6/6；三源剥净 + 双向钉 + 身份闸串联 |
