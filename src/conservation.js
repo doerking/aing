@@ -5,8 +5,9 @@
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
 const GROWTH_RELATIONS = ['sprout-candidate', 'pollinate-candidate'];
-const BAND_LOW = 0.8;
-const BAND_HIGH = 1.5;
+const { DEFAULTS } = require('./config-runtime.js');
+const BAND_LOW = DEFAULTS.conservation.band[0];
+const BAND_HIGH = DEFAULTS.conservation.band[1];
 
 function _scalar(db, sql, binds = []) {
   const s = db.prepare(sql);

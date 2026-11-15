@@ -5,6 +5,7 @@
 // 铁律：≥2 类独立证据才成种；已有边不发种；幂等；不碰 last_access/invalid_at；无物理删。
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
+const { DEFAULTS } = require('./config-runtime.js');
 const REL = 'sprout-candidate';
 const MAX_ENTITIES = 200;
 
@@ -33,8 +34,8 @@ function keywords(text) {
 
 async function sproutStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('sprout 需要 store 注入（SPEC-1.15 契约）');
-  const floor = Number.isInteger(opts.floor) ? opts.floor : 2;
-  const cap = Number.isInteger(opts.cap) ? opts.cap : 4;
+  const floor = Number.isInteger(opts.floor) ? opts.floor : DEFAULTS.sprout.floor;
+  const cap = Number.isInteger(opts.cap) ? opts.cap : DEFAULTS.sprout.cap;
   const stats = { scanned: 0, pairs: 0, seeded: 0, skipped: 0 };
   const db = store._getDb();
 

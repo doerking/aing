@@ -7,11 +7,12 @@
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
 const crypto = require('crypto');
+const { DEFAULTS } = require('./config-runtime.js');
 
 async function compressStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('compress 需要 store 注入（SPEC-1.15 契约）');
-  const inactiveDays = Number.isInteger(opts.inactiveDays) ? opts.inactiveDays : 30;
-  const minLength = Number.isInteger(opts.minLength) ? opts.minLength : 50;
+  const inactiveDays = Number.isInteger(opts.inactiveDays) ? opts.inactiveDays : DEFAULTS.compress.inactiveDays;
+  const minLength = Number.isInteger(opts.minLength) ? opts.minLength : DEFAULTS.compress.minLength;
   const stats = { scanned: 0, seeded: 0, revived: 0, skipped: 0 };
   const db = store._getDb();
 

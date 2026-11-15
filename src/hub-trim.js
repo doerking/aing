@@ -4,6 +4,7 @@
 // 只剪 strength < weakBelow 的边，强边一律唔动；可逆（原因码 hub-trim 可原样恢复）；无物理删。
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
+const { DEFAULTS } = require('./config-runtime.js');
 const REASON = 'hub-trim';
 
 function _activeEdges(db) {
@@ -28,8 +29,8 @@ function _degreeMap(edges) {
 
 async function trimHubs(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('hub-trim 需要 store 注入（SPEC-2.11 契约）');
-  const degreeCap = Number.isInteger(opts.degreeCap) && opts.degreeCap > 0 ? opts.degreeCap : 8;
-  const weakBelow = Number.isInteger(opts.weakBelow) ? opts.weakBelow : 5;
+  const degreeCap = Number.isInteger(opts.degreeCap) && opts.degreeCap > 0 ? opts.degreeCap : DEFAULTS.hubTrim.degreeCap;
+  const weakBelow = Number.isInteger(opts.weakBelow) ? opts.weakBelow : DEFAULTS.hubTrim.weakBelow;
   const db = store._getDb();
 
   const edges = _activeEdges(db);
