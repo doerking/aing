@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 22 档 / 141 条断言全绿 |
+| 测试 | `npm test` → 23 档 / 149 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -77,7 +77,7 @@ status: active
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ✅ | `spec/SPEC-2.10-守恒闸.md` | test-2.10-conservation 6/6；36 轮每轮产出 2–4、累计比 1.0；每轮落 meko_cycles 三列 |
 | **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ✅ | `spec/SPEC-2.11-存量hub裁剪.md` | test-2.11-hub-trim 7/7；只剪弱边(<5)、强边零退、原因码可逆 |
 | **2.12** | **场域维护动作（rebond/unwind/reconcile/demote，全可逆）** | ✅ | `spec/SPEC-2.12-场域维护动作.md` | test-2.12-field-maintain 8/8；带界 I1 + 全可逆 I3 + 动作账 |
-| **2.13** | **场域提升动作（promote/sprout/pollinate，≥2 证据）** | ⬜ | **0.6**、2.12 | I2 断言 + 守恒闸 I5 |
+| **2.13** | **场域提升动作（promote/sprout/pollinate，≥2 证据）** | ✅ | `spec/SPEC-2.13-场域提升动作.md` | test-2.13-field-promote 8/8；I2 证据门槛 + I5 守恒闸 + 边提升可逆 |
 | **2.14** | **进化团入驻：五成员契约注册 + 蜂巢成员池** | ⬜ | **0.8** | I7（成员唔直写双链）|
 | **2.15** | **六维 × 四时点维护接线（T0–T3）** | ⬜ | **0.8**、2.12、2.13 | I9（每轮留度量快照）|
 | **2.16** | **闸东真接 + 自治/审批边界（OmniGate 强制引用）** | ⬜ | **0.8** | I8（无闸记录 promote 必拒）|
