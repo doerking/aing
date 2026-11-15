@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 28 档 / 179 条断言全绿 |
+| 测试 | `npm test` → 35 档 / 221 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -86,23 +86,23 @@ status: active
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
-## 四、M3 意识层 + 入库 + 门禁（0/10）
+## 四、M3 意识层 + 入库 + 门禁（8/13 已落地）
 
 | # | 任务 | 状态 |
 |---|---|---|
-| 3.1 | 意识层闭环 W3 | ⬜ |
+| 3.1 | 意识层闭环 W3 | ✅ | `spec/SPEC-3.1-意识层闭环.md` | test-3.1-consciousness-kernel 6/6；五因子注意力 + stagnation≥3 断流 |
 | 3.2 | 控制面 W2（CLI+HTTP）| ⬜ |
-| 3.3 | 读端纯读（C16）| ⬜ |
-| 3.4 | 离散旋钮单源（C17）| ⬜ |
-| 3.5 | 入库主线（C10g/h）| ⬜ |
-| 3.6 | 身份闸 + 标签闸（C10i）| ⬜ |
+| 3.3 | 读端纯读（C16）| ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo AC-6/AC-6c：纯读前后库指纹一致、源码无写语句 |
+| 3.4 | 离散旋钮单源（C17）| ✅ | `spec/SPEC-3.4-离散旋钮单源.md` | test-3.4-config-runtime 5/5；四组件共用 DEFAULTS |
+| 3.5 | 入库主线（C10g/h）| ✅ | `spec/SPEC-3.5-入库主线.md` | test-3.5-auto-ingest 6/6；三源剥净 + 双向钉 + 身份闸串联 |
+| 3.6 | 身份闸 + 标签闸（C10i）| ✅ | `spec/SPEC-3.6-身份闸与标签闸.md` | test-3.6-api-gate 5/5；自报 status/conf/tags 全忽略 |
 | 3.7 | 门禁 C0–C9 适配 | ⬜ |
 | 3.8 | 门禁 C10a–C10i 适配 | ⬜ |
 | 3.9 | 门禁 C11–C19 适配 | ⬜ |
 | 3.10 | 门禁 C20–C21 适配 | ⬜ |
-| **3.11** | **memo 用户面重构（recent/openLoops/patterns/plans）** | ⬜ |
-| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ⬜ |
-| **3.13** | **三源入库闭环 + 回喂门禁（G1/G5）** | ⬜ |
+| **3.11** | **memo 用户面重构（recent/openLoops/patterns/plans）** | ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo 8/8；冷启动诚实、systemLine≤80 |
+| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」 |
+| **3.13** | **会话三源入库闭环（reply/search/rationale）** | ✅ | `spec/SPEC-3.13-三源入库闭环.md` | test-3.13-session-ingest 5/5；plan-hit/miss 反馈边 |
 
 ## 五、M4 数据迁移 + 总验收（0/6）
 
