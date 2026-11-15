@@ -95,6 +95,26 @@ const DDL = [
     created_at DATETIME,
     updated_at DATETIME,
     archived_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS gate_records (
+    id TEXT PRIMARY KEY,
+    subject TEXT,
+    kind TEXT,                    -- promote / threshold / gene
+    passed INTEGER DEFAULT 0,
+    gates_json TEXT,              -- canary/holdout/acceptance 三闸逐闸结论
+    evidence_json TEXT,
+    baseline_json TEXT,
+    cycle_id TEXT,
+    created_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS approval_queue (
+    id TEXT PRIMARY KEY,
+    kind TEXT,                    -- threshold / band-rule / budget / user-surface
+    payload_json TEXT,
+    reason TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME,
+    decided_at DATETIME
   )`
 ];
 
