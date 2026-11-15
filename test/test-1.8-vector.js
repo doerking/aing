@@ -50,5 +50,5 @@ catch (e) { console.error('❌ 红（正确的红）—— src/vector.js 未实�
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'vector.js'), 'utf8');
   ac('AC-7 铁律', String(laV) === '2021-06-01 00:00:00' && !/DELETE\s+FROM/i.test(src));
 
-  console.log(`${pass}/${pass + fail} 绿`); process.exit(fail ? 1 : 0);
+  console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

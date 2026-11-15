@@ -97,5 +97,5 @@ const count = (sql) => {
   ac('AC-7 无物理删 + 行数只增不减', !/DELETE\s+FROM/i.test(src) && nEnt1 >= 5, `nEnt1=${nEnt1}`);
 
   console.log(`${pass}/${pass + fail} 绿`);
-  process.exit(fail ? 1 : 0);
+  process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
