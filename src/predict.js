@@ -1,0 +1,112 @@
+'use strict';
+// aing-v2 predict.js —— M3 任务 3.12 实现（SPEC-3.12 预案器）
+// 输入：用户消息 + 库检索（向量 top-N）+ 候选边；输出：≤3 张有据预案卡。
+// 每张卡 basis 可点回原文；冇据则 1 张 cold-start 卡（G6 诚实）。
+// 只读：唔写任何表；唔碰 last_access；无物理 DELETE。
+// 组件唔直连 knowledge-store：store 由调用方注入（arch-lint C5 守）。
+
+const crypto = require('crypto');
+const PLAN_MAX = 3;
+const BANDS = ['high', 'mid', 'low'];
+const QUOTE_MAX = 80;
+
+function _rows(db, sql, binds = []) {
+  const s = db.prepare(sql);
+  if (binds.length) s.bind(binds);
+  const out = [];
+  while (s.step()) out.push(s.getAsObject());
+  s.free();
+  return out;
+}
+
+function _scalar(db, sql, binds = []) {
+  const s = db.prepare(sql);
+  if (binds.length) s.bind(binds);
+  const found = s.step();
+  const r = found ? s.getAsObject() : null;
+  s.free();
+  return r;
+}
+
+function _body(entity) {
+  try { return JSON.parse(entity.content || '{}'); } catch (_) { return {}; }
+}
+
+function _quote(body) {
+  const t = String(body.reply || body.rationale || '').trim();
+  return t.slice(0, QUOTE_MAX);
+}
+
+function _planId(topic, ids) {
+  return 'plan-' + crypto.createHash('sha1').update(String(topic) + '|' + ids.join(',')).digest('hex').slice(0, 8);
+}
+
+function _band(items) {
+  const kinds = new Set(items.map(i => i.kind));
+  if (kinds.size >= 2) return 'high';
+  if (items.length >= 2) return 'mid';
+  return 'low';
+}
+
+async function predict(store, opts = {}) {
+  if (!store || typeof store._getDb !== 'function') throw new Error('predict 需要 store 注入（SPEC-3.12 契约）');
+  const db = store._getDb();
+  const message = String(opts.message || '');
+  const k = Number.isInteger(opts.k) && opts.k > 0 ? opts.k : 8;
+
+  const coldPlan = () => ({
+    id: 'plan-cold',
+    hypothesis: '无以往依据：此话题库内无会话可依',
+    basis: [],
+    suggested: '先按常规做法推进，边做边把本轮会话入库',
+    risk: '无历史可参照，建议先行确认关键假设',
+    confidenceBand: 'low'
+  });
+
+  let hits = [];
+  try { hits = await require('./vector.js').search(store, message, { k }); } catch (_) { hits = []; }
+
+  const convHits = [];
+  for (const h of hits) {
+    const e = _scalar(db, 'SELECT * FROM entities WHERE id = ?', [h.id]);
+    if (!e || e.type !== 'Conversation' || e.invalid_at) continue;
+    const body = _body(e);
+    convHits.push({ id: e.id, name: e.name, body, at: body.at || String(e.created_at || ''), score: h.score });
+  }
+  if (!convHits.length) return { coldStart: true, plans: [coldPlan()] };
+
+  const plans = [];
+  for (const h of convHits) {
+    if (plans.length >= PLAN_MAX) break;
+    const basis = [{ kind: 'conversation', id: h.id, at: h.at, quote: _quote(h.body) }];
+
+    // 第二类证据：候选边连到的另一条会话
+    const cands = _rows(db,
+      `SELECT * FROM links WHERE invalid_at IS NULL
+       AND relation IN ('sprout-candidate','pollinate-candidate')
+       AND (source_id = ? OR target_id = ?)`, [h.id, h.id]);
+    for (const c of cands) {
+      const otherId = c.source_id === h.id ? c.target_id : c.source_id;
+      const other = _scalar(db, 'SELECT * FROM entities WHERE id = ?', [otherId]);
+      if (!other || other.type !== 'Conversation' || other.invalid_at) continue;
+      const ob = _body(other);
+      basis.push({ kind: 'sprout', id: otherId, at: ob.at || String(other.created_at || ''), quote: _quote(ob) });
+      if (basis.length >= 3) break;
+    }
+
+    const topic = String(h.body.topic || h.name || '未命名话题');
+    const ids = basis.map(b => b.id);
+    plans.push({
+      id: _planId(topic, ids),
+      hypothesis: `用户接下来大概想继续「${topic}」：${String(h.body.reply || '').slice(0, 40)}`.trim(),
+      basis,
+      suggested: String(h.body.rationale || '沿用上轮做法，先把边界复核一次'),
+      risk: '若无此需求，会多花一轮确认',
+      confidenceBand: _band(basis)
+    });
+  }
+
+  return { coldStart: false, plans: plans.slice(0, PLAN_MAX) };
+}
+
+module.exports = { predict, PLAN_MAX, BANDS };
