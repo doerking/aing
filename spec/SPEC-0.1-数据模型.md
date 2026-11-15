@@ -128,6 +128,20 @@ CREATE TABLE IF NOT EXISTS field_actions (
 );
 ```
 
+修订 H（2026-11-16）：另立 `genes` 表（2.15/2.16）——进化团 gene 的生老病死落点；
+`lineage` 存回滚指针（前像 JSON），`archived_at` 非空即可经 rollback 复原。
+
+```sql
+CREATE TABLE IF NOT EXISTS genes (
+  id TEXT PRIMARY KEY,
+  name TEXT, score REAL DEFAULT 0.5,
+  uses INTEGER DEFAULT 0, wins INTEGER DEFAULT 0, failures INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
+  lineage TEXT,
+  created_at DATETIME, updated_at DATETIME, archived_at DATETIME
+);
+```
+
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
 | # | 判据 | 检验方式（隔离假院真跑） |
