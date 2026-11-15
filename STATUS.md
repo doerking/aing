@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 14 档 / 88 条断言全绿 |
+| 测试 | `npm test` → 15 档 / 94 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -41,7 +41,7 @@ status: active
 
 **M0 拍板**：2026-11-16 owner 授权 Hana 揸 fit 布置，四份 spec 视为拍板通过，开 M1。
 
-## 二、M1 核心代谢双铰链化（11/15）
+## 二、M1 核心代谢双铰链化（12/15）
 
 | # | 任务 | 状态 | spec | test |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ status: active
 | 1.6 | link 三轴化 + 三轴 gate | ✅ | 1.2 | test-1.6-link 5/5 + test-1.6-triaxis-gate 8/8 |
 | 1.7 | link-sync 同步 | ✅ | 1.7 | test-1.7-link-sync 6/6 |
 | 1.8 | vector 向量（strength 加权）| ✅ | 1.8 | test-1.8-vector 7/7 |
-| 1.9 | sprout 发芽（含 P3 sproutFloor）| ⬜ | — | — |
+| 1.9 | sprout 发芽（含 P3 sproutFloor）| ✅ | 1.9 | test-1.9-sprout 6/6 |
 | 1.10 | pollinate 授粉 | ⬜ | — | — |
 | 1.11 | compress 换锚 | ⬜ | — | — |
 | 1.12 | kespi 八维 | ⬜ | — | — |

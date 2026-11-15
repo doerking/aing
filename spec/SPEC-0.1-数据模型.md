@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS entity_vectors (
 );
 ```
 
+links 表补 `evidence TEXT`（JSON：候选边证据列表，1.9/1.10 用；修订 B，2026-11-16）。
+
 后续步（1.12 KESPI、1.11 压缩籽）按同模式另立表，均以 `entity_id` 为主键、均不反写 `entities`。
 
 ## 三、Acceptance Criteria（可客观检验，非主观词）
