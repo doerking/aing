@@ -60,7 +60,7 @@ node src/neural.js event '{"channel":"anomaly","target":"<单号>","source":"<ag
 ## 三、双层蜂群（谁维护 / 谁派工）
 
 - **内蜂群**（自维护）：5 固定角色，**随包自洽部署**（`<skill-assets>/` 下，不依赖任何外部运行时）。健康驱动派单 + agent 手动。触发源=新架构读数面（KESPI/verify/meko_cycles）。详见 [SPEC-0.5](./spec/SPEC-0.5-内外蜂群接线与部署重设.md)。
-- **外蜂群**（对外派工）：载体在宿主运行时面。aing-v2 只做链路保障（弹道落盘/心跳/归因考核）。
+- **外蜂群**（对外派工）：载体在宿主运行时面。aing-v2 只做链路保障（轨迹留痕/心跳/归因考核）。
 - **两套不桥接**。
 
 按标签取技能：`node src/query.js "<标签>"`（advisory-only，判断后自挂，唔自动执行）。

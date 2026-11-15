@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 核心代谢, link-sync, 双链边一致, M1, spec:8, link-sync:8]
 description: M1.7 link-sync spec——raw 链内部有效边镜像到 wiki 链（同 relation/strength），缺镜像端点不建幽灵边，退役边不同步，幂等
 date: 2026-11-16
-status: draft（Hana 立旗）
+status: draft（Hana 定判据）
 owner: hana
 upstream: [SPEC-1.2, SPEC-1.4, SPEC-0.1, INVENTORY A 行 sync-links-to-fs]
 ---

@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 核心代谢, distill, 复制链, 保真, M1, spec:9, distill:8]
 description: M1.5 distill 蒸馏 spec——pending-distillation 的 raw 实体转 active，原文逐字保真复制入 wiki 镜像（唯一允许覆盖镜像的步），幂等、不碰 last_access
 date: 2026-11-16
-status: draft（Hana 立旗）
+status: draft（Hana 定判据）
 owner: hana
 upstream: [SPEC-1.1, SPEC-1.4, SPEC-0.1, INVENTORY A 行 distill]
 ---
