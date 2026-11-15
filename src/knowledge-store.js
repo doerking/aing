@@ -30,6 +30,7 @@ const DDL = [
     relation TEXT,
     confidence REAL,
     strength INTEGER DEFAULT 5,
+    evidence TEXT,
     invalid_at DATETIME,
     created_at DATETIME,
     PRIMARY KEY (source_id, target_id)
