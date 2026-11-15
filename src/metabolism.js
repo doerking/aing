@@ -23,7 +23,7 @@ const DEFAULT_STEPS = [
 
 // id → { strand, band, reads, writes, reversible, module, fn }
 const REGISTRY = {
-  compile:     { strand: 'raw',   band: 'entry',      reads: [],                      writes: ['entities'],            reversible: false, module: './compile.js',     fn: 'compile' },
+  compile:     { strand: 'raw',   band: 'entry',      reads: [],                      writes: ['entities'],            reversible: false, module: './compile.js',     fn: 'compile', argStyle: 'dir-store' },
   import:      { strand: 'raw',   band: 'background', reads: ['entities'],            writes: ['entities', 'links'],   reversible: true,  module: './import.js',      fn: 'importStep' },
   distill:     { strand: 'raw',   band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './distill.js',     fn: 'distillStep' },
   'link-sync': { strand: 'cross', band: 'background', reads: ['entities', 'links'],   writes: ['links'],               reversible: true,  module: './link-sync.js',   fn: 'linkSyncStep' },
@@ -56,6 +56,11 @@ function buildDefaultSteps(ids = DEFAULT_STEPS) {
         const mod = require(spec.module);
         const fn = mod[spec.fn];
         if (typeof fn !== 'function') throw new Error('metabolism: ' + id + ' 入口缺失 ' + spec.fn);
+        // compile 的历史签名为 (rawDir, store)，其余步骤为 (store, opts)
+        if (spec.argStyle === 'dir-store') {
+          const rawDir = ctx.rawDir || process.env.AING_RAW || require('path').join(__dirname, '..', 'raw');
+          return fn(rawDir, ctx.store, { round: ctx.round });
+        }
         return fn(ctx.store, { round: ctx.round });
       }
     };
