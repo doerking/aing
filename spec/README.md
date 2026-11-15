@@ -37,6 +37,7 @@ owner: ring
 | 1.7 | [link-sync 双链边一致](./SPEC-1.7-link-sync双链边一致.md) | raw 内部边镜像到 wiki，缺端点不建幽灵边 | 实现绿 |
 | 1.8 | [vector 强度加权](./SPEC-1.8-vector强度加权.md) | 64 维哈希向量 + 余弦×强度权重，内容变才重建 | 实现绿 |
 | 1.9 | [sprout 发芽](./SPEC-1.9-sprout发芽.md) | 三类证据成种，场域带 4–6 段，每轮 2–4 粒 | 实现绿 |
+| 1.10 | [pollinate 授粉](./SPEC-1.10-pollinate授粉.md) | 跨类型按跨域+标签/关键词成粒，4–6 段 | 实现绿 |
 | 1.13 | [prune 逻辑退役](./SPEC-1.13-prune逻辑退役.md) | 三条件 AND + 可逆退役 | 实现绿 |
 | 1.14 | [meko 螺旋编排](./SPEC-1.14-meko编排螺旋推进.md) | raw→cross→wiki 逐轮，meko_cycles | 实现绿 |
 | 1.15 | [场域骨架 + 组件契约门禁](./SPEC-1.15-场域骨架与组件契约门禁.md) | 契约注册 + C5 arch-lint | 实现绿 |
