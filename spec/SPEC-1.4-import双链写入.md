@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 核心代谢, import, 双铰链, 双链写入, M1, spec:9, import:8]
 description: M1.4 import 入库 spec——为 raw 链实体建 wiki 链镜像 + 氢键弱键，双链成对、幂等、不覆盖已存在镜像（保差分）、退役不镜像、永不碰 last_access
 date: 2026-11-16
-status: draft（Hana 立旗，待 owner 随时可驳）
+status: draft（Hana 定判据，待 owner 随时可驳）
 owner: hana
 upstream: [SPEC-0.1, SPEC-0.6 §五, SPEC-1.2, SPEC-1.15, INVENTORY A 行 import-from-wiki]
 ---

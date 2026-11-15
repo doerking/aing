@@ -59,8 +59,8 @@ upstream: [SWARM-设定-内外两套-备查汇总-2026-11-09, INVENTORY-aing完�
 
 | 保障 | 功能 | 改写后接哪 |
 |---|---|---|
-| 弹道落盘 | 派工单带身份/落点，唔返嚟都落盘 | 意识层事件面（neural 事件 + decision lineage） |
-| 心跳/链路面 | 波次接力、线断不死 | meko_cycles（scheduleCycle 编排心跳） |
+| 轨迹留痕 | 派工单带身份/落点，唔返嚟都落盘 | 意识层事件面（neural 事件 + decision lineage） |
+| 心跳/链路面 | 批次接力、线断不死 | meko_cycles（scheduleCycle 编排心跳） |
 | 归因账 + KESPI 考核 | 收全部归因、考效率 | KESPI 八维 + trajectory-store |
 
 ## 四、两套不桥接（铁律，改写后仍成立）
@@ -75,7 +75,7 @@ upstream: [SWARM-设定-内外两套-备查汇总-2026-11-09, INVENTORY-aing完�
 | AC-1 | 内蜂群随包自洽 | 假院只装 aing-v2 包 → `<skill-assets>/` 下内蜂群五角色说明书齐全，不依赖任何外部运行时即可被 aing-v2 内部面加载 |
 | AC-2 | 触发源接新读数面 | 造一个 verify 红 / KESPI 缺口 → 内蜂群健康巡检角色能从新读数面取到该信号并派单 |
 | AC-3 | 探测不经第三方 | 内蜂群健康读数全从 aing-v2 内部 briefing/query 取，关闭外部运行时面后内蜂群仍能跑（证明不依赖） |
-| AC-4 | 外蜂群保障端接线 | 造一条派工事件 → 弹道落盘进 decision lineage、心跳进 meko_cycles、归因进 trajectory-store，三件各归其位 |
+| AC-4 | 外蜂群保障端接线 | 造一条派工事件 → 轨迹留痕进 decision lineage、心跳进 meko_cycles、归因进 trajectory-store，三件各归其位 |
 | AC-5 | 两套不桥接 | 内蜂群派单不触发外蜂群编组；外蜂群探测不到内蜂群（双向证不桥接） |
 | AC-6 | 宪法合规 | 本 spec 及实现全文无第三方名称、无真实路径泄露（grep 第三方名 = 0） |
 
