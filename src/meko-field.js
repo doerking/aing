@@ -223,10 +223,15 @@ async function revertFieldAction(store, id) {
     } else if (row.action === 'reconcile') {
       const u = db.prepare(`UPDATE entities SET invalid_at = CURRENT_TIMESTAMP, invalid_reason = 'revert' WHERE id = ?`);
       u.run([row.target]); u.free();
-    } else if (row.action === 'demote') {
+    } else if (row.action === 'demote' || row.action === 'promote') {
       const before = JSON.parse(row.before_json || '{}');
       const u = db.prepare('UPDATE entities SET tolaria_strength = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
       u.run([before.strength, row.target]); u.free();
+    } else if (row.action === 'promote-edge') {
+      const before = JSON.parse(row.before_json || '{}');
+      const [src, dst] = String(row.target).split('->');
+      const u = db.prepare('UPDATE links SET relation = ?, strength = ? WHERE source_id = ? AND target_id = ?');
+      u.run([before.relation, before.strength, src, dst]); u.free();
     } else {
       return { error: 'unknown-action' };
     }
