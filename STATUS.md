@@ -15,7 +15,7 @@ status: active
 
 | 项 | 值 |
 |---|---|
-| 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit 见 `git log`）|
+| 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C3 ALL GREEN（2026-11-16）|
 | 测试 | `npm test` → 6 档 / 35 条断言全绿 |
