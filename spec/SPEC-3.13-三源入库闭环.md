@@ -24,7 +24,7 @@ upstream: [SPEC-0.7 §2/G1/G5, SPEC-1.1, SPEC-1.2]
 ### 2.1 三源入库（G1）
 - 输入：`{sessionId, at, topic, reply, searchShown, rationale}`
 - 实体 id `conv-<sessionId>`，type `Conversation`
-- content = JSON：`{ topic, at, reply, searchShown: [...], rationale }`
+- content = JSON：`{ topic, at, reply, searchShown: [...], rationale, outcome }`（outcome 缺省 `open`）
 - tags 必含 `conv:9` 与三源标记 `src:reply` / `src:search` / `src:rationale`
 - **回复为空** → 抛 `reply-required`，唔写任何行
 - 搜索展示与事由分析允许为空数组/空串，但**标签照留**（三源结构在，值可为空）

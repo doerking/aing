@@ -38,7 +38,8 @@ async function ingestSession(store, payload = {}) {
     at: payload.at || new Date().toISOString(),
     reply,
     searchShown,
-    rationale
+    rationale,
+    outcome: payload.outcome == null ? 'open' : payload.outcome
   });
   const tags = JSON.stringify([TAG_HEAD, SOURCE_TAGS.reply, SOURCE_TAGS.search, SOURCE_TAGS.rationale]);
 
