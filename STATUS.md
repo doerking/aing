@@ -115,6 +115,14 @@ status: active
 | 4.5 | 全量代谢新架构首跑 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-5 + `node tools/migrate-run.js`：14 步首跑绿 |
 | 4.6 | 旧库归档 + 总验收 | ✅ | `spec/SPEC-4.0-数据迁移与总验收.md` | test-4.1 AC-6：旧库 SHA/mtime 不变、报告 archived=true；C0–C21 全绿 |
 
+## 五·补 总验收（2026-11-16 夜）
+
+- **56/56 任务落地**（M0 4 / M1 15 / M2 18 / M3 13 / M4 6；M2 2.7/2.8 占位另计）
+- **41 档 / 247 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
+- **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
+- 交接与取舍：`docs/HANDOFF-2026-11-16.md`
+
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
 首战体检结论（库龄 11 天口径）：守恒比 0 / 回炉单向泄漏 / 存量 hub 垄断（29 实体超 cap，头部 48 度贡献 65% 边）。
