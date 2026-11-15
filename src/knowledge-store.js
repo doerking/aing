@@ -44,6 +44,20 @@ const DDL = [
     status TEXT,
     kespi_snapshot REAL
   )`,
+  `CREATE TABLE IF NOT EXISTS compressed_seeds (
+    entity_id TEXT PRIMARY KEY,
+    content_hash TEXT,
+    last_access_at DATETIME,
+    active INTEGER DEFAULT 1,
+    compressed_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS kespi_scores (
+    entity_id TEXT PRIMARY KEY,
+    kq REAL, kg REAL, ka REAL, km REAL,
+    kd REAL, kc REAL, kr REAL, kb REAL,
+    overall REAL,
+    computed_at DATETIME
+  )`,
   `CREATE TABLE IF NOT EXISTS entity_vectors (
     entity_id TEXT PRIMARY KEY,
     dim INTEGER,
