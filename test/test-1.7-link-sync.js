@@ -72,5 +72,5 @@ const rows = (sql) => { const s = store._getDb().prepare(sql); const out = []; w
     JSON.stringify(la));
 
   console.log(`${pass}/${pass + fail} 绿`);
-  process.exit(fail ? 1 : 0);
+  process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
