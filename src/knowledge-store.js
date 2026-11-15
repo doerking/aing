@@ -83,6 +83,19 @@ const DDL = [
     reversed_at DATETIME,
     created_at DATETIME
   )`,
+  `CREATE TABLE IF NOT EXISTS genes (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    score REAL DEFAULT 0.5,
+    uses INTEGER DEFAULT 0,
+    wins INTEGER DEFAULT 0,
+    failures INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    lineage TEXT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    archived_at DATETIME
+  )`
 ];
 
 let SQL = null;      // sql.js 模块
