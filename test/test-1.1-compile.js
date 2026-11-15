@@ -51,7 +51,7 @@ catch (e) {
     fs.writeFileSync(path.join(rawDir, 'sub', 'f2.md'), '# F2 无声明');
     // 同声明 id 的第二档 → 只入一行
     fs.writeFileSync(path.join(rawDir, 'f1b.md'), '---\nid: ent-declared\n---\nF1B 同 id');
-    const stats = await compile.compile(rawDir);
+    const stats = await compile.compile(rawDir, store);
     const row = store.getEntity('ent-declared');
     assert(row != null, '声明 id 实体应入库');
     const db = store._getDb();
@@ -67,7 +67,7 @@ catch (e) {
     fs.mkdirSync(raw2, { recursive: true });
     fs.writeFileSync(path.join(raw2, 'a.md'),
       '---\nid: ent-full\ntype: Concept\nname: 全列实体\ntags: [x:9, y]\nstatus: active\nconfidence: 0.9\n---\n正文内容');
-    await compile.compile(raw2);
+    await compile.compile(raw2, store);
     const e = store.getEntity('ent-full');
     assert(e != null, 'ent-full 应入库');
     assert(e.type === 'Concept', 'type 应为 Concept');
@@ -97,7 +97,7 @@ catch (e) {
             VALUES ('ent-changed', '旧内容', 'active', '2020-01-01 00:00:00', '2020-01-01 00:00:00', '2021-01-01 00:00:00')`);
     store._persist();
 
-    const s1 = await compile.compile(raw4);
+    const s1 = await compile.compile(raw4, store);
     assert(s1.created === 0, '既有实体第二趟应 created=0');
     assert(s1.updated === 1, '内容变了的实体应 updated=1');
     const sameRow = store.getEntity('ent-same');
@@ -108,14 +108,14 @@ catch (e) {
 
     // 第二趟：全部 no-op
     const before = store.getEntity('ent-changed').updated_at;
-    const s2 = await compile.compile(raw4);
+    const s2 = await compile.compile(raw4, store);
     assert(s2.created === 0 && s2.updated === 0, '第二趟应全 no-op');
     const db2 = store._getDb();
     const stmt2 = db2.prepare('SELECT COUNT(*) AS n FROM entities');
     stmt2.step();
     const nAfter1 = stmt2.getAsObject().n;
     stmt2.free();
-    await compile.compile(raw4);
+    await compile.compile(raw4, store);
     const stmt3 = store._getDb().prepare('SELECT COUNT(*) AS n FROM entities');
     stmt3.step();
     const nAfter3 = stmt3.getAsObject().n;
@@ -129,15 +129,15 @@ catch (e) {
     fs.mkdirSync(raw5, { recursive: true });
     // 实体内容不变 → last_access 不动
     fs.writeFileSync(path.join(raw5, 'p.md'), '---\nid: ent-la\n---\nLA 正文');
-    await compile.compile(raw5);
+    await compile.compile(raw5, store);
     const db = store._getDb();
     db.run("UPDATE entities SET last_access = '2021-06-01 00:00:00' WHERE id = 'ent-la'");
     store._persist();
-    await compile.compile(raw5);
+    await compile.compile(raw5, store);
     assert(String(store.getEntity('ent-la').last_access) === '2021-06-01 00:00:00', 'no-op 路径 last_access 应不变');
     // 实体内容更新 → last_access 仍不动
     fs.writeFileSync(path.join(raw5, 'p.md'), '---\nid: ent-la\n---\nLA 正文改');
-    await compile.compile(raw5);
+    await compile.compile(raw5, store);
     assert(String(store.getEntity('ent-la').last_access) === '2021-06-01 00:00:00', '更新路径 last_access 也应不变（SPEC-0.4 AC-6 回归）');
   });
 
@@ -149,7 +149,7 @@ catch (e) {
     db.run(`INSERT INTO entities (id, content, status, created_at, updated_at, invalid_at)
             VALUES ('ent-retired', '退役正文', 'retired', '2020-01-01 00:00:00', '2020-01-01 00:00:00', '2022-01-01 00:00:00')`);
     store._persist();
-    await compile.compile(raw6);
+    await compile.compile(raw6, store);
     const row = store.getEntity('ent-retired');
     assert(String(row.invalid_at) === '2022-01-01 00:00:00', 'compile 跑后 invalid_at 应不变（不复活）');
   });

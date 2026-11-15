@@ -17,8 +17,8 @@ status: active
 |---|---|
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
-| 门禁 | `node verify-deploy.js` → C0–C3 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 6 档 / 35 条断言全绿 |
+| 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
+| 测试 | `npm test` → 10 档 / 61 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **51 任务**（M0=4(+3 附) / M1=15 / M2=13 / M3=13 / M4=6）|
 
@@ -39,12 +39,12 @@ status: active
 
 **M0 拍板**：2026-11-16 owner 授权 Hana 揸 fit 布置，四份 spec 视为拍板通过，开 M1。
 
-## 二、M1 核心代谢双铰链化（3/14）
+## 二、M1 核心代谢双铰链化（7/15）
 
 | # | 任务 | 状态 | spec | test |
 |---|---|---|---|---|
 | 1.1 | 骨架 + knowledge-store（全列 schema）| ✅ | 0.1 | test-1.1-dataschema 6/6 |
-| 1.2 | failing test：双铰链拓扑锁行为 | ⬜ | — | 待建 `test/test-1.2-helix-topology.js` |
+| 1.2 | failing test：双铰链拓扑锁行为 | ✅ | 1.14 | test-1.14 AC-2/AC-3（螺旋 + 状态穿透）|
 | 1.3 | compile 双铰链化 | ✅ | 1.1 | test-1.1-compile 6/6 |
 | 1.4 | import 入库（双链写入）| ⬜ | — | — |
 | 1.5 | distill 蒸馏（复制链）| ⬜ | — | — |
@@ -55,9 +55,9 @@ status: active
 | 1.10 | pollinate 授粉 | ⬜ | — | — |
 | 1.11 | compress 换锚 | ⬜ | — | — |
 | 1.12 | kespi 八维 | ⬜ | — | — |
-| 1.13 | prune 逻辑退役 | ⬜ | — | — |
-| 1.14 | **meko-orchestrator 编排（关键路径尾）** | ⬜ | — | — |
-| **1.15** | **场域编排骨架（registerStep/runCycle + 组件契约 + arch-lint C5）** | ⬜ | **0.6** | 全部组件改契约注册，唔直连 store |
+| 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 6/6 |
+| 1.14 | **meko-orchestrator 编排（关键路径尾）** | ✅ | 1.14 | test-1.14-orchestrator 6/6 |
+| **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |
 
 ## 三、M2 meko 四顶职责（4/8 已落地 + 3 新增健康修复）
 
@@ -130,4 +130,4 @@ status: active
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
-| **D8** | 现有 8 个 src 模块均直连 store | SPEC-0.6 铁律：M1 收口前全部改契约注册（任务 1.15）|
+| ~~D8~~ | ~~8 个模块直连 store~~ | **已清**：compile/tri-axis-gate 改注入；arch-lint C5 守（2026-11-16）|

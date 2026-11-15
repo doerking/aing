@@ -79,7 +79,7 @@ catch (e) {
   await check('AC-6 命中写回：检索命中刷新last_access；compile不碰', () => {
     store.insertEntity({ id: 'hit1', name: 'n', type: 'Concept', content: 'c', tags: '[]', status: 'active', confidence: 0.5 });
     const before = store.getEntity('hit1').last_access;
-    gate.touchLastAccess('hit1'); // 检索命中写回
+    gate.touchLastAccess(store, 'hit1'); // 检索命中写回
     const after = store.getEntity('hit1').last_access;
     assert(after && after !== before, '命中后 last_access 应更新');
     // compile 不碰：无 compile API 可调，此 AC 由调用方契约保证（这里只锁 touch 存在且生效）

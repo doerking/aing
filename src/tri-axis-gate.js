@@ -32,10 +32,12 @@ function shouldEnterRetrieval(edge) {
 }
 
 // AC-6 命中写回：检索命中刷新 last_access。compile 永不调用本函数。
-function touchLastAccess(entityId) {
-  const store = require('./knowledge-store.js');
-  const db = store._getDb ? store._getDb() : null;
-  if (!db) throw new Error('touchLastAccess 需 store 暴露 _getDb()（AC-6 命中写回依赖）');
+// store 由调用方注入（SPEC-1.15 契约；本模块唔直连 knowledge-store）。
+function touchLastAccess(store, entityId) {
+  if (!store || typeof store._getDb !== 'function') {
+    throw new Error('touchLastAccess 需要 store 注入（SPEC-1.15 契约）');
+  }
+  const db = store._getDb();
   const stmt = db.prepare('UPDATE entities SET last_access = CURRENT_TIMESTAMP WHERE id = ?');
   stmt.run([entityId]);
   stmt.free();

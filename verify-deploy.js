@@ -66,6 +66,13 @@ gate('C4', '全仓 md Tolaria 9 段格式', () => {
   return { ok: r.code === 0, detail: last };
 });
 
+// C5 组件唔直连 store（SPEC-1.15 §四）
+gate('C5', 'arch-lint：组件唔直连 knowledge-store', () => {
+  const r = runNode('tools/arch-lint.js');
+  const last = r.out.trim().split('\n').slice(-1)[0];
+  return { ok: r.code === 0, detail: last };
+});
+
 const failed = results.filter(r => !r.ok);
 console.log('-----');
 if (only) {
