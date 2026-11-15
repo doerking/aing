@@ -13,6 +13,7 @@ const DEFAULT_STEPS = [
   'sprout',
   'pollinate',
   'hub-trim',
+  'field-maintain',
   'compress',
   'recycle',
   'kespi',
@@ -34,6 +35,7 @@ const REGISTRY = {
   recycle:     { strand: 'raw',   band: 'field',      reads: ['compressed_seeds'],    writes: ['entities'],            reversible: true,  module: './recycle.js',     fn: 'recycleStep' },
   kespi:       { strand: 'cross', band: 'background', reads: ['entities', 'links'],   writes: ['kespi_scores'],        reversible: true,  module: './kespi.js',       fn: 'kespiStep' },
   prune:       { strand: 'wiki',  band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './prune.js',       fn: 'pruneCycle' },
+  'field-maintain': { strand: 'cross', band: 'field', reads: ['entities','links'], writes: ['entities','links','field_actions'], reversible: true, module: './meko-field.js', fn: 'maintainStep' },
   conservation:{ strand: 'cross', band: 'background', reads: ['links', 'entities'],   writes: ['meko_cycles'],         reversible: true,  module: './conservation.js', fn: 'conservationStep' }
 };
 

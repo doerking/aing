@@ -108,8 +108,25 @@ pruned INTEGER,                 -- 本窗口退场数
 conservation_ratio REAL         -- growth/pruned（pruned=0 时见 SPEC-2.10 §2.1）
 ```
 
-修订 F（2026-11-16）：`links` 补 `invalid_reason TEXT`——存量 hub 裁剪须可辨识、可撤销（2.11），
+修订 F（2026-11-16）：`links` 与 `entities` 各补 `invalid_reason TEXT`——退役须可辨识、可撤销（2.11/2.12），
 唔可以靠猜边点解退役；原因码只写枚举值（`hub-trim` / `admission` / `prune`）。
+
+修订 G（2026-11-16）：另立 `field_actions` 动作账（2.12/2.13）——每次场域动作留前像/后像与周期号，
+`reversed_at` 非空即已撤销；账本只增，唔物理删（T1 复核与 I3 全可逆的凭据）。
+
+```sql
+CREATE TABLE IF NOT EXISTS field_actions (
+  id TEXT PRIMARY KEY,
+  action TEXT,                  -- rebond/unwind/reconcile/demote/promote
+  target TEXT,
+  before_json TEXT,
+  after_json TEXT,
+  cycle_id TEXT,
+  reversible INTEGER DEFAULT 1,
+  reversed_at DATETIME,
+  created_at DATETIME
+);
+```
 
 ## 三、Acceptance Criteria（可客观检验，非主观词）
 
