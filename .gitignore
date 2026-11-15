@@ -1,0 +1,5 @@
+node_modules/
+.temp/
+*.db
+*.db-journal
+yard/

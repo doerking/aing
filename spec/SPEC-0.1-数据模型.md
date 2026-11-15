@@ -1,0 +1,101 @@
+---
+tags: [aing-v2, spec, 数据模型, M0, spec:9, must-read:8, dna:7]
+description: M0.1 数据模型 spec——entities/links/meko_cycles 三表 DDL，三轴列内建，幂等建表，带可客观检验 acceptance criteria
+date: 2026-11-13
+status: draft（待 owner review）
+owner: ring
+upstream: [ARCHITECTURE-全架构重写图纸-DNA双铰链-从零实现-2026-11-13.md §三]
+---
+
+# SPEC-0.1 · 数据模型（aing-v2 knowledge.db）
+
+> M0 纯设计零码。本 spec 是 source of truth，code 是 spec 结果（spec-first，工程规范 §三）。
+> 三轴列（强度 tolaria_strength/strength · 时效 last_access/invalid_at · 类型 type/relation）**建表时内建**，不再走旧库 ALTER 加列轨道。
+
+---
+
+## 一、目标
+
+在 `aing-v2/knowledge.db` 从零建三张表（entities / links / meko_cycles），schema 按 DNA 双铰链 + 三轴判定设计，**直接建全列**（图纸 §三），不依赖旧库迁移加列。
+
+## 二、Schema（DDL，spec 即契约）
+
+### 2.1 entities 表
+```sql
+CREATE TABLE IF NOT EXISTS entities (
+  id TEXT PRIMARY KEY,
+  name TEXT,
+  type TEXT,                            -- 类型专一轴：Concept/Conversation/Todo/...
+  content TEXT,
+  tags TEXT,                            -- JSON 数组，9 段 Tolaria 标签
+  status TEXT,                          -- active/pending-distillation/retired
+  confidence REAL,
+  tolaria_strength INTEGER DEFAULT 5,   -- 强度轴：实体自身 9 段（9免压缩/8核心/7重要/5默认/≤3弱）
+  last_access DATETIME,                 -- 时效轴：检索命中写，compile 永不碰
+  created_at DATETIME,
+  updated_at DATETIME,
+  invalid_at DATETIME                   -- 逻辑退役戳（可逆，非物理删）
+);
+```
+
+### 2.2 links 表
+```sql
+CREATE TABLE IF NOT EXISTS links (
+  source_id TEXT,
+  target_id TEXT,
+  relation TEXT,                        -- 类型专一轴：边类型
+  confidence REAL,
+  strength INTEGER DEFAULT 5,           -- 强度轴：边 9 段（confidence→段位：0.8+→8 / 0.6-0.79→7 / 0.4-0.59→5 / 0.3-0.39→3）
+  invalid_at DATETIME,                  -- 时效轴：逻辑退役
+  created_at DATETIME,
+  PRIMARY KEY (source_id, target_id)
+);
+```
+
+### 2.3 meko_cycles 表（新增，旧库无）
+```sql
+CREATE TABLE IF NOT EXISTS meko_cycles (
+  id TEXT PRIMARY KEY,
+  cycle_type TEXT,              -- 解旋/复制/再螺旋/互校
+  helix_strand TEXT,            -- raw/wiki/both
+  scheduled_at DATETIME,        -- 时界确定性时延上界
+  executed_at DATETIME,
+  status TEXT,                  -- scheduled/executed/failed
+  kespi_snapshot REAL           -- 通感一体：编排同时探测拓扑健康
+);
+```
+
+## 三、Acceptance Criteria（可客观检验，非主观词）
+
+| # | 判据 | 检验方式（隔离假院真跑） |
+|---|---|---|
+| AC-1 | 三表建成 | 隔离假院跑建表 → `sqlite_master` 查得 `entities`/`links`/`meko_cycles` 三行 |
+| AC-2 | 幂等复跑不炸 | 同假院连跑建表 2 趟 → 第 2 趟 exit 0、无异常、表结构与第 1 趟逐列一致 |
+| AC-3 | 三轴列在位 | `PRAGMA table_info(entities)` 含 `tolaria_strength`/`last_access`/`invalid_at`；`PRAGMA table_info(links)` 含 `strength`/`invalid_at` |
+| AC-4 | 默认值正确 | 插一行 entities 不传 `tolaria_strength` → 读回 = 5；插一行 links 不传 `strength` → 读回 = 5 |
+| AC-5 | 主键约束生效 | links 插 (A,B) 后再插 (A,B) → 抛约束冲突（PRIMARY KEY 生效） |
+| AC-6 | FK 完整性（对齐 C10e） | `PRAGMA foreign_keys` 落盘后仍 ON；links.source_id 指向不存在实体时按门禁口径处理 |
+
+## 四、Non-Goals（明确不做）
+
+- **不做旧库迁移**——迁移是 M4 的事（任务 4.3/4.4），本 spec 只管新库从零建。
+- **不做 ALTER 加列兼容**——旧库走 ALTER 是历史包袱，新库直接建全列。
+- **不做查询/索引优化**——索引与查询属 M1（任务 1.1 实现 + 1.6 三轴 link），本 spec 只锁表结构。
+- **不碰旧 aing/**——旧库重写期冻结只读，本 spec 不动它。
+
+## 五、决策默认值（内置，owner 可改）
+
+| 项 | 默认值 | 理由 |
+|---|---|---|
+| strength→段位映射 | 0.8+→8 / 0.6-0.79→7 / 0.4-0.59→5 / 0.3-0.39→3 | 承图纸 §三.3.2，confidence 连续值→9段离散 |
+| tolaria_strength 默认 | 5 | 中段默认，弱实体不误抬 |
+| invalid_at 语义 | NULL=有效，非 NULL=逻辑退役 | 可逆（物理 DELETE 改打戳） |
+
+## 六、依赖
+
+- **被依赖**：0.2 meko 接口 spec、0.3 时界协议 spec、0.4 三轴判定 spec、M1 任务 1.1（knowledge-store.js 实现）
+- **上游**：图纸 §三（数据模型）+ 全景图 §三（加列哲学，此处改为建全列）
+
+---
+
+> **M0 门**：四份 spec（0.1/0.2/0.3/0.4）齐 + owner 拍板 → 开 M1 failing test 先行。
