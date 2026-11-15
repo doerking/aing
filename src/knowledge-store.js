@@ -129,6 +129,14 @@ const DDL = [
     key TEXT PRIMARY KEY,
     value_json TEXT,
     updated_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT NOT NULL,
+    type TEXT NOT NULL,
+    target TEXT,
+    payload_json TEXT,
+    created_at DATETIME
   )`
 ];
 
