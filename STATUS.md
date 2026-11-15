@@ -20,7 +20,9 @@ status: active
 | 门禁 | `node verify-deploy.js` → C0–C3 ALL GREEN（2026-11-16）|
 | 测试 | `npm test` → 6 档 / 35 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **40 任务**（M0=4 / M1=14 / M2=8→11 / M3=10 / M4=6）|
+| 任务总数口径 | **48 任务**（M0=4(+2 附) / M1=15 / M2=13 / M3=10 / M4=6）|
+
+> **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑星闪场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 
 ## 一、M0 全架构 spec（4/4）
 
@@ -31,6 +33,7 @@ status: active
 | 0.3 | 星闪调度协议 | ✅ | `spec/SPEC-0.3-星闪调度协议.md` | test-2.4-starlink 5/5 |
 | 0.4 | 三轴判定 | ✅ | `spec/SPEC-0.4-三轴判定.md` | test-1.6-triaxis-gate 8/8 |
 | 附 | 内外蜂群接线 | ✅ | `spec/SPEC-0.5-内外蜂群接线与部署重设.md` | 文档面 |
+| **0.6** | **meko 贯彻全架构 × 中间三段星闪场域** | ✅ | `spec/SPEC-0.6-meko贯彻全架构-中间三段星闪场域.md` | doc-tags-lint 6/6 + C4 |
 
 **M0 拍板**：2026-11-16 owner 授权 Hana 揸 fit 布置，四份 spec 视为拍板通过，开 M1。
 
@@ -52,6 +55,7 @@ status: active
 | 1.12 | kespi 八维 | ⬜ | — | — |
 | 1.13 | prune 逻辑退役 | ⬜ | — | — |
 | 1.14 | **meko-orchestrator 编排（关键路径尾）** | ⬜ | — | — |
+| **1.15** | **场域编排骨架（registerStep/runCycle + 组件契约 + arch-lint C5）** | ⬜ | **0.6** | 全部组件改契约注册，唔直连 store |
 
 ## 三、M2 meko 四顶职责（4/8 已落地 + 3 新增健康修复）
 
@@ -68,6 +72,8 @@ status: active
 | **2.9** | **回炉接线 P6（recycle-seeds 入 STEPS + 门禁断言）** | ⬜ | 待写 | **首战共识 critical** |
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ⬜ | 待写 | **首战共识 critical** |
 | **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ⬜ | 待写 | **首战共识 major** |
+| **2.12** | **场域维护动作（rebond/unwind/reconcile/demote，全可逆）** | ⬜ | **0.6** | 场域带 6/5/4 内跑，I1/I3 断言 |
+| **2.13** | **场域提升动作（promote/sprout/pollinate，≥2 证据）** | ⬜ | **0.6**、2.12 | I2 断言 + 守恒闸 I5 |
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
@@ -118,3 +124,5 @@ status: active
 | D4 | 轴 3 行号 prune.js:190 vs :245 | minor，随 1.13 落地一并核 |
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
+| **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
+| **D8** | 现有 8 个 src 模块均直连 store | SPEC-0.6 铁律：M1 收口前全部改契约注册（任务 1.15）|

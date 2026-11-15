@@ -21,6 +21,8 @@ owner: ring
 | 0.2 | [meko四顶接口](./SPEC-0.2-meko四顶接口.md) | HydrogenBond/HistoneLayer/StarlinkOrchestrator/HelixCrosscheck 签名 | 0.1 | draft |
 | 0.3 | [星闪调度协议](./SPEC-0.3-星闪调度协议.md) | SLB/SLE 双模 + G 节点 + T_bound 算法 | 0.1, 0.2 | draft |
 | 0.4 | [三轴判定](./SPEC-0.4-三轴判定.md) | strength≥7 + 配对矩阵 + invalid_at 真值表 | 0.1 | draft |
+| 0.5 | [内外蜂群接线](./SPEC-0.5-内外蜂群接线与部署重设.md) | 两套不桥接 + 内蜂群自洽部署 | 0.1,0.2 | draft |
+| **0.6** | **[meko 贯彻全架构 × 中间三段星闪场域](./SPEC-0.6-meko贯彻全架构-中间三段星闪场域.md)** | 组件契约 + 三带 + 场域动作/不变量 + Tolaria 9 段 | 0.1-0.4 | **拍板（2026-11-16 owner）** |
 
 ## 二、每份 spec 的结构契约（工程规范 §三 spec quality = output quality）
 

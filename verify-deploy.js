@@ -59,6 +59,13 @@ gate('C3', 'schema 契约（单档真跑 test-1.1-dataschema.js）', () => {
   return { ok: r.code === 0, detail: r.code === 0 ? '三表 + 三轴列 + 幂等 绿' : 'schema 断言红' };
 });
 
+// C4 文档 Tolaria 9 段（SPEC-0.6 §六）
+gate('C4', '全仓 md Tolaria 9 段格式', () => {
+  const r = runNode('tools/doc-tags-lint.js');
+  const last = r.out.trim().split('\n').slice(-1)[0];
+  return { ok: r.code === 0, detail: last };
+});
+
 const failed = results.filter(r => !r.ok);
 console.log('-----');
 if (only) {
