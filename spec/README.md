@@ -33,6 +33,7 @@ owner: ring
 | 1.1 | [compile 编译步](./SPEC-1.1-compile编译步.md) | raw 解旋入 entities，幂等，不碰 last_access | 实现绿 |
 | 1.2 | [link 同步步](./SPEC-1.2-link同步步.md) | 三轴夹出建边 + invalid_at 退役 | 实现绿 |
 | 1.4 | [import 双链写入](./SPEC-1.4-import双链写入.md) | raw→wiki 镜像 + 氢键，保差分，幂等 | 实现绿 |
+| 1.5 | [distill 复制链保真](./SPEC-1.5-distill复制链保真.md) | pending→active，原文逐字保真入镜像 | 实现绿 |
 | 1.13 | [prune 逻辑退役](./SPEC-1.13-prune逻辑退役.md) | 三条件 AND + 可逆退役 | 实现绿 |
 | 1.14 | [meko 螺旋编排](./SPEC-1.14-meko编排螺旋推进.md) | raw→cross→wiki 逐轮，meko_cycles | 实现绿 |
 | 1.15 | [场域骨架 + 组件契约门禁](./SPEC-1.15-场域骨架与组件契约门禁.md) | 契约注册 + C5 arch-lint | 实现绿 |
