@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 17 档 / 107 条断言全绿 |
+| 测试 | `npm test` → 18 档 / 114 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
 
@@ -41,7 +41,7 @@ status: active
 
 **M0 拍板**：2026-11-16 owner 授权 Hana 揸 fit 布置，四份 spec 视为拍板通过，开 M1。
 
-## 二、M1 核心代谢双铰链化（14/15）
+## 二、M1 核心代谢双铰链化（15/15 ✅ M1 完成）
 
 | # | 任务 | 状态 | spec | test |
 |---|---|---|---|---|
@@ -56,7 +56,7 @@ status: active
 | 1.9 | sprout 发芽（含 P3 sproutFloor）| ✅ | 1.9 | test-1.9-sprout 6/6 |
 | 1.10 | pollinate 授粉 | ✅ | 1.10 | test-1.10-pollinate 6/6 |
 | 1.11 | compress 换锚 | ✅ | 1.11 | test-1.11-compress 7/7 |
-| 1.12 | kespi 八维 | ⬜ | — | — |
+| 1.12 | kespi 八维 | ✅ | 1.12 | test-1.12-kespi 7/7 |
 | 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 6/6 |
 | 1.14 | **meko-orchestrator 编排（关键路径尾）** | ✅ | 1.14 | test-1.14-orchestrator 6/6 |
 | **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |

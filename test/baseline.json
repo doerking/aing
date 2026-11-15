@@ -4,6 +4,7 @@
   "test-1.1-dataschema.js": 6,
   "test-1.10-pollinate.js": 6,
   "test-1.11-compress.js": 7,
+  "test-1.12-kespi.js": 7,
   "test-1.13-prune.js": 6,
   "test-1.14-orchestrator.js": 6,
   "test-1.15-field.js": 8,
