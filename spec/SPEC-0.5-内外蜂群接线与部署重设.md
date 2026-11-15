@@ -40,7 +40,7 @@ upstream: [SWARM-设定-内外两套-备查汇总-2026-11-09, INVENTORY-aing完�
 | 验收 | verify 门禁 | aing-v2 verify-deploy ALL GREEN 面 |
 | 缺口修复 | gaps 派单 | 新 KESPI gaps + meko_cycles failed |
 | 自我提升 | selfImprovement 提案 | 四门回滚链 + 成长层 |
-| 对抗审查 | 照妖揾计划缺陷 | 每期 adversarial challenge（工程规范 R3） |
+| 对抗审查 | 独立挑刺，揾计划缺陷 | 每期 adversarial challenge（工程规范 R3） |
 
 ### 2.3 自洽部署要点（宪法③核心）
 
