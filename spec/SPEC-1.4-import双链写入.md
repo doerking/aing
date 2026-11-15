@@ -61,7 +61,7 @@ upstream: [SPEC-0.1, SPEC-0.6 §五, SPEC-1.2, SPEC-1.15, INVENTORY A 行 import
 - 不做差异复校/回填（2.12 reconcile）
 - 不做 wiki→raw 反向镜像（方向固定 raw→wiki）
 - 不做场的强度升降（2.12/2.13）
-- 不动旧 `G:\DPD\aing`
+- 不动旧 aing 库（冻结只读）
 
 ## 五、契约
 
