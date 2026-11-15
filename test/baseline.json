@@ -16,5 +16,6 @@
   "test-1.8-vector.js": 7,
   "test-1.9-sprout.js": 6,
   "test-2.4-starlink.js": 5,
-  "test-2.8-meko-four.js": 5
+  "test-2.8-meko-four.js": 5,
+  "test-2.9-recycle.js": 6
 }

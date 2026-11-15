@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS compressed_seeds (
   content_hash TEXT,
   last_access_at DATETIME,
   active INTEGER DEFAULT 1,      -- 1=已压缩为籽；0=被重新访问，已解压
+  recycled INTEGER DEFAULT 0,    -- 1=已回炉（每粒只回炉一次，修订 D）
   compressed_at DATETIME
 );
 CREATE TABLE IF NOT EXISTS kespi_scores (
