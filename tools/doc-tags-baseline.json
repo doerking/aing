@@ -3,6 +3,7 @@
     "AGENT.md",
     "README.md",
     "STATUS.md",
+    "docs/HANDOFF-2026-11-16.md",
     "spec/README.md",
     "spec/SPEC-0.1-数据模型.md",
     "spec/SPEC-0.2-meko四顶接口.md",
@@ -36,12 +37,17 @@
     "spec/SPEC-2.18-外派蜂群三分编组.md",
     "spec/SPEC-2.9-回炉接线.md",
     "spec/SPEC-3.1-意识层闭环.md",
+    "spec/SPEC-3.10-门禁C20-C21适配.md",
     "spec/SPEC-3.11-memo用户面.md",
     "spec/SPEC-3.12-预案器predict.md",
     "spec/SPEC-3.13-三源入库闭环.md",
     "spec/SPEC-3.2-意识层控制面.md",
     "spec/SPEC-3.4-离散旋钮单源.md",
     "spec/SPEC-3.5-入库主线.md",
-    "spec/SPEC-3.6-身份闸与标签闸.md"
+    "spec/SPEC-3.6-身份闸与标签闸.md",
+    "spec/SPEC-3.7-门禁C0-C9适配.md",
+    "spec/SPEC-3.8-门禁C10适配.md",
+    "spec/SPEC-3.9-门禁C11-C19适配.md",
+    "spec/SPEC-4.0-数据迁移与总验收.md"
   ]
 }
