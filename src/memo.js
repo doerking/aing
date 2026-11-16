@@ -144,6 +144,15 @@ async function buildMemo(store, opts = {}) {
   let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
   if (systemLine.length > SYSTEM_LINE_MAX) systemLine = systemLine.slice(0, SYSTEM_LINE_MAX - 1) + '…';
 
+  // 外派派单卡（SPEC-3.15 挂载）：传了就挂，没传就明说未接——不摆空位、不假装已派
+  const swarm = opts.swarmCard && typeof opts.swarmCard === 'object' && opts.swarmCard.card
+    ? {
+      attached: true,
+      summary: `外派：${opts.swarmCard.ok ? '可派' : '不得派出'} · 模式 ${opts.swarmCard.mode} · 波次 ${(opts.swarmCard.waves || []).map(w => w.join('-')).join(' → ') || '未定'}`,
+      card: String(opts.swarmCard.card)
+    }
+    : { attached: false, line: '外派：本批未接入（宿主侧派单口）' };
+
   return {
     user: {
       recent,
@@ -153,6 +162,7 @@ async function buildMemo(store, opts = {}) {
       coldStart: convs.length === 0,
       maintenance
     },
+    swarm,
     systemLine,
     diagnostics: { vector },
     agentTodos: []

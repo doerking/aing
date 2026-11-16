@@ -51,6 +51,15 @@ async function cmdOrchestrate(dbPath, opts = {}) {
   });
 }
 
+// SPEC-3.15：文件读取只在 CLI 层做，卡本体保持纯函数
+function cmdDispatchCard(opts = {}) {
+  const fs = require('fs');
+  const { buildDispatchCard } = require('./dispatch-card.js');
+  const ticket = opts.file ? JSON.parse(fs.readFileSync(path.resolve(String(opts.file)), 'utf8')) : {};
+  const snapshot = opts.snapshot ? JSON.parse(fs.readFileSync(path.resolve(String(opts.snapshot)), 'utf8')) : undefined;
+  return buildDispatchCard(ticket, { snapshot });
+}
+
 function humanMemo(m) {
   const u = m.user || {};
   const L = ['—— 用户面 ——'];
@@ -59,6 +68,8 @@ function humanMemo(m) {
   if ((u.openLoops || []).length) L.push('未闭环：' + u.openLoops.map(x => x.text).join(' / '));
   if ((u.patterns || []).length) L.push('模式：' + u.patterns.map(p => `${p.pattern}×${p.hits}`).join(' / '));
   if ((u.plans || []).length) L.push('预案：' + u.plans.map(p => p.hypothesis).join(' | '));
+  if (m.swarm && m.swarm.attached) L.push(m.swarm.summary + '（卡已挂载）');
+  else if (m.swarm && m.swarm.line) L.push(m.swarm.line);
   L.push('系统：' + (m.systemLine || ''));
   return L.join('\n');
 }
@@ -78,7 +89,8 @@ function parse(argv) {
 function usage() {
   console.log([
     'aing-v2 cli（CLI 开库入口）',
-    '  node src/cli.js memo [--json] [--limit N] [--db <path>]',
+    '  node src/cli.js memo [--json] [--limit N] [--swarm-card <ticket.json>] [--db <path>]',
+    '  node src/cli.js dispatch-card --file <ticket.json> [--snapshot <path>] [--json]',
     '  node src/cli.js ingest --payload <json>',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
@@ -93,9 +105,22 @@ async function main(argv) {
   const dbPath = flags.db || undefined;
   try {
     if (cmd === 'memo') {
-      const out = await cmdMemo(dbPath, { limit: flags.limit ? Number(flags.limit) : undefined });
+      const opts = { limit: flags.limit ? Number(flags.limit) : undefined };
+      if (flags['swarm-card']) {
+        const fs = require('fs');
+        const { buildDispatchCard } = require('./dispatch-card.js');
+        const ticket = JSON.parse(fs.readFileSync(path.resolve(String(flags['swarm-card'])), 'utf8'));
+        const snapshot = flags.snapshot ? JSON.parse(fs.readFileSync(path.resolve(String(flags.snapshot)), 'utf8')) : undefined;
+        opts.swarmCard = buildDispatchCard(ticket, { snapshot });
+      }
+      const out = await cmdMemo(dbPath, opts);
       console.log(flags.json ? JSON.stringify(out, null, 2) : humanMemo(out));
       return 0;
+    }
+    if (cmd === 'dispatch-card') {
+      const out = cmdDispatchCard({ file: flags.file, snapshot: flags.snapshot });
+      console.log(flags.json ? JSON.stringify(out, null, 2) : out.card);
+      return out.ok ? 0 : 3;
     }
     if (cmd === 'ingest') {
       const payload = flags.payload ? JSON.parse(flags.payload) : {};
@@ -136,4 +161,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, humanMemo, usage, main };
+module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, usage, main };
