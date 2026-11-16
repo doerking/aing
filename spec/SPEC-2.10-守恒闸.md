@@ -115,3 +115,14 @@ upstream: [SPEC-0.6 I5, SPEC-0.8 D3/T2, SPEC-1.9, SPEC-1.11, SPEC-1.13, SPEC-2.9
 - 混口径 `ratio` 字段仍在 API 里保留一版给既有消费者，**不再上屏**。
 - 顺序：`健康 / 向量 / 守恒 / 蒸馏债 / 缺口 / 籽 / 场域动作`——超长截断只会削尾部低价值项。
 - 测试：`test/test-3.11c-memo-conservation.js` 5/5（边层上屏、待退上屏、混口径不出门、顺序与长度、只读）。
+
+---
+
+## 修订 D（2026-11-17）：轮账三列与主读数同源
+
+修订 B/C 把主读数与显示统一到边层，但 `meko_cycles` 落盘仍是混口径：`growth` 数边、`pruned` 数实体、`conservation_ratio` 是混比。实测一轮：边层 71:1035，轮账却写 `growth=71 pruned=0 ratio=Inf`——历史读数与当轮判定对不上，反馈差分也跟着吃假数。
+
+- `_writeCycle` 三列改取 `measureConservation().edge`：`growth` = 产边、`pruned` = 退边、`conservation_ratio` = 边层比值（退边为 0 时为合法 `Infinity`）。
+- 实体退场不再冒充 `pruned`；它的存量口径是 `retention` 候选（memo 显示为「待退」）。
+- `test-2.10-conservation` 的 AC-5 随之改为对边层断言（契约变更，断言语义不变）。
+- 测试：`test/test-2.10d-cycle-columns.js` 5/5（growth 取边层、pruned 取边层、ratio 取边层、零退边落 Infinity、轮账可读）。
