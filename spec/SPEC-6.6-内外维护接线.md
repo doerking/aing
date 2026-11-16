@@ -20,7 +20,7 @@ upstream: [SPEC-0.8, SPEC-2.15, SPEC-3.11, SPEC-6.5]
 | 层 | 入口 | 本任务给什么 | 不给什么 |
 |---|---|---|---|
 | 内场 | meko T0/T2 | T0 plan 带 `observation` + `targets`；T2 快照带 `insights` | 不给 T0 写权；不自动按 targets 修边 |
-| 外场 | memo | `user.maintenance` 块 + 系统行「缺口/走势」 | memo 不派单、不改双链、不写表 |
+| 外场 | memo | `user.maintenance` 块 + 系统行「缺口/走势」+ 外派派单卡（外派面挂载于此，随载交付设定） | memo 纯读：不执行派出、不改双链、不写表 |
 | 出口 | `maintenance-report.js` | 一份聚合读数，两处消费 | 不各自重算，避免多套读数 |
 
 **执行边界不变**：targets 只是清单，真修复仍归 2.12/2.13；洞察候选仍走蒸馏门。
@@ -62,7 +62,7 @@ buildReport(store, opts) -> {
 ### 2.4 铁律
 
 - 简报只读：前后库指纹一致。
-- memo 仍纯读；不投事件、不派单。
+- memo 仍纯读；不投事件、不执行派出（外派面只留派单卡与读数）。
 - 不物理删除；不直连 knowledge-store（store 注入，arch-lint C5 守）。
 
 ---
@@ -83,7 +83,7 @@ buildReport(store, opts) -> {
 ## 四、Non-Goals
 
 - 不自动执行 targets 修复（归 2.12/2.13）。
-- 不给 memo 派单或写权；不恢复外场五角色为常驻子 agent。
+- 不给 memo 执行派出或写权；不恢复外场五角色为常驻子 agent。
 - 不改 `focus` 四值语义，不新增代谢步骤。
 - 不做审批流（洞察仍走蒸馏门，非 approval_queue）。
 
