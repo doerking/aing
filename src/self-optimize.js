@@ -210,12 +210,37 @@ async function dispatchTickets(store, opts = {}) {
 function verifyTickets(store, opts = {}) {
   _requireStore(store, 'self-optimize.verifyTickets');
   const db = store._getDb();
-  const tickets = _rows(db, `SELECT * FROM opt_tickets WHERE status = 'dispatched' ORDER BY created_at, id`);
+  const tickets = _rows(db,
+    `SELECT * FROM opt_tickets WHERE status IN ('dispatched', 'proposed') ORDER BY created_at, id`);
   const out = { verified: [], stillOpen: [], rejected: [] };
 
   for (const t of tickets) {
+    const cycleId = opts.cycleId || t.cycle_id || null;
+
+    // 能力叙事工单（6.9）：消费证据 = distill_points 出现该实体；提案单不毕业。
+    if (t.dim === 'cap') {
+      const consumed = _scalar(db, 'SELECT base_id FROM distill_points WHERE base_id = ?', [t.entity_id]);
+      if (consumed && consumed.base_id) {
+        _mark(db, t.id, 'verified', { reason: 'consumed', delta: 1 }, cycleId);
+        out.verified.push({ id: t.id, entity_id: t.entity_id, dim: 'cap', before: null, after: null, delta: 1 });
+      } else if (Number(t.attempts) >= VERIFY_ATTEMPTS) {
+        _mark(db, t.id, 'rejected', { reason: 'no-consumption' }, cycleId);
+        out.rejected.push({ id: t.id, reason: 'no-consumption' });
+      } else {
+        _mark(db, t.id, 'proposed', { reason: 'waiting-consumption' }, cycleId);
+        out.stillOpen.push({ id: t.id, reason: 'waiting-consumption' });
+      }
+      continue;
+    }
+
+    // KESPI 提案单（memo-card）：只出提案，不参与读数复核。
+    if (t.status === 'proposed') {
+      out.stillOpen.push({ id: t.id, reason: 'proposal-only' });
+      continue;
+    }
+
     if (!DIM_RULES[t.dim]) {
-      _mark(db, t.id, 'rejected', { reason: 'unknown-dim' }, opts.cycleId || t.cycle_id);
+      _mark(db, t.id, 'rejected', { reason: 'unknown-dim' }, cycleId);
       out.rejected.push({ id: t.id, reason: 'unknown-dim' });
       continue;
     }
@@ -225,16 +250,18 @@ function verifyTickets(store, opts = {}) {
     try { ev = JSON.parse(t.evidence_json || '{}'); } catch (_) { ev = {}; }
     const before = ev.score == null ? Number(t.score) : Number(ev.score);
     if (after == null) {
+      _mark(db, t.id, 'dispatched', { reason: 'no-score' }, cycleId);
       out.stillOpen.push({ id: t.id, reason: 'no-score' });
       continue;
     }
     if (after > before + 1e-9) {
-      _mark(db, t.id, 'verified', { before, after, delta: Math.round((after - before) * 10000) / 10000 }, opts.cycleId || t.cycle_id);
+      _mark(db, t.id, 'verified', { before, after, delta: Math.round((after - before) * 10000) / 10000 }, cycleId);
       out.verified.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, before, after, delta: after - before });
     } else if (Number(t.attempts) >= VERIFY_ATTEMPTS) {
-      _mark(db, t.id, 'rejected', { reason: 'no-improvement', before, after }, opts.cycleId || t.cycle_id);
+      _mark(db, t.id, 'rejected', { reason: 'no-improvement', before, after }, cycleId);
       out.rejected.push({ id: t.id, reason: 'no-improvement', before, after });
     } else {
+      _mark(db, t.id, 'dispatched', { reason: 'waiting-next-cycle', before, after }, cycleId);
       out.stillOpen.push({ id: t.id, reason: 'waiting-next-cycle', before, after });
     }
   }
@@ -252,6 +279,11 @@ async function graduateToGene(store, opts = {}) {
   const out = { graduated: [], quarantined: [], skipped: [] };
 
   for (const t of tickets) {
+    // 能力提案单（dim='cap'）只作 memo 待办，不毕业成 gene（SPEC-6.9 §2.4）。
+    if (t.dim === 'cap') {
+      out.skipped.push({ id: t.id, entity_id: t.entity_id, reason: 'proposal-only' });
+      continue;
+    }
     const name = `opt:${t.kind}:${t.action}`;
     let ev = {};
     try { ev = JSON.parse(t.evidence_json || '{}'); } catch (_) { ev = {}; }
