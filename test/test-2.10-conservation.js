@@ -69,10 +69,14 @@ const rows = (sql, binds = []) => { const s = store._getDb().prepare(sql); if (b
   await orch.runCycle('守恒', { rounds: 1 });
   const cyc = rows("SELECT * FROM meko_cycles ORDER BY executed_at DESC, rowid DESC LIMIT 1")[0];
   const mm = conservation.measureConservation(store, {});
+  // 修订 D：三列取边层（与主读数同量纲）
+  const edge = mm.edge || mm;
+  const ratioSame = cyc && (cyc.conservation_ratio === edge.ratio ||
+    Number(cyc.conservation_ratio) === Number(edge.ratio));
   ac('AC-5 每轮落盘三列且与计量一致',
     cyc && cyc.growth != null && cyc.pruned != null && cyc.conservation_ratio != null &&
-    Number(cyc.growth) === mm.growth && Number(cyc.conservation_ratio) === mm.ratio,
-    JSON.stringify({ cyc, mm }));
+    Number(cyc.growth) === edge.growth && Number(cyc.pruned) === edge.pruned && ratioSame,
+    JSON.stringify({ cyc, edge }));
 
   const before = { e: rows('SELECT COUNT(*) AS n FROM entities')[0].n, l: rows('SELECT COUNT(*) AS n FROM links')[0].n };
   conservation.measureConservation(store, {});
