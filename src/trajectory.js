@@ -5,6 +5,8 @@
 // 本件先接两条写入链：会话（6.1 六段 / 3.13 三源）与代谢轮；episode/rollout 留后续。
 // 铁律：不改实体正文、不碰 last_access；轨迹只追加（同 id 跳过）；store 由调用方注入。
 
+const { parseBody, readableTopic } = require('./conv-text.js');
+
 function _rows(db, sql, binds = []) {
   const s = db.prepare(sql);
   if (binds.length) s.bind(binds);
@@ -34,7 +36,7 @@ function _body(entity) {
 function buildSessionTrajectory(entity) {
   if (!entity || !entity.id) return null;
   const b = _body(entity);
-  const route = [b.topic || entity.name || entity.id];
+  const route = [readableTopic(entity.name, b) || entity.id];
   const isNarrative = b.format === 'capability-narrative-v1' || Array.isArray(b.turns);
 
   if (isNarrative) {
@@ -120,7 +122,7 @@ function buildMarkdownTrajectory(entity) {
   return {
     id: 'traj-' + entity.id,
     task_type: 'session',
-    route: [entity.name || title || entity.id],
+    route: [readableTopic(entity.name, parseBody(entity)) || title || entity.id],
     tools: [],
     step_sequence: sections.length ? sections : ['正文'],
     success: 1,

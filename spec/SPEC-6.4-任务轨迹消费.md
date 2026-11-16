@@ -137,3 +137,14 @@ upstream: [SPEC-3.13, SPEC-6.1, 旧院 trajectory-store.js, docs/Engineering/CON
 - 新增 `logFromLineage(store, rows)`：旧院代谢决策因果链 → 每步一条。`outcome === 'success'` → `success=1 / score_hard=1`；`duration_ms ← evidence.durationMs|duration`；evidence 保留 `action/target/reason/alternatives/causalChain`；`source='metabolism-decision-lineage'`；确定性 id `metabolism-<step>-<timestamp>`，缺 `step` 或重复 id 计入 `skipped`。
 - 测试：`test/test-6.4c-trajectory-imports.js` 6/6（映射、幂等、缺 step 跳过、失败判定、stats/list 可见、铁律）。
 - 与旧院差异表「四条链」一行随本修订更新为：episode 与 metabolism 因果链已接；rollout 无 v2 消费方暂不接；tri-path 随缺口 4 裁定不接（不空转接一条没生产者的链）。
+
+---
+
+## 修订 B（2026-11-17）：轨迹 route 用可读话题
+
+`route` 会被预案、派单卡、复盘当「这条轨迹叫什么」直接显示。markdown 会话的 `name` 是时间戳，落进 route 等于没名字。
+
+- 两条会话链（`buildSessionTrajectory` JSON 形状 / `buildMarkdownTrajectory` markdown 形状）的 route 统一走 `conv-text.readableTopic`，与 memo / predict / 留存候选同源。
+- 轨迹的 `id` / `task_type` / `source` / `step_sequence` / `evidence` 契约不变。
+- `test-6.4b-markdown-conv` 的 AC-1 断言随之从「实体名」改为「摘要首句」（契约变更，断言语义不变）。
+- 测试：`test/test-6.4d-trajectory-route.js` 4/4（markdown route 可读、JSON route 用 topic、契约不破、只读）。

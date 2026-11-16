@@ -55,7 +55,7 @@ const parse = (s, fb) => { try { return JSON.parse(s); } catch (_) { return fb; 
   const mRoute = md ? parse(md.route, []) : [];
   ac('AC-1 markdown 会话轨迹',
     md && md.task_type === 'session' && md.source === 'session-markdown' && Number(md.success) === 1 &&
-    mRoute[0] === '会话-md1' && mSeq.includes('来源') && mSeq.includes('内容') && mSeq.includes('蒸馏摘要') &&
+    mRoute[0] === '摘要一条' && mSeq.includes('来源') && mSeq.includes('内容') && mSeq.includes('蒸馏摘要') &&
     mEv.convId === 'conv-md1' && mEv.format === 'markdown-conversation' && mEv.bodyChars === MD.length && mEv.sectionCount === 3,
     JSON.stringify({ row: md && { s: md.source, ok: md.success }, mRoute, mSeq, mEv }));
 
