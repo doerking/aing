@@ -126,7 +126,10 @@ async function buildMemo(store, opts = {}) {
   const pendingDistill = Number(_scalar(db, `SELECT COUNT(*) AS n FROM entities WHERE status = 'pending-distillation' AND invalid_at IS NULL`).n || 0);
   const lastCycle = _scalar(db, `SELECT * FROM meko_cycles ORDER BY executed_at DESC, rowid DESC LIMIT 1`);
   const lastField = _scalar(db, `SELECT COUNT(*) AS n FROM field_actions`);
-  const ratioText = cons.ratio === Infinity ? 'inf' : String(cons.ratio);
+  // 守恒读数只印边层（SPEC-2.10 修订 C）：分子分母同量纲；实体退场单列「待退」存量。
+  const edge = cons.edge || { growth: cons.growth, pruned: cons.pruned };
+  const backlog = (cons.entity && Number.isFinite(cons.entity.backlog)) ? cons.entity.backlog : 0;
+  const consText = `守恒 ${edge.growth}:${edge.pruned}${backlog > 0 ? ' 待退' + backlog : ''}`;
   const vector = _vectorDiagnostics(db);
   // 内外维护简报（SPEC-6.6）：只读聚合，失败置 null 不阻断 memo
   let maintenance = null;
@@ -142,7 +145,7 @@ async function buildMemo(store, opts = {}) {
   const gapTotal = maintenance ? maintenance.gaps.total : 0;
   // 向量段紧跟健康——超长截断时先保它（SPEC-5.2 §2.3）
   const vecTag = `向量 ${vector.backend} ${vector.percent}%${vector.source === 'env' ? '(测试)' : ''}`;
-  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
+  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / ${consText} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0}`;
   if (systemLine.length > SYSTEM_LINE_MAX) systemLine = systemLine.slice(0, SYSTEM_LINE_MAX - 1) + '…';
 
   // 外派派单卡（SPEC-3.15 挂载）：传了就挂，没传就明说未接——不摆空位、不假装已派
