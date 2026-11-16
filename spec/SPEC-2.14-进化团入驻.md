@@ -15,6 +15,8 @@ upstream: [SPEC-0.8 §三/§六/§九, SPEC-1.14, SPEC-1.15, SPEC-2.12, SPEC-2.1
 
 ---
 
+> **口径裁定（D10，2026-11-17）**：守内面以本件五组件 + 2.17 狼位为准；内部总设定的旧五角色（theorist / engineer / trainer / analyst / adversarial-reviewer）不迁入守内面——旧角色依赖宿主 spawn 子代理，包内不装执行器，搬入即空壳。对抗职能由 `omni-gate` 三闸 + `tri-cross` 双链互校 + `poll` 加权意见承担。
+
 ## 一、目标
 
 五成员按契约注册、可被 `runCycle` 驱动；成员池按信号进出、容量受编制约束；成员只读只判，零写权。

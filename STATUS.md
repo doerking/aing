@@ -197,8 +197,9 @@ status: active
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
+| **D13** | 旧版 aing 的 md9 欠账（88 篇机械回填 + references/demo/tools 9 篇 + 13 篇无 frontmatter 定值） | **已裁（2026-11-17）**：旧版冻结、一律不改；v2 实际启用时以 v2 为准（owner：旧版果边可以跳过） |
 | **D9** | 原院 guardrails 无调用点、四件 meko-* 无调用方 | 已裁定唔迁：guardrails 化为 `omni-gate` 强制闸（2.16）；meko-* 四件弃 |
-| **D10** | **守内面两套口径并存**：内部总设定 = neural-evolution-swarm 旧五角色；v2 = gene-keeper/omni-gate/pilot/tri-cross/poll 五组件 + 狼位 | **待裁**：牵动 2.14/2.17/6.6，故 2.18 修订 B 已把该条挂起不裁 |
+| **D10** | **守内面两套口径并存**：内部总设定 = neural-evolution-swarm 旧五角色；v2 = gene-keeper/omni-gate/pilot/tri-cross/poll 五组件 + 狼位 | **已裁（2026-11-17，owner 授权代裁）**：守内面 = v2 五组件 + 2.17 狼位；旧五角色不迁入守内面。理由：旧角色依赖宿主 spawn 子代理，包内不装执行器，搬入即空壳；2.14/2.17/6.6 已落地全绿，换口径零收益；对抗职能由 omni-gate 三闸 + tri-cross 双链互校 + poll 加权意见承担，掩护位粒子属外派面不混入 |
 | **D11** | 包内 `src/dispatch-swarm.js` 与「对外采集与包无代码接线」边界冲突 | **已裁 A（2026-11-17）**：留包内，只作「派单底版校验 + 攻果门校验」纯函数与记账；不 spawn、不发网络、不碰存储（`tools/arch-lint.js` 执行位守）；AC-6~20 全落测。剩项：包内无生产调用方，接线归宿主运行时的外派入口 |
 | **D12** | memo 与 meko 两端口径并存（§11.2 `memo --dispatch` vs 6.6「memo 不派单」） | **已裁（2026-11-17）**：**外派面在 memo 挂载**，随载交付相关设定；memo 只出读数与派单卡（纯读、不执行），meko 只出编排与场域读数、只管双铰链体（不派粒、不接外派工单）；两端口径同源、字段同名、均不声称「已派」。落于 SPEC-2.18 §〇 / SPEC-0.8 十 / SPEC-6.6 |
 | ~~D8~~ | ~~8 个模块直连 store~~ | **已清**：compile/tri-axis-gate 改注入；arch-lint C5 守（2026-11-16）|
