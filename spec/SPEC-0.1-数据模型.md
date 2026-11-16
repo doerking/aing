@@ -201,3 +201,16 @@ CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value_json TEXT, update
 ---
 
 > **M0 门**：四份 spec（0.1/0.2/0.3/0.4）齐 + owner 拍板 → 开 M1 failing test 先行。
+
+修订 K（2026-11-17）：另立 `tombstones` 墓碑表（6.11 到期归档）——物理删热库前先写墓碑，
+留 `id / type / name / digest / archive_ref / deleted_at`，保证被删实体可查、历史引用可解析。
+
+```sql
+CREATE TABLE IF NOT EXISTS tombstones (
+  id TEXT PRIMARY KEY,
+  type TEXT, name TEXT,
+  digest TEXT,            -- 正文摘要，供归档校验比对
+  archive_ref TEXT,       -- 归档包文件名（archive/YYYY-MM.ndjson）
+  deleted_at DATETIME
+);
+```

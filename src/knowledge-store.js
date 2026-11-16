@@ -178,7 +178,16 @@ const DDL = [
     key TEXT PRIMARY KEY,
     value_json TEXT,
     updated_at DATETIME
-  )`,
+  )`
+,
+  `CREATE TABLE IF NOT EXISTS tombstones (
+    id TEXT PRIMARY KEY,
+    type TEXT,
+    name TEXT,
+    digest TEXT,
+    archive_ref TEXT,
+    deleted_at DATETIME
+  )`,
   `CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     source TEXT NOT NULL,
