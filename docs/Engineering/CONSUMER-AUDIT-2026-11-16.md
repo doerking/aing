@@ -132,13 +132,15 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 | 5 | api-server entity REST | v2 只有 api-gate 纯函数 + control-plane 四路由；**无 entity 写面服务**。宿主接入前必须补或明确不补 |
 | 6 | agent-dashboard / memo-call / memo-trigger / 两个 host adapter / ner-extractor | host 面与可选件；建议随发布范围一次性裁定 |
 
+> **2026-11-17 owner 确认**：1/2 登记为有意不迁（v2 走按需 CLI 与宿主定时）；3–6 随宿主接口面与发布范围一次性裁定，不逐件开单。
+
 ---
 
 ## 六、口径走样（有 spec，但与旧值不同，需 owner 拍板）
 
 | 项 | 旧值 | v2 值 | 依据 | 风险 |
 |---|---|---|---|---|
-| KESPI overall | 八维加权（0.15/0.12/0.13/0.12/0.13/0.10/0.15/0.10） | 八维算术均值 | SPEC-1.12 §二 | 维度语义也换了（KA 活跃、KM 完整），旧读数不可直接比 |
+| KESPI overall | 八维加权（0.15/0.12/0.13/0.12/0.13/0.10/0.15/0.10） | 八维算术均值 | SPEC-1.12 §二 | **已裁（2026-11-17）：维持均值**——维度语义已换，恢复权重只给旧数字假的可比性 |
 | prune 判据 | ≥90 天未动 **且** KESPI < 0.5 | ≥90 天未动 **且** 强度 ≤3（背景带） | SPEC-1.13 | 去掉质量下限，低质高强实体不会被退；需确认是否刻意 |
 
 > **6.7 补记**：prune 的「90 天未动」原先只读 `last_access`，而 v2 无人写它；已补 `access_hits` 访问事件接口（只追加，检索/memo 仍纯读），prune/compress/field-promote/KESPI 四处共用同一时钟。质量下限仍不进 prune——质量走降级证据链。
@@ -167,3 +169,5 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 - 旧院消费件源码：`aing/src/query.js`、`distill.js:103`、`trajectory-store.js`、`insight-extractor.js`、`gap-detector.js`、`metacognition-layer.js`、`feedback-loop.js`、`tri-path-orchestrator.js`
 - v2 现况：`STATUS.md`、`docs/HANDOFF-2026-11-16.md`、`src/knowledge-store.js`（12 张表清单）
 - 同类核对记录（上一轮）：`docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`
+
+> **2026-11-17 补记**：`distill_points.points_json` 有写无读（原「内容层无消费者」），已由 6.10 补上消费者——predict 的 basis 增 `point` 类（关联实体首条蒸馏点），只读、不造依据；检索融合明确不加第四通道。
