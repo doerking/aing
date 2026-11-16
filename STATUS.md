@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 62 档 / 412 条断言全绿 |
+| 测试 | `npm test` → 62 档 / 413 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -59,7 +59,7 @@ status: active
 | 1.10 | pollinate 授粉 | ✅ | 1.10 | test-1.10-pollinate 6/6 |
 | 1.11 | compress 换锚 | ✅ | 1.11 | test-1.11-compress 7/7 |
 | 1.12 | kespi 八维 | ✅ | 1.12 | test-1.12-kespi 7/7 |
-| 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 6/6 |
+| 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 7/7（判据已切 SPEC-6.11 四件） |
 | 1.14 | **meko-orchestrator 编排（关键路径尾）** | ✅ | 1.14 | test-1.14-orchestrator 6/6 |
 | **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |
 
@@ -121,8 +121,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计；6.11 的 prune 判据切换待接）
-- **62 档 / 412 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
+- **62 档 / 413 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -159,7 +159,7 @@ status: active
 | 6.9b | 时界真接（真 KESPI + 分步预算） | ✅ | `spec/SPEC-6.9b-时界真接-真KESPI与分步预算.md` | test-6.9b-timebound-wiring 8/8：运算类/未知 base≥120s、budgetTick 求和抬升、软配额 overBudget、真探针均值+来源、写回真值、无读数写占位标记、走势排除占位、幂等补列+铁律 |
 | 6.9c | 成长观察读数同源（Delta / 洞察只取真读数） | ✅ | `spec/SPEC-6.9c-成长观察读数同源.md` | test-6.9c-kespi-readers 4/4：Delta 只取真读数、真读数不足报 insufficient、洞察效果不混占位轮、过滤条件+无删+差分只读 |
 | **6.10** | **蒸馏点消费（points_json → 预案依据）** | ✅ | `spec/SPEC-6.10-蒸馏点消费.md` | test-6.10-point-basis 5/5；predict basis 增 point 类（关联实体首条点，≤80 字），无点不加、不造依据；conversation+point 即 high；纯读、确定性；检索融合明确不加第四通道 |
-| **6.11** | **分层留存与到期归档（原稿/短料/知识/墓碑）** | ✅（prune 判据切换待接） | `spec/SPEC-6.11-分层留存与到期归档.md` | test-6.11-retention 8/8；`src/retention.js` 只读分层规划（到窗+无访问+无证据+可还原/可重建）；`tools/archive.js` 月包 ndjson+md+manifest、干跑还原、校验不过不删、墓碑表（SPEC-0.1 修订 K）；实测 20k 短料 15.3MB / KESPI 3.4s / 向量 4.0s；移动端退役模式留接口位 |
+| **6.11** | **分层留存与到期归档（原稿/短料/知识/墓碑）** | ✅ | `spec/SPEC-6.11-分层留存与到期归档.md` | test-6.11-retention 8/8；`src/retention.js` 只读分层规划（到窗+无访问+无证据+可还原/可重建）；`tools/archive.js` 月包 ndjson+md+manifest、干跑还原、校验不过不删、墓碑表（SPEC-0.1 修订 K）；实测 20k 短料 15.3MB / KESPI 3.4s / 向量 4.0s；移动端退役模式留接口位；prune 已切新四件判据（test-1.13-prune 7/7） |
 | **6.12** | **落盘安全（原子写 + 单写者锁 + 容量上限）** | ✅ | `spec/SPEC-6.12-落盘安全.md` | test-6.12-persist-safety 6/6；tmp/rename 原子写（失败原库不变、无残留）、`.lock` 单写者（活锁拒写、陈旧锁接管）、外部改写检测 `db-stale`、容量上限默认 10MB（env 可调） |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。

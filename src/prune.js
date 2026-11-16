@@ -1,10 +1,12 @@
 'use strict';
-// aing-v2 prune.js —— M1 任务 1.13 实现（SPEC-1.13 逻辑退役）
+// aing-v2 prune.js —— M1 任务 1.13 实现（SPEC-1.13 逻辑退役；修订 A 按 SPEC-6.11 换判据）
 // 铁律：退役 = invalid_at 打戳，可逆；本文件唔准出现物理 DELETE。
-// 候选只取背景带（tolaria_strength <= 3）且久未访问（last_access 早于 inactiveDays 或 NULL）。
+// 判据：分层（短料层才按时间退，知识层不退）＋ 到窗 ＋ 无访问 ＋ 无证据 ＋ 可还原/可重建。
+// 旧「强度 ≤3」作废：实测强度只有 5/8/9，背景带无对象，候选恒为 0。
 
-const DEFAULT_INACTIVE_DAYS = 90;
-const MAX_STRENGTH = 3; // 背景带上限（SPEC-0.6）
+const { planRetention } = require('./retention.js');
+
+const DEFAULT_INACTIVE_DAYS = 30;
 
 function _rows(store, sql, params = []) {
   const db = store._getDb();
@@ -17,22 +19,9 @@ function _rows(store, sql, params = []) {
 }
 
 function listCandidates(store, { inactiveDays = DEFAULT_INACTIVE_DAYS, limit = Infinity } = {}) {
-  const rows = _rows(
-    store,
-    `SELECT e.id, e.tolaria_strength, e.last_access FROM entities e
-     WHERE e.status = 'active'
-       AND e.invalid_at IS NULL
-       AND e.tolaria_strength <= ?
-       AND (e.last_access IS NULL OR (julianday('now') - julianday(e.last_access)) >= ?)
-       AND NOT EXISTS (
-         SELECT 1 FROM access_hits h
-         WHERE h.entity_id = e.id
-           AND (julianday('now') - julianday(h.hit_at)) < ?
-       )
-     ORDER BY e.id`,
-    [MAX_STRENGTH, inactiveDays, inactiveDays]
-  );
-  return rows.slice(0, limit).map(r => r.id);
+  // 只读规划归 retention；本函数只取 id，不改语义
+  const plan = planRetention(store, { windowDays: Number(inactiveDays) > 0 ? Number(inactiveDays) : undefined });
+  return plan.candidates.map(c => c.id).slice(0, limit);
 }
 
 function listRetired(store) {

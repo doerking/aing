@@ -24,9 +24,10 @@ function rows(db, sql) { const s = db.prepare(sql); const o = []; while (s.step(
   const dbPath = path.join(yard, 'knowledge.db');
   await store.init(dbPath);
   let db = store._getDb();
-  const put = (id, conf) => store.insertEntity({ id, name: id, type: 'Concept', content: LONG, tags: '["t"]', status: 'active', confidence: conf });
-  put('bg-old', 0.2); put('recent-hit', 0.2); put('bg-fresh', 0.2); put('promo', 0.5);
-  db.run("UPDATE entities SET tolaria_strength=1, last_access='2020-01-01 00:00:00' WHERE id IN ('bg-old','recent-hit')");
+  // 短料层（Conversation）才按时间退役（SPEC-6.11）；知识层不因时间退，故本组 fixture 用 Conversation。
+  const put = (id, conf, type = 'Concept') => store.insertEntity({ id, name: id, type, content: LONG, tags: '["t"]', status: 'active', confidence: conf });
+  put('bg-old', 0.2, 'Conversation'); put('recent-hit', 0.2, 'Conversation'); put('bg-fresh', 0.2, 'Conversation'); put('promo', 0.5);
+  db.run("UPDATE entities SET tolaria_strength=1, last_access='2020-01-01 00:00:00', updated_at='2020-01-01 00:00:00' WHERE id IN ('bg-old','recent-hit','bg-fresh')");
   db.run("UPDATE entities SET tolaria_strength=1, last_access=CURRENT_TIMESTAMP WHERE id='bg-fresh'");
   db.run("UPDATE entities SET tolaria_strength=5, last_access=NULL WHERE id='promo'");
   store._persist();

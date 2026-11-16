@@ -1,8 +1,8 @@
 ---
 tags: [aing-v2, spec, 核心代谢, prune, 逻辑退役, 双铰链, M1, spec:9, must-read:8, prune:8, 双铰链:7]
-description: M1.13 prune 逻辑退役 spec——不复物理删，invalid_at 打戳可逆；候选只取背景带低强度久未访问；dry-run 默认
+description: M1.13 prune 逻辑退役 spec——不复物理删，invalid_at 打戳可逆；候选=分层到窗+无访问+无证据（SPEC-6.11 修订 A）；dry-run 默认
 date: 2026-11-16
-status: draft（待 owner review）
+status: 定稿（已实现；2026-11-17 修订 A 切 SPEC-6.11 四件判据）
 owner: ring / Hana
 upstream: [SPEC-0.1, SPEC-0.4, SPEC-0.6, ARCHITECTURE.md §10]
 ---
@@ -63,3 +63,19 @@ upstream: [SPEC-0.1, SPEC-0.4, SPEC-0.6, ARCHITECTURE.md §10]
 
 - 上游：SPEC-0.1（invalid_at 列）、SPEC-0.6（三带；背景带=≤3）
 - 实现：`src/prune.js`；被 `meko-orchestrator` 作为背景带步骤驱动。
+
+---
+
+## 六、修订 A（2026-11-17，owner 批准）
+
+判据整体切到 **SPEC-6.11 分层留存** 的四件全中，旧「90 天＋强度≤3」作废：
+
+1. **分层**：原稿层永不动；短料层（Conversation / Todo 等）才按时间窗退役，默认 30 天；知识层（Concept / Paper / MetaKnowledge / 未知类型）不按时间退。
+2. **到窗**：`updated_at`（缺则 `created_at`）超出分层窗口。
+3. **无访问**：`last_access` 与 `access_hits` 最近一次都超出窗口（近窗内命中即救回，语义同 AC-6）。
+4. **无证据**：无 `strength ≥ 5` 的活边。
+5. **可还原/可重建**：短料靠归档还原；本条由归档流程（SPEC-6.11 §三–§四）把关，prune 只出候选。
+
+- 实现：`listCandidates` 委托 `src/retention.js` 的 `planRetention`（只读）；退役与物理删仍是两步，prune 本身只打 `invalid_at`，禁物理删不变。
+- 旧 AC-1（strength 3/5/7）与 AC-6 的 strength 半边随之失效；测试已改为「短料层且到窗」＋「知识层不随时间退役」。
+- 强度实测只有 5/8/9（无 ≤3 对象），旧判据候选恒为 0——这是切换的直接原因。
