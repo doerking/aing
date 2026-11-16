@@ -28,18 +28,20 @@ try {
 
 (async () => {
   await store.init(path.join(yard, 'knowledge.db'));
-  const ins = (id, strength) => store.insertEntity({ id, name: id, type: 'Concept', content: 'c-' + id, status: 'active', confidence: 0.5 });
-  ins('low', 3); ins('mid', 5); ins('high', 7);
+  // SPEC-1.13 修订 A / SPEC-6.11：分层判据——短料层按窗，知识层不按时间退
+  const ins = (id, type) => store.insertEntity({ id, name: id, type: type, content: 'c-' + id, status: 'active', confidence: 0.5 });
+  ins('low', 'Conversation'); ins('mid', 'Conversation'); ins('high', 'Conversation'); ins('know', 'Concept');
   const db = store._getDb();
   // 统一置为久未访问（last_access NULL，strength 由列表驱动）
   db.run("UPDATE entities SET tolaria_strength = 3 WHERE id='low'");
+  db.run("UPDATE entities SET created_at='2020-01-01 00:00:00', updated_at='2020-01-01 00:00:00' WHERE id IN ('low','know')");
   db.run("UPDATE entities SET tolaria_strength = 5 WHERE id='mid'");
   db.run("UPDATE entities SET tolaria_strength = 7 WHERE id='high'");
   store._persist();
 
-  // AC-1 候选只取背景带
+  // AC-1 候选只取短料层且到窗
   const dry = await prune.pruneCycle(store, { dryRun: true, inactiveDays: 90 });
-  ac('AC-1 候选只取背景带(≤3)', JSON.stringify(dry.candidates) === JSON.stringify(['low']), JSON.stringify(dry.candidates));
+  ac('AC-1 候选只取短料层且到窗', JSON.stringify(dry.candidates) === JSON.stringify(['low']), JSON.stringify(dry.candidates));
 
   // AC-2 dry-run 零写
   const before = store.getEntity('low');
@@ -67,7 +69,7 @@ try {
   // AC-5 禁物理删
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'prune.js'), 'utf8');
   const rows = (() => { const s = db.prepare('SELECT COUNT(*) AS n FROM entities'); s.step(); const n = s.getAsObject().n; s.free(); return n; })();
-  ac('AC-5 无 DELETE FROM + 行数不变', !/DELETE\s+FROM/i.test(src) && rows === 3, `rows=${rows}`);
+  ac('AC-5 无 DELETE FROM + 行数不变', !/DELETE\s+FROM/i.test(src) && rows === 4, `rows=${rows}`);
 
   // AC-6 活跃保护
   db.run("UPDATE entities SET last_access = CURRENT_TIMESTAMP WHERE id='mid'");
@@ -75,6 +77,10 @@ try {
   store._persist();
   const dry2 = await prune.pruneCycle(store, { dryRun: true, inactiveDays: 90 });
   ac('AC-6 新近访问实体唔入选', !dry2.candidates.includes('mid'), JSON.stringify(dry2.candidates));
+
+  // AC-7 知识层不按时间退役（SPEC-6.11 四件判据 + 分层）
+  const dry3 = await prune.pruneCycle(store, { dryRun: true, inactiveDays: 90 });
+  ac('AC-7 知识层不随时间退役', !dry3.candidates.includes('know'), JSON.stringify(dry3.candidates));
 
   console.log(`${pass}/${pass + fail} 绿`);
   process.exit(fail ? 1 : 0);

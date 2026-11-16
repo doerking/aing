@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 留存, 归档, 到期删, prune, 移动端, M6, spec:9, retention:9, prune:7]
 description: M6.11 分层留存与到期归档 spec——2 万/月短料下热库必须设上限：原稿永不删、短料按热窗、知识按证据、墓碑永久；流程为退役→归档(月 ndjson+md+manifest)→删热库，三条前置硬门槛；prune 判据由「90 天+强度≤3」改为「到窗+无访问+无证据+可重建」；移动端退役模式留接口位
 date: 2026-11-17
-status: 定稿（已实现：分层规划 / 归档导出 / 干跑校验 / 墓碑删除；prune 判据切换待接）
+status: 定稿（已实现：分层规划 / 归档导出 / 干跑校验 / 墓碑删除 / prune 判据已切换）
 owner: hana
 upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 轨迹, 只读推演 2026-11-17]
 ---
