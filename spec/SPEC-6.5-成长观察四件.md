@@ -111,7 +111,7 @@ upstream: [SPEC-0.7, SPEC-2.15, SPEC-3.4, SPEC-6.4, docs/Engineering/CONSUMER-AU
 - 不做自动调参、不写 `config` 表、不自动审批。
 - 不做因果推断（只报轮级统计相关）。
 - 不做 `--fix` 自动修复（修复归 2.12/2.13）。
-- 不迁 episode / rollout / tri-path 三条轨迹链（缺口 4 再议）。
+- ~~不迁 episode / rollout / tri-path 三条轨迹链（缺口 4 再议）~~ → 见 `spec/SPEC-6.4-任务轨迹消费.md` 修订 A：episode 与代谢因果链已接；rollout 无消费方；tri-path 按缺口 4 裁定不迁。
 - 不改 memo 用户面字段（T2 与模块可被读，memo 接线留后续）。
 
 ## 五、契约

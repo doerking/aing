@@ -58,6 +58,7 @@
   "test-6.3-retrieval-fusion.js": 7,
   "test-6.4-trajectory.js": 7,
   "test-6.4b-markdown-conv.js": 5,
+  "test-6.4c-trajectory-imports.js": 6,
   "test-6.5-growth-observe.js": 9,
   "test-6.6-maintenance-wiring.js": 8,
   "test-6.7-access-events.js": 8,

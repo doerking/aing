@@ -211,6 +211,57 @@ async function logCycle(store, info = {}) {
   });
 }
 
+/** 旧院 growth-loop episodes → 轨迹（episode 链）。同 id 幂等。 */
+function logFromGrowthLoop(store, episodes = []) {
+  let imported = 0, skipped = 0;
+  for (const ep of Array.isArray(episodes) ? episodes : []) {
+    if (!ep || !ep.id) { skipped++; continue; }
+    const route = Array.isArray(ep.route) ? ep.route.map(String) : [];
+    const r = logTrajectory(store, {
+      id: String(ep.id),
+      task_type: ep.taskType || ep.task_type || 'unknown',
+      route,
+      step_sequence: route,
+      success: ep.success ? 1 : 0,
+      retries: ep.retries || 0,
+      duration_ms: ep.durationMs || ep.duration_ms || 0,
+      evidence: { lesson: ep.lesson || null, evidence: ep.evidence || null, patternKey: ep.patternKey || null },
+      source: 'growth-loop'
+    });
+    if (r.skipped) skipped++; else imported++;
+  }
+  return { imported, skipped };
+}
+
+/** 旧院代谢决策因果链 → 轨迹（每步一条，缺 step 跳过）。同 step+timestamp 幂等。 */
+function logFromLineage(store, rows = []) {
+  let imported = 0, skipped = 0;
+  for (const r of Array.isArray(rows) ? rows : []) {
+    if (!r || !r.step) { skipped++; continue; }
+    const ok = String(r.outcome || '').toLowerCase() === 'success';
+    const ev = r.evidence && typeof r.evidence === 'object' ? r.evidence : {};
+    const res = logTrajectory(store, {
+      id: `metabolism-${r.step}-${r.timestamp || 0}`,
+      task_type: 'metabolism',
+      route: [String(r.step)],
+      step_sequence: [String(r.step)],
+      success: ok ? 1 : 0,
+      duration_ms: Number(ev.durationMs || ev.duration || 0) || 0,
+      score_hard: ok ? 1 : 0,
+      evidence: {
+        action: r.action || null,
+        target: r.target || null,
+        reason: r.reason || null,
+        alternatives: r.alternatives || null,
+        causalChain: r.causalChain || null
+      },
+      source: 'metabolism-decision-lineage'
+    });
+    if (res.skipped) skipped++; else imported++;
+  }
+  return { imported, skipped };
+}
+
 async function listTrajectories(store, opts = {}) {
   const db = store._getDb();
   let sql = 'SELECT * FROM task_trajectories';
@@ -236,5 +287,5 @@ async function stats(store) {
 }
 
 module.exports = {
-  buildSessionTrajectory, buildMarkdownTrajectory, logTrajectory, syncSessions, logCycle, listTrajectories, stats
+  buildSessionTrajectory, buildMarkdownTrajectory, logTrajectory, syncSessions, logCycle, logFromGrowthLoop, logFromLineage, listTrajectories, stats
 };
