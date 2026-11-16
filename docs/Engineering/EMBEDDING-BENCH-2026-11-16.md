@@ -22,10 +22,20 @@ upstream: [SPEC-5.1]
 
 ## 二、固定评测集（冻结后只增不改）
 
-- 位置：`data/eval/embedding-pairs.jsonl`
-- 每条一行：`{"q": "<查询>", "pos": ["<应命中实体>"], "neg": ["<不应命中实体>"], "lang": "zh|yue|en"}`，`lang` 必填，粤语口语样本单列。
+- 位置：`data/eval/embedding-pairs.jsonl`（题）；`data/eval/corpus.jsonl`（语料，60 实体）；`data/eval/FROZEN.json`（版本与 sha1）。
+- 每条一行：`{"q": "<查询>", "pos": ["<应命中实体>"], "neg": ["<不应命中实体>"], "lang": "zh|yue|en", "kind": "exact|paraphrase|trad"}`，`lang` 必填，粤语口语样本单列；`kind` 记题型（字面重叠 / 改写 / 简繁），只用于分层解读。
 - 版本化后**冻结**：改一条就等于换评测集，旧结论作废，不许悄悄改题。
 - 规模起步 ≥ 50 条，粤语样本 ≥ 15 条；不足时先补题，不先跑结论。
+
+**冻结记录 v1（2026-11-17）**
+
+| 字段 | 值 |
+|---|---|
+| 版本（pairs sha1 前 12） | `d79f91d2ccdf` |
+| 题数 | 65（zh 33 / yue 20 / en 12） |
+| 题型 | exact 31 / paraphrase 32 / trad 2 |
+| 语料 | 60 实体（`corpus.jsonl`） |
+| 守门 | `test/test-5.3b-eval-set.js`：sha1/bytes 不合即红，逼升版本 |
 
 ## 三、指标定义（四项起步）
 

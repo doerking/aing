@@ -3,4 +3,5 @@ node_modules/
 *.db
 *.db-journal
 yard/
-data/
+data/*
+!data/eval/
