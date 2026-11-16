@@ -16,7 +16,7 @@ const PATTERN = /require\(\s*['"]\.\/knowledge-store(?:\.js)?['"]\s*\)/;
 
 // SPEC-2.18 / D11 裁定 A：外派件只做底版与攻果门校验，不得成为执行器。
 const NO_EXEC = new Set(['child_process', 'http', 'https', 'net', 'dgram', 'fs', 'knowledge-store', './knowledge-store', './knowledge-store.js']);
-const EXEC_GUARDED = new Set(['dispatch-swarm.js']);
+const EXEC_GUARDED = new Set(['dispatch-swarm.js', 'dispatch-card.js']);
 const REQUIRE_ANY = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
 
 const problems = [];
