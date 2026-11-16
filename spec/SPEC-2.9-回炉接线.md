@@ -57,3 +57,13 @@ upstream: [SPEC-0.1 修订 D, SPEC-1.11, SPEC-1.14, SPEC-0.6]
 
 - 上游：SPEC-1.11（籽）、SPEC-0.1 修订 D（recycled 列）、SPEC-1.14（编排）
 - 消费者：2.10 守恒闸（回炉闭环断言）
+
+---
+
+## 修订 A（2026-11-17）：回炉实体名用可读话题
+
+回炉出的微粒名是 `回炉·<原名>`。原名若是 markdown 会话的时间戳，这条微粒以后在人前就叫 `回炉·会话-2026-11-09T01:23:41.985Z`。
+
+- 名称改为 `回炉·readableTopic(name, content)`（`conv-text`，与 memo / predict / 留存候选同源）。
+- 正文与来源锚 `[recycled-from:<id>]` 不变；同籽复跑仍然幂等跳过。
+- 测试：`test/test-2.9b-recycle-name.js` 4/4（markdown 可读、JSON 用 topic、正文契约不变、复跑幂等）。
