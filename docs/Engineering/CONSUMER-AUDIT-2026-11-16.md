@@ -116,7 +116,7 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 - **旧院契约**：`aing/src/tri-path-orchestrator.js`——EXPLORE（向量+多样性）/ VERIFY（双佐证：边置信或 KESPI）/ OPTIMIZE（实体均分），队正裁决 + 熔断（failureThreshold=5 / resetTimeout=60s / halfOpenMax=3），状态落 `data/tri-path-state.json`。
 - **v2 现状**：无对应。**注意**：v2 的「三轴判定」（SPEC-0.4）是**准入闸**（强度/配对/时效），不是三路执行裁决；两者名字相近、职能不同，不能互替。
 - **裁定（2026-11-17 owner）**：外派蜂群是**采集面**（搜资料 / 看资料 / 按用户要求定厚度），不是裁决面。三路候选、择优裁断、熔断**一律不迁**；复杂判断仍单路直出，接受「一步失败无降级路径」这一代价。
-- **落地**：已写入 `spec/SPEC-2.18-外派蜂群三分编组.md` §2.0/§2.6/§四（采集职责、无熔断、不做裁决），并同步 §2.3 批间用户闸、§2.7 接线（memo 入口 + 主 agent 支配）。
+- **落地**：`spec/SPEC-2.18-外派蜂群三分编组.md` 修订 B 已按内部总设定重写为「外派采集面」（七步派单 / 轨迹口径 / 来源分级 / 攻果门 / 基线门 / 两权分离 / 禁虚报），并写入「不做裁决、无熔断、批间用户闸」。
 - **残留**：`dispatch-swarm.js` 目前无生产调用方（仅测试 require），接线待 memo 派工口落地时一并做。
 
 ---
