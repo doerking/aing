@@ -20,10 +20,20 @@ const DEFAULT_STEPS = [
   'compress',
   'recycle',
   'kespi',
+  'capability-dispatch',
   'self-optimize',
+  'lineage-reflect',
+  'retrieval-kpi',
   'prune',
   'conservation'
 ];
+
+// 维护/自优化轮才执行的步骤共用开关（SPEC-6.8 §三 / SPEC-6.9 §2.5）
+function maintenanceGuard(ctx = {}) {
+  return ctx.selfOptimize === true ||
+    (ctx.opts && ctx.opts.selfOptimize === true) ||
+    /维护|自优化/.test(String(ctx.cycleType || ''));
+}
 
 // id → { strand, band, reads, writes, reversible, module, fn }
 const REGISTRY = {
@@ -43,7 +53,16 @@ const REGISTRY = {
   kespi:       { strand: 'cross', band: 'background', reads: ['entities', 'links'],   writes: ['kespi_scores'],        reversible: true,  module: './kespi.js',       fn: 'kespiStep' },
   'self-optimize': { strand: 'cross', band: 'field', reads: ['entities','kespi_scores'], writes: ['opt_tickets','field_actions','genes','gate_records'], reversible: true, module: './self-optimize.js', fn: 'selfOptimizeStep',
     // 默认唔自动下药：维护/自优化轮或显式 opts.selfOptimize 才开（SPEC-6.8 §三）
-    guard: (ctx) => ctx.selfOptimize === true || (ctx.opts && ctx.opts.selfOptimize === true) || /维护|自优化/.test(String(ctx.cycleType || '')) },
+    guard: maintenanceGuard },
+  'capability-dispatch': { strand: 'cross', band: 'field', reads: ['entities','distill_points'], writes: ['opt_tickets'], reversible: true, module: './capability-dispatch.js', fn: 'dispatchCapabilities',
+    // 能力叙事派单只在维护轮开（SPEC-6.9 §2.5）
+    guard: maintenanceGuard },
+  'lineage-reflect': { strand: 'cross', band: 'background', reads: ['field_actions','meko_cycles'], writes: ['task_trajectories'], reversible: true, module: './lineage-reflect.js', fn: 'reflect',
+    // 谱系反思只在维护轮开（SPEC-6.9 §2.5）
+    guard: maintenanceGuard },
+  'retrieval-kpi': { strand: 'cross', band: 'background', reads: ['entities'], writes: ['task_trajectories'], reversible: true, module: './retrieval-kpi.js', fn: 'runKpi',
+    // 检索 KPI 只在维护轮开（SPEC-6.9 §2.5）
+    guard: maintenanceGuard },
   prune:       { strand: 'wiki',  band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './prune.js',       fn: 'pruneCycle' },
   'field-maintain': { strand: 'cross', band: 'field', reads: ['entities','links'], writes: ['entities','links','field_actions'], reversible: true, module: './meko-field.js', fn: 'maintainStep' },
   conservation:{ strand: 'cross', band: 'background', reads: ['links', 'entities'],   writes: ['meko_cycles'],         reversible: true,  module: './conservation.js', fn: 'conservationStep' }
