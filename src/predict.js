@@ -28,11 +28,7 @@ function _scalar(db, sql, binds = []) {
   return r;
 }
 
-function _body(entity) {
-  const raw = String(entity.content == null ? '' : entity.content);
-  // 真库过半会话正文是 markdown（不是 JSON）：整篇当回复，至少能出引文
-  try { return JSON.parse(raw); } catch (_) { return { reply: raw.trim(), markdown: true }; }
-}
+const { parseBody: _body, firstClause: _firstClause, mdSummary: _mdSummary, readableTopic: _readableTopic } = require('./conv-text.js');
 
 function _quote(body) {
   // 引文取第一句真内容：有摘要段先取摘要，再正文首句（标题行/来源行不算引文）
@@ -40,78 +36,6 @@ function _quote(body) {
   const t = (summary ? _firstClause(summary, QUOTE_MAX) : '')
     || _firstClause(body.reply, QUOTE_MAX) || _firstClause(body.rationale, QUOTE_MAX);
   return t || String(body.reply || body.rationale || '').trim().slice(0, QUOTE_MAX);
-}
-
-const TS_NAME = /^(会话[\s-]*)?\d{4}-\d{2}-\d{2}[T ]\d{2}[-:]\d{2}[-:]\d{2}/;
-
-function _compactTs(text) {
-  const m = String(text || '').match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2})[-:](\d{2})/);
-  return m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : null;
-}
-
-function _firstClause(text, n = 24) {
-  // 旧库会话正文常以「# 会话-<时间戳>」起头：跳过标题行/时间戳行/结构词行，取第一句真内容
-  for (const raw of String(text || "").split(String.fromCharCode(10))) {
-    const heading = /^\s*#{1,6}\s*/.test(raw);
-    let t = raw.replace(/^[\s#>\-*•\d.、)（(]+/, '').trim();
-    // 去掉【沙漏理解摘要 w1】/① 这类提炼标签，留下真内容
-    t = t.replace(/^(【[^】]{0,24}】|[①-⑩])\s*/, '').trim();
-    if (!t || TS_NAME.test(t)) continue;
-    // 结构标题行（## 蒸馏摘要 / ## 来源 / ## 内容）：短、无标点、整行只有标签
-    if (heading && t.length <= 8 && !/[。！？；，,;.!?：:]/.test(t)) continue;
-    if (/^(来源|原|论|操作|结论|会话|内容)\s*$/.test(t)) continue;
-    if (/^(原始资料|来源|会话|内容|标题)\s*[:：]/.test(t)) continue;
-    if (/session-[0-9a-f]{8,}/i.test(t)) continue;
-    const cut = t.split(/[。！？；，,;.!?]/)[0].trim();
-    if (cut) return _clip(cut, n);
-  }
-  return '';
-}
-
-/** 截断不切在词中间：优先退到空格/标点/连字符处 */
-function _clip(text, n) {
-  const t = String(text == null ? "" : text).trim();
-  if (t.length <= n) return t;
-  const head = t.slice(0, n);
-  const cut = Math.max(head.lastIndexOf(" "), head.lastIndexOf("　"), head.lastIndexOf("，"), head.lastIndexOf("、"), head.lastIndexOf("；"), head.lastIndexOf("："), head.lastIndexOf("-"), head.lastIndexOf("/"));
-  let out = cut >= Math.max(4, n - 10) ? head.slice(0, cut).trim() : head;
-  // 截断处若有未闭合的括号，退到括号前（「ego-browser（chassis」这类半截括号不出口）
-  for (const [open, close] of [["（", "）"], ["(", ")"]]) {
-    const o = out.lastIndexOf(open);
-    if (o >= 4 && out.indexOf(close, o) === -1) out = out.slice(0, o).trim();
-  }
-  return out;
-}
-
-/** markdown 会话的摘要段首条（旧库真实形状：## 蒸馏摘要 下的第一条要点） */
-function _mdSummary(text) {
-  const lines = String(text || "").split(String.fromCharCode(10));
-  for (let i = 0; i < lines.length; i++) {
-    if (/^#{1,6}\s*(蒸馏摘要|摘要|结论|核心要点)/.test(lines[i].trim())) {
-      for (let j = i + 1; j < Math.min(lines.length, i + 8); j++) {
-        const t = lines[j].replace(/^[\s#>\-*•]+/, "").trim();
-        if (t) return t;
-      }
-    }
-  }
-  return "";
-}
-
-/** 话题取法：真 topic > 摘要段首条 > 非时间戳的 name > 正文首句 > 压缩后的时间 > 未命名 */
-function _readableTopic(name, body) {
-  const topic = String((body && body.topic) || '').trim();
-  if (topic) return topic;
-  const nm = String(name || '').trim();
-  const summary = _mdSummary(body && body.reply);
-  if (summary) {
-    const sc = _firstClause(summary, 24);
-    if (sc) return sc;
-  }
-  if (nm && !TS_NAME.test(nm)) return nm;
-  const clause = _firstClause(body && body.reply);
-  if (clause) return clause;
-  const ts = _compactTs(nm);
-  return ts ? '会话 ' + ts : '未命名话题';
 }
 
 function _planId(topic, ids) {

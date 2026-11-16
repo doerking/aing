@@ -6,6 +6,7 @@
 // M5 任务 5.2（SPEC-5.2）：多一块只读向量诊断——后端 / 覆盖 / 旧行 / 测试开关，异常不静默。
 
 const V = require('./vector.js');
+const { parseBody, readableTopic } = require('./conv-text.js');
 const SYSTEM_LINE_MAX = 80;
 
 function _rows(db, sql, binds = []) {
@@ -26,9 +27,9 @@ function _scalar(db, sql, binds = []) {
   return r;
 }
 
-function _body(entity) {
-  try { return JSON.parse(entity.content || '{}'); } catch (_) { return {}; }
-}
+// 正文读法与 predict 同源（SPEC-3.11 修订 A）：markdown 会话取摘要段，唔裸露时间戳名
+const _body = parseBody;
+const _topic = (entity, body) => readableTopic(entity && entity.name, body);
 
 // 向量诊断（SPEC-5.2 §2.1）：只 SELECT，不建向量、不写表
 function _vectorDiagnostics(db) {
@@ -70,7 +71,7 @@ async function buildMemo(store, opts = {}) {
     return {
       sessionId: String(e.id).replace(/^conv-/, ''),
       at: b.at || String(e.created_at || ''),
-      topic: b.topic || e.name || '',
+      topic: _topic(e, b),
       outcome: b.outcome == null ? 'open' : b.outcome
     };
   });
@@ -81,7 +82,7 @@ async function buildMemo(store, opts = {}) {
     .slice(0, limit)
     .map(x => ({
       id: x.e.id,
-      text: x.b.topic || x.e.name || String(x.e.id),
+      text: _topic(x.e, x.b),
       since: x.b.at || String(x.e.created_at || '')
     }));
 
@@ -89,7 +90,7 @@ async function buildMemo(store, opts = {}) {
   const byTopic = new Map();
   for (const e of convs) {
     const b = _body(e);
-    const topic = String(b.topic || '').trim();
+    const topic = String(_topic(e, b) || '').trim();
     if (!topic) continue;
     if (!byTopic.has(topic)) byTopic.set(topic, []);
     byTopic.get(topic).push(e.id);
@@ -104,7 +105,7 @@ async function buildMemo(store, opts = {}) {
   if (convs.length) {
     const latest = _body(convs[0]);
     try {
-      const p = await require('./predict.js').predict(store, { message: String(latest.topic || '') });
+      const p = await require('./predict.js').predict(store, { message: String(_topic(convs[0], latest) || '') });
       plans = (p.plans || []).slice(0, plansLimit);
     } catch (_) { plans = []; }
   } else {
