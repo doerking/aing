@@ -75,7 +75,10 @@ class MekoOrchestrator {
         const steps = this.steps.filter(s => s.strand === strand);
         for (const step of steps) {
           try {
-            const r = await step.onCycle({ store: this.store, round, strand, bus, cycleId });
+            const r = await step.onCycle({
+              store: this.store, round, strand, bus, cycleId,
+              cycleType, opts, selfOptimize: opts.selfOptimize
+            });
             results.push({ round, id: step.id, ok: r ? r.ok !== false : true, actions: r && r.actions });
           } catch (e) {
             results.push({ round, id: step.id, ok: false, error: e.message });

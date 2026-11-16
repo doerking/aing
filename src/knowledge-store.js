@@ -128,6 +128,22 @@ const DDL = [
     updated_at DATETIME,
     archived_at DATETIME
   )`,
+  `CREATE TABLE IF NOT EXISTS opt_tickets (
+    id TEXT PRIMARY KEY,
+    entity_id TEXT NOT NULL,     -- 病灶实体
+    dim TEXT NOT NULL,           -- kq/kg/ka/km/kd/kc/kr/kb/overall
+    kind TEXT NOT NULL,          -- kc-low / kd-low / ...
+    action TEXT NOT NULL,        -- reconcile / rebond / demote / memo-card
+    score REAL,                  -- 触发时该维读数
+    zone TEXT,                   -- red / yellow
+    status TEXT DEFAULT 'open',  -- open / dispatched / proposed / verified / rejected / graduated
+    attempts INTEGER DEFAULT 0,
+    evidence_json TEXT,
+    cycle_id TEXT,
+    created_at DATETIME,
+    updated_at DATETIME
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_opt_tickets_open ON opt_tickets(status, dim, entity_id)`,
   `CREATE TABLE IF NOT EXISTS gate_records (
     id TEXT PRIMARY KEY,
     subject TEXT,

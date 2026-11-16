@@ -1,6 +1,6 @@
 ---
 tags: [aing-v2, 状态, 进度, single-source-of-truth:9, must-read:9]
-description: aing-v2 重写进度唯一真源——67 任务状态/spec/test/证据三指针，其余文档只引用不复述
+description: aing-v2 重写进度唯一真源——68 任务状态/spec/test/证据三指针，其余文档只引用不复述
 date: 2026-11-16
 status: active
 ---
@@ -18,14 +18,15 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 52 档 / 332 条断言全绿 |
+| 测试 | `npm test` → 53 档 / 340 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **67 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=14 / M4=6 / M5=3 / M6=7）|
+| 任务总数口径 | **68 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=14 / M4=6 / M5=3 / M6=8）|
 
 > **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑时界场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 > **2026-11-16 摆位裁定（SPEC-0.8）**：进化团旧院一直旁挂无定位，今次**入驻 meko 中间质**——五成员（gene-keeper / omni-gate / pilot / tri-cross / poll）按组件契约注册，蜂巢形态共享同一中间质，T0 定焦 / T1 复核 / T2 度量 / T3 演化 四时点 × 六维（结构/强度/度量/时序/成员/用户）全程维护；判定与执行分离，写入仍由场域件 2.12/2.13 做。
 > **2026-11-16 修订 A（SPEC-0.8 §九–§十）**：五角色身份与职责**不动**，三分编组下沉到子层——每位自带 ≤2 子agent（狼位），5 单元 × 3 员 = 15 席，观察层由狼位补。外派蜂群照旧院条令：常驻 3 员单位、**派出前底版范式（语言+行为+工作流）先于任务链**、单间不互斥滚动派发、收口后交接自然消逝（只回残渣）。守内/对外仍互不派单不桥接，两边只共同接住 meko 的派出口与残渣吸入口。**旧五角色（neural-evolution-swarm）归 memo 做外场维护**（无 meko 写权、无场域带权限）；内场加狼位（2.17），外场**唔加常设子agent**（重活交外派）。维护纪律直接对齐**双相循环**（一轮点样转）与**决策闸**（一个动作点样拍板）；发布包内唔用内部术语。
 > **2026-11-16 缘起口径（SPEC-0.7）**：本能=场域自动；意识=决策与预判；**成长只认会话三源**（回复/搜索展示/事由分析）；**预判=发芽代谢出有据预案**；memo 把主驾注意力转向用户；内成员与主驾隔着 memo。
+> **2026-11-16 修订 B（SPEC-0.8 §十二）**：11-10 物业设定只复制骨架、改名、语义重填，skills 未导入；v2 五成员又按代码组件映射，`skill-trainer` 无继任。今次按「域边界照旧、技能内容搬入」处理——五成员增 `skills` 列，训练师并入 `gene-keeper`，KESPI 误差闭环由 SPEC-6.8 承接，不接外部 SkillOpt/LobeHub。
 
 ## 一、M0 全架构 spec（4/4）
 
@@ -118,8 +119,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **67/67 任务落地**（M0 4 / M1 15 / M2 18 / M3 14 / M4 6 / M5 3 / M6 7；M2 2.7/2.8 占位另计）
-- **52 档 / 332 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **68/68 任务落地**（M0 4 / M1 15 / M2 18 / M3 14 / M4 6 / M5 3 / M6 8；M2 2.7/2.8 占位另计）
+- **53 档 / 340 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -139,7 +140,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **未做（下一步）**：冻结评测集 `data/eval/embedding-pairs.jsonl`（≥50 条、粤语 ≥15 条）、词面 IDF 通道、compile 侧 `type` 推断；通道与可见性已齐，结论仍未出。
 
-## 五·补三 M6 能力叙事入库与消费（7/7 已落地）
+## 五·补三 M6 能力叙事入库与消费（8/8 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -150,6 +151,7 @@ status: active
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
 | 6.6 | 内外维护接线（memo 外场 × meko 内场） | ✅ | `spec/SPEC-6.6-内外维护接线.md` | test-6.6-maintenance-wiring 8/8：简报形状、targets 优先级、洞察上浮、memo 外场块、memo 纯读、T0 内场、T2 内场、铁律 |
 | 6.7 | 访问事件接口（access_hits） | ✅ | `spec/SPEC-6.7-访问事件接口.md` | test-6.7-access-events 8/8：表+索引只追加、记录契约、prune 只救不杀、compress 双锚、晋级证据、KESPI KA、CLI 接线、铁律 |
+| 6.8 | 自优化闭环（KESPI 误差 → 工单 → 场域动作 → T2 复核 → gene） | ✅ | `spec/SPEC-6.8-自优化闭环-误差工单到场域动作.md` | test-6.8-self-optimize 8/8：工单表、误差开单幂等、维度路由、场域下药留痕、读数上升复核、过闸毕业 gene、技能导入+训练师只读、铁律 |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
@@ -161,6 +163,7 @@ status: active
 - **6.5 成长观察**：旧院四件按「观察与执行分离」改姿态——`gap-scan`（五维缺口）、`feedback-delta`（轮间 Delta 与走势）、`self-model`（覆盖率/蒸馏债/成功率）三件只读，零写、不调参，统一由 T2 快照的 `gaps`/`feedback`/`selfModel` 三块消费；`insight-extract` 只写 raw 链候选实体（`pending-distillation`、confidence 0、type `MetaKnowledge`），走同一道蒸馏门。默认链 16→17 步（`trajectory` 后插 `insight-extract`）。自动调参与 `--fix` 自动修复明确不做。
 - **6.6 内外维护**：新增只读聚合 `src/maintenance-report.js`（单一出口）——`internal` 给 meko 内场（T0 plan 带 `observation` + 按 empty→orphan→unindexed→stagnant→thin 排序的 `targets`；T2 快照增 `insights`），`external` 给 memo 外场（`user.maintenance` + 系统行「缺口 N 走势」）。memo 仍纯读、不派单；targets 只是清单，真修复仍归 2.12/2.13；洞察仍走蒸馏门。
 - **6.7 访问事件**：新增只追加事实表 `access_hits`（entity_id/hit_at/source）+ `src/access.js`；`recordAccess` 由 CLI/宿主在内容被真正消费后调用，检索与 memo 仍纯读。prune（近 90 天 hit 只救不杀）、compress（last_access 与最近 hit 都旧才压）、field-promote（近 30 天 hit 算 access 证据）、KESPI KA（两者取更近）四处消费同一时钟。不改 `last_access`、不物理删。旧院 `query.js` 在读路径写回；本件把同一次写挪到消费方，语义同、边界清。
+- **6.8 自优化闭环**：新增 `opt_tickets` 工单表 + `src/self-optimize.js`。KESPI 八维低于阈值即开单（同实体同维幂等），按维路由到 `reconcile`/`rebond`/`demote` 或 `memo-card`；`reconcile` 先于 `rebond`。下药后重算 KESPI，读数上升即 `verified`，连续两次无改善即 `rejected`。已验证工单过 `omni-gate` 三闸后毕业成 `opt:<kind>:<action>` gene（未过则 `quarantined`）。默认链 `kespi` 后插 `self-optimize`（17→18 步），但只在「维护/自优化」轮或显式开关下执行，迁移/全量首跑不改库。`gene-keeper` 继承 `skill-trainer`，只读扫描工单候选（`persist:false`）；五成员增 `skills` 列。详见 `docs/Engineering/MEKO-SKILL-IMPORT-2026-11-16.md`。
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 

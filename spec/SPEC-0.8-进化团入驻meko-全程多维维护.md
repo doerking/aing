@@ -162,6 +162,8 @@ upstream: [SPEC-0.6, SPEC-0.7, SPEC-0.3, SPEC-1.14, SPEC-1.15, ARCHITECTURE-原�
 ### 9.3 旧五角色（neural-evolution-swarm）的定位：归 memo，做外场维护
 
 > owner 2026-11-16 拍板：旧五角色**唔入 meko 内册**，**委寄 memo 做外场维护**。
+>
+> **修订 B（§十二）取代本节关于「技能训练」的归属**：训练技能导入内场 `gene-keeper`，由 SPEC-6.8 闭环承接；本节其余（设计评审 / 实现把关 / 拓扑体检 / 对抗审查）仍归 memo 外场。
 
 | 层 | 谁 | 面向 | 职责 |
 |---|---|---|---|
@@ -268,3 +270,53 @@ upstream: [SPEC-0.6, SPEC-0.7, SPEC-0.3, SPEC-1.14, SPEC-1.15, ARCHITECTURE-原�
 **退化信号**：连续 3 轮无动作 / 守恒比越界 / 回炉断供 → 自动报警入 `pilot` 的 D4 时序维，触发 full_metabolism。
 
 > 一句话：**双相循环管「一轮点样转」，决策闸管「一个动作点样拍板」。** 进化团唔需要新方法论，只需要把两套既有纪律钉进场域带。
+
+---
+
+## 十二、修订 B（2026-11-16）· 技能导入：五角色技能搬进五成员
+
+> 修订原因：owner 指出 11-10 物业设定只复制骨架、改名、语义重填，skills 未导入；v2 五成员又从代码组件映射，`skill-trainer` 无继任。今次按「域边界照旧、技能内容搬入」处理。完整账见 `docs/Engineering/MEKO-SKILL-IMPORT-2026-11-16.md`。
+
+### 12.1 导入账（摘要）
+
+| 原角色 | 原技能 | 导入到 | 处理 |
+|---|---|---|---|
+| neuro-theorist | 六属性标尺、全局工作空间/注意力/元认知 | `pilot` | 保留方法，用于七类信号→九动作定焦 |
+| senior-engineer | 最小可验证改动、回归证据 | `tri-cross` | 保留方法，用于双链复核与回归 |
+| **skill-trainer** | **SkillOpt 六阶段、Gate4a、守恒 0.8–1.5** | **`gene-keeper`** | **本地化六阶段，不接外部 SkillOpt/Python** |
+| plasticity-analyst | 六维拓扑体检、守恒比 | `tri-cross` | 保留六维口径，接 D1 |
+| adversarial-reviewer | rebuttals[]、假前提、群体漂移 | `omni-gate` | 保留对抗格式，接三闸 |
+| guide-chain-swarm | 三路意见、加权（非多数票）| `poll` | 保留召集/加权 |
+
+### 12.2 成员册增列（实现面）
+
+`src/evolution-team.js` 的 `MEMBERS[].skills`：
+
+| 成员 | skills |
+|---|---|
+| `gene-keeper` | `skill-trainer`, `growth-loop` |
+| `omni-gate` | `adversarial-reviewer`, `guardrails` |
+| `pilot` | `neuro-theorist`, `growth-director` |
+| `tri-cross` | `plasticity-analyst`, `senior-engineer` |
+| `poll` | `guide-chain-swarm` |
+
+同文件导出 `TRAINER_STAGES = ['rollout','reflect','aggregate','select','update','gate']`。
+
+### 12.3 训练师归位：KESPI 误差闭环
+
+- `gene-keeper` 继承 `skill-trainer`，承接 SPEC-6.8：
+  `KESPI 误差 → opt_tickets 工单 → 场域动作（2.12/2.13）→ T2 复核 → omni-gate → gene`。
+- 证据全在本地：`kespi_scores` / `field_actions` / `gate_records` / `genes`。
+- 不引入外部 SkillOpt、影子稿、Python、LobeHub 或外部 Agent Group。
+- `gene-keeper.onCycle` 只读扫描工单候选（`persist:false`），不落库，守 I7。
+
+### 12.4 与 §9.3 的关系
+
+- §9.3 关于「技能训练归 memo 外场」一句由本节取代；外场仍保留设计评审、实现把关、拓扑体检、对抗审查。
+- 5 个常驻单元长身份与职责一字不改（§三）；本次只补 `skills` 与训练闭环，不新增角色、不改编制。
+
+### 12.5 验收
+
+- 2.14 成员册五员均有非空 `skills`，`gene-keeper` 含 `skill-trainer`。
+- 6.8 闭环 AC-1–AC-8 全绿：开单、路由、下药、复核、毕业、技能导入、只读、铁律。
+- 默认代谢链含 `self-optimize`，但仅在「维护/自优化」轮或显式开关下执行。

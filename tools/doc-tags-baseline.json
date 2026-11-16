@@ -5,6 +5,7 @@
     "STATUS.md",
     "docs/Engineering/CONSUMER-AUDIT-2026-11-16.md",
     "docs/Engineering/EMBEDDING-BENCH-2026-11-16.md",
+    "docs/Engineering/MEKO-SKILL-IMPORT-2026-11-16.md",
     "docs/HANDOFF-2026-11-16.md",
     "docs/MEMORY-2026-11-16.md",
     "spec/README.md",
@@ -62,6 +63,7 @@
     "spec/SPEC-6.4-任务轨迹消费.md",
     "spec/SPEC-6.5-成长观察四件.md",
     "spec/SPEC-6.6-内外维护接线.md",
-    "spec/SPEC-6.7-访问事件接口.md"
+    "spec/SPEC-6.7-访问事件接口.md",
+    "spec/SPEC-6.8-自优化闭环-误差工单到场域动作.md"
   ]
 }
