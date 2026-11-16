@@ -56,6 +56,15 @@ function _vectorDiagnostics(db) {
   };
 }
 
+/** 超长只削尾部整段（健康/向量必留）：不出「场域动作 5…」这种半个字段（SPEC-5.2 §2.3 修订 A） */
+function _clipSystemLine(line) {
+  if (line.length <= SYSTEM_LINE_MAX) return line;
+  const parts = line.split(' / ');
+  while (parts.length > 1 && parts.join(' / ').length + 2 > SYSTEM_LINE_MAX) parts.pop();
+  const out = parts.join(' / ');
+  return out.length + 2 <= SYSTEM_LINE_MAX ? out + ' …' : line.slice(0, SYSTEM_LINE_MAX - 1) + '…';
+}
+
 async function buildMemo(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('memo 需要 store 注入（SPEC-3.11 契约）');
   const db = store._getDb();
@@ -146,7 +155,7 @@ async function buildMemo(store, opts = {}) {
   // 向量段紧跟健康——超长截断时先保它（SPEC-5.2 §2.3）
   const vecTag = `向量 ${vector.backend} ${vector.percent}%${vector.source === 'env' ? '(测试)' : ''}`;
   let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / ${consText} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0}`;
-  if (systemLine.length > SYSTEM_LINE_MAX) systemLine = systemLine.slice(0, SYSTEM_LINE_MAX - 1) + '…';
+  systemLine = _clipSystemLine(systemLine);
 
   // 外派派单卡（SPEC-3.15 挂载）：传了就挂，没传就明说未接——不摆空位、不假装已派
   const swarm = opts.swarmCard && typeof opts.swarmCard === 'object' && opts.swarmCard.card
