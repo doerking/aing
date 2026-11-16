@@ -1,6 +1,6 @@
 ---
 tags: [aing-v2, 状态, 进度, single-source-of-truth:9, must-read:9]
-description: aing-v2 重写进度唯一真源——61 任务状态/spec/test/证据三指针，其余文档只引用不复述
+description: aing-v2 重写进度唯一真源——62 任务状态/spec/test/证据三指针，其余文档只引用不复述
 date: 2026-11-16
 status: active
 ---
@@ -18,9 +18,9 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 46 档 / 286 条断言全绿 |
+| 测试 | `npm test` → 47 档 / 293 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **61 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=14 / M4=6 / M5=3 / M6=1）|
+| 任务总数口径 | **62 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=14 / M4=6 / M5=3 / M6=2）|
 
 > **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑时界场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 > **2026-11-16 摆位裁定（SPEC-0.8）**：进化团旧院一直旁挂无定位，今次**入驻 meko 中间质**——五成员（gene-keeper / omni-gate / pilot / tri-cross / poll）按组件契约注册，蜂巢形态共享同一中间质，T0 定焦 / T1 复核 / T2 度量 / T3 演化 四时点 × 六维（结构/强度/度量/时序/成员/用户）全程维护；判定与执行分离，写入仍由场域件 2.12/2.13 做。
@@ -118,8 +118,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **61/61 任务落地**（M0 4 / M1 15 / M2 18 / M3 14 / M4 6 / M5 3 / M6 1；M2 2.7/2.8 占位另计）
-- **46 档 / 286 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **62/62 任务落地**（M0 4 / M1 15 / M2 18 / M3 14 / M4 6 / M5 3 / M6 2；M2 2.7/2.8 占位另计）
+- **47 档 / 293 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -139,16 +139,18 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **未做（下一步）**：冻结评测集 `data/eval/embedding-pairs.jsonl`（≥50 条、粤语 ≥15 条）、词面 IDF 通道、compile 侧 `type` 推断；通道与可见性已齐，结论仍未出。
 
-## 五·补三 M6 能力显现入库（1/1 已落地）
+## 五·补三 M6 能力叙事入库与消费（2/2 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
 | 6.1 | 能力显现入库（六段叙事 + 校准合并） | ✅ | `spec/SPEC-6.1-能力显现入库.md` | test-6.1-narrative-ingest 7/7：六段齐、手段/编排归位、截断与思维开关、approval 按 callId 挂工具、feedback/goal 落会话级、落库 content 带 format/turns/stats、幂等、缺料拒入、铁律 |
+| 6.2 | 能力叙事消费与蒸馏点 | ✅ | `spec/SPEC-6.2-能力叙事消费与蒸馏点.md` | test-6.2-distill-points 7/7：区间捕获不截断、h1–h6 双语起锚、止端中文、不过捕、蒸馏点确定性、落 distill_points、幂等+退役跳过、链上可见+铁律 |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
 - **差异登记**：手段与编排拆成两个 `###` 段（六段要数得出来）；AB 写 `raw/inbox` 中间文件，v2 直接写 Conversation 实体；校准由调用方传数组，不依赖 cordis 事件。
 - **未接**：CLI / auto-ingest 尚未调用 `ingestNarrative`；swarm33 规则库（AB 的六模块 135 断言）尚未移植评估。
+- **6.2 消费侧**：旧院 `distill.js:103` 的区间捕获口径已迁入 `src/distill-points.js`；蒸馏点落辅助表 `distill_points`（不改正文、不破逐字保真），默认链 14→15 步（`distill` 之后插 `distill-points`）。缺口来源与其余三组真缺口见 `docs/Engineering/CONSUMER-AUDIT-2026-11-16.md`。
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 

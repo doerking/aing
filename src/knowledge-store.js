@@ -72,6 +72,14 @@ const DDL = [
     checksum TEXT,
     updated_at DATETIME
   )`,
+  `CREATE TABLE IF NOT EXISTS distill_points (
+    base_id TEXT PRIMARY KEY,
+    digest TEXT NOT NULL,
+    raw_count INTEGER NOT NULL,
+    line_count INTEGER NOT NULL,
+    points_json TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS field_actions (
     id TEXT PRIMARY KEY,
     action TEXT,                  -- rebond/unwind/reconcile/demote/promote
