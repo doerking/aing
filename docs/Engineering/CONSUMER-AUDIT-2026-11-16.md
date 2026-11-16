@@ -98,6 +98,7 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 
 > **6.4 已补**：`task_trajectories` 表（13 列 + 3 索引）+ `src/trajectory.js`；会话（六段/三源）与代谢轮各落一条，幂等只追加。
 > **6.5 已补**：四件按「观察与执行分离」改姿态——`gap-scan` / `feedback-delta` / `self-model` 三件只读，由 T2 快照消费；`insight-extract` 只写 raw 链候选实体（confidence 0），走蒸馏门。自动调参与 `--fix` 明确不做。
+> **6.6 已补**：内外维护接线——`maintenance-report.js` 单一出口，memo 外场见 `user.maintenance`（缺口/走势/待蒸馏洞察），meko 内场 T0 拿 `targets`、T2 拿 `insights`；执行仍归 2.12/2.13。
 
 | 旧件 | 职责 | v2 现状 |
 |---|---|---|

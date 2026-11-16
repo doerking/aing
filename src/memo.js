@@ -127,9 +127,21 @@ async function buildMemo(store, opts = {}) {
   const lastField = _scalar(db, `SELECT COUNT(*) AS n FROM field_actions`);
   const ratioText = cons.ratio === Infinity ? 'inf' : String(cons.ratio);
   const vector = _vectorDiagnostics(db);
+  // 内外维护简报（SPEC-6.6）：只读聚合，失败置 null 不阻断 memo
+  let maintenance = null;
+  try {
+    const rep = require('./maintenance-report.js').buildReport(store);
+    maintenance = {
+      gaps: { total: rep.internal.gaps.total, counts: rep.internal.gaps.counts },
+      trend: rep.internal.feedback.verdict,
+      pendingInsights: rep.external.pendingInsights
+    };
+  } catch (_) { maintenance = null; }
+  const trendGlyph = { improving: '↑', regressing: '↓', flat: '→', insufficient: '─' }[maintenance && maintenance.trend] || '─';
+  const gapTotal = maintenance ? maintenance.gaps.total : 0;
   // 向量段紧跟健康——超长截断时先保它（SPEC-5.2 §2.3）
   const vecTag = `向量 ${vector.backend} ${vector.percent}%${vector.source === 'env' ? '(测试)' : ''}`;
-  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / 蒸馏债 ${pendingDistill} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
+  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
   if (systemLine.length > SYSTEM_LINE_MAX) systemLine = systemLine.slice(0, SYSTEM_LINE_MAX - 1) + '…';
 
   return {
@@ -138,7 +150,8 @@ async function buildMemo(store, opts = {}) {
       openLoops,
       patterns,
       plans,
-      coldStart: convs.length === 0
+      coldStart: convs.length === 0,
+      maintenance
     },
     systemLine,
     diagnostics: { vector },

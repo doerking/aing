@@ -48,5 +48,6 @@
   "test-6.2-distill-points.js": 7,
   "test-6.3-retrieval-fusion.js": 7,
   "test-6.4-trajectory.js": 7,
-  "test-6.5-growth-observe.js": 9
+  "test-6.5-growth-observe.js": 9,
+  "test-6.6-maintenance-wiring.js": 8
 }
