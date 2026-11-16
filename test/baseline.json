@@ -42,5 +42,6 @@
   "test-3.9-gates-c11-c19.js": 3,
   "test-4.1-migrate.js": 6,
   "test-5.1-vector-backend.js": 9,
-  "test-5.2-memo-vector-status.js": 8
+  "test-5.2-memo-vector-status.js": 8,
+  "test-5.3-retrieval-rank.js": 9
 }

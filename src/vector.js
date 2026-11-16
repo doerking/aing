@@ -7,14 +7,24 @@
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 //
 // M5 任务 5.1（SPEC-5.1）：后端可插拔 + 只供测试的开关 + 混用防护。
-// 默认仍是 hash-64；换后端只能用 opts.backend 或环境变量 AING_VECTOR_BACKEND（测试/评测用）。
+// 换后端只能用 opts.backend 或环境变量 AING_VECTOR_BACKEND（测试/评测用）。
 // 不同后端的向量永不互比——检索按 model + dim 过滤，结论按自己语料复核，不按测试集排名。
+// M5 任务 5.3（SPEC-5.3）：文档投喂实测后修排序——默认升 hash-64w2：
+//   ① 简繁归一（t2s 单字折叠，繁体正文能被简体查询命中）
+//   ② 双字/拉丁词权重 2（更长匹配 = 更强证据）
+//   ③ 检索按双链基名去重，k 按去重后计
+// hash-64 保留可切做对照（不折叠、权重全 1，逐位等于 SPEC-1.8）。
 
 const crypto = require('crypto');
 
+// 简繁归一字表（SPEC-5.3 §2.1）：t2s 单字映射，来源 OpenCC（Apache-2.0），本地生成后随包，无运行时依赖
+const T2S_RAW = require('./t2s-chars.json');
+const T2S = new Map(Object.entries(T2S_RAW).filter(([k]) => !k.startsWith('_')));
+
 const DIM = 64;
-const MODEL = 'hash-64';
-const BUILTIN = 'hash-64';
+const MODEL = 'hash-64w2';   // 默认（SPEC-5.3）：CJK 双字 / 拉丁词权重 2
+const LEGACY = 'hash-64';    // 旧口径（SPEC-1.8），可切回做对照
+const BIGRAM_WEIGHT = 2;
 
 function fnv1a(str) {
   let h = 0x811c9dc5;
@@ -25,8 +35,15 @@ function fnv1a(str) {
   return h >>> 0;
 }
 
-/** CJK 单字 + CJK 双字 + 拉丁词 */
-function tokens(text) {
+/** 简繁归一：繁体字折到简体（简体原样返回） */
+function fold(text) {
+  let out = '';
+  for (const ch of String(text == null ? '' : text)) out += T2S.get(ch) || ch;
+  return out;
+}
+
+/** CJK 单字 + CJK 双字 + 拉丁词（原文，不折叠） */
+function rawTokens(text) {
   const s = String(text == null ? '' : text).toLowerCase();
   const out = [];
   const cjk = [];
@@ -45,13 +62,17 @@ function tokens(text) {
   return out;
 }
 
-function hashEmbed(text) {
+/** 默认口径的词元：先简繁归一再切词（SPEC-5.3 §2.1） */
+function tokens(text) { return rawTokens(fold(text)); }
+
+function embedFrom(list, bigramWeight) {
   const v = new Array(DIM).fill(0);
-  for (const t of tokens(text)) {
+  for (const t of list) {
+    const w = t.length >= 2 ? bigramWeight : 1;
     const h = fnv1a(t);
     const idx = h % DIM;
     const sign = ((h >>> 8) & 1) ? 1 : -1;
-    v[idx] += sign;
+    v[idx] += sign * w;
   }
   let norm = 0;
   for (const x of v) norm += x * x;
@@ -60,9 +81,13 @@ function hashEmbed(text) {
   return v;
 }
 
+function hashEmbed(text) { return embedFrom(tokens(text), BIGRAM_WEIGHT); }
+function legacyEmbed(text) { return embedFrom(rawTokens(text), 1); }
+
 // ── 后端注册表（SPEC-5.1 §2.1）────────────────────────────────
 const backends = new Map();
-backends.set(BUILTIN, { name: BUILTIN, dim: DIM, model: MODEL, embed: hashEmbed, builtin: true });
+backends.set(LEGACY, { name: LEGACY, dim: DIM, model: LEGACY, embed: legacyEmbed, builtin: true });
+backends.set(MODEL, { name: MODEL, dim: DIM, model: MODEL, embed: hashEmbed, builtin: true });
 
 const warned = new Set();
 
@@ -71,7 +96,7 @@ function registerBackend(backend) {
   if (!backend || typeof backend !== 'object') throw new Error('后端必须是对象');
   const name = String(backend.name == null ? '' : backend.name).trim();
   if (!name) throw new Error('后端缺 name');
-  if (name === BUILTIN) throw new Error(`内置后端 ${BUILTIN} 不可覆盖`);
+  if (backends.has(name) && backends.get(name).builtin) throw new Error(`内置后端 ${name} 不可覆盖`);
   const dim = Number(backend.dim);
   if (!Number.isInteger(dim) || dim <= 0) throw new Error(`后端 ${name} 的 dim 非法：${backend.dim}`);
   if (typeof backend.embed !== 'function') throw new Error(`后端 ${name} 缺 embed 函数`);
@@ -83,15 +108,15 @@ function registerBackend(backend) {
 /** 解析后端：显式名 > 环境变量 > hash-64；未知名回退并警告一次 */
 function resolveBackend(name) {
   const requested = name == null || name === ''
-    ? String(process.env.AING_VECTOR_BACKEND || BUILTIN)
+    ? String(process.env.AING_VECTOR_BACKEND || MODEL)
     : String(name);
   const hit = backends.get(requested);
   if (hit) return { ...hit, requested, fallback: false };
   if (!warned.has(requested)) {
     warned.add(requested);
-    console.warn(`[vector] 未知后端 ${requested}，回退 ${BUILTIN}`);
+    console.warn(`[vector] 未知后端 ${requested}，回退 ${MODEL}`);
   }
-  return { ...backends.get(BUILTIN), requested, fallback: true };
+  return { ...backends.get(MODEL), requested, fallback: true };
 }
 
 function listBackends() {
@@ -205,11 +230,22 @@ async function search(store, query, opts = {}) {
     hits.push({ id: r.id, name: r.name, score: sim * (0.5 + 0.5 * Math.min(9, Math.max(1, strength)) / 9), similarity: sim, strength });
   }
   stmt.free();
-  hits.sort((a, b) => b.score - a.score);
-  return hits.slice(0, k);
+  // 双链去重（SPEC-5.3 §2.2）：同 base 只留一条；同分优先 raw（wiki 是镜像）
+  hits.sort((a, b) => b.score - a.score ||
+    (String(a.id).startsWith('wiki-') ? 1 : 0) - (String(b.id).startsWith('wiki-') ? 1 : 0));
+  const out = [];
+  const seen = new Set();
+  for (const h of hits) {
+    const base = String(h.id).replace(/^wiki-/, '');
+    if (seen.has(base)) continue;
+    seen.add(base);
+    out.push({ ...h, base });
+    if (out.length >= k) break;
+  }
+  return out;
 }
 
 module.exports = {
-  vectorStep, search, vectorOf, tokens, DIM, MODEL,
+  vectorStep, search, vectorOf, tokens, rawTokens, fold, DIM, MODEL,
   registerBackend, resolveBackend, listBackends
 };

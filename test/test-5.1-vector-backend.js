@@ -29,9 +29,9 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
 function rowsOf(db) { const st = db.prepare('SELECT entity_id, dim, model FROM entity_vectors ORDER BY entity_id'); const o = []; while (st.step()) o.push(st.getAsObject()); st.free(); return o; }
 
 (async () => {
-  // AC-1 默认路径不变
-  const v0 = m.vectorOf('苹果手机');
-  ac('AC-1 默认路径不变（逐位等于 SPEC-1.8 快照）', sameVec(v0, SNAP_APPLE) && m.DIM === 64 && m.MODEL === 'hash-64', JSON.stringify(v0));
+  // AC-1 旧口径逐位不变（5.3 后默认升为 hash-64w2，旧口径显式指定仍锁快照）
+  const v0 = m.vectorOf('苹果手机', { backend: 'hash-64' });
+  ac('AC-1 旧口径逐位等于 SPEC-1.8 快照', sameVec(v0, SNAP_APPLE) && m.DIM === 64 && m.MODEL === 'hash-64w2', JSON.stringify(v0));
 
   // AC-2 自定义后端可用
   const reg = typeof m.registerBackend === 'function' && typeof m.resolveBackend === 'function' && typeof m.listBackends === 'function';
@@ -48,14 +48,14 @@ function rowsOf(db) { const st = db.prepare('SELECT entity_id, dim, model FROM e
     envOk = r && r.name === 'probe-8' && r.fallback !== true;
     delete process.env.AING_VECTOR_BACKEND;
     const back = m.resolveBackend();
-    envOk = envOk && back && back.name === 'hash-64';
+    envOk = envOk && back && back.name === 'hash-64w2';
   }
   ac('AC-3 环境变量开关（只供测试）', envOk);
 
   // AC-4 未知后端回退
   let fb = null;
   if (typeof m.resolveBackend === 'function') fb = m.resolveBackend('no-such-backend');
-  ac('AC-4 未知后端回退 hash-64', !!fb && fb.name === 'hash-64' && fb.fallback === true && fb.requested === 'no-such-backend', JSON.stringify(fb && { name: fb.name, fallback: fb.fallback, requested: fb.requested }));
+  ac('AC-4 未知后端回退默认', !!fb && fb.name === 'hash-64w2' && fb.fallback === true && fb.requested === 'no-such-backend', JSON.stringify(fb && { name: fb.name, fallback: fb.fallback, requested: fb.requested }));
 
   // AC-5 非法后端拒收
   const bad1 = typeof m.registerBackend === 'function' && throws(() => m.registerBackend({ name: 'no-embed', dim: 8 }));
@@ -75,23 +75,26 @@ function rowsOf(db) { const st = db.prepare('SELECT entity_id, dim, model FROM e
   // AC-6 默认后端建向量记后端
   const r1 = await m.vectorStep(store, {});
   const rows1 = rowsOf(db);
-  ac('AC-6 建向量记后端（64 / hash-64）', r1.indexed === 3 && rows1.length === 3 && rows1.every(r => r.dim === 64 && r.model === 'hash-64'), JSON.stringify(rows1));
+  ac('AC-6 建向量记后端（64 / 默认）', r1.indexed === 3 && rows1.length === 3 && rows1.every(r => r.dim === 64 && r.model === 'hash-64w2'), JSON.stringify(rows1));
 
   // AC-7 换后端重建
   const r2 = await m.vectorStep(store, { backend: 'probe-8' });
   const rows2 = rowsOf(db);
   ac('AC-7 换后端重建（不跳过，维度随之变）', r2.rebuilt === 3 && r2.skipped === 0 && rows2.every(r => r.dim === 8 && r.model === 'probe-8'), JSON.stringify({ r2, rows2 }));
 
-  // AC-8 混用防护：把 apple 一行换回 hash-64（模拟部分迁移的混库）
+  // AC-8 混用防护：把 apple 一行换成旧口径 hash-64（模拟部分迁移的混库）
   const put = db.prepare("UPDATE entity_vectors SET dim=64, model='hash-64', vector=? WHERE entity_id='apple'");
-  put.run([JSON.stringify(m.vectorOf('苹果手机\n苹果手机发布新旗舰'))]); put.free();
+  put.run([JSON.stringify(m.vectorOf('苹果手机\n苹果手机发布新旗舰', { backend: 'hash-64' }))]); put.free();
   store._persist();
   const probeHits = await m.search(store, '苹果手机', { backend: 'probe-8', k: 10 });
   const defHits = await m.search(store, '苹果手机', { k: 10 });
+  const oldHits = await m.search(store, '苹果手机', { backend: 'hash-64', k: 10 });
   const probeIds = probeHits.map(h => h.id);
   const defIds = defHits.map(h => h.id);
+  const oldIds = oldHits.map(h => h.id);
   const probeOnly = probeIds.every(id => id === 'banana' || id === 'cherry');
-  ac('AC-8 混用防护（各后端只出自己的行）', probeOnly && !probeIds.includes('apple') && defIds.length === 1 && defIds[0] === 'apple', JSON.stringify({ probeIds, defIds }));
+  const defOnly = defIds.every(id => id === 'banana' || id === 'cherry');
+  ac('AC-8 混用防护（各后端只出自己的行）', probeOnly && !probeIds.includes('apple') && defOnly && !defIds.includes('apple') && oldIds.length === 1 && oldIds[0] === 'apple', JSON.stringify({ probeIds, defIds, oldIds }));
 
   // AC-9 铁律
   const la = db.prepare("SELECT last_access FROM entities WHERE id='apple'"); la.step(); const laV = la.getAsObject().last_access; la.free();
