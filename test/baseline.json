@@ -39,5 +39,6 @@
   "test-3.8-gates-c10.js": 3,
   "test-3.9-gates-c11-c19.js": 3,
   "test-3.10-gates-c20-c21.js": 3,
-  "test-4.1-migrate.js": 6
+  "test-4.1-migrate.js": 6,
+  "test-3.14-cli.js": 6
 }

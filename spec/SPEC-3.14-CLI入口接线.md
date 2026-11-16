@@ -1,0 +1,68 @@
+---
+tags: [aing-v2, spec, cli, 入口, 开库, M3, spec:9, cli:9]
+description: M3.14 CLI 入口接线 spec——新增统一开库入口 src/cli.js（与 neural.js 同角色入 arch-lint 白名单），提供 memo / ingest / orchestrate 三子命令；库路径取 AING_DB 或缺省 data/knowledge.db；store 注入下游，组件零直连
+date: 2026-11-16
+status: draft（Hana 定判据）
+owner: hana
+upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
+---
+
+# SPEC-3.14 · CLI 入口接线（memo / ingest / orchestrate）
+
+> 现状：memo.js / auto-ingest.js / meko-orchestrator.js 皆系依赖注入组件，命令行入口未接；
+> 出场接线（读 memo / 会话入库 / 一轮代谢）缺统一开库层。
+> 本 spec 新增 `src/cli.js` 作为 CLI 开库入口（与 `neural.js` 同角色，入 arch-lint C5 白名单），
+> 开库后注入调用现有组件；唔改组件本体、唔破坏 C5（组件仍唔直连 store）。
+
+---
+
+## 一、目标
+
+提供 `node src/cli.js <memo|ingest|orchestrate>`：开库（`AING_DB` 或缺省 `data/knowledge.db`）→ 注入 store → 调用 `buildMemo` / `autoIngest` / `MekoOrchestrator`。
+
+## 二、行为（spec 即契约）
+
+### 2.1 子命令
+- `memo [--json] [--limit N]`：调 `buildMemo(store, {limit})`；默认人读摘要，`--json` 输出全量
+- `ingest --payload <json>`：调 `autoIngest(store, payload)`；`payload.actor` 必须 `hana`
+- `orchestrate [--rounds N] [--json]`：`buildDefaultSteps()` 注册进 `MekoOrchestrator` 后 `runCycle`
+
+### 2.2 开库路径优先级
+`--db` 参数 > `AING_DB` 环境变量 > 缺省 `<repo-root>/data/knowledge.db`
+
+### 2.3 导出（供测试注入，唔靠 spawn）
+`openStore / cmdMemo / cmdIngest / cmdOrchestrate / humanMemo / usage / main`
+
+### 2.4 铁律
+- 组件本体唔改：memo / auto-ingest / meko-orchestrator 保持纯库，store 由 cli 注入（C5 守）
+- 库路径全用 `__dirname` 相对或入参，唔硬编码盘符（C8 守）
+- 唔用 child_process / git 写端（C13 守）
+
+## 三、Acceptance Criteria
+
+| # | 判据 | 检验方式 |
+|---|---|---|
+| AC-1 | memo 冷启动诚实 | 空库 `cmdMemo` → `coldStart=true`、`recent=[]` |
+| AC-2 | ingest 真写 + memo 读到 | `cmdIngest(hana)` 后 `cmdMemo` recent 含该会话 |
+| AC-3 | ingest 只认 hana | `actor=user` → `identity-rejected` |
+| AC-4 | orchestrate 真跑 | 注入最小步 → `ok`、`rounds`、meko_cycles 落 |
+| AC-5 | CLI 真跑 | spawn `cli.js memo --json` → exit0、JSON 含会话 |
+| AC-6 | C5 白名单 + 本仓绿 | `node tools/arch-lint.js` exit0 |
+
+## 四、Non-Goals
+
+- 不做 query 检索面（`query.js` 另立 spec）
+- 不改组件本体
+- 不做 HTTP 面
+
+## 五、契约
+
+- `openStore(dbPath?) -> store`（`init` 后返回单例）
+- `cmdMemo(dbPath?, opts?) -> memo`
+- `cmdIngest(dbPath?, payload) -> receipt`
+- `cmdOrchestrate(dbPath?, {rounds, steps, cycleType, budgetMs}) -> runResult`
+
+## 六、依赖
+
+- 上游：SPEC-3.11（memo）、SPEC-3.5（ingest）、SPEC-1.14（orchestrator）、SPEC-1.15 §四（arch-lint C5）
+- 影响面：`tools/arch-lint.js` WHITELIST 增 `cli.js`；`AGENT.md` 命令表增 cli 子命令

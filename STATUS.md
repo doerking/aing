@@ -18,9 +18,9 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 41 档 / 247 条断言全绿 |
+| 测试 | `npm test` → 42 档 / 253 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **56 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=13 / M4=6）|
+| 任务总数口径 | **57 任务**（M0=4(+3 附) / M1=15 / M2=18 / M3=14 / M4=6）|
 
 > **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑星闪场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 > **2026-11-16 摆位裁定（SPEC-0.8）**：进化团旧院一直旁挂无定位，今次**入驻 meko 中间质**——五成员（gene-keeper / omni-gate / pilot / tri-cross / poll）按组件契约注册，蜂巢形态共享同一中间质，T0 定焦 / T1 复核 / T2 度量 / T3 演化 四时点 × 六维（结构/强度/度量/时序/成员/用户）全程维护；判定与执行分离，写入仍由场域件 2.12/2.13 做。
@@ -86,7 +86,7 @@ status: active
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
-## 四、M3 意识层 + 入库 + 门禁（13/13 已落地）
+## 四、M3 意识层 + 入库 + 门禁（14/14 已落地）
 
 | # | 任务 | 状态 |
 |---|---|---|
@@ -103,6 +103,7 @@ status: active
 | **3.11** | **memo 用户面重构（recent/openLoops/patterns/plans）** | ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo 8/8；冷启动诚实、systemLine≤80 |
 | **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」 |
 | **3.13** | **会话三源入库闭环（reply/search/rationale）** | ✅ | `spec/SPEC-3.13-三源入库闭环.md` | test-3.13-session-ingest 5/5；plan-hit/miss 反馈边 |
+| **3.14** | **CLI 入口接线（memo/ingest/orchestrate）** | ✅ | `spec/SPEC-3.14-CLI入口接线.md` | test-3.14-cli 6/6；arch-lint 白名单增 cli.js |
 
 ## 五、M4 数据迁移 + 总验收（6/6 已落地）
 
@@ -117,8 +118,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **56/56 任务落地**（M0 4 / M1 15 / M2 18 / M3 13 / M4 6；M2 2.7/2.8 占位另计）
-- **41 档 / 247 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **57/57 任务落地**（M0 4 / M1 15 / M2 18 / M3 14 / M4 6；M2 2.7/2.8 占位另计）
+- **42 档 / 253 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
