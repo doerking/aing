@@ -80,6 +80,24 @@ const DDL = [
     points_json TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS task_trajectories (
+    id TEXT PRIMARY KEY,
+    task_type TEXT NOT NULL,
+    route TEXT DEFAULT '[]',
+    tools TEXT DEFAULT '[]',
+    step_sequence TEXT DEFAULT '[]',
+    success INTEGER DEFAULT 0,
+    retries INTEGER DEFAULT 0,
+    duration_ms INTEGER DEFAULT 0,
+    score_soft REAL DEFAULT 0,
+    score_hard INTEGER DEFAULT 0,
+    evidence TEXT DEFAULT '{}',
+    source TEXT DEFAULT 'unknown',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_traj_type ON task_trajectories(task_type)`,
+  `CREATE INDEX IF NOT EXISTS idx_traj_success ON task_trajectories(success)`,
+  `CREATE INDEX IF NOT EXISTS idx_traj_source ON task_trajectories(source)`,
   `CREATE TABLE IF NOT EXISTS field_actions (
     id TEXT PRIMARY KEY,
     action TEXT,                  -- rebond/unwind/reconcile/demote/promote

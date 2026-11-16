@@ -46,5 +46,6 @@
   "test-5.3-retrieval-rank.js": 9,
   "test-6.1-narrative-ingest.js": 7,
   "test-6.2-distill-points.js": 7,
-  "test-6.3-retrieval-fusion.js": 7
+  "test-6.3-retrieval-fusion.js": 7,
+  "test-6.4-trajectory.js": 7
 }
