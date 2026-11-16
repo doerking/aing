@@ -54,6 +54,12 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 
 - 常规写入、重开读回与现在一致；`init` 的建表与幂等行为不变。
 
+### 2.6 陈旧 tmp 清理
+
+- `init` 时清扫同目录下 `<db>.tmp.*`，只删 mtime 超过锁阈值（默认 120 秒）的。
+- 新鲜 tmp 可能是另一个活写者正在写，不碰。
+- 清理尽力而为：失败不阻 init。
+
 ---
 
 ## 三、Acceptance Criteria
@@ -66,6 +72,7 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 | AC-4 | 外部改写 | 加载后外部 touch → `db-stale`，不覆盖 |
 | AC-5 | 容量上限 | `AING_DB_CAP_BYTES=100` → `db-over-cap`，文件不变 |
 | AC-6 | 正常路径 | 写入后重开读回一致，无 tmp/lock 残留 |
+| AC-7 | 陈旧 tmp 清理 | init 后陈旧 tmp 消失；新鲜 tmp 保留 |
 
 ---
 
@@ -75,6 +82,13 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 - 不做 WAL / 页级写（sql.js 无此能力，保单文件零原生依赖）。
 - 不做加密、不做远端同步。
 - 不负责归档与删除（归 SPEC-6.11）。
+
+---
+
+## 五、已知取舍（评估过，不做）
+
+1. **`db-stale` 同秒窗口**：mtime 同秒且 size 不变的外部改动会漏检。判定阈值为 ±1ms，proot/ext4 的 mtime 是纳秒精度，另有单写者锁兜底；实际风险极低，不加密哈希比对（每写一读全库代价不值）。
+2. **rename 后目录 `fsync`**：POSIX 崩溃安全理论上要求 rename 后 fsync 父目录。Android ext4 journaling 下 rename 元数据随事务落盘，不额外做；换到无 journal 的文件系统（如某些 USB 盘）时再评估。
 
 ---
 
