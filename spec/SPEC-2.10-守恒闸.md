@@ -75,3 +75,17 @@ upstream: [SPEC-0.6 I5, SPEC-0.8 D3/T2, SPEC-1.9, SPEC-1.11, SPEC-1.13, SPEC-2.9
 
 - 上游：SPEC-1.9（产出）、SPEC-1.13（退场）、SPEC-1.10（跨域产出）
 - 消费者：SPEC-0.8 T2 度量、pilot D3/D4
+
+---
+
+## 修订 A（2026-11-17）：Infinity 不当坏值，只堵读侧哑弹
+
+> owner 裁定：「不改判据，只堵哑弹」。本节取代「Infinity 是否改哨兵」这一待裁项。
+
+- **判据不动**：`pruned = 0 且 growth > 0` 仍返回 `ratio: Infinity`、`verdict: 'growth-only'`、`inBand: false`。不改哨兵数（9e9 之类会污染 AVG / 排序 / 带内比较，且要迁旧数据）。
+- **存库不动**：SQLite REAL 存得 Inf，`conservation_ratio > 1e300` 在 SQL 侧可判，读回 JS 也是 `Infinity`；真库 6 轮实测全部为 Inf，T2 `complete` 与 verdict 均正确。
+- **只堵两处读侧**：
+  1. `feedback-delta` 的守恒比差分：非有限一律不出数——`Inf−Inf` 会得 `NaN`，`∞→有限` 会被算成假跌幅。现出 `{ratio: null, ratioState}`，状态取 `finite | inf | to-inf | from-inf | missing | insufficient`。
+  2. 序列化面：`JSON.stringify(Infinity)` 恒为 `null`，与「无读数」不可区分；输出方须显式转 `"inf"`（memo 系统行早已如此处理）。
+- 测试：`test/test-2.10b-conservation-inf.js` 6/6（判据不动、Inf−Inf 不出 NaN、两向不假涨跌、有限照旧、铁律）。
+- 仍待裁的另一半：**退边是否计入 pruned**（hub-trim 退的是边，pruned 只数实体，导致只长不剪的比值恒为 Inf）——不在本修订范围。
