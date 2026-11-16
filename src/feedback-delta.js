@@ -32,6 +32,17 @@ function trajectory(db) {
   return { samples: rows.length, successRate: round4((ok / rows.length) * 100) };
 }
 
+// 守恒比差分守护（SPEC-2.10 修订 A）：Inf 是合法读数，不是坏值。
+// Inf−Inf 会得 NaN、∞→有限会被算成假跌幅，所以非有限一律不出数，只标状态。
+function _ratioDelta(toRaw, fromRaw) {
+  if (toRaw == null || fromRaw == null) return { ratio: null, state: 'missing' };
+  const a = Number(toRaw), b = Number(fromRaw);
+  const aInf = a === Infinity, bInf = b === Infinity;
+  if (aInf || bInf) return { ratio: null, state: aInf && bInf ? 'inf' : (aInf ? 'to-inf' : 'from-inf') };
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return { ratio: null, state: 'missing' };
+  return { ratio: round4(a - b), state: 'finite' };
+}
+
 function delta(store) {
   if (!store || typeof store._getDb !== 'function') throw new Error('feedback-delta 需要 store 注入（SPEC-1.15 契约）');
   const db = store._getDb();
@@ -51,7 +62,7 @@ function delta(store) {
     return {
       from: cycles[0] ? cycles[0].id : null,
       to: null,
-      delta: { kespi: null, growth: null, pruned: null, ratio: null },
+      delta: { kespi: null, growth: null, pruned: null, ratio: null, ratioState: 'insufficient' },
       counts,
       trajectory: traj,
       verdict: 'insufficient'
@@ -60,11 +71,13 @@ function delta(store) {
 
   const [to, from] = cycles;   // DESC：第一条是较新
   const kd = Number(to.kespi_snapshot) - Number(from.kespi_snapshot);
+  const rd = _ratioDelta(to.conservation_ratio, from.conservation_ratio);
   const out = {
     kespi: Number.isFinite(kd) ? round4(kd) : null,
     growth: Number(to.growth) - Number(from.growth),
     pruned: Number(to.pruned) - Number(from.pruned),
-    ratio: round4(Number(to.conservation_ratio) - Number(from.conservation_ratio))
+    ratio: rd.ratio,
+    ratioState: rd.state
   };
   let verdict = 'flat';
   if (out.kespi != null && out.kespi > TREND_EPS) verdict = 'improving';
