@@ -96,7 +96,43 @@ function buildSessionTrajectory(entity) {
     };
   }
 
-  return null;
+  return buildMarkdownTrajectory(entity) || null;
+}
+
+/** 非 JSON 的 Conversation 正文：按二级以下小节落轨迹（SPEC-6.4b） */
+function buildMarkdownTrajectory(entity) {
+  const raw = entity && entity.content != null ? String(entity.content) : '';
+  const text = raw.trim();
+  if (!text) return null;
+  // 能解析成 JSON 的（含不认识的怪对象）不按 markdown 回填，避免把 JSON 原文当正文
+  try { JSON.parse(text); return null; } catch (_) { /* 非 JSON，继续 */ }
+
+  const lines = text.split(/\r?\n/);
+  const sections = [];
+  for (const line of lines) {
+    const m = /^#{2,6}\s+(.+)$/.exec(line.trim());
+    if (!m) continue;
+    const s = m[1].trim();
+    if (s && !sections.includes(s)) sections.push(s);
+  }
+  const title = (lines.find(l => /^#\s+/.test(l)) || '').replace(/^#\s+/, '').trim();
+
+  return {
+    id: 'traj-' + entity.id,
+    task_type: 'session',
+    route: [entity.name || title || entity.id],
+    tools: [],
+    step_sequence: sections.length ? sections : ['正文'],
+    success: 1,
+    evidence: {
+      convId: entity.id,
+      format: 'markdown-conversation',
+      bodyChars: text.length,
+      sectionCount: sections.length,
+      sections
+    },
+    source: 'session-markdown'
+  };
 }
 
 /** 只追加：同 id 已存在即跳过 */
@@ -200,5 +236,5 @@ async function stats(store) {
 }
 
 module.exports = {
-  buildSessionTrajectory, logTrajectory, syncSessions, logCycle, listTrajectories, stats
+  buildSessionTrajectory, buildMarkdownTrajectory, logTrajectory, syncSessions, logCycle, listTrajectories, stats
 };

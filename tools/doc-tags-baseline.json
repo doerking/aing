@@ -67,6 +67,7 @@
     "spec/SPEC-6.8-自优化闭环-误差工单到场域动作.md",
     "spec/SPEC-6.9-原版脚手架三件移植-能力入原生表.md",
     "spec/SPEC-6.9b-时界真接-真KESPI与分步预算.md",
-    "spec/SPEC-6.9c-成长观察读数同源.md"
+    "spec/SPEC-6.9c-成长观察读数同源.md",
+    "spec/SPEC-6.4b-markdown会话轨迹回填.md"
   ]
 }
