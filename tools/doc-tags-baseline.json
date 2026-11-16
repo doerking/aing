@@ -8,6 +8,7 @@
     "docs/Engineering/MEKO-SKILL-IMPORT-2026-11-16.md",
     "docs/HANDOFF-2026-11-16.md",
     "docs/MEMORY-2026-11-16.md",
+    "docs/MEMORY-2026-11-17.md",
     "spec/README.md",
     "spec/SPEC-0.1-数据模型.md",
     "spec/SPEC-0.2-meko四顶接口.md",
@@ -61,13 +62,13 @@
     "spec/SPEC-6.2-能力叙事消费与蒸馏点.md",
     "spec/SPEC-6.3-检索融合消费.md",
     "spec/SPEC-6.4-任务轨迹消费.md",
+    "spec/SPEC-6.4b-markdown会话轨迹回填.md",
     "spec/SPEC-6.5-成长观察四件.md",
     "spec/SPEC-6.6-内外维护接线.md",
     "spec/SPEC-6.7-访问事件接口.md",
     "spec/SPEC-6.8-自优化闭环-误差工单到场域动作.md",
     "spec/SPEC-6.9-原版脚手架三件移植-能力入原生表.md",
     "spec/SPEC-6.9b-时界真接-真KESPI与分步预算.md",
-    "spec/SPEC-6.9c-成长观察读数同源.md",
-    "spec/SPEC-6.4b-markdown会话轨迹回填.md"
+    "spec/SPEC-6.9c-成长观察读数同源.md"
   ]
 }
