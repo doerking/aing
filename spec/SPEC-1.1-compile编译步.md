@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 核心代谢, compile, 双铰链, M1, spec:9, compile:8]
 description: M1.1 compile 编译步 spec——raw 链解旋-复制入 entities 表，尊重声明 id，幂等 upsert，永不碰 last_access/invalid_at
 date: 2026-11-13
-status: draft（待 owner review）
+status: 定稿（含 2026-11-17 修订 A：type 路径推断）
 owner: ring
 upstream: [ARCHITECTURE-全架构重写图纸-DNA双铰链-从零实现-2026-11-13.md §1.2/§三/§六第1期, SPEC-0.1, SPEC-0.4 AC-6]
 ---
@@ -65,3 +65,16 @@ upstream: [ARCHITECTURE-全架构重写图纸-DNA双铰链-从零实现-2026-11-
 ---
 
 > 第 1 期按垂直切片推进，每步独立 spec + failing test + ALL GREEN。
+
+---
+
+## 修订 A（2026-11-17）：type 路径推断
+
+- 动机：frontmatter 不写 `type` 时，实体类型为 NULL；下游分层留存把 NULL 一律归知识层（永不按时间退），短料（会话/待办）因此堆满热库。
+- 契约：
+  1. frontmatter `type` 非空 → **原样优先**，路径不覆盖。
+  2. 否则按相对路径的目录段（小写）匹配：`conversations|conversation|chats|sessions → Conversation`；`todos|todo|tasks → Todo`；`papers|paper → Paper`；`concepts|concept → Concept`；`meta|meta-knowledge|metaknowledge → MetaKnowledge`；`insights|insight → Insight`；`originals|origin|inbox → RawDocument`。
+  3. 都不匹配 → `null`（未知，下游按知识层保底；**不从正文猜**——误判成短料会被到期删）。
+- 导出：`inferType(relPath, metadata)`、`TYPE_BY_DIR`。
+- 幂等不变：推断结果参与行比对，复跑无变则 skipped，不刷 `updated_at`。
+- 测试：`test/test-1.1b-type-infer.js` 6/6（显式优先、会话/待办、知识层三类、未知不猜、幂等、铁律）。
