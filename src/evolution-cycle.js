@@ -29,6 +29,11 @@ function _conservation(store) {
   catch (_) { return { growth: 0, pruned: 0, ratio: 1, inBand: true, verdict: 'balanced', idle: true }; }
 }
 
+// 6.5 只读件接入 T2：单件失败置 null，不阻断快照（观测不阻断主链）
+function _safe(fn) {
+  try { return fn(); } catch (_) { return null; }
+}
+
 const EVIDENCE_ACTIONS = ['demote', 'promote', 'promote-edge'];
 const MAINTENANCE_ACTIONS = ['rebond', 'unwind', 'reconcile'];
 
@@ -118,7 +123,11 @@ class EvolutionRuntime {
       D4: { value: idleStreak, definition: '连续无动作轮数' },
       D5: { value: genesActive, definition: `活跃 gene 数（归档 ${genesArchived}）` },
       D6: { value: proposals, definition: '待呈提案数（只出数）' },
-      conservation: c
+      conservation: c,
+      // 6.5：三只读件由 T2 消费；best-effort，单个失败置 null 不阻断快照
+      gaps: _safe(() => require('./gap-scan.js').gapScan(this.store)),
+      feedback: _safe(() => require('./feedback-delta.js').delta(this.store)),
+      selfModel: _safe(() => require('./self-model.js').measure(this.store))
     };
     this._snapshots.push(snap);
     return snap;

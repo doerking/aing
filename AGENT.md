@@ -15,7 +15,7 @@ status: draft（改写版）
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `npm test` / `node test/run-all.js` | ✅ 可用 | 49 档 / 307 条断言 |
+| `npm test` / `node test/run-all.js` | ✅ 可用 | 50 档 / 316 条断言 |
 | `npm run test:guard` | ✅ 可用 | test 计数只加唔减（R4）|
 | `node verify-deploy.js` | ✅ 可用 | C0–C21 共 33 项门禁 |
 | `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
