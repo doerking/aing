@@ -64,7 +64,7 @@ async function predict(store, opts = {}) {
   });
 
   let hits = [];
-  try { hits = await require('./vector.js').search(store, message, { k }); } catch (_) { hits = []; }
+  try { hits = (await require('./retrieval.js').search(store, message, { limit: k })).candidates; } catch (_) { hits = []; }
 
   const convHits = [];
   for (const h of hits) {
