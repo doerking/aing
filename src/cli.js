@@ -27,6 +27,12 @@ async function cmdIngest(dbPath, payload = {}) {
   return autoIngest(s, payload);
 }
 
+async function cmdAccess(dbPath, ids, opts = {}) {
+  const s = await openStore(dbPath);
+  const { recordAccess } = require('./access.js');
+  return recordAccess(s, ids, opts);
+}
+
 async function cmdOrchestrate(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { MekoOrchestrator } = require('./meko-orchestrator.js');
@@ -66,7 +72,8 @@ function usage() {
     'aing-v2 cli（CLI 开库入口）',
     '  node src/cli.js memo [--json] [--limit N] [--db <path>]',
     '  node src/cli.js ingest --payload <json>',
-    '  node src/cli.js orchestrate [--rounds N] [--json]'
+    '  node src/cli.js orchestrate [--rounds N] [--json]',
+    '  node src/cli.js access --ids a,b [--source cli]'
   ].join('\n'));
 }
 
@@ -87,6 +94,12 @@ async function main(argv) {
       console.log(JSON.stringify(out, null, 2));
       return 0;
     }
+    if (cmd === 'access') {
+      const ids = String(flags.ids || '').split(',').map(x => x.trim()).filter(Boolean);
+      const out = await cmdAccess(dbPath, ids, { source: flags.source || 'cli' });
+      console.log(JSON.stringify(out, null, 2));
+      return 0;
+    }
     if (cmd === 'orchestrate') {
       const out = await cmdOrchestrate(dbPath, { rounds: flags.rounds ? Number(flags.rounds) : undefined });
       console.log(flags.json ? JSON.stringify(out, null, 2) : `orchestrate ok=${out.ok} rounds=${out.rounds} ${out.elapsedMs}ms`);
@@ -103,4 +116,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdMemo, cmdIngest, cmdOrchestrate, humanMemo, usage, main };
+module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdOrchestrate, humanMemo, usage, main };

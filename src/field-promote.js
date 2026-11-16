@@ -64,6 +64,13 @@ async function evidenceFor(store, entityId) {
       const fresh = _scalar(db, `SELECT (julianday('now') - julianday(?)) * 86400 AS age`, [String(e.last_access)]);
       if (fresh && Number(fresh.age) >= 0 && Number(fresh.age) <= ACCESS_DAYS * 86400) kinds.push('access');
     }
+    if (!kinds.includes('access')) {
+      const hit = _scalar(db, 'SELECT MAX(hit_at) AS at FROM access_hits WHERE entity_id = ?', [entityId]);
+      if (hit && hit.at) {
+        const freshHit = _scalar(db, `SELECT (julianday('now') - julianday(?)) * 86400 AS age`, [String(hit.at)]);
+        if (freshHit && Number(freshHit.age) >= 0 && Number(freshHit.age) <= ACCESS_DAYS * 86400) kinds.push('access');
+      }
+    }
   }
 
   const k = _scalar(db, 'SELECT overall FROM kespi_scores WHERE entity_id = ?', [entityId]);

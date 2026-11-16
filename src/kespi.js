@@ -9,8 +9,11 @@
 const DAY = 86400000;
 
 function parseTs(v) {
-  if (v == null) return null;
-  const t = Date.parse(String(v).replace(' ', 'T') + 'Z');
+  if (v == null || v === '') return null;
+  const raw = String(v).trim();
+  const iso = raw.includes('T') ? raw : raw.replace(' ', 'T');
+  const zoned = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+  const t = Date.parse(zoned);
   return Number.isFinite(t) ? t : null;
 }
 function daysSince(now, v) {
@@ -42,6 +45,15 @@ async function kespiStep(store, opts = {}) {
   }
   ls.free();
 
+  // 访问事件（SPEC-6.7）：与 last_access 取更近的一次，作为 KA 的活跃锚
+  const hitMap = new Map();
+  const hs = db.prepare('SELECT entity_id, MAX(hit_at) AS at FROM access_hits GROUP BY entity_id');
+  while (hs.step()) {
+    const r = hs.getAsObject();
+    if (r.at != null) hitMap.set(String(r.entity_id), String(r.at));
+  }
+  hs.free();
+
   const upsert = db.prepare(
     `INSERT OR REPLACE INTO kespi_scores (entity_id, kq, kg, ka, km, kd, kc, kr, kb, overall, computed_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
@@ -61,9 +73,11 @@ async function kespiStep(store, opts = {}) {
     const upd = daysSince(now, e.updated_at);
     const kg = upd == null ? 0.5 : (upd <= 30 ? 1 : Math.exp(-upd / 90));
 
-    // KA 活跃
-    const la = daysSince(now, e.last_access);
-    const ka = la == null ? 0.2 : (la <= 7 ? 1 : Math.exp(-la / 30));
+    // KA 活跃：last_access 与访问事件取更近者
+    const laDays = daysSince(now, e.last_access);
+    const hitDays = daysSince(now, hitMap.get(e.id));
+    const accessDays = [laDays, hitDays].filter(v => v != null).sort((a, b) => a - b)[0];
+    const ka = accessDays == null ? 0.2 : (accessDays <= 7 ? 1 : Math.exp(-accessDays / 30));
 
     // KM 完整
     const km = [e.name, e.type, e.content, e.tags].filter(v => v != null && String(v) !== '').length / 4;
