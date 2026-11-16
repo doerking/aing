@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 留存, 归档, 到期删, prune, 移动端, M6, spec:9, retention:9, prune:7]
 description: M6.11 分层留存与到期归档 spec——2 万/月短料下热库必须设上限：原稿永不删、短料按热窗、知识按证据、墓碑永久；流程为退役→归档(月 ndjson+md+manifest)→删热库，三条前置硬门槛；prune 判据由「90 天+强度≤3」改为「到窗+无访问+无证据+可重建」；移动端退役模式留接口位
 date: 2026-11-17
-status: 定稿（代码待补）
+status: 定稿（已实现：分层规划 / 归档导出 / 干跑校验 / 墓碑删除；prune 判据切换待接）
 owner: hana
 upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 轨迹, 只读推演 2026-11-17]
 ---
@@ -30,12 +30,13 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 | 层 | 对象 | 寿命判据 | 删除 |
 |---|---|---|---|
 | **原稿层** | `raw/` 原稿与来源原文 | 永不删 | 禁止 |
-| **短料层** | Conversation / Todo / 日报类短产出 | 热窗（默认 30 天，可配） | 三段流程后删热库 |
+| **短料层** | Conversation / Todo / 日报类短产出 | 热窗（默认 30 天，可配）＋条数上限（默认 3 万） | 三段流程后删热库 |
 | **知识层** | Concept / Paper / MetaKnowledge 等编译产物 | 按证据与访问存活，不按时间删 | 只在被证伪或降级链触发时退役 |
 | **墓碑层** | 所有被删行 | 永久 | 不删 |
 
 - 分层以 `entities.type` 判；新增类型默认归知识层（宁留勿删）。
-- 短料层到窗不等于必删：还要过 2.4 的判据。
+- 短料层到窗不等于必删：还要过 §五 的四件判据。
+- 条数上限先于时间生效：短料条数超上限即按最老先归档，不等满窗。
 
 ---
 
@@ -52,7 +53,7 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 ## 四、三条前置（缺一不删）
 
 1. **归档先于删**：归档包不落盘并通过校验之前，热库一行不动。
-2. **可重建干跑**：从原稿重建 → 摘要比对；重建不出或摘要不一致的实体打「不可重建」标记，永不删。
+2. **可还原或可重建**：短料无原稿，靠**归档还原**（ndjson 重读、逐条摘要比对）；知识层靠**从原稿/镜像重建**。两条路都跑不通的实体不删。
 3. **墓碑可查**：删除前先写墓碑；墓碑写失败则整批中止。
 
 ---
@@ -60,7 +61,7 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 ## 五、判据替换（prune 重定义）
 
 - 旧：`90 天未动 且 tolaria_strength ≤ 3`。实测无效——强度只有 5/8/9，≤3 无对象，候选恒为 0。
-- 新判据四件全中才退役：**到窗（分层窗口）＋ 无访问（`last_access` 与 `access_hits` 均在窗内）＋ 无独立证据（连接/镜像/访问/KESPI 四类皆不成立）＋ 可重建**。
+- 新判据四件全中才退役：**到窗（分层窗口）＋ 无访问（`last_access` 与 `access_hits` 均超出窗口）＋ 无证据（无强度≥5 的边、无窗内访问；KESPI 不参与——实测饱和，均值 0.847、sd 0.075、六维近常数，当证据等于永不删）＋ 可还原或可重建**。
 - 窗口可配：短料默认 30 天；知识层不设时间窗（`windowDays = null`）。
 - 退役与删除分离：退役仍可逆；删除只在归档校验通过后发生。
 
@@ -80,7 +81,10 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 2. 2 万条/30 天量级下：一轮代谢耗时、`_persist` 单次写盘体积与耗时。
 3. 归档批次的条数、包体积、SHA 生成耗时。
 
-> 2026-11-17 已跑基线推演（299 活跃实体副本）：overall 均值 0.847、sd 0.075、六维饱和；强度 5/8/9 三档；prune 候选 0。此数作为改造前对照。
+> 2026-11-17 已跑基线推演与量级测试（均在副本上，真库未动）：
+> ① 现库 299 活跃实体 / 2.4MB，折算 8.3KB·条（知识实体含多边）；KESPI 均值 0.847、sd 0.075、六维饱和；强度只有 5/8/9，prune 候选 0。
+> ② 短料实测：5,000 条 → 库 5.6MB；20,000 条 → 库 15.3MB（约 144B/条落盘），KESPI 20,320 条 3.4s、向量 20,000 条 4.0s、`_persist` 11–34ms。
+> ③ 外推：10 万条热库约 75MB、单轮 KESPI/向量各约 17s/20s——故热条数上限暂定 3 万（单轮 ≤10s 量级），超限先归档。
 
 ---
 
@@ -120,3 +124,12 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 
 - 上游：SPEC-1.13（prune 原判据）、SPEC-0.1（表结构）、SPEC-6.2/6.4（派生件来源）。
 - 消费者：prune、metabolism、移动端（后续）。
+
+---
+
+## 十二、契约（实现）
+
+- `src/retention.js`：`tierOf(entity)`、`planRetention(store, {windowDays, maxHot, mode, now})` → `{counts, overCap, candidates[], skipped, applyAllowed}`；**只读**。
+- `tools/archive.js`：`exportMonth(store, {month, outDir, plan})` 写 `YYYY-MM.ndjson`（实体 + 边 + digest）、`YYYY-MM.md`（人读摘要）、`YYYY-MM.manifest.json`（条数 / SHA-256 / 逐条摘要）；`verifyArchive(outDir, month)` 干跑还原；`applyRetention(store, {plan, outDir, month, manifest})` 校验通过后写墓碑并删热库。
+- CLI：`node tools/archive.js --db <path> --out <dir> --month YYYY-MM [--max-hot N] [--window-days N] [--mode desktop|mobile-retire] [--apply]`；默认 dry-run。
+- 表：`tombstones`（SPEC-0.1 修订 K）。
