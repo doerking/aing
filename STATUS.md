@@ -84,7 +84,7 @@ status: active
 | **2.15** | **六维 × 四时点维护接线（T0–T3）** | ✅ | `spec/SPEC-2.15-六维四时点维护接线.md` | test-2.15-evolution-cycle 5/5；T0–T3 齐、六维各一断言、gene 可回滚 |
 | **2.16** | **闸东真接 + 自治/审批边界（OmniGate 强制引用）** | ✅ | `spec/SPEC-2.16-闸东真接与审批边界.md` | test-2.16-omni-gate 8/8；I8 无闸必拒、W2 队列、memo 卡片、双重锁 |
 | **2.17** | **子agent 单元：每位角色自带 ≤2 狼位（修订 A）** | ✅ | `spec/SPEC-2.17-子agent狼位.md` | test-2.17-wolf-units 4/4；身份快照不变、零写权、完即弃、D1–D5 采样 |
-| **2.18** | **外派三分编组：采集面（搜/看/定厚度）+ 3 员作业面 + 批内滚动/批间用户闸** | ✅ 规格修订 A（代码待补） | `spec/SPEC-2.18-外派蜂群三分编组.md` | test-2.18-dispatch-swarm 7/7 覆盖 AC-1~5；AC-6~9（厚度/批间闸/无熔断）待实现 |
+| **2.18** | **外派采集面：粒子×框架 / 七步派单 / 轨迹口径 / 来源分级 / 攻果门 / 基线门 / 两权分离 / 禁虚报** | ✅ 规格修订 B（代码待补） | `spec/SPEC-2.18-外派蜂群三分编组.md` | test-2.18-dispatch-swarm 7/7 覆盖 AC-1~5；AC-6~15（厚度/批间闸/无熔断/轨迹口径/分级/攻果门/基线门/禁虚报/两权）待实现 |
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
@@ -197,4 +197,6 @@ status: active
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
 | **D9** | 原院 guardrails 无调用点、四件 meko-* 无调用方 | 已裁定唔迁：guardrails 化为 `omni-gate` 强制闸（2.16）；meko-* 四件弃 |
+| **D10** | **守内面两套口径并存**：内部总设定 = neural-evolution-swarm 旧五角色；v2 = gene-keeper/omni-gate/pilot/tri-cross/poll 五组件 + 狼位 | **待裁**：牵动 2.14/2.17/6.6，故 2.18 修订 B 已把该条挂起不裁 |
+| **D11** | 包内 `src/dispatch-swarm.js` 与「对外采集与包无代码接线」边界冲突 | **待裁**：留则只作「派单底版校验 + 攻果门校验」纯函数，不提供 spawn；否则移出包 |
 | ~~D8~~ | ~~8 个模块直连 store~~ | **已清**：compile/tri-axis-gate 改注入；arch-lint C5 守（2026-11-16）|
