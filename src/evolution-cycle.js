@@ -29,9 +29,23 @@ function _conservation(store) {
   catch (_) { return { growth: 0, pruned: 0, ratio: 1, inBand: true, verdict: 'balanced', idle: true }; }
 }
 
-// 6.5 只读件接入 T2：单件失败置 null，不阻断快照（观测不阻断主链）
+// 6.5/6.6 只读件接入 T0/T2：一份维护简报，失败置 null，不阻断主链（观测不阻断）
 function _safe(fn) {
   try { return fn(); } catch (_) { return null; }
+}
+
+function _reportBlocks(store) {
+  try {
+    const r = require('./maintenance-report.js').buildReport(store);
+    return {
+      gaps: r.internal.gaps,
+      feedback: r.internal.feedback,
+      selfModel: r.internal.selfModel,
+      insights: r.external.pendingInsights
+    };
+  } catch (_) {
+    return { gaps: null, feedback: null, selfModel: null, insights: null };
+  }
 }
 
 const EVIDENCE_ACTIONS = ['demote', 'promote', 'promote-edge'];
@@ -54,11 +68,19 @@ class EvolutionRuntime {
     if (!last || c.idle) focus = 'supply';
     else if (c.verdict === 'growth-only') focus = 'digest';
     else if (c.verdict === 'prune-only') focus = 'restore';
+    let observation = null; let targets = [];
+    try {
+      const report = require('./maintenance-report.js').buildReport(this.store);
+      observation = report.internal;
+      targets = report.internal.targets;
+    } catch (_) { /* 简报失败不阻断定焦 */ }
     return {
       focus,
       reason: c.verdict,
       budget: { rounds: 1, fieldTick: 1 },
-      lastCycle: last ? { type: last.cycle_type, status: last.status } : null
+      lastCycle: last ? { type: last.cycle_type, status: last.status } : null,
+      observation,
+      targets
     };
   }
 
@@ -124,10 +146,8 @@ class EvolutionRuntime {
       D5: { value: genesActive, definition: `活跃 gene 数（归档 ${genesArchived}）` },
       D6: { value: proposals, definition: '待呈提案数（只出数）' },
       conservation: c,
-      // 6.5：三只读件由 T2 消费；best-effort，单个失败置 null 不阻断快照
-      gaps: _safe(() => require('./gap-scan.js').gapScan(this.store)),
-      feedback: _safe(() => require('./feedback-delta.js').delta(this.store)),
-      selfModel: _safe(() => require('./self-model.js').measure(this.store))
+      // 6.5/6.6：内外维护简报单一出口；失败置 null 不阻断快照
+      ..._reportBlocks(this.store)
     };
     this._snapshots.push(snap);
     return snap;
