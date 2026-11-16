@@ -18,21 +18,7 @@ function _scalar(db, sql, binds = []) {
   return row;
 }
 
-function measureConservation(store, opts = {}) {
-  if (!store || typeof store._getDb !== 'function') throw new Error('conservation 需要 store 注入（SPEC-2.10 契约）');
-  const sinceDays = Number.isInteger(opts.sinceDays) && opts.sinceDays > 0 ? opts.sinceDays : 30;
-  const db = store._getDb();
-  const since = _scalar(db, `SELECT datetime('now', ?) AS s`, ['-' + sinceDays + ' days']).s;
-
-  const growth = Number(_scalar(db,
-    `SELECT COUNT(*) AS n FROM links
-     WHERE relation IN (?, ?) AND created_at >= ?`,
-    [...GROWTH_RELATIONS, since]).n || 0);
-
-  const pruned = Number(_scalar(db,
-    `SELECT COUNT(*) AS n FROM entities WHERE invalid_at IS NOT NULL AND invalid_at >= ?`,
-    [since]).n || 0);
-
+function _judge(growth, pruned) {
   const idle = growth === 0 && pruned === 0;
   const ratio = pruned > 0 ? growth / pruned : (growth > 0 ? Infinity : 1);
   const inBand = ratio >= BAND_LOW && ratio <= BAND_HIGH;
@@ -41,8 +27,54 @@ function measureConservation(store, opts = {}) {
   else if (ratio > BAND_HIGH) verdict = 'growth-only';
   else if (ratio < BAND_LOW) verdict = 'prune-only';
   else verdict = 'balanced';
+  return { ratio, inBand, verdict, idle };
+}
 
-  return { growth, pruned, ratio, inBand, verdict, idle, since, band: [BAND_LOW, BAND_HIGH] };
+function measureConservation(store, opts = {}) {
+  if (!store || typeof store._getDb !== 'function') throw new Error('conservation 需要 store 注入（SPEC-2.10 契约）');
+  const sinceDays = Number.isInteger(opts.sinceDays) && opts.sinceDays > 0 ? opts.sinceDays : 30;
+  const db = store._getDb();
+  const since = _scalar(db, `SELECT datetime('now', ?) AS s`, ['-' + sinceDays + ' days']).s;
+
+  // 边层（主读数，SPEC-2.10 修订 B）：产边与退边同量纲
+  const edgeGrowth = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM links WHERE relation IN (?, ?) AND created_at >= ?`,
+    [...GROWTH_RELATIONS, since]).n || 0);
+  const edgePruned = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM links WHERE invalid_at IS NOT NULL AND invalid_at >= ?`,
+    [since]).n || 0);
+
+  // 实体退场单列（不混进边层比值：单位不同，混了就是假读数）
+  const entityPruned = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM entities WHERE invalid_at IS NOT NULL AND invalid_at >= ?`,
+    [since]).n || 0);
+
+  const edge = _judge(edgeGrowth, edgePruned);
+  // 旧混口径保留一版（growth=边、pruned=实体），供既有消费者过渡；它不进报警面（混量纲的读数不能当判据）
+  const legacy = _judge(edgeGrowth, entityPruned);
+
+  // 实体层用「到期未退」存量报警，不用混口径比值：口径单一来源 = retention 的候选清单
+  let backlog = 0;
+  try { backlog = require('./retention.js').planRetention(store, {}).candidates.length; } catch (_) { backlog = 0; }
+
+  const alerts = [];
+  if (edge.verdict === 'growth-only') alerts.push('edge:growth-only');
+  if (edge.verdict === 'prune-only') alerts.push('edge:prune-only');
+  if (backlog > 0) alerts.push('entity:backlog');
+  const gateVerdict = alerts.some((a) => a.endsWith('growth-only'))
+    ? 'growth-only'
+    : alerts.some((a) => a.endsWith('prune-only'))
+      ? 'prune-only'
+      : (alerts.includes('entity:backlog') ? 'backlog' : 'balanced');
+
+  return {
+    growth: edgeGrowth, pruned: entityPruned,
+    ratio: legacy.ratio, inBand: legacy.inBand, verdict: legacy.verdict, idle: legacy.idle,
+    edge: { growth: edgeGrowth, pruned: edgePruned, ratio: edge.ratio, inBand: edge.inBand, verdict: edge.verdict },
+    entity: { pruned: entityPruned, backlog },
+    gate: { inBand: alerts.length === 0, verdict: gateVerdict, alerts },
+    since, band: [BAND_LOW, BAND_HIGH]
+  };
 }
 
 async function conservationStep(store, opts = {}) {

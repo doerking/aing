@@ -89,3 +89,17 @@ upstream: [SPEC-0.6 I5, SPEC-0.8 D3/T2, SPEC-1.9, SPEC-1.11, SPEC-1.13, SPEC-2.9
   2. 序列化面：`JSON.stringify(Infinity)` 恒为 `null`，与「无读数」不可区分；输出方须显式转 `"inf"`（memo 系统行早已如此处理）。
 - 测试：`test/test-2.10b-conservation-inf.js` 6/6（判据不动、Inf−Inf 不出 NaN、两向不假涨跌、有限照旧、铁律）。
 - 仍待裁的另一半：**退边是否计入 pruned**（hub-trim 退的是边，pruned 只数实体，导致只长不剪的比值恒为 Inf）——不在本修订范围。
+
+---
+
+## 修订 B（2026-11-17）：守恒主读数统一到「边」层（owner 批准）
+
+> 旧口径分子数**边**（候选边）、分母数**实体**（退役实体）——量纲不同，比值不成立；且边在退，分母看不见。
+
+- **主读数（边层）**：`edge = { growth: 候选边（sprout/pollinate-candidate，窗口内新建）, pruned: 退边（invalid_at 在窗口内）, ratio, inBand, verdict }`。判据与带不变（[0.8, 1.5]）。
+- **实体层单列**：`entity = { pruned: 窗口内退役实体数, backlog: 到期未退数 }`。`backlog` 直接取 `retention.planRetention().candidates.length`（单一来源，口径不另立）。
+- **报警面**：`gate = { inBand, verdict, alerts }`，`alerts ∈ {edge:growth-only, edge:prune-only, entity:backlog}`；`verdict ∈ {balanced, growth-only, prune-only, backlog}`。
+- **旧字段保留一版**：`growth`（边）、`pruned`（实体）、`ratio`、`inBand`、`verdict` 维持原义，供既有消费者（T2 D3、field-promote 的 growth-only 拒升）过渡；**混口径读数不进报警面**。
+- **依据（真库副本实测）**：320 实体 / 2284 边；实体退场 0（短料未到 30 天窗，真实）；退边真库 0，同一副本手动跑一次 hub-trim 退 82 条 → 旧口径把一次真实的边退场当没发生，只能永久报 `growth-only`。
+- 测试：`test/test-2.10c-edge-conservation.js` 6/6（边层均衡、只长不剪、只剪不长、实体单列、旧字段兼容、铁律）。
+- 已知遗留（不在本修订）：hub-trim 对「双向超 cap」的对端对互不让位（实测 skippedNeeded 2290），会限制退边供给。
