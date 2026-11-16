@@ -188,7 +188,7 @@ upstream: [SPEC-0.6, SPEC-0.7, SPEC-0.3, SPEC-1.14, SPEC-1.15, ARCHITECTURE-原�
 ## 十、修订 A · 外派蜂群三分编组（用完即弃）
 
 > 资料依据：`aing/docs/Engineering/SWARM-33-DOCTRINE-2026-11-06.md`、`DISPATCH-TICKET-TEMPLATE-2026-11-06.md`、`SWARM-RESEARCH-2026-11-03.md §〇`、`dsh-aing-bridge/swarm33-*.js`（135 测）。
-> 边界：守内（自维护）与对外（派工）**互不派单、不作桥接**（owner 2026-11-03 定）。两者只共同接住 meko：内为常驻成员，外为派出口与残渣吸收口。
+> 边界：守内（自维护）与对外（采集）**互不派单、不作桥接**（owner 2026-11-03 定）。外派面在 memo 挂载，随载交付相关设定；meko 只管双铰链体——内为常驻成员，外只接残渣（按普通摄入），不接派出口，也不派粒（D12，2026-11-17）。
 
 ### 10.1 常驻单位 3 员
 
