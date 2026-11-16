@@ -53,13 +53,35 @@ function deriveEntityId(rawDir, filePath) {
 
 // ---------- 复制：实体 upsert ----------
 
-function toContentRow(metadata, body) {
+// 路径信号（只看目录名，保守推断；不从正文猜）。显式 frontmatter type 永远优先。
+const TYPE_BY_DIR = {
+  conversations: 'Conversation', conversation: 'Conversation', chats: 'Conversation', sessions: 'Conversation',
+  todos: 'Todo', todo: 'Todo', tasks: 'Todo',
+  papers: 'Paper', paper: 'Paper',
+  concepts: 'Concept', concept: 'Concept',
+  meta: 'MetaKnowledge', 'meta-knowledge': 'MetaKnowledge', metaknowledge: 'MetaKnowledge',
+  insights: 'Insight', insight: 'Insight',
+  originals: 'RawDocument', origin: 'RawDocument', inbox: 'RawDocument'
+};
+
+function inferType(relPath, metadata) {
+  const explicit = metadata && metadata.type != null ? String(metadata.type).trim() : '';
+  if (explicit) return explicit;
+  const rel = String(relPath || '').replace(/\\/g, '/');
+  const dirs = rel.split('/').slice(0, -1).map((d) => d.toLowerCase());
+  for (const d of dirs) {
+    if (TYPE_BY_DIR[d]) return TYPE_BY_DIR[d];
+  }
+  return null;
+}
+
+function toContentRow(metadata, body, relPath) {
   const confRaw = metadata.confidence;
   const confidence = confRaw == null || confRaw === '' ? null : (Number.isFinite(Number(confRaw)) ? Number(confRaw) : null);
   const tags = metadata.tags == null ? null : JSON.stringify(metadata.tags);
   return {
     name: metadata.name == null || metadata.name === '' ? null : metadata.name,
-    type: metadata.type == null || metadata.type === '' ? null : metadata.type,
+    type: inferType(relPath, metadata),
     content: body,
     tags,
     status: metadata.status == null || metadata.status === '' ? 'active' : metadata.status,
@@ -117,7 +139,7 @@ async function compile(rawDir, store) {
     const text = fs.readFileSync(filePath, 'utf8');
     const { metadata, content } = parseFrontmatter(text);
     const id = (metadata.id != null && String(metadata.id).trim() !== '') ? String(metadata.id).trim() : deriveEntityId(rawDir, filePath);
-    const row = toContentRow(metadata, content);
+    const row = toContentRow(metadata, content, path.relative(rawDir, filePath));
     const existing = store.getEntity(id);
 
     if (!existing) {
@@ -139,4 +161,4 @@ async function compile(rawDir, store) {
   return stats;
 }
 
-module.exports = { compile, parseFrontmatter, deriveEntityId };
+module.exports = { compile, parseFrontmatter, deriveEntityId, inferType, TYPE_BY_DIR };
