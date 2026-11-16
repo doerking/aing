@@ -3,6 +3,8 @@
 // 契约见 spec/SPEC-6.6-内外维护接线.md §2.1：内场（T0/T2）与外场（memo）共用一份读数。
 // 铁律：零写；不修边、不改实体、不碰 last_access；store 注入，不直连 knowledge-store。
 
+const { parseBody, readableTopic } = require('./conv-text.js');
+
 const TARGETS_MAX = 10;
 const PENDING_INSIGHT_MAX = 3;
 // 修复优先级：空内容最急，其次孤儿、未索引、停滞，最后稀薄
@@ -41,7 +43,7 @@ function buildReport(store, opts = {}) {
   const feedback = require('./feedback-delta.js').delta(store, opts);
 
   const pending = rowsOf(db,
-    `SELECT id, name FROM entities
+    `SELECT id, name, content FROM entities
      WHERE type = 'MetaKnowledge' AND status = 'pending-distillation' AND invalid_at IS NULL
      ORDER BY rowid DESC`);
 
@@ -56,7 +58,11 @@ function buildReport(store, opts = {}) {
     external: {
       pendingInsights: {
         count: pending.length,
-        items: pending.slice(0, PENDING_INSIGHT_MAX).map(e => ({ id: String(e.id), name: String(e.name == null ? e.id : e.name) }))
+        // 名取可读话题（SPEC-6.6 修订 A）：markdown 实体的 name 是时间戳
+        items: pending.slice(0, PENDING_INSIGHT_MAX).map(e => ({
+          id: String(e.id),
+          name: String(readableTopic(e.name, parseBody({ content: e.content })))
+        }))
       }
     }
   };
