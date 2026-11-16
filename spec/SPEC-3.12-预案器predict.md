@@ -75,3 +75,14 @@ upstream: [SPEC-0.7 §三, SPEC-1.8, SPEC-1.9, SPEC-3.13]
 
 - 上游：SPEC-0.7 §三、SPEC-1.8（检索）、SPEC-3.13（会话实体）
 - 消费者：3.11 memo
+
+---
+
+## 修订 A（2026-11-17）：predict 接 CLI
+
+- 新增 `src/cli.js` 命令：`node src/cli.js predict --message "<用户消息>" [--json] [--db <path>]`。
+- `cmdPredict(dbPath, { message })`：空词直接拒绝（不猜），否则开库后调 `predict(store, { message })`。
+- 人读输出 `humanPredict`：每张卡一行结论 `[置信带] hypothesis`，下附 `依据`（kind + id + 引文 30 字）/ `建议` / `风险`；冷启动显式写「无（冷启动，不造依据）」。
+- 缺 `--message` → 退出码 2 + 用法，不崩、不静默。
+- 纯读：跑完实体字段与库文件 mtime 均不变（见 SPEC-6.12 修订 B：init 不再无条件落盘）。
+- 测试：`test/test-3.12b-predict-cli.js` 6/6（入口、人读输出、JSON、缺参拒绝、只读、铁律）。

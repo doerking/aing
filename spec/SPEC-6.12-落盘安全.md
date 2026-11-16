@@ -129,3 +129,12 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 - 2026-11-17（补丁）：建锁改为 staging + `link` 原子创建。soak 实测抓到「锁文件为空」形态（进程在 open 与 write 之间被杀），空锁查不到 pid 会阻塞 120 秒；原子创建后该形态消失，回退路径另留 50ms 空锁宽限。
 - 2026-11-17（手机真机实测入册）：三条硬数——① `/sdcard` fuseblk 三次连写 mtime 全同，`db-stale` 失效 → 库只准私有目录（f2fs）；② 20,000 行 export = 10.04MB，cap 10MB 即约 2 万行边界；③ wasm 堆 ≈ 库体积×10（10MB 库 → 堆 103MB / RSS 峰 142MB）。soak 复跑产物在 `/root/workspace/swarm-test/`（writer/verify 脚本 + soak.db）。
 - 消费者：所有调用 `_persist` 的组件；手机端（proot）。
+
+---
+
+## 修订 B（2026-11-17）：init 只在有变化时落盘 + 开库清死锁
+
+- **问题**：原 `init` 无条件 `persist()`，任何纯读命令（memo / predict）开库都会重写整库——mtime 被改、白耗 f2fs 写入，还会干扰 `db-stale` 的外部改写判定。
+- **现行为**：仅当 (a) 库文件原本不存在、(b) 应用了列迁移（`kespi_source`）、(c) `sqlite_master` 对象数变化（DDL 真建了表/索引）之一成立时才落盘；否则纯读开库不动文件。
+- **配套**：开库时顺手清「死写者」留下的锁与孤儿 tmp（死 pid / 过期空锁才清，活锁一律不动），避免无写入时死锁文件长期滞留。
+- 测试：`test-3.12b-predict-cli.js` AC-5（只读：字段与 mtime 不变）；`test-6.12-persist-safety.js` 10/10 不回归（AC-8 死 pid 锁 / 孤儿 tmp 仍自动接管）。

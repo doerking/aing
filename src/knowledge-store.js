@@ -268,6 +268,21 @@ function _tryCreateLock(lockPath) {
   }
 }
 
+/** 开库时顺手清死写者留下的锁（只清死 pid / 过期空锁，活锁一律不动） */
+function _cleanDeadLock(lockPath) {
+  let st = null;
+  try { st = fs.statSync(lockPath); } catch (_) { return false; }
+  let dead = false;
+  try {
+    const obj = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+    if (Number.isInteger(obj.pid) && obj.pid > 0 && obj.pid !== process.pid && !_pidAlive(obj.pid)) dead = true;
+  } catch (_) {
+    dead = Date.now() - st.mtimeMs >= EMPTY_LOCK_GRACE_MS;
+  }
+  if (dead) { try { fs.unlinkSync(lockPath); return true; } catch (_) {} }
+  return false;
+}
+
 const EMPTY_LOCK_GRACE_MS = 50; // 只在无硬链接的回退路径上用：空锁视为「写了一半被打断」
 
 function _acquireLock(lockPath) {
@@ -336,6 +351,7 @@ async function init(dbFilePath) {
   if (!SQL) SQL = await initSqlJs();
   dbPath = dbFilePath;
   _cleanStaleTmp(dbFilePath);
+  _cleanDeadLock(dbFilePath + '.lock');
   if (fs.existsSync(dbFilePath)) {
     db = new SQL.Database(fs.readFileSync(dbFilePath));
     const st = fs.statSync(dbFilePath);
@@ -345,14 +361,22 @@ async function init(dbFilePath) {
     lastStat = null;
   }
   // 幂等：IF NOT EXISTS，连跑不炸（AC-2）
+  const migrationBefore = {
+    missingFile: lastStat == null,
+    objects: Number((db.exec('SELECT COUNT(*) FROM sqlite_master')[0] || { values: [[0]] }).values[0][0] || 0)
+  };
   for (const stmt of DDL) db.run(stmt);
   // 列迁移（SPEC-6.9b）：老库 meko_cycles 无 kespi_source，先查后补
+  let migrated = false;
   if (!columns('meko_cycles').includes('kespi_source')) {
     db.run('ALTER TABLE meko_cycles ADD COLUMN kespi_source TEXT');
+    migrated = true;
   }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
-  persist({ skipCap: true });
+  // 只在真有变化时落盘：纯读命令开库不改文件 mtime（否则会干扰 db-stale 检测、白耗 f2fs 写入）
+  const objectsNow = Number((db.exec('SELECT COUNT(*) FROM sqlite_master')[0] || { values: [[0]] }).values[0][0] || 0);
+  if (migrationBefore.missingFile || migrated || objectsNow !== migrationBefore.objects) persist({ skipCap: true });
 }
 
 function listTables() {
