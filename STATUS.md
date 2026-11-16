@@ -73,7 +73,7 @@ status: active
 | 2.4 | ③ TimeboundOrchestrator | ✅ | 0.3 | test-2.4-timebound 5/5 |
 | 2.5 | ③ SLB/SLE 双模分流 | ✅ | 0.3 | test-2.4 AC-3 |
 | 2.6 | ③ Polar 抗干扰 | ✅ | 0.3 | test-2.4 AC-4 |
-| 2.7 | ③ 通感一体（KESPI 内嵌）| 🟡 占位 | 0.3 | 现为均分读数，非真 KESPI |
+| 2.7 | ③ 通感一体（KESPI 内嵌）| ✅ | 0.3 | test-2.4-timebound AC-5（每轮写非空 `kespi_snapshot`）；6.9b 起改读 `kespi_scores.overall` 活跃实体均值、仅零读数才落占位并标 `placeholder`，`kespi_source` 入 `meko_cycles`；八维明细未单独消费（探健康只需标量，非缺口）|
 | 2.8 | ④ HelixCrosscheck | ✅ | 0.2 | test-2.8b-helix-reconcile 6/6：gap 只数活跃、配对视同场域口径（无前缀归 raw 链）、`reconciled` 取账本真值（目标实体真被补出）、可按 cycle 圈定、只读；同时修掉旧实现「同 id 跨链比对」的恒 gap 缺陷；真库副本读数：320 实体 → wiki 孤儿镜像 31（raw 侧已不在）、wikiGaps 0、账本对返 86 |
 | **2.9** | **回炉接线 P6（recycle-seeds 入 STEPS + 门禁断言）** | ✅ | `spec/SPEC-2.9-回炉接线.md` | test-2.9-recycle 6/6；`metabolism.DEFAULT_STEPS` 含 recycle + 编排器真收契约 |
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ✅ | `spec/SPEC-2.10-守恒闸.md` | test-2.10-conservation 6/6；36 轮每轮产出 2–4、累计比 1.0；每轮落 meko_cycles 三列 |
