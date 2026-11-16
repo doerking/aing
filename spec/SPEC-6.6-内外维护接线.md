@@ -106,3 +106,13 @@ buildReport(store, opts) -> {
 | 缺口清单 | 只出数 | 出数 + 排优先级 targets |
 | 洞察候选 | 只落库 | 在 memo 外场可见（只呈现，不执行） |
 | 写权 | 洞察写候选实体 | 不变；本件新增模块全部只读 |
+
+---
+
+## 修订 A（2026-11-17）：待蒸馏洞察名可读
+
+维护简报的 `external.pendingInsights.items[].name` 会被 memo 与进化循环引用。markdown 实体的 `name` 是时间戳，直接透出等于没名字。
+
+- 名称改为 `readableTopic(name, content)`（`conv-text`，与 memo / predict / 留存 / 轨迹同源）。
+- `count` 与条目形状（`id` / `name`）不变；本件仍为零写。
+- 测试：`test/test-6.6b-insight-names.js` 4/4（markdown 可读、JSON 用 topic、形状不变、只读）。
