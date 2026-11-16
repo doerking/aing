@@ -104,7 +104,7 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 |---|---|---|
 | feedback-loop | 执行前后快照 Delta、参数调优、学习记录 | 无件；只有 session-ingest 的 plan-hit/miss 边 |
 | insight-extractor | lineage + 轮级 KESPI → insight 档（confidence 0，不自评） | 无件 |
-| trajectory-store | `task_trajectories` 表 + 四条写入链（episode/rollout/tri-path/metabolism） | **无表无件**（v2 schema 12 张表无 trajectory） |
+| trajectory-store | `task_trajectories` 表 + 四条写入链（episode/rollout/tri-path/metabolism） | 表与件已建（SPEC-6.4）；链：session / 代谢轮 / growth-loop episode / 代谢因果链已接，rollout 无消费方、tri-path 按缺口 4 不迁 |
 | gap-detector | 5 维缺口（孤立/稀薄/停滞/未索引/空内容） | 无件；helix-crosscheck 只做双链 gap，且 `reconciled=0` 占位 |
 | metacognition-layer | 三层自我模型（实测 KESPI/覆盖率/错误率/响应时） + 策略调整 | 无件；evolution T2 是六维快照，不是自我模型调参 |
 

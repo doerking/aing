@@ -102,7 +102,7 @@ upstream: [SPEC-3.13, SPEC-6.1, 旧院 trajectory-store.js, docs/Engineering/CON
 
 ## 四、Non-Goals
 
-- 不迁 episode / rollout / tri-path 三条写入链（属缺口 3 后续与缺口 4）。
+- ~~不迁 episode / rollout / tri-path 三条写入链（属缺口 3 后续与缺口 4）~~ → **修订 A 更新**：growth-loop episode 已接（`logFromGrowthLoop`）；rollout 无 v2 消费方，暂不接；tri-path 随缺口 4「三路裁决不迁」裁定不接。
 - 不做轨迹分析/归因（insight-extractor 属 6.5）。
 - 不改会话入库与实体形状。
 - 不做轨迹上限裁剪（先只追加，后续按 6.5 再定）。
@@ -125,6 +125,15 @@ upstream: [SPEC-3.13, SPEC-6.1, 旧院 trajectory-store.js, docs/Engineering/CON
 
 | 项 | 旧院 | v2 本件 | 理由 |
 |---|---|---|---|
-| 写入链 | episode / rollout / tri-path / metabolism 四条 | 先接 session + metabolism 两条 | 最小闭环；另两条随 6.5 / 缺口 4 |
+| 写入链 | episode / rollout / tri-path / metabolism 四条 | session + metabolism（轮账与因果链）+ growth-loop episode；rollout / tri-path 暂不接 | 不空转接没有生产者的链（修订 A） |
 | 代谢轨迹粒度 | lineage 每步一条 | 每轮一条 | v2 有 `meko_cycles` 轮账，步骤明细在 results 里 |
 | 幂等 | 随机 id + INSERT OR REPLACE | 确定性 id + 存在即跳过 | 历史不可被覆盖 |
+
+---
+
+## 修订 A（2026-11-17）：补两条导入链（缺口 3 · 轨迹链后续）
+
+- 新增 `logFromGrowthLoop(store, episodes)`：旧院 growth-loop episode → 轨迹。`task_type ← taskType`、`route/step_sequence ← route`、`success/retries/duration_ms` 直传、`evidence ← {lesson, evidence, patternKey}`、`source='growth-loop'`；无 `id` 的行计入 `skipped`，同 id 幂等。
+- 新增 `logFromLineage(store, rows)`：旧院代谢决策因果链 → 每步一条。`outcome === 'success'` → `success=1 / score_hard=1`；`duration_ms ← evidence.durationMs|duration`；evidence 保留 `action/target/reason/alternatives/causalChain`；`source='metabolism-decision-lineage'`；确定性 id `metabolism-<step>-<timestamp>`，缺 `step` 或重复 id 计入 `skipped`。
+- 测试：`test/test-6.4c-trajectory-imports.js` 6/6（映射、幂等、缺 step 跳过、失败判定、stats/list 可见、铁律）。
+- 与旧院差异表「四条链」一行随本修订更新为：episode 与 metabolism 因果链已接；rollout 无 v2 消费方暂不接；tri-path 随缺口 4 裁定不接（不空转接一条没生产者的链）。

@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 66 档 / 442 条断言全绿 |
+| 测试 | `npm test` → 67 档 / 448 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -122,7 +122,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **66 档 / 442 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **67 档 / 448 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -168,7 +168,7 @@ status: active
 - **未接**：CLI / auto-ingest 尚未调用 `ingestNarrative`；swarm33 规则库（AB 的六模块 135 断言）尚未移植评估。
 - **6.2 消费侧**：旧院 `distill.js:103` 的区间捕获口径已迁入 `src/distill-points.js`；蒸馏点落辅助表 `distill_points`（不改正文、不破逐字保真），默认链 14→15 步（`distill` 之后插 `distill-points`）。缺口来源与其余三组真缺口见 `docs/Engineering/CONSUMER-AUDIT-2026-11-16.md`。
 - **6.3 检索侧**：旧院 `query.js` 的三路融合（向量 .6 / 词面 .25 / 名称 .15）、慢回忆、KESPI+新鲜度伪精排已迁入 `src/retrieval.js`；`predict` 改接本模块。唯一硬差异：**不写 `last_access`**（旧院 P0 写回，v2 铁律禁写）。慢回忆只走通过三轴判定的有效边。
-- **6.4 轨迹侧**：`task_trajectories` 表（13 列 + 3 索引）已建；会话（六段/三源）与代谢轮各落一条，id 确定性、只追加；编排器每轮 best-effort 记录。默认链 15→16 步（`distill-points` 后插 `trajectory`）。旧院 episode/rollout/tri-path 三条链仍未接（缺口 4）。
+- **6.4 轨迹侧**：`task_trajectories` 表（13 列 + 3 索引）已建；会话（六段/三源）与代谢轮各落一条，id 确定性、只追加；编排器每轮 best-effort 记录。默认链 15→16 步（`distill-points` 后插 `trajectory`）。旧院导入链已合并：growth-loop episode、代谢因果链（每步一条）经 `logFromGrowthLoop` / `logFromLineage` 接入（SPEC-6.4 修订 A，test-6.4c 6/6）；rollout 无 v2 消费方暂不移植，tri-path 随缺口 4「三路裁决不迁」裁定不接（缺口 3 轨迹链后续结案）。
 - **6.4b markdown 回填**：真库 139 条 Conversation 全是 markdown 正文，原派生只认六段/三源两种 JSON，导致 `syncSessions` 全落 `noBody`、session 轨迹为 0。现在第三种形状：非 JSON 且正文非空 → 按 `##`–`######` 小节落轨迹（`source='session-markdown'`，`route=[name|首标题]`，`success=1`，证据带 `bodyChars/sections`）；能解析成 JSON 的怪对象不按 markdown 处理。真库副本实测 `scanned 139 → logged 139 → noBody 0`。
 - **6.5 成长观察**：旧院四件按「观察与执行分离」改姿态——`gap-scan`（五维缺口）、`feedback-delta`（轮间 Delta 与走势）、`self-model`（覆盖率/蒸馏债/成功率）三件只读，零写、不调参，统一由 T2 快照的 `gaps`/`feedback`/`selfModel` 三块消费；`insight-extract` 只写 raw 链候选实体（`pending-distillation`、confidence 0、type `MetaKnowledge`），走同一道蒸馏门。默认链 16→17 步（`trajectory` 后插 `insight-extract`）。自动调参与 `--fix` 自动修复明确不做。
 - **6.6 内外维护**：新增只读聚合 `src/maintenance-report.js`（单一出口）——`internal` 给 meko 内场（T0 plan 带 `observation` + 按 empty→orphan→unindexed→stagnant→thin 排序的 `targets`；T2 快照增 `insights`），`external` 给 memo 外场（`user.maintenance` + 系统行「缺口 N 走势」）。memo 仍纯读、不派单；targets 只是清单，真修复仍归 2.12/2.13；洞察仍走蒸馏门。
