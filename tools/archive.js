@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { parseBody, readableTopic } = require('../src/conv-text.js');
 
 const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 const digestOf = (content) => crypto.createHash('sha256').update(String(content == null ? '' : content)).digest('hex').slice(0, 16);
@@ -42,12 +43,12 @@ function exportMonth(store, opts = {}) {
     const links = _rows(db, 'SELECT * FROM links WHERE source_id = ? OR target_id = ?', [id, id]);
     const d = digestOf(e.content);
     digestMap[id] = d;
-    meta.push({ id, type: e.type || '', name: String(e.name || '').replace(/\|/g, '/') });
+    meta.push({ id, type: e.type || '', topic: String(readableTopic(e.name, parseBody(e))).replace(/\|/g, '/') });
     lines.push(JSON.stringify({ ...e, digest: d, links }));
   }
   const ndjson = lines.join('\n') + '\n';
-  const md = ['# 归档 ' + month, '', `实体 ${lines.length} 条`, '', '| id | type | name |', '|---|---|---|']
-    .concat(meta.map(m => `| ${m.id} | ${m.type} | ${m.name} |`))
+  const md = ['# 归档 ' + month, '', `实体 ${lines.length} 条`, '', '| id | type | 话题 |', '|---|---|---|']
+    .concat(meta.map(m => `| ${m.id} | ${m.type} | ${m.topic} |`))
     .join('\n') + '\n';
 
   fs.writeFileSync(ndjsonPath, ndjson, 'utf8');
