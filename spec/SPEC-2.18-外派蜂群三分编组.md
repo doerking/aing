@@ -1,51 +1,71 @@
 ---
-tags: [aing-v2, spec, 外派, 三分编组, 底版范式, 滚动派发, M2, spec:9, dispatch:9]
-description: M2.18 外派蜂群 spec——常驻 3 员单位（主责/协同/校验），派出前底版范式（语言+行为+工作流）先于任务链，单间不互斥滚动派发，收口只回残渣、交接不继承，外派零写权
+tags: [aing-v2, spec, 外派, 三分编组, 采集, 作业面, 底版范式, 滚动派发, M2, spec:9, dispatch:9]
+description: M2.18 外派蜂群 spec——常驻 3 员单元按点线面构成作业面，只做采集（搜/看/按用户要求定厚度），批内滚动直派、批间用户闸，无熔断，收口交料即消逝、外派零写权
 date: 2026-11-16
-status: draft（Hana 定判据）
+status: 修订 A（2026-11-17 采集中轴；口径来源为内部学说档，不随包）
 owner: hana
 upstream: [SPEC-0.8 §十 修订 A, SPEC-0.5, SPEC-0.7]
 ---
 
 # SPEC-2.18 · 外派蜂群（三分编组）
 
-> 外派是「派出去办事」，不是「多开几个内成员」。条令三句：
-> **常驻 3 员、底版先于任务链、用完即弃**。收口只回残渣，人走人路、料归料堆——
+> 外派是「派出去采集」，不是「多开几个内成员」。条令四句：
+> **只做采集、三员成一个作业面、批内不等回、用完即弃**。收口只回料，人走人路、料归料堆——
 > 下一单从零底版起，唔继承上一单的上下文。
 
 ---
 
 ## 一、目标
 
-派单前校验底版范式齐；单间并行互不等待；收口校验轨迹与标签并解散；外派全程零写权。
+派单前校验底版范式与厚度要求齐；**只采集**（搜资料 → 看资料 → 定厚度），不裁决不写库；单间并行互不等待，批间由用户闸控制；收口校验轨迹与标签并解散；外派全程零写权。
 
 ## 二、行为（spec 即契约）
 
-### 2.1 常驻单位 3 员
-- 固定三角色：`主责`（单元长）/`协同`/`校验`
-- 职责面不重叠、不留缝：三者 `responsibility` 互不相同
-- 数量随业务增减，最低 1 单元
+### 2.0 职责边界：只做采集
+
+- 外派单元只做三件，顺序写死：**搜资料 → 看资料 → 定厚度**。
+- **厚度由用户要求定**：派单 brief 指明这单要采多厚，单元在厚度内取材；不由单元自定、不由场域代定。
+- 交付须自报**厚度达标情况**（对照 brief 的要求）；不达标照交，由主 agent 决定是否再派。
+- 不裁决、不出结论、不写库。裁决与落库归场域，对外交付由主 agent 定。
+
+### 2.1 编组：1 单元 3 员，构成作业面
+
+- 常规驻守 1 单元 = **3 员**，固定角色 `主责`（单元长）/`协同`/`校验`，职责面不重叠、不留缝。
+- 3 员按 **点—线—面** 构成作业面：单点各自取材（点）、沿线接力并交叉验证（线）、合拢覆盖用户要的资料面（面）。
+- 一单元不够 → 升 **1 班 = 3 单元 + 班长**；班级波次：1 单元前出、其余展开，不三单元同刻全开。
+- 班长只做现场调度（换防 / 补位 / 提速），不参与正面取材，不拍板。
+- 数量随业务增减，最低 1 单元。
 
 ### 2.2 底版范式先于任务链（顺序写死）
 - 派单必须带齐：`language`（语言思维与输出）、`behavior`（行为规范）、`workflow`（工作流）
 - 缺任一项 → 抛 `baseline-missing`，**不建单位、不启动任务**
 - 底版随单生成，唔跨单复用
 
-### 2.3 滚动派发（单间不互斥）
-- 新单唔等旧单收口：`dispatch` 即刻建单位并置 `running`
-- 在跑单位数无上限（受外部编制约束，本件只报数）
+### 2.3 推进：批内不等回，批间等用户
+
+- **批内**：新单唔等旧单收口，`dispatch` 即刻建单位并置 `running`；在跑单位数受编制约束，本件只报数。
+- **批间**：只有**用户说继续**才派下一批；未说即停派，不自动续单、不按时间表续派。
 
 ### 2.4 收口（用完即弃）
-- `close(unitId, {traces, tags})`：
+- `close(unitId, {traces, tags, thickness})`：
   - 轨迹必齐：`traces` 为非空数组（每步留痕）
   - 标签必齐：`tags` 至少含 `unit/ticket/outcome`
+  - 厚度必报：`thickness` 含 `{required, achieved, met}`，`required` 来自派单 brief
   - 缺一 → `refused` 并保持单位在跑
-- 收口成功 → 返回残渣 `{unitId, ticket, traces, tags, residue}`，单位移出编制
+- 收口成功 → 返回残渣 `{unitId, ticket, traces, tags, thickness, residue}`，单位移出编制
 - **交接唔继承**：下一单的底版与上下文从空白起（`inherited: []`）
 
 ### 2.5 零写权
 - 外派单位对知识库零写权；任何写意图 → 抛 `swarm-no-write`
 - 残渣只能回流 meko 的吸入口，由场域件决定是否落库
+
+### 2.6 无熔断
+- 不设失败阈值、停派窗口、半开探测；单点损伤按点位补位继续（点—线—面连续性），不因次数停派。
+- 是否继续采集由用户闸（2.3 批间）决定，不由失败计数决定。
+
+### 2.7 接线
+- 派单入口在 **memo**；**主 agent 支配**派单与续派。
+- meko 只接残渣（2.5）；外派不直接与内场成员对话。
 
 ## 三、Acceptance Criteria
 
@@ -53,24 +73,32 @@ upstream: [SPEC-0.8 §十 修订 A, SPEC-0.5, SPEC-0.7]
 |---|---|---|
 | AC-1 | 缺底版拒派 | 缺 workflow → 抛 `baseline-missing`，单位数不变 |
 | AC-2 | 单间不互斥 | 连派两单 → 两单位同时 running，互不等待 |
-| AC-3 | 收口校验 + 交接不继承 | 缺轨迹/标签 → 拒收且单位在跑；齐 → 收口解散、残渣齐；新单 `inherited` 为空 |
+| AC-3 | 收口校验 + 交接不继承 | 缺轨迹/标签/厚度 → 拒收且单位在跑；齐 → 收口解散、残渣齐；新单 `inherited` 为空 |
 | AC-4 | 3 员职责不重叠 | 角色集合恰 3 个、职责两两不同 |
 | AC-5 | 零写权 | `write()` 抛 `swarm-no-write`；无任何实体/边写入 |
+| AC-6 | 缺厚度拒派 | brief 无 `thickness` → 抛 `thickness-missing`，单位数不变 |
+| AC-7 | 交付自报厚度达标 | `close` 必带 `thickness{required,achieved,met}`；缺 → `refused` |
+| AC-8 | 批间只认用户闸 | 同批可连派；未声明继续 → 下一批 `batch-locked`，不自动续 |
+| AC-9 | 无熔断 | 连续 5 单失败后仍可派，无停派窗口、无半开 |
 
 ## 四、Non-Goals
 
 - 不做内蜂群（2.14/2.17）
 - 不做外派资料库与模板渲染
 - 不做守内↔对外桥接（条令：互不派单）
+- **不做裁决**：多路候选 / 择优裁断并入场域，不迁（旧院三路编排件不移植；复杂判断仍单路直出）
+- **不做熔断**：不设失败阈值与停派窗口（见 2.6）
+- **不做自动续派**：批间只认用户闸（见 2.3）
 
 ## 五、契约
 
 - `BASELINE_REQUIRED = ['language','behavior','workflow']`
 - `REQUIRED_TAGS = ['unit','ticket','outcome']`
-- `class DispatchDesk { dispatch({ticket, baseline, inherited}) ; close(unitId, {traces, tags}) ; units() ; write(unitId) throws }`
-- `class DispatchUnit { id, ticket, members:[3], state }`
+- `class DispatchDesk { dispatch({ticket, baseline, thickness, batch, inherited}) ; close(unitId, {traces, tags, thickness}) ; units() ; write(unitId) throws }`
+- `class DispatchUnit { id, ticket, members:[3], roles:{lead, collab, check}, state }`
+- `class Squad { units:[3], leader }`（一单元不够才升班，见 2.1）
 
 ## 六、依赖
 
-- 上游：SPEC-0.8 §十、SPEC-0.5（内外不桥接）
-- 消费者：memo 派工口（M3）
+- 上游：SPEC-0.8 §十、SPEC-0.5（内外不桥接）；编组口径沿用内部外派学说档（不随包）
+- 消费者：memo 派工口（M3），由主 agent 支配派单与续派
