@@ -49,6 +49,7 @@
     "spec/SPEC-3.7-门禁C0-C9适配.md",
     "spec/SPEC-3.8-门禁C10适配.md",
     "spec/SPEC-3.9-门禁C11-C19适配.md",
-    "spec/SPEC-4.0-数据迁移与总验收.md"
+    "spec/SPEC-4.0-数据迁移与总验收.md",
+    "spec/SPEC-3.14-CLI入口接线.md"
   ]
 }
