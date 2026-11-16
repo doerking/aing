@@ -90,10 +90,10 @@ const snap = (db) => JSON.stringify({
   insFa.run(['fa-2', 'rebond', 'raw-alpha->raw-gamma', null]);
   insFa.run(['fa-3', 'reconcile', 'raw-beta', '2026-11-16T00:00:00.000Z']);
   insFa.free();
-  const insCyc = db.prepare(`INSERT INTO meko_cycles (id,cycle_type,kespi_snapshot,executed_at,status)
-    VALUES (?,?,?,?, 'success')`);
-  insCyc.run(['mc-1', 'maintain', 0.50, '2026-11-16T00:00:00.000Z']);
-  insCyc.run(['mc-2', 'maintain', 0.60, '2026-11-16T01:00:00.000Z']);
+  const insCyc = db.prepare(`INSERT INTO meko_cycles (id,cycle_type,kespi_snapshot,kespi_source,executed_at,status)
+    VALUES (?,?,?,?,?, 'success')`);
+  insCyc.run(['mc-1', 'maintain', 0.50, 'kespi_scores', '2026-11-16T00:00:00.000Z']);
+  insCyc.run(['mc-2', 'maintain', 0.60, 'kespi_scores', '2026-11-16T01:00:00.000Z']);
   insCyc.free();
   store._persist();
 
