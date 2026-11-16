@@ -37,16 +37,21 @@ async function trimHubs(store, opts = {}) {
   const deg = _degreeMap(edges);
   const stats = { hubs: 0, trimmed: 0, skippedNeeded: 0 };
 
-  // 超额节点：按超额从大到小（同额按 id 稳定序，保确定性）
+  const trimmedSet = new Set();
+  const keyOf = (e) => e.source_id + '\u0000' + e.target_id;
+  const hubSet = new Set();
+
+  // 多轮直到稳：单轮里 A 先让 B 裁、B 裁完才降到 cap，A 这轮就再没机会 → 会留残余超额。
+  // 每轮重算超额名单，直到没有新裁或到轮上限（确定性：同图同序）。
+  for (let round = 0; round < 10; round++) {
   const over = [...deg.entries()]
     .filter(([, n]) => n > degreeCap)
     .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]));
-
-  const trimmedSet = new Set();
-  const keyOf = (e) => e.source_id + '\u0000' + e.target_id;
+  if (!over.length) break;
+  const trimmedAtRoundStart = stats.trimmed;
 
   for (const [node] of over) {
-    stats.hubs++;
+    hubSet.add(node);
     // 候选：该节点所有有效、未裁、且属弱边的边，从最弱起
     const candidates = edges
       .filter(e => !trimmedSet.has(keyOf(e)) &&
@@ -56,17 +61,32 @@ async function trimHubs(store, opts = {}) {
         String(a.created_at || '').localeCompare(String(b.created_at || '')) ||
         keyOf(a).localeCompare(keyOf(b)));
 
+    // 先让「双超 cap」的对边互相让位，再动普通叶子边：否则排序会一路把同一个节点削光
+    const prefer = [], rest = [];
     for (const e of candidates) {
+      const o = e.source_id === node ? e.target_id : e.source_id;
+      ((deg.get(o) || 0) > degreeCap ? prefer : rest).push(e);
+    }
+    for (const e of prefer.concat(rest)) {
       if ((deg.get(node) || 0) <= degreeCap) break;
       const other = e.source_id === node ? e.target_id : e.source_id;
-      // 对端问一句：对端本身超 cap → 交对端自己裁（唔抢名额、唔双重削减）
-      if ((deg.get(other) || 0) > degreeCap) { stats.skippedNeeded++; continue; }
+      // 对端也超 cap：单向让位——超额大者先裁；等额按 id 稳定序（低位者让）。
+      // 旧规则「交对端自己裁」在两端互相超 cap 时会互等，退边供给直接断（实测 skippedNeeded 两千几）。
+      if ((deg.get(other) || 0) > degreeCap) {
+        const myOver = deg.get(node) - degreeCap;
+        const otherOver = deg.get(other) - degreeCap;
+        const iYield = myOver > otherOver || (myOver === otherOver && String(node) < String(other));
+        if (!iYield) { stats.skippedNeeded++; continue; }
+      }
       deg.set(node, deg.get(node) - 1);
       deg.set(other, deg.get(other) - 1);
       trimmedSet.add(keyOf(e));
       stats.trimmed++;
     }
   }
+  if (stats.trimmed === trimmedAtRoundStart) break;
+  }
+  stats.hubs = hubSet.size;
 
   if (stats.trimmed > 0) {
     const stmt = db.prepare(

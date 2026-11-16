@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 71 档 / 472 条断言全绿 |
+| 测试 | `npm test` → 72 档 / 478 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -77,7 +77,7 @@ status: active
 | 2.8 | ④ HelixCrosscheck | ✅ | 0.2 | test-2.8b-helix-reconcile 6/6：gap 只数活跃、配对视同场域口径（无前缀归 raw 链）、`reconciled` 取账本真值（目标实体真被补出）、可按 cycle 圈定、只读；同时修掉旧实现「同 id 跨链比对」的恒 gap 缺陷；真库副本读数：320 实体 → wiki 孤儿镜像 31（raw 侧已不在）、wikiGaps 0、账本对返 86 |
 | **2.9** | **回炉接线 P6（recycle-seeds 入 STEPS + 门禁断言）** | ✅ | `spec/SPEC-2.9-回炉接线.md` | test-2.9-recycle 6/6；`metabolism.DEFAULT_STEPS` 含 recycle + 编排器真收契约 |
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ✅ | `spec/SPEC-2.10-守恒闸.md` | test-2.10-conservation 6/6；36 轮每轮产出 2–4、累计比 1.0；每轮落 meko_cycles 三列；修订 A：Infinity 保留为合法读数（不改哨兵），差分侧非有限不出数、标 `ratioState`；修订 B：主读数统一到边层（候选边/退边同量纲），实体层单列 `pruned + backlog`（backlog 取 retention 候选数），报警面 `gate.alerts`，旧混口径保留一版不进报警；test-2.10b 6/6 + test-2.10c 6/6 |
-| **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ✅ | `spec/SPEC-2.11-存量hub裁剪.md` | test-2.11-hub-trim 7/7；只剪弱边(<5)、强边零退、原因码可逆 |
+| **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ✅ | `spec/SPEC-2.11-存量hub裁剪.md` | test-2.11-hub-trim 7/7；只剪弱边(<5)、强边零退、原因码可逆；修订 A：双超 cap 单向让位（超额大者先裁、等额按 id）、先双超对边后叶子边、多轮至稳——副本退边 82→1090、skippedNeeded 2290→96，test-2.11b 6/6 |
 | **2.12** | **场域维护动作（rebond/unwind/reconcile/demote，全可逆）** | ✅ | `spec/SPEC-2.12-场域维护动作.md` | test-2.12-field-maintain 8/8；带界 I1 + 全可逆 I3 + 动作账 |
 | **2.13** | **场域提升动作（promote/sprout/pollinate，≥2 证据）** | ✅ | `spec/SPEC-2.13-场域提升动作.md` | test-2.13-field-promote 8/8；I2 证据门槛 + I5 守恒闸 + 边提升可逆 |
 | **2.14** | **进化团入驻：五成员契约注册 + 蜂巢成员池** | ✅ | `spec/SPEC-2.14-进化团入驻.md` | test-2.14-evolution-team 6/6；五员契约齐、零写权、无独立入口、成员池 15 席 |
@@ -122,7 +122,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **71 档 / 472 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **72 档 / 478 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
