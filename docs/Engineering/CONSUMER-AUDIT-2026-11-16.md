@@ -22,7 +22,7 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 | 已承接 | 14 | 有 v2 对应件且行为对得上 |
 | 部分承接 / 形态变更 | 7 | 有件但口径或形状变了，需登记 |
 | 有意不迁（有记录） | 4 | 旧记录或 v2 spec 写明取舍 |
-| **真缺口** | **4 组** | 旧记录有消费契约，v2 无件、无消费者、未登记（**缺口 1 已于当日补：SPEC-6.2**） |
+| **真缺口** | **4 组** | 旧记录有消费契约，v2 无件、无消费者、未登记（**缺口 1、2 已于当日补：SPEC-6.2 / 6.3**） |
 | 口径走样（有 spec，需拍板） | 3 | 参数或判据变了，spec 写了但与旧值不同 |
 | 未登记缺口（小件） | 6 | host 面、可选件、触发面 |
 
@@ -77,7 +77,7 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 
 ### 缺口 1 · 能力叙事消费侧（最高优先）——**2026-11-16 已补**
 
-> **已补**：`spec/SPEC-6.2-能力叙事消费与蒸馏点.md` + `src/distill-points.js` + `test-6.2-distill-points.js`（7 AC 全绿）；默认链在 `distill` 之后新增 `distill-points` 步，蒸馏点落辅助表 `distill_points`。本缺口关闭，余下三组仍开。
+> **已补**：`spec/SPEC-6.2-能力叙事消费与蒸馏点.md` + `src/distill-points.js` + `test-6.2-distill-points.js`（7 AC 全绿）；默认链在 `distill` 之后新增 `distill-points` 步，蒸馏点落辅助表 `distill_points`。本缺口关闭，余下两组仍开。
 
 - **旧院契约**：`aing/src/distill.js:103` `extractCapabilityRaw`——按「能力单元 / Capability Unit」区间捕获六段原话；起端双语锚（`/i`）、止端只认消费端中文节名（提取实体/标签/蒸馏摘要）；h1–h6 鲁棒；配套 C10g 门禁与 greenlist「capability-narrative-ingest」（green 31 / locked 3）。
 - **旧院教训**：截断正则下六段只留 1 行，**94% 内容静默丢失**（`aing/docs/HANDOFF-2026-11-09-capability-narrative.md`）。
@@ -85,7 +85,9 @@ upstream: [ARCHITECTURE.md（旧院）, INTERFACES.md（旧院）, METABOLISM-PI
 - **影响**：会话六段落库后被当普通正文复制，蒸馏端不抽原话、不建蒸馏点；6.1 的产出在代谢链里是死料。
 - **建议**：新任务 6.2——把区间捕获落成 v2 独立抽取层，遵循交接单三条口径（层级鲁棒 / 起端双语 / 止端中文），带「不许过捕」负向证与门禁断言。
 
-### 缺口 2 · 检索融合消费侧
+### 缺口 2 · 检索融合消费侧——**2026-11-16 已补**
+
+> **已补**：`spec/SPEC-6.3-检索融合消费.md` + `src/retrieval.js` + `test-6.3-retrieval-fusion.js`（7 AC 全绿）；`predict` 已改接三路融合。唯一硬差异：不写 `last_access`。
 
 - **旧院契约**：`aing/src/query.js` 五件事——三路加权融合（语义 0.6 / 关键词 0.25 / 名称 0.15）、慢回忆二跳扩展、伪精排（KESPI 0.15 + 新鲜度 0.1）、阈值单源 `growth.config.query`、附 KESPI 最新分。
 - **v2 现状**：无 `query.js`；只有 `vector.js` 的 `search()`（纯向量 + 强度加权 + 双链去重）。`predict.js` 直接吃向量 top-N，`memo` 也只读库。
