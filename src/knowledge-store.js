@@ -201,12 +201,77 @@ const DDL = [
 let SQL = null;      // sql.js 模块
 let db = null;       // 当前连接
 let dbPath = null;   // 当前库文件
+let lastStat = null; // 上次落盘后的 {mtimeMs, size}（SPEC-6.12 外部改写检测）
 
-function persist() {
+// SPEC-6.12 落盘安全：原子写 / 单写者锁 / 容量上限。proot 杀进程是常态，半写即坏库。
+const CAP_DEFAULT = 10 * 1024 * 1024;
+const LOCK_STALE_DEFAULT = 120000;
+
+function _capBytes() {
+  const v = Number(process.env.AING_DB_CAP_BYTES);
+  return Number.isFinite(v) && v > 0 ? v : CAP_DEFAULT;
+}
+
+function _lockStaleMs() {
+  const v = Number(process.env.AING_DB_LOCK_STALE_MS);
+  return Number.isFinite(v) && v > 0 ? v : LOCK_STALE_DEFAULT;
+}
+
+function _acquireLock(lockPath) {
+  try {
+    fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
+    return true;
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    let st = null;
+    try { st = fs.statSync(lockPath); } catch (_) { return _acquireLock(lockPath); }
+    if (Date.now() - st.mtimeMs > _lockStaleMs()) {
+      try { fs.unlinkSync(lockPath); } catch (_) { /* 被抢先，重试 */ }
+      return _acquireLock(lockPath);
+    }
+    return false;
+  }
+}
+
+function persist(opts = {}) {
   if (!db || !dbPath) return;
   const bytes = Buffer.from(db.export());
+  const cap = _capBytes();
+  if (!opts.skipCap && bytes.length > cap && process.env.AING_DB_CAP_ALLOW !== '1') {
+    throw new Error(`db-over-cap: 库 ${bytes.length}B 超上限 ${cap}B（AING_DB_CAP_BYTES 可调，AING_DB_CAP_ALLOW=1 放行）`);
+  }
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  fs.writeFileSync(dbPath, bytes);
+  const lockPath = dbPath + '.lock';
+  if (!_acquireLock(lockPath)) {
+    throw new Error('db-locked: 另一写者持有锁（AING_DB_LOCK_STALE_MS 后可接管）');
+  }
+  try {
+    if (lastStat) {
+      let st = null;
+      try { st = fs.statSync(dbPath); } catch (_) { /* 文件不见了，按新写处理 */ }
+      if (st && (Math.abs(st.mtimeMs - lastStat.mtimeMs) > 1 || st.size !== lastStat.size)) {
+        throw new Error('db-stale: 库文件在加载后被外部改写，拒绝覆盖');
+      }
+    }
+    const tmp = `${dbPath}.tmp.${process.pid}`;
+    let fd = null;
+    try {
+      fd = fs.openSync(tmp, 'w');
+      fs.writeSync(fd, bytes);
+      try { fs.fsyncSync(fd); } catch (_) { /* 平台不支持则略过 */ }
+      fs.closeSync(fd);
+      fd = null;
+      fs.renameSync(tmp, dbPath);
+    } catch (err) {
+      try { if (fd != null) fs.closeSync(fd); } catch (_) { /* 已关 */ }
+      try { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); } catch (_) { /* 清理失败不遮主错 */ }
+      throw new Error('db-write-failed: ' + err.message);
+    }
+    const st = fs.statSync(dbPath);
+    lastStat = { mtimeMs: st.mtimeMs, size: st.size };
+  } finally {
+    try { if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath); } catch (_) { /* 放锁失败不遮主错 */ }
+  }
 }
 
 async function init(dbFilePath) {
@@ -214,8 +279,11 @@ async function init(dbFilePath) {
   dbPath = dbFilePath;
   if (fs.existsSync(dbFilePath)) {
     db = new SQL.Database(fs.readFileSync(dbFilePath));
+    const st = fs.statSync(dbFilePath);
+    lastStat = { mtimeMs: st.mtimeMs, size: st.size };
   } else {
     db = new SQL.Database();
+    lastStat = null;
   }
   // 幂等：IF NOT EXISTS，连跑不炸（AC-2）
   for (const stmt of DDL) db.run(stmt);
@@ -225,7 +293,7 @@ async function init(dbFilePath) {
   }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
-  persist();
+  persist({ skipCap: true });
 }
 
 function listTables() {
