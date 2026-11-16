@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 68 档 / 454 条断言全绿 |
+| 测试 | `npm test` → 69 档 / 460 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -74,7 +74,7 @@ status: active
 | 2.5 | ③ SLB/SLE 双模分流 | ✅ | 0.3 | test-2.4 AC-3 |
 | 2.6 | ③ Polar 抗干扰 | ✅ | 0.3 | test-2.4 AC-4 |
 | 2.7 | ③ 通感一体（KESPI 内嵌）| 🟡 占位 | 0.3 | 现为均分读数，非真 KESPI |
-| 2.8 | ④ HelixCrosscheck | 🟡 接口行为 | 0.2 | reconcile=0 占位，完整互校待补 |
+| 2.8 | ④ HelixCrosscheck | ✅ | 0.2 | test-2.8b-helix-reconcile 6/6：gap 只数活跃、配对视同场域口径（无前缀归 raw 链）、`reconciled` 取账本真值（目标实体真被补出）、可按 cycle 圈定、只读；同时修掉旧实现「同 id 跨链比对」的恒 gap 缺陷；真库副本读数：320 实体 → wiki 孤儿镜像 31（raw 侧已不在）、wikiGaps 0、账本对返 86 |
 | **2.9** | **回炉接线 P6（recycle-seeds 入 STEPS + 门禁断言）** | ✅ | `spec/SPEC-2.9-回炉接线.md` | test-2.9-recycle 6/6；`metabolism.DEFAULT_STEPS` 含 recycle + 编排器真收契约 |
 | **2.10** | **守恒闸 P2/P3（sproutFloorPerCycle 2–4，守恒比 ∈[0.8,1.5]）** | ✅ | `spec/SPEC-2.10-守恒闸.md` | test-2.10-conservation 6/6；36 轮每轮产出 2–4、累计比 1.0；每轮落 meko_cycles 三列 |
 | **2.11** | **存量 hub 裁剪（非改准入；带误删=0 负向证）** | ✅ | `spec/SPEC-2.11-存量hub裁剪.md` | test-2.11-hub-trim 7/7；只剪弱边(<5)、强边零退、原因码可逆 |
@@ -122,7 +122,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **68 档 / 454 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **69 档 / 460 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`

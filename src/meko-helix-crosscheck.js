@@ -7,30 +7,46 @@
 class HelixCrosscheck {
   constructor(store) { this.store = store; }
 
-  _allEntities() {
+  _rows(sql, binds = []) {
     const db = this.store._getDb();
-    const rows = [];
-    const stmt = db.prepare('SELECT * FROM entities');
-    while (stmt.step()) rows.push(stmt.getAsObject());
+    const stmt = db.prepare(sql);
+    if (binds.length) stmt.bind(binds);
+    const out = [];
+    while (stmt.step()) out.push(stmt.getAsObject());
     stmt.free();
-    return rows;
+    return out;
   }
 
   _core(id, prefix) { return id.startsWith(prefix) ? id.slice(prefix.length) : null; }
 
-  async crosscheck() {
-    const rows = this._allEntities();
-    const rawIds = new Set();
-    const wikiIds = new Set();
-    for (const r of rows) {
-      if (r.id.startsWith('raw-')) rawIds.add(r.id);
-      else if (r.id.startsWith('wiki-')) wikiIds.add(r.id);
+  /**
+   * 互校：raw↔wiki 交替校验。
+   * - gap 只数活跃实体（退役位永远补不完，且 field 对返也跳过退役）
+   * - 配对视同 meko-field 口径：无前缀实体归 raw 链
+   * @param {{cycleId?: string}} opts cycleId 只统计该轮的对返账
+   * @returns {Promise<{rawGaps: string[], wikiGaps: string[], reconciled: number}>}
+   */
+  async crosscheck(opts = {}) {
+    const active = this._rows('SELECT id FROM entities WHERE invalid_at IS NULL ORDER BY id').map((r) => String(r.id));
+    const all = new Set(this._rows('SELECT id FROM entities').map((r) => String(r.id)));
+    const rawGaps = [];
+    const wikiGaps = [];
+    for (const id of active) {
+      if (id.startsWith('wiki-')) {
+        if (!all.has('raw-' + id.slice(5))) rawGaps.push(id);
+      } else {
+        // raw- 前缀与无前缀（SPEC-1.4 兼容）同属 raw 链
+        const base = id.startsWith('raw-') ? id.slice(4) : id;
+        if (!all.has('wiki-' + base)) wikiGaps.push(id);
+      }
     }
-    // wiki 有 raw 无 → rawGaps（raw 链缺这条）；raw 有 wiki 无 → wikiGaps
-    const rawGaps = [...wikiIds].filter(id => !rawIds.has(id));
-    const wikiGaps = [...rawIds].filter(id => !wikiIds.has(id));
-    // 互补对返：能配上的漏需求被对端补齐数（P0 防漏）；完整代谢在 M2 实现，此处留痕计数
-    const reconciled = 0;
+    // 对返数取账本真值：只算「目标实体确实被补出来」的 reconcile 动作
+    const cycleId = opts && opts.cycleId != null ? String(opts.cycleId) : null;
+    const sql = `SELECT COUNT(*) AS n FROM field_actions fa
+      WHERE fa.action = 'reconcile'
+        AND EXISTS (SELECT 1 FROM entities e WHERE e.id = fa.target)`
+      + (cycleId ? ' AND fa.cycle_id = ?' : '');
+    const reconciled = Number((this._rows(sql, cycleId ? [cycleId] : [])[0] || {}).n || 0);
     return { rawGaps, wikiGaps, reconciled };
   }
 }

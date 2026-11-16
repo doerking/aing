@@ -92,3 +92,12 @@ class HelixCrosscheck {
 ---
 
 > **M0 门**：四份 spec 齐 + owner 拍板 → 开 M1。
+
+---
+
+## 修订 A（2026-11-17）：HelixCrosscheck 真对返（任务 2.8）
+
+- **修缺陷**：原实现 `rawGaps = wikiIds.filter(id => !rawIds.has(id))` 拿同一 id 跨两链比对，导致「所有 wiki 实体恒为 gap、所有 raw 实体恒为 gap」，`reconciled` 永远 0。现按 `wiki-`/`raw-` 去前缀配对：`rawGaps` = 缺 raw 对位的 wiki id；`wikiGaps` = 缺 wiki 对位的 raw id；无前缀实体归 raw 链（与 SPEC-2.12 reconcile 口径一致）。
+- **只数活跃**：`invalid_at IS NULL` 才进 gap；对位是否存在按全表判（退役对位视作已存在，与场域对返同口径，避免「永远补不完」）。
+- **reconciled 取账本真值**：数 `field_actions` 里 `action='reconcile'` 且目标实体确实存在的条数；传 `{cycleId}` 只统计该轮。互校本身仍然只读，写入仍归 SPEC-2.12 reconcile。
+- 测试：`test/test-2.8b-helix-reconcile.js` 6/6（只数活跃、真对返计数、cycle 圈定、只读、铁律、形态稳定）。
