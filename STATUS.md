@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 58 档 / 370 条断言全绿 |
+| 测试 | `npm test` → 58 档 / 385 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **73 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=14 / M4=6 / M5=3 / M6=12）|
 
@@ -84,7 +84,7 @@ status: active
 | **2.15** | **六维 × 四时点维护接线（T0–T3）** | ✅ | `spec/SPEC-2.15-六维四时点维护接线.md` | test-2.15-evolution-cycle 5/5；T0–T3 齐、六维各一断言、gene 可回滚 |
 | **2.16** | **闸东真接 + 自治/审批边界（OmniGate 强制引用）** | ✅ | `spec/SPEC-2.16-闸东真接与审批边界.md` | test-2.16-omni-gate 8/8；I8 无闸必拒、W2 队列、memo 卡片、双重锁 |
 | **2.17** | **子agent 单元：每位角色自带 ≤2 狼位（修订 A）** | ✅ | `spec/SPEC-2.17-子agent狼位.md` | test-2.17-wolf-units 4/4；身份快照不变、零写权、完即弃、D1–D5 采样 |
-| **2.18** | **外派采集面：粒子×框架 / 七步派单 / 轨迹口径 / 来源分级 / 攻果门 / 基线门 / 两权分离 / 禁虚报** | ✅ 规格修订 B（代码待补） | `spec/SPEC-2.18-外派蜂群三分编组.md` | test-2.18-dispatch-swarm 7/7 覆盖 AC-1~5；AC-6~20（厚度/批间闸/无熔断/轨迹口径/分级/攻果门/基线门/禁虚报/两权/三类粒子/掩护位/回报验收/降级/成本）待实现 |
+| **2.18** | **外派采集面：粒子×框架 / 七步派单 / 轨迹口径 / 来源分级 / 攻果门 / 基线门 / 两权分离 / 禁虚报** | ✅ | `spec/SPEC-2.18-外派蜂群三分编组.md` | test-2.18-dispatch-swarm 22/22 覆盖 AC-1~20；D11 裁定 A：包内只出派单底版与攻果门校验纯函数（不 spawn / 不发网络 / 不碰存储，arch-lint 守）；厚度三态、批间用户闸、无熔断、轨迹 ≤12、来源分级与交叉、四件门、基线门、三布尔禁虚报、两权清单、三类粒子、掩护位铁律、回报验收、降级不跳门、波次成本 |
 
 > 2.9–2.11 由神经进化团队首战共识（Gate4b INTERVENE + Gate5 R1 critical）强制纳入，唔做则 M2 门唔过。
 
@@ -121,7 +121,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **73/73 任务落地**（M0 5 / M1 15 / M2 18 / M3 14 / M4 6 / M5 3 / M6 12；M2 2.7/2.8 占位另计）
-- **58 档 / 370 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **58 档 / 385 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -198,5 +198,5 @@ status: active
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
 | **D9** | 原院 guardrails 无调用点、四件 meko-* 无调用方 | 已裁定唔迁：guardrails 化为 `omni-gate` 强制闸（2.16）；meko-* 四件弃 |
 | **D10** | **守内面两套口径并存**：内部总设定 = neural-evolution-swarm 旧五角色；v2 = gene-keeper/omni-gate/pilot/tri-cross/poll 五组件 + 狼位 | **待裁**：牵动 2.14/2.17/6.6，故 2.18 修订 B 已把该条挂起不裁 |
-| **D11** | 包内 `src/dispatch-swarm.js` 与「对外采集与包无代码接线」边界冲突 | **待裁**：留则只作「派单底版校验 + 攻果门校验」纯函数，不提供 spawn；否则移出包 |
+| **D11** | 包内 `src/dispatch-swarm.js` 与「对外采集与包无代码接线」边界冲突 | **已裁 A（2026-11-17）**：留包内，只作「派单底版校验 + 攻果门校验」纯函数与记账；不 spawn、不发网络、不碰存储（`tools/arch-lint.js` 执行位守）；AC-6~20 全落测。剩项：包内无生产调用方，接线归宿主运行时的外派入口 |
 | ~~D8~~ | ~~8 个模块直连 store~~ | **已清**：compile/tri-axis-gate 改注入；arch-lint C5 守（2026-11-16）|
