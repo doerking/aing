@@ -29,7 +29,8 @@ upstream: [SPEC-1.8, SPEC-5.3, 旧院 query.js, docs/Engineering/CONSUMER-AUDIT-
 
 - **向量路**：`vector.search(store, q, {k: limit*3})`（沿用 5.3 的强度加权、简繁归一、双链去重）。
 - **词面路**：对 `name + type + tags` 做简繁折叠后小写；查询按空白/中文标点切词。
-  - 整词命中记 1；中文长词任一 2 字滑窗命中记 0.5；分数 = 命中数 / 查询词数，上限 1。
+  - 整词命中记 1；中文长词任一 2 字滑窗命中记 0.5；**按 IDF 加权**：`Σ idf(t)·hit(t) / Σ idf(t)`，上限 1（修订 A）。
+  - `idf(t) = ln((N+1)/(df(t)+1)) + 1`，平滑、恒 ≥1；`df` 在本轮召回的词面语料上现算，不落表。
 - **名称路**：`name` 或 `id` 与查询折叠后相等 → 1；包含 → 0.8；否则 0。
 - 词面/名称路只收真命中（>0），不全库倾倒。
 
@@ -99,7 +100,7 @@ upstream: [SPEC-1.8, SPEC-5.3, 旧院 query.js, docs/Engineering/CONSUMER-AUDIT-
 ## 五、契约
 
 - `search(store, query, opts) -> {candidates, meta}`
-- 纯函数导出：`keywordScore(entity, query)`、`nameScore(entity, query)`、`recencyScore(entity)`
+- 纯函数导出：`keywordScore(entity, query)`（旧口径，保留）、`keywordScoreIdf(entity, query, df, N)`、`idfOf(df, N)`、`queryTokens(query)`、`nameScore(entity, query)`、`recencyScore(entity)`
 - 常量：`DEFAULTS`（weights / slowRecallThreshold / expandTop / rerank / limit）
 
 ## 六、依赖
@@ -129,3 +130,11 @@ upstream: [SPEC-1.8, SPEC-5.3, 旧院 query.js, docs/Engineering/CONSUMER-AUDIT-
 
 - 提升主要来自名称/标签路与慢回忆；词面路只覆盖 `name/type/tags`，正文词面仍属后续评测任务。
 - 5/8 不足以称「可信」；权重不按这 8 条查询调，评测集冻结后再判（口径见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八·补）。
+
+## 九、修订 A（2026-11-17，词面 IDF 通道）
+
+- 动机：旧词面分按「命中词数 / 查询词数」平摊，罕见词与满库常见词同权，噪声大。
+- 契约：`lexical = Σ idf(t)·hit(t) / Σ idf(t)`；`idf(t) = ln((N+1)/(df(t)+1)) + 1`；`df` 由本轮所有活实体的 `name+type+tags` 现算，`N` = 活实体数；空查询或全无命中 → 0；全覆盖查询仍得 1（既有 AC 不回归）。
+- 慢回忆扩展出的邻居同样走 IDF 口径。
+- 实测（冻结集 v1）：v1 指标未变（R@10 与负例命中率与改前逐位相同）——该集每题命中是二值的，IDF 只在「同题多候选」时改排序；要量出 IDF 增益需多正例题或噪声题，留待评测集 v2 扩充。
+- 铁律不变：只读、不写 `last_access`、不物理删。

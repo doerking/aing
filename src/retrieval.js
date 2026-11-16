@@ -45,6 +45,48 @@ function tagsOf(entity) {
   } catch (_) { return []; }
 }
 
+/** 查询切词（与 keywordScore 同口径） */
+function queryTokens(query) {
+  return _foldLower(query).split(/[\s,，、;；]+/).filter((t) => t.length > 0);
+}
+
+function _hayOf(entity) {
+  return _foldLower([(entity && entity.name) || '', (entity && entity.type) || '', ...tagsOf(entity)].join(' '));
+}
+
+/** 单词命中：整词 1；中文长词的 2 字滑窗 0.5；无 0 */
+function tokenHit(hay, token) {
+  if (!hay || !token) return 0;
+  if (hay.includes(token)) return 1;
+  if (token.length >= 2 && /[一-鿿]/.test(token)) {
+    for (let i = 0; i + 2 <= token.length; i++) {
+      if (hay.includes(token.slice(i, i + 2))) return 0.5;
+    }
+  }
+  return 0;
+}
+
+/** 平滑 IDF：df 越小权重越大，恒 ≥1（df=0 → ln(N+1)+1） */
+function idfOf(df, N) {
+  const d = Number.isFinite(df) && df > 0 ? df : 0;
+  const n = Number.isFinite(N) && N > 0 ? N : 0;
+  return Math.log((n + 1) / (d + 1)) + 1;
+}
+
+/** IDF 加权词面分：Σ idf(t)·hit(t) / Σ idf(t)，上限 1（SPEC-6.3 修订 A） */
+function keywordScoreIdf(entity, query, df, N) {
+  const tokens = queryTokens(query);
+  if (!tokens.length) return 0;
+  const hay = _hayOf(entity);
+  let num = 0, den = 0;
+  for (const t of tokens) {
+    const w = idfOf(df && df[t], N);
+    den += w;
+    num += w * tokenHit(hay, t);
+  }
+  return den > 0 ? Math.min(1, num / den) : 0;
+}
+
 /** 词面覆盖分：name + type + tags 的整词/二字滑窗命中率（旧院 keywordScore 口径） */
 function keywordScore(entity, query) {
   const hay = _foldLower([(entity && entity.name) || '', (entity && entity.type) || '', ...tagsOf(entity)].join(' '));
@@ -118,10 +160,19 @@ async function search(store, query, opts = {}) {
     add(row, { sim: Number(h.score) || 0 });
   }
 
-  // 2) 词面/名称路（只收真命中，不全库倾倒）
+  // 2) 词面/名称路（只收真命中，不全库倾倒；词面用 IDF 加权，SPEC-6.3 修订 A）
   const all = _rows(db, 'SELECT id,name,type,tags,updated_at FROM entities WHERE invalid_at IS NULL');
+  const tokens = queryTokens(query);
+  const df = {};
+  if (tokens.length) {
+    for (const row of all) {
+      const hay = _hayOf(row);
+      for (const t of tokens) if (tokenHit(hay, t) > 0) df[t] = (df[t] || 0) + 1;
+    }
+  }
+  const N = all.length;
   for (const row of all) {
-    const lx = keywordScore(row, query);
+    const lx = keywordScoreIdf(row, query, df, N);
     const nm = nameScore(row, query);
     if (lx <= 0 && nm <= 0) continue;
     add(row, { lexical: lx, nameHit: nm });
@@ -164,7 +215,7 @@ async function search(store, query, opts = {}) {
         if (pool.has(nbId)) continue;
         const row = rowOf(nbId);
         if (!row || row.invalid_at) continue;
-        const lx = keywordScore(row, query);
+        const lx = keywordScoreIdf(row, query, df, N);
         const nm = nameScore(row, query);
         const e = add(row, { sim: 0, lexical: lx, nameHit: nm, slowRecall: true });
         if (!e) continue;
@@ -210,4 +261,4 @@ async function search(store, query, opts = {}) {
   return { candidates: out, meta: { avgSim, slowExpanded, weights, rerank: rr } };
 }
 
-module.exports = { DEFAULTS, search, keywordScore, nameScore, recencyScore, parseTs, tagsOf };
+module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, nameScore, recencyScore, parseTs, tagsOf };
