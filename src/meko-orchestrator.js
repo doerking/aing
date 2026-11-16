@@ -93,6 +93,11 @@ class MekoOrchestrator {
       this._writeCycle(cycleType, round, failed ? 'failed' : 'executed', kespi);
 
       if (failed) {
+        try {
+          await require('./trajectory.js').logCycle(this.store, {
+            cycleId, ok: false, rounds: round, results, failedStep: failed, elapsedMs: _nowMs() - startedAt
+          });
+        } catch (_) { /* 轨迹写失败不阻断编排 */ }
         return {
           ok: false, cycleId, rounds: round, failedRound: round, failedStep: failed,
           results, deadline: new Date(endsAt).toISOString(), elapsedMs: _nowMs() - startedAt
@@ -100,6 +105,11 @@ class MekoOrchestrator {
       }
     }
 
+    try {
+      await require('./trajectory.js').logCycle(this.store, {
+        cycleId, ok: true, rounds, results, failedStep: null, elapsedMs: _nowMs() - startedAt
+      });
+    } catch (_) { /* 轨迹写失败不阻断编排 */ }
     return {
       ok: true, cycleId, rounds, results,
       deadline: new Date(endsAt).toISOString(), elapsedMs: _nowMs() - startedAt
