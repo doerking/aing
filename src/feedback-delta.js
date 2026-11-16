@@ -37,7 +37,9 @@ function delta(store) {
   const db = store._getDb();
   const cycles = rowsOf(db,
     `SELECT id, kespi_snapshot, growth, pruned, conservation_ratio
-     FROM meko_cycles ORDER BY rowid DESC LIMIT 2`);
+     FROM meko_cycles
+     WHERE kespi_source = 'kespi_scores'
+     ORDER BY rowid DESC LIMIT 2`);
 
   const counts = {
     entities: Number(scalar(db, `SELECT COUNT(*) AS n FROM entities WHERE invalid_at IS NULL`) || 0),

@@ -60,6 +60,7 @@ async function extractInsights(store, opts = {}) {
 
   const cycles = rowsOf(db,
     `SELECT id, growth, pruned, kespi_snapshot FROM meko_cycles
+     WHERE kespi_source = 'kespi_scores'
      ORDER BY rowid ASC`);
   const recent = cycles.slice(-windowN);
 

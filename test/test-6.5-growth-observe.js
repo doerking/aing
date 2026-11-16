@@ -61,8 +61,8 @@ const LONG = '健康实体正文，长度需要超过五十个字符，才不会
 
   // AC-2 反馈差分（两条周期，KESPI 上升）
   const cyc = (id, kespi, growth, pruned, ratio) => db.run(
-    `INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot, growth, pruned, conservation_ratio)
-     VALUES ('${id}', '维护:round1', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'executed', ${kespi}, ${growth}, ${pruned}, ${ratio})`
+    `INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot, kespi_source, growth, pruned, conservation_ratio)
+     VALUES ('${id}', '维护:round1', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'executed', ${kespi}, 'kespi_scores', ${growth}, ${pruned}, ${ratio})`
   );
   cyc('c1', 0.5, 2, 0, 1.0);
   cyc('c2', 0.6, 3, 1, 0.9);
