@@ -15,7 +15,7 @@ status: draft（改写版）
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `npm test` / `node test/run-all.js` | ✅ 可用 | 42 档 / 253 条断言 |
+| `npm test` / `node test/run-all.js` | ✅ 可用 | 43 档 / 262 条断言 |
 | `npm run test:guard` | ✅ 可用 | test 计数只加唔减（R4）|
 | `node verify-deploy.js` | ✅ 可用 | C0–C21 共 33 项门禁 |
 | `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
@@ -76,6 +76,9 @@ node src/neural.js event '{"channel":"anomaly","target":"<单号>","source":"<ag
 | 会话入库 | `node src/auto-ingest.js <session-id> "<文本>"` |
 | KESPI 八维自检 | `node src/kespi-check.js` |
 | 逻辑退役（非物理删） | `node src/prune.js`（默认 dry-run） |
+
+> **向量后端（只供评测，默认不变）**：默认 `hash-64`（字面级）。评测时用环境变量 `AING_VECTOR_BACKEND=<后端名>` 或调用参数 `opts.backend` 临时切换，换后 `vectorStep` 全量重建；检索按 `model`+`dim` 过滤，不同后端永不互比。
+> **换不换由使用者的语料定**：评测排名只证明「在评测集上谁强」。口径见 README「六·补 检索口径」，记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`；发布默认值不按测试集排名改。
 
 ## 五、验收铁律
 
