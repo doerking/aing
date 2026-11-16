@@ -217,8 +217,15 @@ function _lockStaleMs() {
   return Number.isFinite(v) && v > 0 ? v : LOCK_STALE_DEFAULT;
 }
 
+// 进程存活判定（POSIX/Windows 通用）：signal 0 只探存在；EPERM = 存在但无权。
+function _pidAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return e.code === 'EPERM'; }
+}
+
 // 陈旧 tmp 清理：进程死在 write 与 rename 之间时，tmp.<pid> 会永久残留。
-// 与旧锁接管同一套阈值；新鲜 tmp 可能是活写者，不动。
+// 归属 pid 已死 → 孤儿，立即清；pid 活着（可能是慢写者）→ 只按时间阈值清。
 function _cleanStaleTmp(fp) {
   const dir = path.dirname(fp);
   const prefix = path.basename(fp) + '.tmp.';
@@ -227,21 +234,29 @@ function _cleanStaleTmp(fp) {
   for (const name of names) {
     if (!name.startsWith(prefix)) continue;
     const p = path.join(dir, name);
+    const pid = Number(name.slice(prefix.length));
+    const orphan = Number.isInteger(pid) && pid > 0 && !_pidAlive(pid);
     try {
       const st = fs.statSync(p);
-      if (Date.now() - st.mtimeMs > _lockStaleMs()) fs.unlinkSync(p);
+      if (orphan || Date.now() - st.mtimeMs > _lockStaleMs()) fs.unlinkSync(p);
     } catch (_) { /* 清理尽力而为，不阻 init */ }
   }
 }
 
-function _acquireLock(lockPath) {  try {
+function _acquireLock(lockPath) {
+  try {
     fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
     return true;
   } catch (e) {
     if (e.code !== 'EEXIST') throw e;
     let st = null;
     try { st = fs.statSync(lockPath); } catch (_) { return _acquireLock(lockPath); }
-    if (Date.now() - st.mtimeMs > _lockStaleMs()) {
+    let deadOwner = false;
+    try {
+      const obj = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+      if (Number.isInteger(obj.pid) && obj.pid > 0 && obj.pid !== process.pid && !_pidAlive(obj.pid)) deadOwner = true;
+    } catch (_) { /* 内容不可读 → 退回时间阈值 */ }
+    if (deadOwner || Date.now() - st.mtimeMs > _lockStaleMs()) {
       try { fs.unlinkSync(lockPath); } catch (_) { /* 被抢先，重试 */ }
       return _acquireLock(lockPath);
     }
