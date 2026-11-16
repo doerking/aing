@@ -1,0 +1,29 @@
+{
+  "version": "d79f91d2ccdf",
+  "frozen_at": "2026-11-17",
+  "files": {
+    "embedding-pairs.jsonl": {
+      "sha1": "d79f91d2ccdf81cafa8675fdebe9f66fbc2ed557",
+      "bytes": 7182
+    },
+    "corpus.jsonl": {
+      "sha1": "ac088ad60851836fd1d24eb949f82513cd44704e",
+      "bytes": 6134
+    }
+  },
+  "counts": {
+    "pairs": 65,
+    "corpus": 60,
+    "langs": {
+      "zh": 33,
+      "yue": 20,
+      "en": 12
+    },
+    "kinds": {
+      "exact": 31,
+      "paraphrase": 32,
+      "trad": 2
+    }
+  },
+  "rules": "冻结后只增不改：改任何一条即视为新版本，旧结论作废；版本号取 embedding-pairs.jsonl sha1 前 12 位。"
+}

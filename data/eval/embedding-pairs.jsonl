@@ -1,0 +1,65 @@
+{"q": "蒸馏目的", "pos": ["eval-001"], "neg": ["eval-025"], "lang": "zh", "kind": "exact"}
+{"q": "向量空间找最接近", "pos": ["eval-002"], "neg": ["eval-003"], "lang": "zh", "kind": "exact"}
+{"q": "字面匹配算分", "pos": ["eval-003"], "neg": ["eval-002"], "lang": "zh", "kind": "exact"}
+{"q": "三路分数加权融合", "pos": ["eval-004"], "neg": ["eval-022"], "lang": "zh", "kind": "exact"}
+{"q": "只允许一个进程写库", "pos": ["eval-005"], "neg": ["eval-006"], "lang": "zh", "kind": "exact"}
+{"q": "临时文件再重命名", "pos": ["eval-006"], "neg": ["eval-005"], "lang": "zh", "kind": "exact"}
+{"q": "库体积超阈值拒绝写", "pos": ["eval-007"], "neg": ["eval-008"], "lang": "zh", "kind": "exact"}
+{"q": "加载后文件被外部改动", "pos": ["eval-008"], "neg": ["eval-007"], "lang": "zh", "kind": "exact"}
+{"q": "实体与关系组成网络", "pos": ["eval-009"], "neg": ["eval-010"], "lang": "zh", "kind": "exact"}
+{"q": "原始稿与编译稿互相指向", "pos": ["eval-010"], "neg": ["eval-009"], "lang": "zh", "kind": "exact"}
+{"q": "压缩后保留的入口", "pos": ["eval-011"], "neg": ["eval-001"], "lang": "zh", "kind": "exact"}
+{"q": "长期未用的边逐步降权", "pos": ["eval-012"], "neg": ["eval-013"], "lang": "zh", "kind": "exact"}
+{"q": "按实测分布调门槛", "pos": ["eval-013"], "neg": ["eval-012"], "lang": "zh", "kind": "exact"}
+{"q": "只重算变化部分", "pos": ["eval-014"], "neg": ["eval-015"], "lang": "zh", "kind": "exact"}
+{"q": "空库第一次运行没有历史", "pos": ["eval-015"], "neg": ["eval-014"], "lang": "zh", "kind": "exact"}
+{"q": "按固定链条调用组件的唯一入口", "pos": ["eval-016"], "neg": ["eval-004"], "lang": "zh", "kind": "exact"}
+{"q": "记录谁在何时改了什么", "pos": ["eval-017"], "neg": ["eval-018"], "lang": "zh", "kind": "exact"}
+{"q": "一轮代谢结束时的只读记录", "pos": ["eval-018"], "neg": ["eval-017"], "lang": "zh", "kind": "exact"}
+{"q": "物理删除后留下的索引记录", "pos": ["eval-019"], "neg": ["eval-020"], "lang": "zh", "kind": "exact"}
+{"q": "到期退场按层与证据", "pos": ["eval-020"], "neg": ["eval-021"], "lang": "zh", "kind": "exact"}
+{"q": "条数与摘要对齐才删", "pos": ["eval-021"], "neg": ["eval-019"], "lang": "zh", "kind": "exact"}
+{"q": "多路召回合并成最终名次", "pos": ["eval-022"], "neg": ["eval-004"], "lang": "zh", "kind": "exact"}
+{"q": "沿有效边扩展一步找回没直接命中的内容", "pos": ["eval-023"], "neg": ["eval-022"], "lang": "zh", "kind": "paraphrase"}
+{"q": "该找到的实际找回比例", "pos": ["eval-024"], "neg": ["eval-025"], "lang": "zh", "kind": "exact"}
+{"q": "返回结果里真正相关的比例", "pos": ["eval-025"], "neg": ["eval-024"], "lang": "zh", "kind": "exact"}
+{"q": "同一概念含义逐渐偏移", "pos": ["eval-026"], "neg": ["eval-013"], "lang": "zh", "kind": "exact"}
+{"q": "怎么删掉过期内容又不丢数据", "pos": ["eval-020"], "neg": ["eval-021"], "lang": "zh", "kind": "paraphrase"}
+{"q": "写盘如何避免写坏", "pos": ["eval-006"], "neg": ["eval-005"], "lang": "zh", "kind": "paraphrase"}
+{"q": "两个进程同时写会怎样", "pos": ["eval-005"], "neg": ["eval-006"], "lang": "zh", "kind": "paraphrase"}
+{"q": "找东西的算法有哪些", "pos": ["eval-004"], "neg": ["eval-003"], "lang": "zh", "kind": "paraphrase"}
+{"q": "空状态下的排序难题", "pos": ["eval-015"], "neg": ["eval-014"], "lang": "zh", "kind": "paraphrase"}
+{"q": "轮阵", "pos": ["eval-027"], "neg": ["eval-016"], "lang": "zh", "kind": "trad"}
+{"q": "果实", "pos": ["eval-028"], "neg": ["eval-001"], "lang": "zh", "kind": "trad"}
+{"q": "唔好再改，维持原样", "pos": ["eval-029"], "neg": ["eval-030"], "lang": "yue", "kind": "paraphrase"}
+{"q": "一直睇实个进度", "pos": ["eval-030"], "neg": ["eval-029"], "lang": "yue", "kind": "paraphrase"}
+{"q": "收尾做埋佢", "pos": ["eval-031"], "neg": ["eval-036"], "lang": "yue", "kind": "paraphrase"}
+{"q": "啲任务派畀外边人做", "pos": ["eval-032"], "neg": ["eval-016"], "lang": "yue", "kind": "paraphrase"}
+{"q": "内存数据写去硬盘", "pos": ["eval-033"], "neg": ["eval-006"], "lang": "yue", "kind": "paraphrase"}
+{"q": "出问题有层保险", "pos": ["eval-034"], "neg": ["eval-029"], "lang": "yue", "kind": "paraphrase"}
+{"q": "边个拍板", "pos": ["eval-035"], "neg": ["eval-036"], "lang": "yue", "kind": "paraphrase"}
+{"q": "件事搞掂喇", "pos": ["eval-036"], "neg": ["eval-031"], "lang": "yue", "kind": "paraphrase"}
+{"q": "临场自己想办法", "pos": ["eval-037"], "neg": ["eval-034"], "lang": "yue", "kind": "paraphrase"}
+{"q": "个方案跑唔通", "pos": ["eval-038"], "neg": ["eval-046"], "lang": "yue", "kind": "paraphrase"}
+{"q": "唔该帮手睇下", "pos": ["eval-039"], "neg": ["eval-030"], "lang": "yue", "kind": "paraphrase"}
+{"q": "冇问题照做", "pos": ["eval-040"], "neg": ["eval-038"], "lang": "yue", "kind": "exact"}
+{"q": "顶唔顺压力", "pos": ["eval-041"], "neg": ["eval-042"], "lang": "yue", "kind": "exact"}
+{"q": "好嬲好火", "pos": ["eval-042"], "neg": ["eval-041"], "lang": "yue", "kind": "paraphrase"}
+{"q": "件嘢好结实", "pos": ["eval-043"], "neg": ["eval-044"], "lang": "yue", "kind": "paraphrase"}
+{"q": "好划算", "pos": ["eval-044"], "neg": ["eval-043"], "lang": "yue", "kind": "exact"}
+{"q": "搵返唔到", "pos": ["eval-045"], "neg": ["eval-046"], "lang": "yue", "kind": "paraphrase"}
+{"q": "条路行得通", "pos": ["eval-046"], "neg": ["eval-038"], "lang": "yue", "kind": "paraphrase"}
+{"q": "落盘安全点做", "pos": ["eval-033"], "neg": ["eval-007"], "lang": "yue", "kind": "paraphrase"}
+{"q": "咩叫兜底", "pos": ["eval-034"], "neg": ["eval-037"], "lang": "yue", "kind": "exact"}
+{"q": "atomic file replacement", "pos": ["eval-047"], "neg": ["eval-048"], "lang": "en", "kind": "exact"}
+{"q": "single writer mutual exclusion", "pos": ["eval-048"], "neg": ["eval-047"], "lang": "en", "kind": "paraphrase"}
+{"q": "maximum database size", "pos": ["eval-049"], "neg": ["eval-051"], "lang": "en", "kind": "paraphrase"}
+{"q": "record left after deletion", "pos": ["eval-050"], "neg": ["eval-051"], "lang": "en", "kind": "paraphrase"}
+{"q": "how long to keep old records", "pos": ["eval-051"], "neg": ["eval-052"], "lang": "en", "kind": "paraphrase"}
+{"q": "verify archive before purge", "pos": ["eval-052"], "neg": ["eval-050"], "lang": "en", "kind": "exact"}
+{"q": "representation learning dimensions", "pos": ["eval-053"], "neg": ["eval-054"], "lang": "en", "kind": "paraphrase"}
+{"q": "combine lexical and vector scores", "pos": ["eval-054"], "neg": ["eval-053"], "lang": "en", "kind": "paraphrase"}
+{"q": "fraction of returned results that are relevant", "pos": ["eval-055"], "neg": ["eval-056"], "lang": "en", "kind": "paraphrase"}
+{"q": "fraction of relevant items found", "pos": ["eval-056"], "neg": ["eval-055"], "lang": "en", "kind": "paraphrase"}
+{"q": "p95 response time target", "pos": ["eval-057"], "neg": ["eval-059"], "lang": "en", "kind": "paraphrase"}
+{"q": "reindex only changed docs", "pos": ["eval-059"], "neg": ["eval-058"], "lang": "en", "kind": "paraphrase"}

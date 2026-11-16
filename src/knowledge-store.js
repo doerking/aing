@@ -226,13 +226,16 @@ function _pidAlive(pid) {
 
 // 陈旧 tmp 清理：进程死在 write 与 rename 之间时，tmp.<pid> 会永久残留。
 // 归属 pid 已死 → 孤儿，立即清；pid 活着（可能是慢写者）→ 只按时间阈值清。
+// 锁的 staging 文件同理。
 function _cleanStaleTmp(fp) {
   const dir = path.dirname(fp);
-  const prefix = path.basename(fp) + '.tmp.';
+  const base = path.basename(fp);
+  const prefixes = [base + '.tmp.', base + '.lock.staging.'];
   let names = [];
   try { names = fs.readdirSync(dir); } catch (_) { return; }
   for (const name of names) {
-    if (!name.startsWith(prefix)) continue;
+    const prefix = prefixes.find((p) => name.startsWith(p));
+    if (!prefix) continue;
     const p = path.join(dir, name);
     const pid = Number(name.slice(prefix.length));
     const orphan = Number.isInteger(pid) && pid > 0 && !_pidAlive(pid);
@@ -243,25 +246,49 @@ function _cleanStaleTmp(fp) {
   }
 }
 
-function _acquireLock(lockPath) {
+// 建锁必须原子：先完整写 staging，再 link 成锁。锁文件一旦出现，内容必定完整，
+// 不会出现「空锁 = 无 pid 可查」的死角（proot 下被杀的常见形态）。
+function _tryCreateLock(lockPath) {
+  const content = JSON.stringify({ pid: process.pid, at: Date.now() });
+  const staging = `${lockPath}.staging.${process.pid}`;
+  fs.writeFileSync(staging, content);
   try {
-    fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
+    fs.linkSync(staging, lockPath);
     return true;
   } catch (e) {
-    if (e.code !== 'EEXIST') throw e;
-    let st = null;
-    try { st = fs.statSync(lockPath); } catch (_) { return _acquireLock(lockPath); }
-    let deadOwner = false;
-    try {
-      const obj = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
-      if (Number.isInteger(obj.pid) && obj.pid > 0 && obj.pid !== process.pid && !_pidAlive(obj.pid)) deadOwner = true;
-    } catch (_) { /* 内容不可读 → 退回时间阈值 */ }
-    if (deadOwner || Date.now() - st.mtimeMs > _lockStaleMs()) {
-      try { fs.unlinkSync(lockPath); } catch (_) { /* 被抢先，重试 */ }
-      return _acquireLock(lockPath);
+    if (e.code === 'EEXIST') return false;
+    if (e.code === 'EPERM' || e.code === 'ENOSYS' || e.code === 'EXDEV' || e.code === 'EACCES') {
+      // 文件系统不支持硬链接（如手机外置 FAT32）：退回 wx 直写
+      try { fs.writeFileSync(lockPath, content, { flag: 'wx' }); return true; }
+      catch (e2) { if (e2.code === 'EEXIST') return false; throw e2; }
     }
-    return false;
+    throw e;
+  } finally {
+    try { fs.unlinkSync(staging); } catch (_) { /* staging 清不掉不遮主错 */ }
   }
+}
+
+const EMPTY_LOCK_GRACE_MS = 50; // 只在无硬链接的回退路径上用：空锁视为「写了一半被打断」
+
+function _acquireLock(lockPath) {
+  if (_tryCreateLock(lockPath)) return true;
+  let st = null;
+  try { st = fs.statSync(lockPath); } catch (_) { return _acquireLock(lockPath); }
+  const age = Date.now() - st.mtimeMs;
+  let deadOwner = false;
+  try {
+    const raw = fs.readFileSync(lockPath, 'utf8');
+    const obj = JSON.parse(raw);
+    if (Number.isInteger(obj.pid) && obj.pid > 0 && obj.pid !== process.pid && !_pidAlive(obj.pid)) deadOwner = true;
+  } catch (_) {
+    // 内容为空/半写：回退路径下只可能是建锁中途被杀；给 50ms 宽限再判死
+    if (age >= EMPTY_LOCK_GRACE_MS) deadOwner = true;
+  }
+  if (deadOwner || age > _lockStaleMs()) {
+    try { fs.unlinkSync(lockPath); } catch (_) { /* 被抢先，重试 */ }
+    return _acquireLock(lockPath);
+  }
+  return false;
 }
 
 function persist(opts = {}) {

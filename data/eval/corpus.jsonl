@@ -1,0 +1,60 @@
+{"id": "eval-001", "name": "蒸馏", "content": "把长会话压成要点，保留可追溯的引用与出处。"}
+{"id": "eval-002", "name": "向量检索", "content": "用余弦相似度在嵌入空间里找最接近的实体。"}
+{"id": "eval-003", "name": "词面检索", "content": "按字面匹配算分，不依赖语义模型，可复现。"}
+{"id": "eval-004", "name": "混合检索", "content": "向量、词面、名称三路分数加权融合后再排序。"}
+{"id": "eval-005", "name": "单写者锁", "content": "同一时刻只允许一个进程写库，其余排队或报错。"}
+{"id": "eval-006", "name": "原子写", "content": "先写临时文件再重命名，避免半写坏库。"}
+{"id": "eval-007", "name": "容量上限", "content": "库体积超过阈值就拒绝写入，原库保持不变。"}
+{"id": "eval-008", "name": "外部改写检测", "content": "加载后文件被别人动过就拒绝覆盖。"}
+{"id": "eval-009", "name": "知识图谱", "content": "实体与关系组成的网络，边有方向与强度。"}
+{"id": "eval-010", "name": "双链", "content": "原始稿与编译稿两边互相指向，检索时去重。"}
+{"id": "eval-011", "name": "锚点", "content": "压缩后保留的入口位置，重新访问可以还原。"}
+{"id": "eval-012", "name": "权重衰减", "content": "长期未用的边与实体逐步降权。"}
+{"id": "eval-013", "name": "阈值校准", "content": "用实测分布调整判定门槛，避免拍脑袋。"}
+{"id": "eval-014", "name": "增量编译", "content": "只重算变化的部分，不动未变的实体。"}
+{"id": "eval-015", "name": "冷启动", "content": "空库第一次运行，没有历史可供排序参考。"}
+{"id": "eval-016", "name": "编排器", "content": "按固定链条依次调用各组件的唯一入口。"}
+{"id": "eval-017", "name": "审计日志", "content": "记录谁在何时改了什么，供事后追查。"}
+{"id": "eval-018", "name": "快照", "content": "某一轮代谢结束时的只读状态记录。"}
+{"id": "eval-019", "name": "墓碑", "content": "物理删除后留下的索引记录，可查询去向。"}
+{"id": "eval-020", "name": "保留策略", "content": "按层与证据决定哪些内容到期退场。"}
+{"id": "eval-021", "name": "归档校验", "content": "条数与摘要对齐才允许删除热库。"}
+{"id": "eval-022", "name": "排序融合", "content": "多路召回合并成一个最终名次。"}
+{"id": "eval-023", "name": "慢回忆", "content": "沿有效边扩展一步，找回没有直接命中的内容。"}
+{"id": "eval-024", "name": "召回率", "content": "该找到的内容里实际找回的比例。"}
+{"id": "eval-025", "name": "精确率", "content": "返回结果里真正相关所占的比例。"}
+{"id": "eval-026", "name": "语义漂移", "content": "同一概念在不同轮次里含义逐渐偏移。"}
+{"id": "eval-027", "name": "輪陣", "content": "多個單元按節奏輪轉協作的方法。"}
+{"id": "eval-028", "name": "果實", "content": "隱喻產出物，經代謝後留下的結果。"}
+{"id": "eval-029", "name": "唔使郁", "content": "保持现状，不要改动。"}
+{"id": "eval-030", "name": "睇住", "content": "盯着看、持续观察。"}
+{"id": "eval-031", "name": "收口", "content": "把收尾工作做完，流程结束。"}
+{"id": "eval-032", "name": "派单", "content": "把任务分给外面的人去做。"}
+{"id": "eval-033", "name": "落盘", "content": "把内存里的数据写到磁盘。"}
+{"id": "eval-034", "name": "兜底", "content": "出问题时还有一层保险。"}
+{"id": "eval-035", "name": "揸 fit", "content": "由谁做主、谁负责拍板。"}
+{"id": "eval-036", "name": "搞掂", "content": "事情办妥了。"}
+{"id": "eval-037", "name": "执生", "content": "临场自己想办法应付。"}
+{"id": "eval-038", "name": "行唔通", "content": "方案跑不通，走不下去。"}
+{"id": "eval-039", "name": "唔该", "content": "劳驾、谢谢，用于请求与致谢。"}
+{"id": "eval-040", "name": "冇问题", "content": "没有问题，可以照做。"}
+{"id": "eval-041", "name": "顶唔顺", "content": "承受不住，压力太大。"}
+{"id": "eval-042", "name": "火滚", "content": "非常生气。"}
+{"id": "eval-043", "name": "硬净", "content": "结实、经得起用。"}
+{"id": "eval-044", "name": "抵玩", "content": "划算、性价比高。"}
+{"id": "eval-045", "name": "翻唔到", "content": "找不回来、恢复不了。"}
+{"id": "eval-046", "name": "走得通", "content": "路线可行、能跑通。"}
+{"id": "eval-047", "name": "atomic write", "content": "Write to a temp file, fsync, then rename over the target."}
+{"id": "eval-048", "name": "lock file", "content": "A single writer holds an exclusive lock while persisting."}
+{"id": "eval-049", "name": "capacity cap", "content": "Refuse to write when the database exceeds the byte budget."}
+{"id": "eval-050", "name": "tombstone", "content": "A permanent index row left after a physical delete."}
+{"id": "eval-051", "name": "retention policy", "content": "Decide by tier and evidence which records leave the hot store."}
+{"id": "eval-052", "name": "archival check", "content": "Verify counts and digests before purging the hot database."}
+{"id": "eval-053", "name": "embedding model", "content": "A mapping from text to a fixed-length numeric vector."}
+{"id": "eval-054", "name": "hybrid search", "content": "Fuse lexical, name, and vector scores into one ranking."}
+{"id": "eval-055", "name": "precision", "content": "Share of returned results that are actually relevant."}
+{"id": "eval-056", "name": "recall", "content": "Share of relevant items that were actually found."}
+{"id": "eval-057", "name": "latency budget", "content": "A p95 response-time target for a retrieval call."}
+{"id": "eval-058", "name": "cold start", "content": "The first run on an empty store with no history."}
+{"id": "eval-059", "name": "incremental compile", "content": "Recompute only what changed, leave the rest untouched."}
+{"id": "eval-060", "name": "semantic drift", "content": "The same concept quietly shifting meaning across rounds."}
