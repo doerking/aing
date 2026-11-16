@@ -58,6 +58,13 @@ const write = (rel, text) => { const p = path.join(yard, rel); fs.mkdirSync(path
   ac('AC-5 幂等', stats.skipped === 7 && stats.created === 0 && stats.updated === 0 && JSON.stringify(before) === JSON.stringify(after),
     JSON.stringify(stats));
 
+  // AC-7 推断不出不清空：既有 type 非空且路径无信号 → 保留原值
+  store.insertEntity({ id: 'misc-keep', name: '既有类型', type: 'Concept', content: '旧编译产物。' });
+  write('raw/misc/keep.md', ['---', 'name: 既有类型', '---', '', '旧编译产物。'].join('\n'));
+  await C.compile(raw, store);
+  const kept = rowsOf(db, "SELECT type FROM entities WHERE id = 'misc-keep'")[0];
+  ac('AC-7 推断不出不清空', kept && kept.type === 'Concept', JSON.stringify(kept));
+
   // AC-6 铁律：不碰 last_access / invalid_at；源码无物理删
   const untouched = rowsOf(db, "SELECT COUNT(*) AS n FROM entities WHERE last_access IS NOT NULL OR invalid_at IS NOT NULL")[0].n;
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'compile.js'), 'utf8');

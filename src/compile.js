@@ -141,6 +141,8 @@ async function compile(rawDir, store) {
     const id = (metadata.id != null && String(metadata.id).trim() !== '') ? String(metadata.id).trim() : deriveEntityId(rawDir, filePath);
     const row = toContentRow(metadata, content, path.relative(rawDir, filePath));
     const existing = store.getEntity(id);
+    // 推断不出时不清空既有类型（迁移/旧编译已定的 type 不能被降级）
+    if (row.type == null && existing && existing.type != null) row.type = existing.type;
 
     if (!existing) {
       insertStmt.run([id, row.name, row.type, row.content, row.tags, row.status, row.confidence]);

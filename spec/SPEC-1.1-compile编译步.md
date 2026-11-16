@@ -75,6 +75,8 @@ upstream: [ARCHITECTURE-全架构重写图纸-DNA双铰链-从零实现-2026-11-
   1. frontmatter `type` 非空 → **原样优先**，路径不覆盖。
   2. 否则按相对路径的目录段（小写）匹配：`conversations|conversation|chats|sessions → Conversation`；`todos|todo|tasks → Todo`；`papers|paper → Paper`；`concepts|concept → Concept`；`meta|meta-knowledge|metaknowledge → MetaKnowledge`；`insights|insight → Insight`；`originals|origin|inbox → RawDocument`。
   3. 都不匹配 → `null`（未知，下游按知识层保底；**不从正文猜**——误判成短料会被到期删）。
+  4. 推断结果为 `null` 且库中既有 `type` 非空 → **保留既有值，不清空**（迁移/旧编译已定的类型不被降级）。
 - 导出：`inferType(relPath, metadata)`、`TYPE_BY_DIR`。
 - 幂等不变：推断结果参与行比对，复跑无变则 skipped，不刷 `updated_at`。
+- 真库副本 dry-run（2026-11-17，旧院 `raw/` 85 档）：显式 75 / 可推断 0 / 未知 10；仅 1 档会变（`session-2026-09-08-部署记录` 由旧 `Concept` 纠正为 frontmatter 声明的 `Conversation`），无批量降级。
 - 测试：`test/test-1.1b-type-infer.js` 6/6（显式优先、会话/待办、知识层三类、未知不猜、幂等、铁律）。
