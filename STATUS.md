@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 73 档 / 484 条断言全绿 |
+| 测试 | `npm test` → 74 档 / 490 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -103,7 +103,7 @@ status: active
 | 3.9 | 门禁 C11–C19 适配 | ✅ | `spec/SPEC-3.9-门禁C11-C19适配.md` | test-3.9-gates-c11-c19 3/3；零提交写端 + 纯读 |
 | 3.10 | 门禁 C20–C21 适配 | ✅ | `spec/SPEC-3.10-门禁C20-C21适配.md` | test-3.10-gates-c20-c21 3/3；命令真跑 + 文档基线账 |
 | **3.11** | **memo 用户面重构（recent/openLoops/patterns/plans）** | ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo 8/8；冷启动诚实、systemLine≤80 |
-| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」；修订 A：接 CLI（`predict --message`，人读/ JSON 双输出，缺参退 2），test-3.12b 6/6 |
+| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」；修订 A：接 CLI（`predict --message`，人读/ JSON 双输出，缺参退 2），test-3.12b 6/6；修订 B：真库 markdown 正文可读化（摘要段取话题/引文、跳结构行与 id 行、双链去重、词边界截断），test-3.12c 6/6 |
 | **3.13** | **会话三源入库闭环（reply/search/rationale）** | ✅ | `spec/SPEC-3.13-三源入库闭环.md` | test-3.13-session-ingest 5/5；plan-hit/miss 反馈边 |
 | **3.14** | **CLI 入口接线（memo/predict/ingest/orchestrate）** | ✅ | `spec/SPEC-3.14-CLI入口接线.md` | test-3.14-cli 6/6；arch-lint 白名单增 cli.js；predict 命令见 SPEC-3.12 修订 A |
 | **3.15** | **memo 外派派单卡（挂载 + 随载设定）** | ✅ | `spec/SPEC-3.15-外派派单卡.md` | test-3.15-dispatch-card 8/8；卡七段/缺项标「不得派出」/三布尔如实/批间闸/只读快照三态/判据同源；memo 纯读、卡不代派；arch-lint 执行位守增 dispatch-card.js |
@@ -122,7 +122,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **73 档 / 484 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **74 档 / 490 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
