@@ -69,5 +69,16 @@ const err = (fn) => { try { fn(); return null; } catch (e) { return e.message; }
   ac('AC-5 容量上限', /db-over-cap/.test(String(e5)) && before5.equals(after5),
     JSON.stringify({ e5, same: before5.equals(after5) }));
 
+  // AC-7 陈旧 tmp 清理：init 顺手清超 stale 阈值的 tmp；新鲜 tmp 不碰（可能是活写者）
+  const staleTmp = path.join(yard, 'knowledge.db.tmp.99999');
+  const freshTmp = path.join(yard, 'knowledge.db.tmp.88888');
+  fs.writeFileSync(staleTmp, 'x');
+  fs.writeFileSync(freshTmp, 'x');
+  const oldTmp = new Date(Date.now() - 10 * 60000);
+  fs.utimesSync(staleTmp, oldTmp, oldTmp);
+  await store.init(DB);
+  ac('AC-7 陈旧 tmp 清理', !fs.existsSync(staleTmp) && fs.existsSync(freshTmp),
+    JSON.stringify(fs.readdirSync(yard)));
+
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

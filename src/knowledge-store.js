@@ -217,8 +217,24 @@ function _lockStaleMs() {
   return Number.isFinite(v) && v > 0 ? v : LOCK_STALE_DEFAULT;
 }
 
-function _acquireLock(lockPath) {
-  try {
+// 陈旧 tmp 清理：进程死在 write 与 rename 之间时，tmp.<pid> 会永久残留。
+// 与旧锁接管同一套阈值；新鲜 tmp 可能是活写者，不动。
+function _cleanStaleTmp(fp) {
+  const dir = path.dirname(fp);
+  const prefix = path.basename(fp) + '.tmp.';
+  let names = [];
+  try { names = fs.readdirSync(dir); } catch (_) { return; }
+  for (const name of names) {
+    if (!name.startsWith(prefix)) continue;
+    const p = path.join(dir, name);
+    try {
+      const st = fs.statSync(p);
+      if (Date.now() - st.mtimeMs > _lockStaleMs()) fs.unlinkSync(p);
+    } catch (_) { /* 清理尽力而为，不阻 init */ }
+  }
+}
+
+function _acquireLock(lockPath) {  try {
     fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
     return true;
   } catch (e) {
@@ -277,6 +293,7 @@ function persist(opts = {}) {
 async function init(dbFilePath) {
   if (!SQL) SQL = await initSqlJs();
   dbPath = dbFilePath;
+  _cleanStaleTmp(dbFilePath);
   if (fs.existsSync(dbFilePath)) {
     db = new SQL.Database(fs.readFileSync(dbFilePath));
     const st = fs.statSync(dbFilePath);
