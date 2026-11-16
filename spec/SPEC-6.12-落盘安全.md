@@ -51,6 +51,8 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 
 - 默认 `10 * 1024 * 1024` 字节，`AING_DB_CAP_BYTES` 覆盖；`AING_DB_CAP_ALLOW=1` 可临时放行。
 - 超限 → 抛 `db-over-cap`，**在 rename 之前**判断，原库不变。
+- **10MB 即约 2 万行短料边界**（实测：20,000 行 export 恰好 10.04MB）。短料正文越长越早触顶，按 2 万行估上界。
+- 内存要按 **wasm 堆 ≈ 库体积 × 10** 预留（实测：10MB 库 → wasm 堆 103MB、RSS 峰 142MB）。手机端进程内存预算按此估；超预算先归档，不抬 cap。
 
 ### 2.5 正常路径不变
 
@@ -67,6 +69,12 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 
 - 进程在 persist 任意点被硬杀后，重开必须自动成功，不需要人工删锁/清 tmp。
 - 重开后库必须通过 `PRAGMA integrity_check`，既有实体仍在，且能继续写。
+
+### 2.8 部署位置（手机端硬约束，不可在 CI 验证）
+
+- 库**只准放应用私有目录**（如 f2fs 等本地文件系统），**禁止放 `/sdcard`**。
+- 依据（proot 实测）：`/sdcard` 是 fuseblk，连续三次写入 mtime 全同 → `db-stale` 检测与陈旧锁的时间判定同时失效，等于把 2.3 / 2.2 两道保险拆掉。
+- 手机端实现时必须做启动自检：库路径不在私有目录 → 拒绝开库并报 `db-location`，提示迁移，不静默继续（桌面端不触发；错误码先预留）。
 
 ---
 
@@ -105,7 +113,7 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 
 ## 五、契约
 
-- 错误码：`db-locked` / `db-stale` / `db-over-cap` / `db-write-failed`。
+- 错误码：`db-locked` / `db-stale` / `db-over-cap` / `db-write-failed`；`db-location` 预留给手机端启动自检。
 - 环境变量：`AING_DB_CAP_BYTES`（默认 10485760）、`AING_DB_CAP_ALLOW`（`1` 放行）、`AING_DB_LOCK_STALE_MS`（默认 120000）。
 - 落盘顺序固定：容量判断 → 取锁 → 变更检测 → 写 tmp → fsync → rename → 记 stat → 放锁。
 
@@ -119,4 +127,5 @@ upstream: [SPEC-0.1 数据模型, SPEC-6.11 分层留存, 手机端运行要求 
 
 - 2026-11-17：补崩溃自愈——锁与孤儿 tmp 按归属 pid 存活判定接管；新增 AC-8~AC-10（真子进程硬杀 soak）。
 - 2026-11-17（补丁）：建锁改为 staging + `link` 原子创建。soak 实测抓到「锁文件为空」形态（进程在 open 与 write 之间被杀），空锁查不到 pid 会阻塞 120 秒；原子创建后该形态消失，回退路径另留 50ms 空锁宽限。
+- 2026-11-17（手机真机实测入册）：三条硬数——① `/sdcard` fuseblk 三次连写 mtime 全同，`db-stale` 失效 → 库只准私有目录（f2fs）；② 20,000 行 export = 10.04MB，cap 10MB 即约 2 万行边界；③ wasm 堆 ≈ 库体积×10（10MB 库 → 堆 103MB / RSS 峰 142MB）。soak 复跑产物在 `/root/workspace/swarm-test/`（writer/verify 脚本 + soak.db）。
 - 消费者：所有调用 `_persist` 的组件；手机端（proot）。
