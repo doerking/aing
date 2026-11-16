@@ -48,6 +48,7 @@
   "test-5.3-retrieval-rank.js": 9,
   "test-5.3b-eval-set.js": 6,
   "test-5.3c-bench.js": 6,
+  "test-5.3d-idf.js": 6,
   "test-6.1-narrative-ingest.js": 7,
   "test-6.10-point-basis.js": 5,
   "test-6.11-retention.js": 8,
