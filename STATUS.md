@@ -20,7 +20,7 @@ status: active
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
 | 测试 | `npm test` → 60 档 / 398 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **75 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=13）|
+| 任务总数口径 | **76 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=14）|
 
 > **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑时界场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 > **2026-11-16 摆位裁定（SPEC-0.8）**：进化团旧院一直旁挂无定位，今次**入驻 meko 中间质**——五成员（gene-keeper / omni-gate / pilot / tri-cross / poll）按组件契约注册，蜂巢形态共享同一中间质，T0 定焦 / T1 复核 / T2 度量 / T3 演化 四时点 × 六维（结构/强度/度量/时序/成员/用户）全程维护；判定与执行分离，写入仍由场域件 2.12/2.13 做。
@@ -121,7 +121,7 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **75/75 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 13；M2 2.7/2.8 占位另计）
+- **75/76 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 14，其中 6.11 规格定稿待实现；M2 2.7/2.8 占位另计）
 - **60 档 / 398 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
@@ -142,7 +142,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **未做（下一步）**：冻结评测集 `data/eval/embedding-pairs.jsonl`（≥50 条、粤语 ≥15 条）、词面 IDF 通道、compile 侧 `type` 推断；通道与可见性已齐，结论仍未出。
 
-## 五·补三 M6 能力叙事入库与消费（13/13 已落地）
+## 五·补三 M6 能力叙事入库与消费（13/14 已落地，6.11 规格定稿待实现）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -159,6 +159,7 @@ status: active
 | 6.9b | 时界真接（真 KESPI + 分步预算） | ✅ | `spec/SPEC-6.9b-时界真接-真KESPI与分步预算.md` | test-6.9b-timebound-wiring 8/8：运算类/未知 base≥120s、budgetTick 求和抬升、软配额 overBudget、真探针均值+来源、写回真值、无读数写占位标记、走势排除占位、幂等补列+铁律 |
 | 6.9c | 成长观察读数同源（Delta / 洞察只取真读数） | ✅ | `spec/SPEC-6.9c-成长观察读数同源.md` | test-6.9c-kespi-readers 4/4：Delta 只取真读数、真读数不足报 insufficient、洞察效果不混占位轮、过滤条件+无删+差分只读 |
 | **6.10** | **蒸馏点消费（points_json → 预案依据）** | ✅ | `spec/SPEC-6.10-蒸馏点消费.md` | test-6.10-point-basis 5/5；predict basis 增 point 类（关联实体首条点，≤80 字），无点不加、不造依据；conversation+point 即 high；纯读、确定性；检索融合明确不加第四通道 |
+| **6.11** | **分层留存与到期归档（原稿/短料/知识/墓碑）** | 📝 规格定稿（代码待补） | `spec/SPEC-6.11-分层留存与到期归档.md` | 热库硬上限；退役→归档(月 ndjson+md+manifest)→删热库；三条前置（归档先于删/可重建干跑/墓碑可查）；prune 判据替换为「到窗+无访问+无证据+可重建」；移动端退役模式留接口位 |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
@@ -198,6 +199,7 @@ status: active
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
+| **D15** | 「无物理删」铁律与 2 万/月短料 + 手机端容量冲突 | **已裁（2026-11-17，owner 批准）**：改为「带归档的两段式删除」——退役打戳 → 归档校验（条数/SHA）→ 物理清热库 → 墓碑永久；原稿层永不删。落 SPEC-6.11；代码待补 |
 | **D14** | KESPI 总公式口径（旧八维加权 vs v2 算术均值）与六个未登记小件 | **已裁（2026-11-17）**：KESPI 维持算术均值（维度语义已换，权重只给旧数字假可比）；sensory-ends / scheduler 登记「有意不迁」，batch-ingest / search-and-ingest / api-server entity REST / host 杂件随宿主接口面与发布范围一次性裁定 |
 | **D13** | 旧版 aing 的 md9 欠账（88 篇机械回填 + references/demo/tools 9 篇 + 13 篇无 frontmatter 定值） | **已裁（2026-11-17）**：旧版冻结、一律不改；v2 实际启用时以 v2 为准（owner：旧版果边可以跳过） |
 | **D9** | 原院 guardrails 无调用点、四件 meko-* 无调用方 | 已裁定唔迁：guardrails 化为 `omni-gate` 强制闸（2.16）；meko-* 四件弃 |
