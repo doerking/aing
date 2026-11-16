@@ -28,17 +28,18 @@
   "test-2.8-meko-four.js": 5,
   "test-2.9-recycle.js": 6,
   "test-3.1-consciousness-kernel.js": 6,
+  "test-3.10-gates-c20-c21.js": 3,
   "test-3.11-memo.js": 8,
   "test-3.12-predict.js": 7,
   "test-3.13-session-ingest.js": 5,
+  "test-3.14-cli.js": 6,
+  "test-3.2-control-plane.js": 8,
   "test-3.4-config-runtime.js": 5,
   "test-3.5-auto-ingest.js": 6,
   "test-3.6-api-gate.js": 5,
-  "test-3.2-control-plane.js": 8,
   "test-3.7-gates-c0-c9.js": 3,
   "test-3.8-gates-c10.js": 3,
   "test-3.9-gates-c11-c19.js": 3,
-  "test-3.10-gates-c20-c21.js": 3,
   "test-4.1-migrate.js": 6,
-  "test-3.14-cli.js": 6
+  "test-5.1-vector-backend.js": 9
 }

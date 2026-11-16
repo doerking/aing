@@ -76,6 +76,13 @@ node src/memo.js --summary
 node tools/verify-deploy.js
 ```
 
+## 六·补 检索口径（换后端前必读）
+
+- **默认是字面级**：发布包内置 `hash-64`（64 维确定性哈希，零模型依赖）。它按字面重合排序——同义改写、粤语口语（嘅 / 咗 / 唔 / 冇 / 睇）**基本分辨不出来**，这是刻意的取舍，不是缺陷被掩盖。
+- **语义后端是可选项**：`src/vector.js` 支持注册后端（`registerBackend`），评测时用 `opts.backend` 或环境变量 `AING_VECTOR_BACKEND` 临时切换。发布包不设该变量，默认值不变。
+- **不同后端的向量永不互比**：建向量记 `model` + `dim`，检索只比对同 `model` 同 `dim` 的行；换后端会整库重建，不会串味。
+- **测完必须自己复核**：评测集只证明「在评测集上谁强」，不证明「你的库会变好」。换之前拿自己 20–50 条真实实体名与真会问的查询手判一轮，决定权在你的语料，不在测试集排名。口径与记录见 [向量后端评测](./docs/Engineering/EMBEDDING-BENCH-2026-11-16.md)，行为契约见 [SPEC-5.1](./spec/SPEC-5.1-向量后端可插拔与测试口径.md)。
+
 ## 七、工程纪律（宪法）
 
 1. **spec-first**：spec 是 source of truth，code 是 spec 结果
