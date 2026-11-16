@@ -61,6 +61,7 @@
     "spec/SPEC-6.3-检索融合消费.md",
     "spec/SPEC-6.4-任务轨迹消费.md",
     "spec/SPEC-6.5-成长观察四件.md",
-    "spec/SPEC-6.6-内外维护接线.md"
+    "spec/SPEC-6.6-内外维护接线.md",
+    "spec/SPEC-6.7-访问事件接口.md"
   ]
 }

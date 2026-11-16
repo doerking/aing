@@ -98,6 +98,12 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS idx_traj_type ON task_trajectories(task_type)`,
   `CREATE INDEX IF NOT EXISTS idx_traj_success ON task_trajectories(success)`,
   `CREATE INDEX IF NOT EXISTS idx_traj_source ON task_trajectories(source)`,
+  `CREATE TABLE IF NOT EXISTS access_hits (
+    entity_id TEXT NOT NULL,      -- 只追加事实：内容被真正消费时记一条
+    hit_at DATETIME NOT NULL,
+    source TEXT DEFAULT 'unknown'
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_access_entity ON access_hits(entity_id, hit_at)`,
   `CREATE TABLE IF NOT EXISTS field_actions (
     id TEXT PRIMARY KEY,
     action TEXT,                  -- rebond/unwind/reconcile/demote/promote

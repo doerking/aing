@@ -19,13 +19,18 @@ function _rows(store, sql, params = []) {
 function listCandidates(store, { inactiveDays = DEFAULT_INACTIVE_DAYS, limit = Infinity } = {}) {
   const rows = _rows(
     store,
-    `SELECT id, tolaria_strength, last_access FROM entities
-     WHERE status = 'active'
-       AND invalid_at IS NULL
-       AND tolaria_strength <= ?
-       AND (last_access IS NULL OR (julianday('now') - julianday(last_access)) >= ?)
-     ORDER BY id`,
-    [MAX_STRENGTH, inactiveDays]
+    `SELECT e.id, e.tolaria_strength, e.last_access FROM entities e
+     WHERE e.status = 'active'
+       AND e.invalid_at IS NULL
+       AND e.tolaria_strength <= ?
+       AND (e.last_access IS NULL OR (julianday('now') - julianday(e.last_access)) >= ?)
+       AND NOT EXISTS (
+         SELECT 1 FROM access_hits h
+         WHERE h.entity_id = e.id
+           AND (julianday('now') - julianday(h.hit_at)) < ?
+       )
+     ORDER BY e.id`,
+    [MAX_STRENGTH, inactiveDays, inactiveDays]
   );
   return rows.slice(0, limit).map(r => r.id);
 }

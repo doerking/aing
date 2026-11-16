@@ -27,9 +27,15 @@ async function compressStep(store, opts = {}) {
 
   const ents = [];
   const es = db.prepare(
-    `SELECT id, content, last_access FROM entities
-     WHERE invalid_at IS NULL AND content IS NOT NULL AND last_access IS NOT NULL`
+    `SELECT e.id, e.content, e.last_access,
+       (SELECT CASE WHEN MAX(h.hit_at) IS NULL THEN 1
+                    WHEN (julianday('now') - julianday(MAX(h.hit_at))) >= ? THEN 1
+                    ELSE 0 END
+        FROM access_hits h WHERE h.entity_id = e.id) AS hit_stale
+     FROM entities e
+     WHERE e.invalid_at IS NULL AND e.content IS NOT NULL AND e.last_access IS NOT NULL`
   );
+  es.bind([inactiveDays]);
   while (es.step()) ents.push(es.getAsObject());
   es.free();
 
@@ -48,7 +54,7 @@ async function compressStep(store, opts = {}) {
   for (const e of ents) {
     stats.scanned++;
     const longEnough = String(e.content).length >= minLength;
-    const stale = String(e.last_access) < cutoffRow;
+    const stale = String(e.last_access) < cutoffRow && Number(e.hit_stale) === 1;
     const eligible = longEnough && stale;
     const state = seeds.has(e.id) ? seeds.get(e.id) : null;
 
