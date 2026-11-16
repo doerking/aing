@@ -1,10 +1,11 @@
 {
-  "version": "d79f91d2ccdf",
+  "version": "eec651fc2515",
   "frozen_at": "2026-11-17",
+  "revision": "v2（v1 基础上只增 15 题多正例/噪声题；v1 的结论作废，仅留档）",
   "files": {
     "embedding-pairs.jsonl": {
-      "sha1": "d79f91d2ccdf81cafa8675fdebe9f66fbc2ed557",
-      "bytes": 7182
+      "sha1": "eec651fc25152251b3474b2318f04b55e2a59d16",
+      "bytes": 9014
     },
     "corpus.jsonl": {
       "sha1": "ac088ad60851836fd1d24eb949f82513cd44704e",
@@ -12,16 +13,16 @@
     }
   },
   "counts": {
-    "pairs": 65,
+    "pairs": 80,
     "corpus": 60,
     "langs": {
-      "zh": 33,
-      "yue": 20,
-      "en": 12
+      "zh": 40,
+      "yue": 25,
+      "en": 15
     },
     "kinds": {
       "exact": 31,
-      "paraphrase": 32,
+      "paraphrase": 47,
       "trad": 2
     }
   },

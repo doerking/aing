@@ -140,7 +140,7 @@ status: active
 - **口径落文档**：README「六·补 检索口径」+ `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`（评测集冻结规则、四项指标、粤语单列、测完由使用者自己语料复核）。
 - **memo 可见**：`buildMemo` 多返 `diagnostics.vector`（后端 / dim / model / source / active / indexed / stale / missing / percent / alerts），系统一行形如「健康 ok / 向量 hash-64w2 100% / 蒸馏债 0 …」；`env-override` / `backend-fallback` / `stale-rows` / `low-coverage` 四类固定 code 告警，异常不静默。
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
-- **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v1 结果：hash-64 R@10 90.8% / 负例 38.5%，hash-64w2 86.2% / 26.2%，yue 单列 90.0% / 80.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v2（多正例/噪声题）、compile 侧 `type` 推断。
+- **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v2（多正例/噪声题）、compile 侧 `type` 推断。
 
 ## 五·补三 M6 能力叙事入库与消费（15/15 已落地）
 

@@ -63,3 +63,18 @@
 {"q": "fraction of relevant items found", "pos": ["eval-056"], "neg": ["eval-055"], "lang": "en", "kind": "paraphrase"}
 {"q": "p95 response time target", "pos": ["eval-057"], "neg": ["eval-059"], "lang": "en", "kind": "paraphrase"}
 {"q": "reindex only changed docs", "pos": ["eval-059"], "neg": ["eval-058"], "lang": "en", "kind": "paraphrase"}
+{"q": "写盘安全", "pos": ["eval-006", "eval-005", "eval-007"], "neg": ["eval-017"], "lang": "zh", "kind": "paraphrase"}
+{"q": "删除与归档", "pos": ["eval-019", "eval-020", "eval-021"], "neg": ["eval-018"], "lang": "zh", "kind": "paraphrase"}
+{"q": "排序与融合", "pos": ["eval-004", "eval-022", "eval-025"], "neg": ["eval-023"], "lang": "zh", "kind": "paraphrase"}
+{"q": "检索评估指标", "pos": ["eval-024", "eval-025"], "neg": ["eval-057"], "lang": "zh", "kind": "paraphrase"}
+{"q": "并发写保护", "pos": ["eval-005", "eval-008"], "neg": ["eval-006"], "lang": "zh", "kind": "paraphrase"}
+{"q": "遗忘机制", "pos": ["eval-012", "eval-020"], "neg": ["eval-011"], "lang": "zh", "kind": "paraphrase"}
+{"q": "慢一步扩边", "pos": ["eval-023"], "neg": ["eval-012"], "lang": "zh", "kind": "paraphrase"}
+{"q": "点样保证写盘唔会坏", "pos": ["eval-006", "eval-005"], "neg": ["eval-007"], "lang": "yue", "kind": "paraphrase"}
+{"q": "过期嘅嘢点处理", "pos": ["eval-020", "eval-021", "eval-019"], "neg": ["eval-018"], "lang": "yue", "kind": "paraphrase"}
+{"q": "除咗删，仲要留低咩记录", "pos": ["eval-019"], "neg": ["eval-017"], "lang": "yue", "kind": "paraphrase"}
+{"q": "边几种分数加埋一齐", "pos": ["eval-004", "eval-022"], "neg": ["eval-025"], "lang": "yue", "kind": "paraphrase"}
+{"q": "点知搵得齐唔齐", "pos": ["eval-024"], "neg": ["eval-025"], "lang": "yue", "kind": "paraphrase"}
+{"q": "protect against concurrent writers", "pos": ["eval-048", "eval-049"], "neg": ["eval-047"], "lang": "en", "kind": "paraphrase"}
+{"q": "audit trail after deletion", "pos": ["eval-050", "eval-052"], "neg": ["eval-051"], "lang": "en", "kind": "paraphrase"}
+{"q": "evaluate ranking quality", "pos": ["eval-055", "eval-056"], "neg": ["eval-057"], "lang": "en", "kind": "paraphrase"}
