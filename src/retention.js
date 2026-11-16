@@ -17,6 +17,7 @@ const TYPE_TIER = {
 const ORIGIN_TYPES = ['RawDocument', 'Origin'];
 const STRONG_EDGE = 5;
 const DEFAULT_WINDOW_DAYS = 30;
+const MOBILE_WINDOW_DAYS = 7; // SPEC-6.11 §六：手机端只挂更短热窗
 const DEFAULT_MAX_HOT = 30000;
 
 function tierOf(e) {
@@ -47,7 +48,8 @@ function planRetention(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('retention 需要 store 注入（SPEC-6.11 契约）');
   const db = store._getDb();
   const mode = MODES.includes(opts.mode) ? opts.mode : 'desktop';
-  const windowDays = Number.isFinite(opts.windowDays) ? Number(opts.windowDays) : DEFAULT_WINDOW_DAYS;
+  const defaultWindow = mode === 'mobile-retire' ? MOBILE_WINDOW_DAYS : DEFAULT_WINDOW_DAYS;
+  const windowDays = Number.isFinite(opts.windowDays) ? Number(opts.windowDays) : defaultWindow;
   const maxHot = Number.isFinite(opts.maxHot) ? Number(opts.maxHot) : DEFAULT_MAX_HOT;
   const now = opts.now ? new Date(opts.now) : new Date();
 
@@ -116,6 +118,6 @@ function planRetention(store, opts = {}) {
 }
 
 module.exports = {
-  TIER, MODES, TYPE_TIER, ORIGIN_TYPES, STRONG_EDGE, DEFAULT_WINDOW_DAYS, DEFAULT_MAX_HOT,
+  TIER, MODES, TYPE_TIER, ORIGIN_TYPES, STRONG_EDGE, DEFAULT_WINDOW_DAYS, MOBILE_WINDOW_DAYS, DEFAULT_MAX_HOT,
   tierOf, planRetention
 };

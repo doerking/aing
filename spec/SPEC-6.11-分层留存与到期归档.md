@@ -136,3 +136,16 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
 - `tools/archive.js`：`exportMonth(store, {month, outDir, plan})` 写 `YYYY-MM.ndjson`（实体 + 边 + digest）、`YYYY-MM.md`（人读摘要）、`YYYY-MM.manifest.json`（条数 / SHA-256 / 逐条摘要）；`verifyArchive(outDir, month)` 干跑还原；`applyRetention(store, {plan, outDir, month, manifest})` 校验通过后写墓碑并删热库。
 - CLI：`node tools/archive.js --db <path> --out <dir> --month YYYY-MM [--max-hot N] [--window-days N] [--mode desktop|mobile-retire] [--apply]`；默认 dry-run。
 - 表：`tombstones`（SPEC-0.1 修订 K）。
+
+---
+
+## 修订 A（2026-11-17）：移动端退役模式落地（仅请求侧）
+
+- `planRetention` 在 `mode='mobile-retire'` 时默认热窗 **7 天**（`MOBILE_WINDOW_DAYS`），显式 `windowDays` 仍可覆盖；该模式 `applyAllowed` 恒 `false`（手机不删）。
+- 新增 `src/mobile-retire.js#buildRetireRequest(store, {windowDays, maxHot, now})`：只读生成退役请求
+  `{version:1, mode:'mobile-retire', generatedAt, windowDays, maxHot, counts, overCap, candidates[{id,type,name,updatedAt,ageDays}], sha256}`；
+  候选按 id 排序，`sha256` 为键序稳定序列化的摘要，同库同 `now` 可复算（请求包可验）。
+- CLI：`tools/archive.js --mode mobile-retire` 写 `<out>/retire-request.json`；该模式加 `--apply` 被拒（退出码 5）。
+  桌面端收到请求后按桌面流程归档 → 校验 → 删热库 → 回传结果。
+- 测试：`test/test-6.11b-mobile-retire.js` 6/6（短热窗、恒不落删、请求确定性、请求内容、铁律、CLI 拒绝）。
+- 未做（有意）：请求上行 / 回传的传输层与手机端墓碑索引——等宿主接口面落地再定，不在本件空造协议。

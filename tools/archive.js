@@ -144,6 +144,23 @@ if (require.main === module) {
       mode: get('mode') || 'desktop'
     });
     console.log(`分层：总 ${plan.counts.total}（原稿 ${plan.counts.origin} / 短料 ${plan.counts.short} / 知识 ${plan.counts.knowledge}）；超限 ${plan.overCap}；候选 ${plan.candidates.length}`);
+    if (plan.mode === 'mobile-retire') {
+      // SPEC-6.11 §六：手机端只出退役请求，归档案由桌面端落盘校验后回传；手机端不执行物理删
+      const { buildRetireRequest } = require('../src/mobile-retire.js');
+      const req = buildRetireRequest(store, {
+        windowDays: get('window-days') ? Number(get('window-days')) : undefined,
+        maxHot: get('max-hot') ? Number(get('max-hot')) : undefined
+      });
+      fs.mkdirSync(outDir, { recursive: true });
+      const reqPath = path.join(outDir, 'retire-request.json');
+      fs.writeFileSync(reqPath, JSON.stringify(req, null, 2) + String.fromCharCode(10), 'utf8');
+      console.log(`退役请求 ${req.candidates.length} 条 → ${reqPath}（sha256 ${req.sha256.slice(0, 12)}）`);
+      if (has('apply')) {
+        console.error('手机端不执行物理删（SPEC-6.11 §六）：把退役请求交桌面端归档、校验、回传结果。');
+        process.exitCode = 5;
+      }
+      return;
+    }
     if (!plan.candidates.length) { console.log('无候选，不生成归档。'); return; }
     const exp = exportMonth(store, { month, outDir, plan });
     const v = verifyArchive(outDir, month);
