@@ -20,7 +20,9 @@ status: draft（改写版）
 | `node verify-deploy.js` | ✅ 可用 | C0–C21 共 33 项门禁 |
 | `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
 | `node src/neural.js` | ✅ 可用 | 控制面四动作 event/inhibit/status/verify（3.2）|
-| `node src/cli.js memo` | ✅ 可用 | CLI 开库入口（SPEC-3.14）：memo / ingest / orchestrate |
+| `node src/cli.js memo` | ✅ 可用 | CLI 开库入口（SPEC-3.14）：memo / predict / ingest / access / self-optimize / orchestrate |
+| `node tools/link-sample.js --db <副本>` | ✅ 可用 | 链接质量取样单（SPEC-2.19）：edges / twohop |
+| `node tools/judge-score.js --in <已填单>` | ✅ 可用 | 只认人手判定的计分（未判拒收，分母 0 说样本不足）|
 | `node tools/migrate-run.js` | ✅ 可用 | 旧库迁移（冷备份 + 零丢失复核 + 首跑）|
 | `node src/query.js` | ⬜ M1 后（1.8/1.14）| 检索面 |
 | `node src/auto-ingest.js` | ⬜ CLI 未接 | 入库模块已实现（3.5），命令行入口待接 |
