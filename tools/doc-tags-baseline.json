@@ -54,6 +54,7 @@
     "spec/SPEC-4.0-数据迁移与总验收.md",
     "spec/SPEC-5.1-向量后端可插拔与测试口径.md",
     "spec/SPEC-5.2-memo向量状态反馈.md",
-    "spec/SPEC-5.3-检索排序修正.md"
+    "spec/SPEC-5.3-检索排序修正.md",
+    "spec/SPEC-6.1-能力显现入库.md"
   ]
 }
