@@ -78,5 +78,6 @@ upstream: [ARCHITECTURE-全架构重写图纸-DNA双铰链-从零实现-2026-11-
   4. 推断结果为 `null` 且库中既有 `type` 非空 → **保留既有值，不清空**（迁移/旧编译已定的类型不被降级）。
 - 导出：`inferType(relPath, metadata)`、`TYPE_BY_DIR`。
 - 幂等不变：推断结果参与行比对，复跑无变则 skipped，不刷 `updated_at`。
+- 真库暂不跑（owner 2026-11-17 取态）：等真实使用后再跑几次，不合适再调；本修订只保证规则跑起来是安全的。
 - 真库副本 dry-run（2026-11-17，旧院 `raw/` 85 档）：显式 75 / 可推断 0 / 未知 10；仅 1 档会变（`session-2026-09-08-部署记录` 由旧 `Concept` 纠正为 frontmatter 声明的 `Conversation`），无批量降级。
 - 测试：`test/test-1.1b-type-infer.js` 6/6（显式优先、会话/待办、知识层三类、未知不猜、幂等、铁律）。
