@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 72 档 / 478 条断言全绿 |
+| 测试 | `npm test` → 73 档 / 484 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -103,9 +103,9 @@ status: active
 | 3.9 | 门禁 C11–C19 适配 | ✅ | `spec/SPEC-3.9-门禁C11-C19适配.md` | test-3.9-gates-c11-c19 3/3；零提交写端 + 纯读 |
 | 3.10 | 门禁 C20–C21 适配 | ✅ | `spec/SPEC-3.10-门禁C20-C21适配.md` | test-3.10-gates-c20-c21 3/3；命令真跑 + 文档基线账 |
 | **3.11** | **memo 用户面重构（recent/openLoops/patterns/plans）** | ✅ | `spec/SPEC-3.11-memo用户面.md` | test-3.11-memo 8/8；冷启动诚实、systemLine≤80 |
-| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」 |
+| **3.12** | **预案器 predict.js（发芽 + 上下文 → ≤3 预案卡）** | ✅ | `spec/SPEC-3.12-预案器predict.md` | test-3.12-predict 7/7；冷启动单卡「无以往依据」；修订 A：接 CLI（`predict --message`，人读/ JSON 双输出，缺参退 2），test-3.12b 6/6 |
 | **3.13** | **会话三源入库闭环（reply/search/rationale）** | ✅ | `spec/SPEC-3.13-三源入库闭环.md` | test-3.13-session-ingest 5/5；plan-hit/miss 反馈边 |
-| **3.14** | **CLI 入口接线（memo/ingest/orchestrate）** | ✅ | `spec/SPEC-3.14-CLI入口接线.md` | test-3.14-cli 6/6；arch-lint 白名单增 cli.js |
+| **3.14** | **CLI 入口接线（memo/predict/ingest/orchestrate）** | ✅ | `spec/SPEC-3.14-CLI入口接线.md` | test-3.14-cli 6/6；arch-lint 白名单增 cli.js；predict 命令见 SPEC-3.12 修订 A |
 | **3.15** | **memo 外派派单卡（挂载 + 随载设定）** | ✅ | `spec/SPEC-3.15-外派派单卡.md` | test-3.15-dispatch-card 8/8；卡七段/缺项标「不得派出」/三布尔如实/批间闸/只读快照三态/判据同源；memo 纯读、卡不代派；arch-lint 执行位守增 dispatch-card.js |
 
 ## 五、M4 数据迁移 + 总验收（6/6 已落地）
@@ -122,7 +122,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **72 档 / 478 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **73 档 / 484 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -160,7 +160,7 @@ status: active
 | 6.9c | 成长观察读数同源（Delta / 洞察只取真读数） | ✅ | `spec/SPEC-6.9c-成长观察读数同源.md` | test-6.9c-kespi-readers 4/4：Delta 只取真读数、真读数不足报 insufficient、洞察效果不混占位轮、过滤条件+无删+差分只读 |
 | **6.10** | **蒸馏点消费（points_json → 预案依据）** | ✅ | `spec/SPEC-6.10-蒸馏点消费.md` | test-6.10-point-basis 5/5；predict basis 增 point 类（关联实体首条点，≤80 字），无点不加、不造依据；conversation+point 即 high；纯读、确定性；检索融合明确不加第四通道 |
 | **6.11** | **分层留存与到期归档（原稿/短料/知识/墓碑）** | ✅ | `spec/SPEC-6.11-分层留存与到期归档.md` | test-6.11-retention 8/8；`src/retention.js` 只读分层规划（到窗+无访问+无证据+可还原/可重建）；`tools/archive.js` 月包 ndjson+md+manifest、干跑还原、校验不过不删、墓碑表（SPEC-0.1 修订 K）；实测 20k 短料 15.3MB / KESPI 3.4s / 向量 4.0s；移动端退役模式已落地请求侧：手机默认 7 天热窗、只出 `retire-request.json`、`--apply` 被拒（SPEC-6.11 修订 A，test-6.11b 6/6）；prune 已切新四件判据（test-1.13-prune 7/7） |
-| **6.12** | **落盘安全（原子写 + 单写者锁 + 容量上限 + 崩溃自愈）** | ✅ | `spec/SPEC-6.12-落盘安全.md` | test-6.12-persist-safety 10/10；tmp/rename 原子写（失败原库不变、无残留）、`.lock` 单写者（活锁拒写、死 pid/超时接管）、外部改写检测 `db-stale`、容量上限默认 10MB（env 可调）、init 清死 pid 孤儿 tmp；AC-8~10 真子进程 6 轮随机硬杀：每次重开成功、`integrity_check=ok`、可继续写；**手机真机（proot）实测入册**：库只准私有 f2fs 目录（`/sdcard` fuseblk 三次连写 mtime 全同，`db-stale`/锁时间判定同时失效）、20k 行 export 10.04MB（cap 10MB ≈ 2 万行边界）、10MB 库 → wasm 堆 103MB / RSS 峰 142MB（堆 ≈ 库×10）；soak 复跑产物 `/root/workspace/swarm-test/` |
+| **6.12** | **落盘安全（原子写 + 单写者锁 + 容量上限 + 崩溃自愈）** | ✅ | `spec/SPEC-6.12-落盘安全.md` | 修订 B：init 只在真变化时落盘（纯读开库不动 mtime）+ 开库清死锁；test-6.12-persist-safety 10/10；tmp/rename 原子写（失败原库不变、无残留）、`.lock` 单写者（活锁拒写、死 pid/超时接管）、外部改写检测 `db-stale`、容量上限默认 10MB（env 可调）、init 清死 pid 孤儿 tmp；AC-8~10 真子进程 6 轮随机硬杀：每次重开成功、`integrity_check=ok`、可继续写；**手机真机（proot）实测入册**：库只准私有 f2fs 目录（`/sdcard` fuseblk 三次连写 mtime 全同，`db-stale`/锁时间判定同时失效）、20k 行 export 10.04MB（cap 10MB ≈ 2 万行边界）、10MB 库 → wasm 堆 103MB / RSS 峰 142MB（堆 ≈ 库×10）；soak 复跑产物 `/root/workspace/swarm-test/` |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。

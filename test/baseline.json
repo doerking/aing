@@ -37,6 +37,7 @@
   "test-3.10-gates-c20-c21.js": 3,
   "test-3.11-memo.js": 8,
   "test-3.12-predict.js": 7,
+  "test-3.12b-predict-cli.js": 6,
   "test-3.13-session-ingest.js": 5,
   "test-3.14-cli.js": 6,
   "test-3.15-dispatch-card.js": 8,

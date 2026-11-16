@@ -21,6 +21,14 @@ async function cmdMemo(dbPath, opts = {}) {
   return buildMemo(s, opts);
 }
 
+async function cmdPredict(dbPath, opts = {}) {
+  const message = String(opts.message == null ? '' : opts.message).trim();
+  if (!message) throw new Error('predict 需要 --message（空词不猜）');
+  const s = await openStore(dbPath);
+  const { predict } = require('./predict.js');
+  return predict(s, { message });
+}
+
 async function cmdIngest(dbPath, payload = {}) {
   const s = await openStore(dbPath);
   const { autoIngest } = require('./auto-ingest.js');
@@ -74,6 +82,22 @@ function humanMemo(m) {
   return L.join('\n');
 }
 
+function humanPredict(p) {
+  const plans = (p && p.plans) || [];
+  const L = [`—— 预案（${p && p.coldStart ? '冷启动' : plans.length + ' 张'}）——`];
+  for (let i = 0; i < plans.length; i++) {
+    const c = plans[i];
+    L.push(`${i + 1}) [${c.confidenceBand || 'low'}] ${c.hypothesis}`);
+    const basis = c.basis || [];
+    L.push('   依据：' + (basis.length
+      ? basis.map((b) => `${b.kind} ${b.id}「${String(b.quote || '').slice(0, 30)}」`).join(' / ')
+      : '无（冷启动，不造依据）'));
+    if (c.suggested) L.push('   建议：' + c.suggested);
+    if (c.risk) L.push('   风险：' + c.risk);
+  }
+  return L.join(String.fromCharCode(10));
+}
+
 function parse(argv) {
   const pos = []; const flags = {};
   for (let i = 0; i < argv.length; i++) {
@@ -90,6 +114,7 @@ function usage() {
   console.log([
     'aing-v2 cli（CLI 开库入口）',
     '  node src/cli.js memo [--json] [--limit N] [--swarm-card <ticket.json>] [--db <path>]',
+    '  node src/cli.js predict --message "..." [--json] [--db <path>]',
     '  node src/cli.js dispatch-card --file <ticket.json> [--snapshot <path>] [--json]',
     '  node src/cli.js ingest --payload <json>',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
@@ -115,6 +140,13 @@ async function main(argv) {
       }
       const out = await cmdMemo(dbPath, opts);
       console.log(flags.json ? JSON.stringify(out, null, 2) : humanMemo(out));
+      return 0;
+    }
+    if (cmd === 'predict') {
+      const message = flags.message && flags.message !== true ? String(flags.message) : '';
+      if (!message.trim()) { usage(); return 2; }
+      const out = await cmdPredict(dbPath, { message });
+      console.log(flags.json ? JSON.stringify(out, null, 2) : humanPredict(out));
       return 0;
     }
     if (cmd === 'dispatch-card') {
@@ -161,4 +193,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, usage, main };
+module.exports = { openStore, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
