@@ -36,6 +36,7 @@
   "test-3.1-consciousness-kernel.js": 6,
   "test-3.10-gates-c20-c21.js": 3,
   "test-3.11-memo.js": 8,
+  "test-3.11b-memo-readable.js": 6,
   "test-3.12-predict.js": 7,
   "test-3.12b-predict-cli.js": 6,
   "test-3.12c-predict-readability.js": 6,

@@ -75,3 +75,16 @@ upstream: [SPEC-0.7 §四, SPEC-3.12, SPEC-3.13, SPEC-2.10]
 
 - 上游：SPEC-0.7 §四、SPEC-3.12（预案）、SPEC-3.13（会话）
 - 消费者：主驾出场读端（M3 后段）
+
+---
+
+## 修订 A（2026-11-17）：用户面话题可读（真库形状适配）
+
+真库读数：会话正文多为 markdown，`JSON.parse` 失败即无 `topic`，用户面直接裸露 `会话-<ISO 时间戳>`，模式（同 topic ≥2）恒空。判据不变（筛选/排序一行未动），只改读法。
+
+- 新增 `src/conv-text.js`：`parseBody` / `firstClause` / `mdSummary` / `readableTopic` / `clip` / `compactTs`。纯函数、无 IO、无库依赖，`predict` 与 `memo` 同源（SPEC-3.12 修订 B 的读法集中到此）。
+- `recent.topic`、`openLoops[].text`、`patterns[].pattern`、预案取词，统一走 `readableTopic(实体名, 正文)`。
+- 话题取法：真 `topic` > 摘要段（`## 蒸馏摘要` 等）首条 > 非时间戳 `name` > 正文首句 > 压缩时间（`YYYY-MM-DD HH:MM`）> `未命名话题`。
+- 首句跳过：时间戳行、结构词行、`原始资料：` 出处行、含 `session-<id>` 的 id 行、`[object Object]` 一类退化值、上一句的尾巴片段（`」…` / `→…`）；循环剥净 `【…】`、`①` 一类提炼标签。
+- 截断：退到词边界与未闭合括号前，收尾不留悬空破折号；不切 ASCII 句点（版本号 `v0.3` 不被切残）。
+- 测试：`test/test-3.11b-memo-readable.js` 6/6（以往主题、未闭环、JSON 主题原样、模式聚合、只读、铁律）。
