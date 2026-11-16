@@ -33,6 +33,12 @@ async function cmdAccess(dbPath, ids, opts = {}) {
   return recordAccess(s, ids, opts);
 }
 
+async function cmdSelfOptimize(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { selfOptimizeStep } = require('./self-optimize.js');
+  return selfOptimizeStep(s, opts);
+}
+
 async function cmdOrchestrate(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { MekoOrchestrator } = require('./meko-orchestrator.js');
@@ -40,7 +46,9 @@ async function cmdOrchestrate(dbPath, opts = {}) {
   const orch = new MekoOrchestrator({ store: s });
   const steps = Array.isArray(opts.steps) ? opts.steps : buildDefaultSteps();
   for (const step of steps) orch.registerStep(step);
-  return orch.runCycle(opts.cycleType || '代谢', { rounds: opts.rounds || 2, budgetMs: opts.budgetMs });
+  return orch.runCycle(opts.cycleType || '代谢', {
+    rounds: opts.rounds || 2, budgetMs: opts.budgetMs, selfOptimize: opts.selfOptimize
+  });
 }
 
 function humanMemo(m) {
@@ -72,8 +80,9 @@ function usage() {
     'aing-v2 cli（CLI 开库入口）',
     '  node src/cli.js memo [--json] [--limit N] [--db <path>]',
     '  node src/cli.js ingest --payload <json>',
-    '  node src/cli.js orchestrate [--rounds N] [--json]',
-    '  node src/cli.js access --ids a,b [--source cli]'
+    '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
+    '  node src/cli.js access --ids a,b [--source cli]',
+    '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]'
   ].join('\n'));
 }
 
@@ -101,8 +110,19 @@ async function main(argv) {
       return 0;
     }
     if (cmd === 'orchestrate') {
-      const out = await cmdOrchestrate(dbPath, { rounds: flags.rounds ? Number(flags.rounds) : undefined });
+      const out = await cmdOrchestrate(dbPath, {
+        rounds: flags.rounds ? Number(flags.rounds) : undefined,
+        selfOptimize: flags['self-optimize'] === true
+      });
       console.log(flags.json ? JSON.stringify(out, null, 2) : `orchestrate ok=${out.ok} rounds=${out.rounds} ${out.elapsedMs}ms`);
+      return 0;
+    }
+    if (cmd === 'self-optimize') {
+      const out = await cmdSelfOptimize(dbPath, {
+        cycleId: flags.cycle ? String(flags.cycle) : null,
+        rescore: flags['no-rescore'] === true ? false : true
+      });
+      console.log(JSON.stringify(out, null, 2));
       return 0;
     }
     usage(); return 2;
@@ -116,4 +136,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdOrchestrate, humanMemo, usage, main };
+module.exports = { openStore, cmdMemo, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, humanMemo, usage, main };

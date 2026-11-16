@@ -74,6 +74,7 @@ async function rebond(store, opts = {}) {
   for (const [id, e] of ents) {
     if (!id.startsWith('raw-')) continue;
     if (e.invalid_at) continue;
+    if (opts.entityId && id !== opts.entityId) continue;
     stats.scanned++;
     if (!_inBand(e)) { stats.skippedOutOfBand++; continue; }
     const wiki = ents.get('wiki-' + _base(id));
@@ -154,6 +155,7 @@ async function reconcile(store, opts = {}) {
 
   for (const p of pairs) {
     stats.gaps++;
+    if (opts.entityId && p.from.id !== opts.entityId) continue;
     if (!_inBand(p.from)) { stats.skippedOutOfBand++; continue; }
     insert.run([p.to, p.from.name || null, p.from.type || null, p.from.content || null, p.from.tags || null,
       p.from.status || null, p.from.confidence == null ? null : p.from.confidence,

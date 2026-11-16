@@ -5,34 +5,43 @@
 // 成员池 = 蜂巢：5 单元 ×（1 常驻 + ≤2 狼位），总量 15 席，按信号进出。
 // 本模块唔 require knowledge-store（C5 对进化团同样生效）。
 
+// 技能导入（SPEC-0.8 修订 B）：每位成员继承原院角色文件的能力，唔止继承名。
+// 训练师技能并入 gene-keeper；六阶段本地化，不依赖外部 SkillOpt / 外部编排平台。
+const TRAINER_STAGES = ['rollout', 'reflect', 'aggregate', 'select', 'update', 'gate'];
+
 const MEMBERS = [
   {
     id: 'gene-keeper', name: '基因组长',
-    role: '记录 episode/route/pattern，管 gene 与 elitePattern 的生老病死',
-    reads: ['entities', 'meko_cycles', 'links'], writes: ['gene'],
+    role: '记录 episode/route/pattern，管 gene 与 elitePattern 的生老病死；兼训练师：KESPI 误差开单→下药→复核→gene',
+    skills: ['skill-trainer', 'growth-loop'],
+    reads: ['entities', 'meko_cycles', 'links', 'kespi_scores'], writes: ['gene', 'opt_tickets'],
     timepoint: 'T2'
   },
   {
     id: 'omni-gate', name: '闸东',
     role: 'canary/holdout/acceptance 三闸，真接任何 promote 与改进提升',
+    skills: ['adversarial-reviewer', 'guardrails'],
     reads: ['scores', 'gene', 'baseline'], writes: ['gate-log'],
     timepoint: 'T1'
   },
   {
     id: 'pilot', name: '调度长',
     role: '七类信号 → 九动作优先级 → 只出本轮 plan，交编排器执行',
+    skills: ['neuro-theorist', 'growth-director'],
     reads: ['meko_cycles', 'conservation'], writes: ['plan'],
     timepoint: 'T0'
   },
   {
     id: 'tri-cross', name: '三路复核',
     role: 'explore/verify/optimize ≥2 路同意 + 双链互校',
+    skills: ['plasticity-analyst', 'senior-engineer'],
     reads: ['links', 'entities'], writes: ['verdict'],
     timepoint: 'T1'
   },
   {
     id: 'poll', name: '召集团',
     role: '争议/高风险时召集三位规则官出加权意见（唔系多数票）',
+    skills: ['guide-chain-swarm'],
     reads: ['dispute'], writes: ['opinion'],
     timepoint: 'on-demand'
   }
@@ -62,13 +71,18 @@ const HANDLERS = {
     const kespi = _scalar(db, 'SELECT COUNT(*) AS n, AVG(overall) AS avg FROM kespi_scores');
     const c = _conservation(store);
     const overall = kespi && kespi.n ? Math.round(Number(kespi.avg) * 1000) / 1000 : null;
+    // 训练师技能：只读扫描工单候选，唔落库（I7：成员零写权）
+    let tickets = [];
+    try { tickets = require('./self-optimize.js').scanTickets(store, { persist: false }).tickets; } catch (_) { tickets = []; }
     return {
       ok: true,
-      actions: { scored: kespi ? Number(kespi.n) : 0 },
+      actions: { scored: kespi ? Number(kespi.n) : 0, tickets: tickets.length },
       proposal: {
         type: 'score',
         dims: { D3: { kespiOverall: overall, conservationRatio: c.ratio, inBand: c.inBand } },
-        geneCandidates: overall != null && overall >= 0.6 ? ['kespi-high'] : []
+        geneCandidates: overall != null && overall >= 0.6 ? ['kespi-high'] : [],
+        tickets,
+        trainerStages: TRAINER_STAGES
       }
     };
   },
@@ -161,4 +175,4 @@ class MemberPool {
   }
 }
 
-module.exports = { MEMBERS, MAX_SEATS, WOLVES_PER_UNIT, buildEvolutionSteps, registerEvolutionTeam, MemberPool };
+module.exports = { MEMBERS, MAX_SEATS, WOLVES_PER_UNIT, TRAINER_STAGES, buildEvolutionSteps, registerEvolutionTeam, MemberPool };

@@ -20,6 +20,7 @@ const DEFAULT_STEPS = [
   'compress',
   'recycle',
   'kespi',
+  'self-optimize',
   'prune',
   'conservation'
 ];
@@ -40,6 +41,9 @@ const REGISTRY = {
   compress:    { strand: 'wiki',  band: 'field',      reads: ['entities'],            writes: ['compressed_seeds'],    reversible: true,  module: './compress.js',    fn: 'compressStep' },
   recycle:     { strand: 'raw',   band: 'field',      reads: ['compressed_seeds'],    writes: ['entities'],            reversible: true,  module: './recycle.js',     fn: 'recycleStep' },
   kespi:       { strand: 'cross', band: 'background', reads: ['entities', 'links'],   writes: ['kespi_scores'],        reversible: true,  module: './kespi.js',       fn: 'kespiStep' },
+  'self-optimize': { strand: 'cross', band: 'field', reads: ['entities','kespi_scores'], writes: ['opt_tickets','field_actions','genes','gate_records'], reversible: true, module: './self-optimize.js', fn: 'selfOptimizeStep',
+    // 默认唔自动下药：维护/自优化轮或显式 opts.selfOptimize 才开（SPEC-6.8 §三）
+    guard: (ctx) => ctx.selfOptimize === true || (ctx.opts && ctx.opts.selfOptimize === true) || /维护|自优化/.test(String(ctx.cycleType || '')) },
   prune:       { strand: 'wiki',  band: 'background', reads: ['entities'],            writes: ['entities'],            reversible: true,  module: './prune.js',       fn: 'pruneCycle' },
   'field-maintain': { strand: 'cross', band: 'field', reads: ['entities','links'], writes: ['entities','links','field_actions'], reversible: true, module: './meko-field.js', fn: 'maintainStep' },
   conservation:{ strand: 'cross', band: 'background', reads: ['links', 'entities'],   writes: ['meko_cycles'],         reversible: true,  module: './conservation.js', fn: 'conservationStep' }
@@ -59,6 +63,9 @@ function buildDefaultSteps(ids = DEFAULT_STEPS) {
       budgetTick: 1,
       reversible: spec.reversible,
       onCycle: async (ctx = {}) => {
+        if (typeof spec.guard === 'function' && !spec.guard(ctx)) {
+          return { ok: true, skipped: true, actions: { skipped: true } };
+        }
         const mod = require(spec.module);
         const fn = mod[spec.fn];
         if (typeof fn !== 'function') throw new Error('metabolism: ' + id + ' 入口缺失 ' + spec.fn);
@@ -67,7 +74,7 @@ function buildDefaultSteps(ids = DEFAULT_STEPS) {
           const rawDir = ctx.rawDir || process.env.AING_RAW || require('path').join(__dirname, '..', 'raw');
           return fn(rawDir, ctx.store, { round: ctx.round });
         }
-        return fn(ctx.store, { round: ctx.round });
+        return fn(ctx.store, { ...(ctx.opts || {}), round: ctx.round, cycleId: ctx.cycleId });
       }
     };
   });
