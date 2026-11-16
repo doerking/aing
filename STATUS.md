@@ -145,7 +145,7 @@ status: active
 |---|---|---|---|---|
 | 6.1 | 能力显现入库（六段叙事 + 校准合并） | ✅ | `spec/SPEC-6.1-能力显现入库.md` | test-6.1-narrative-ingest 7/7：六段齐、手段/编排归位、截断与思维开关、approval 按 callId 挂工具、feedback/goal 落会话级、落库 content 带 format/turns/stats、幂等、缺料拒入、铁律 |
 | 6.2 | 能力叙事消费与蒸馏点 | ✅ | `spec/SPEC-6.2-能力叙事消费与蒸馏点.md` | test-6.2-distill-points 7/7：区间捕获不截断、h1–h6 双语起锚、止端中文、不过捕、蒸馏点确定性、落 distill_points、幂等+退役跳过、链上可见+铁律 |
-| 6.3 | 检索融合消费（三路 + 慢回忆 + 伪精排） | ✅ | `spec/SPEC-6.3-检索融合消费.md` | test-6.3-retrieval-fusion 7/7：三路融合形状、名称路、词面路、慢回忆走三轴有效边、KESPI 伪精排、双链去重+k+退役、predict 接线+不写 last_access |
+| 6.3 | 检索融合消费（三路 + 慢回忆 + 伪精排） | ✅ | `spec/SPEC-6.3-检索融合消费.md` | test-6.3-retrieval-fusion 7/7：三路融合形状、名称路、词面路、慢回忆走三轴有效边、KESPI 伪精排、双链去重+k+退役、predict 接线+不写 last_access；同隔离库 8 查询 top-1 3/8→5/8、MRR 0.542→0.729（未调参） |
 
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
