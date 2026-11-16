@@ -102,4 +102,4 @@ upstream: [SPEC-0.6 I5, SPEC-0.8 D3/T2, SPEC-1.9, SPEC-1.11, SPEC-1.13, SPEC-2.9
 - **旧字段保留一版**：`growth`（边）、`pruned`（实体）、`ratio`、`inBand`、`verdict` 维持原义，供既有消费者（T2 D3、field-promote 的 growth-only 拒升）过渡；**混口径读数不进报警面**。
 - **依据（真库副本实测）**：320 实体 / 2284 边；实体退场 0（短料未到 30 天窗，真实）；退边真库 0，同一副本手动跑一次 hub-trim 退 82 条 → 旧口径把一次真实的边退场当没发生，只能永久报 `growth-only`。
 - 测试：`test/test-2.10c-edge-conservation.js` 6/6（边层均衡、只长不剪、只剪不长、实体单列、旧字段兼容、铁律）。
-- 已知遗留（不在本修订）：hub-trim 对「双向超 cap」的对端对互不让位（实测 skippedNeeded 2290），会限制退边供给。
+- 已知遗留已修：hub-trim 对「双向超 cap」互不让位的死锁，由 SPEC-2.11 修订 A 解决（副本退边 82 → 1090）。
