@@ -48,7 +48,7 @@ function groupActions(db) {
 function kespiTrend(db, limit) {
   const rows = _rows(db,
     `SELECT kespi_snapshot FROM meko_cycles
-     WHERE kespi_snapshot IS NOT NULL
+     WHERE kespi_snapshot IS NOT NULL AND kespi_source = 'kespi_scores'
      ORDER BY COALESCE(executed_at, scheduled_at, '') DESC, rowid DESC
      LIMIT ?`, [limit]);
   const series = rows.map(r => Number(r.kespi_snapshot)).filter(Number.isFinite).reverse();

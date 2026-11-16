@@ -45,6 +45,7 @@ const DDL = [
     executed_at DATETIME,
     status TEXT,
     kespi_snapshot REAL,
+    kespi_source TEXT,            -- kespi_scores / placeholder（SPEC-6.9b）
     growth INTEGER,
     pruned INTEGER,
     conservation_ratio REAL
@@ -209,6 +210,10 @@ async function init(dbFilePath) {
   }
   // 幂等：IF NOT EXISTS，连跑不炸（AC-2）
   for (const stmt of DDL) db.run(stmt);
+  // 列迁移（SPEC-6.9b）：老库 meko_cycles 无 kespi_source，先查后补
+  if (!columns('meko_cycles').includes('kespi_source')) {
+    db.run('ALTER TABLE meko_cycles ADD COLUMN kespi_source TEXT');
+  }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
   persist();

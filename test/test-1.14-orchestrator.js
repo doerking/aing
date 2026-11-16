@@ -74,7 +74,7 @@ const base = (id, strand, fn, extra = {}) => ({ id, strand, band: strand === 'wi
   orchT.registerStep(base('slow', 'raw', async () => { const t = Date.now(); while (Date.now() - t < 1300) {} return { ok: true }; }));
   orchT.registerStep(base('later', 'wiki', async () => { after = true; return { ok: true }; }));
   const t0 = Date.now();
-  const rt = await orchT.runCycle('解旋', { rounds: 1 });
+  const rt = await orchT.runCycle('解旋', { rounds: 1, budgetMs: 500 });
   const elapsed = Date.now() - t0;
   ac('AC-5 超时 → failed + 后续唔跑 + 有界', rt.ok === false && after === false && elapsed < 4000, `ok=${rt.ok} after=${after} ${elapsed}ms`);
 

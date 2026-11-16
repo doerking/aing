@@ -68,6 +68,18 @@ const REGISTRY = {
   conservation:{ strand: 'cross', band: 'background', reads: ['links', 'entities'],   writes: ['meko_cycles'],         reversible: true,  module: './conservation.js', fn: 'conservationStep' }
 };
 
+// 每步契约 tick（SPEC-6.9b §2.4）：求和抬升 T_bound，并作分步软配额
+const STEP_TICKS = {
+  compile: 10, import: 15, distill: 5, 'distill-points': 5, trajectory: 5,
+  'insight-extract': 5, 'link-sync': 5, vector: 30, sprout: 5, pollinate: 5,
+  'hub-trim': 5, 'field-maintain': 10, compress: 5, recycle: 5, kespi: 10,
+  'capability-dispatch': 5, 'self-optimize': 10, 'lineage-reflect': 2,
+  'retrieval-kpi': 15, prune: 5, conservation: 2
+};
+for (const [id, ticks] of Object.entries(STEP_TICKS)) {
+  if (REGISTRY[id]) REGISTRY[id].budgetTick = ticks;
+}
+
 // 生成可注册契约（onCycle 由编排器回调，store 注入）
 function buildDefaultSteps(ids = DEFAULT_STEPS) {
   return ids.map((id) => {
@@ -79,7 +91,7 @@ function buildDefaultSteps(ids = DEFAULT_STEPS) {
       band: spec.band,
       reads: spec.reads.slice(),
       writes: spec.writes.slice(),
-      budgetTick: 1,
+      budgetTick: spec.budgetTick || 1,
       reversible: spec.reversible,
       onCycle: async (ctx = {}) => {
         if (typeof spec.guard === 'function' && !spec.guard(ctx)) {
