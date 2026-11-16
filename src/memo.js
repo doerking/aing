@@ -3,7 +3,9 @@
 // 新 memo = 主驾睇用户的窗：以往主题 / 未闭环 / 模式 / 预案在前，系统细节压成一行。
 // 纯读（C16）：唔写任何表、唔投事件；空库 coldStart 诚实（G6）。
 // 组件唔直连 knowledge-store：store 由调用方注入（arch-lint C5 守）。
+// M5 任务 5.2（SPEC-5.2）：多一块只读向量诊断——后端 / 覆盖 / 旧行 / 测试开关，异常不静默。
 
+const V = require('./vector.js');
 const SYSTEM_LINE_MAX = 80;
 
 function _rows(db, sql, binds = []) {
@@ -26,6 +28,31 @@ function _scalar(db, sql, binds = []) {
 
 function _body(entity) {
   try { return JSON.parse(entity.content || '{}'); } catch (_) { return {}; }
+}
+
+// 向量诊断（SPEC-5.2 §2.1）：只 SELECT，不建向量、不写表
+function _vectorDiagnostics(db) {
+  const backend = V.resolveBackend();
+  const env = String(process.env.AING_VECTOR_BACKEND || '');
+  const active = Number(_scalar(db, `SELECT COUNT(*) AS n FROM entities WHERE invalid_at IS NULL`).n || 0);
+  const indexed = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM entity_vectors v JOIN entities e ON e.id = v.entity_id
+     WHERE e.invalid_at IS NULL AND v.model = ? AND v.dim = ?`, [backend.model, backend.dim]).n || 0);
+  const stale = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM entity_vectors v JOIN entities e ON e.id = v.entity_id
+     WHERE e.invalid_at IS NULL AND (v.model <> ? OR v.dim <> ?)`, [backend.model, backend.dim]).n || 0);
+  const missing = Math.max(0, active - indexed);
+  const percent = active === 0 ? 100 : Math.round((indexed / active) * 100);
+  const alerts = [];
+  if (env) alerts.push({ code: 'env-override', level: 'warn', text: `测试开关开着：AING_VECTOR_BACKEND=${env}` });
+  if (backend.fallback) alerts.push({ code: 'backend-fallback', level: 'warn', text: `未知后端 ${backend.requested}，已回退 ${backend.name}` });
+  if (stale > 0) alerts.push({ code: 'stale-rows', level: 'warn', text: `${stale} 行旧后端向量未重建` });
+  if (missing > 0) alerts.push({ code: 'low-coverage', level: 'warn', text: `向量覆盖 ${indexed}/${active}` });
+  return {
+    backend: backend.name, dim: backend.dim, model: backend.model,
+    source: env ? 'env' : 'default',
+    active, indexed, stale, missing, percent, alerts
+  };
 }
 
 async function buildMemo(store, opts = {}) {
@@ -99,7 +126,10 @@ async function buildMemo(store, opts = {}) {
   const lastCycle = _scalar(db, `SELECT * FROM meko_cycles ORDER BY executed_at DESC, rowid DESC LIMIT 1`);
   const lastField = _scalar(db, `SELECT COUNT(*) AS n FROM field_actions`);
   const ratioText = cons.ratio === Infinity ? 'inf' : String(cons.ratio);
-  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / 蒸馏债 ${pendingDistill} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
+  const vector = _vectorDiagnostics(db);
+  // 向量段紧跟健康——超长截断时先保它（SPEC-5.2 §2.3）
+  const vecTag = `向量 ${vector.backend} ${vector.percent}%${vector.source === 'env' ? '(测试)' : ''}`;
+  let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / 蒸馏债 ${pendingDistill} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0} / 守恒比 ${ratioText}`;
   if (systemLine.length > SYSTEM_LINE_MAX) systemLine = systemLine.slice(0, SYSTEM_LINE_MAX - 1) + '…';
 
   return {
@@ -111,6 +141,7 @@ async function buildMemo(store, opts = {}) {
       coldStart: convs.length === 0
     },
     systemLine,
+    diagnostics: { vector },
     agentTodos: []
   };
 }
