@@ -48,6 +48,24 @@ function _band(items) {
   return 'low';
 }
 
+// SPEC-6.10：取会话关联实体的首条蒸馏点（只读；无点返回 null，不造依据）
+function _firstPoint(db, convId) {
+  const others = _rows(db,
+    `SELECT CASE WHEN source_id = ? THEN target_id ELSE source_id END AS other, strength
+     FROM links WHERE invalid_at IS NULL AND (source_id = ? OR target_id = ?)
+     ORDER BY strength DESC, other ASC LIMIT 5`, [convId, convId, convId]);
+  for (const o of others) {
+    const r = _scalar(db, 'SELECT points_json FROM distill_points WHERE base_id = ?', [o.other]);
+    if (!r || !r.points_json) continue;
+    let pts;
+    try { pts = JSON.parse(r.points_json); } catch (_) { continue; }
+    if (!Array.isArray(pts)) continue;
+    const first = pts.map(p => String(p == null ? '' : p).trim()).find(p => p.length >= 4);
+    if (first) return { id: o.other, quote: first.slice(0, QUOTE_MAX) };
+  }
+  return null;
+}
+
 async function predict(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('predict 需要 store 注入（SPEC-3.12 契约）');
   const db = store._getDb();
@@ -80,7 +98,11 @@ async function predict(store, opts = {}) {
     if (plans.length >= PLAN_MAX) break;
     const basis = [{ kind: 'conversation', id: h.id, at: h.at, quote: _quote(h.body) }];
 
-    // 第二类证据：候选边连到的另一条会话
+    // 第二类证据：蒸馏点（SPEC-6.10）——关联实体首条点；无点不加，不造依据
+    const point = _firstPoint(db, h.id);
+    if (point) basis.push({ kind: 'point', id: point.id, quote: point.quote });
+
+    // 第三类证据：候选边连到的另一条会话
     const cands = _rows(db,
       `SELECT * FROM links WHERE invalid_at IS NULL
        AND relation IN ('sprout-candidate','pollinate-candidate')
