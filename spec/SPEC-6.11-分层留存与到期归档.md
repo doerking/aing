@@ -149,3 +149,14 @@ upstream: [SPEC-1.13 prune, SPEC-0.1 数据模型, SPEC-6.2 蒸馏点, SPEC-6.4 
   桌面端收到请求后按桌面流程归档 → 校验 → 删热库 → 回传结果。
 - 测试：`test/test-6.11b-mobile-retire.js` 6/6（短热窗、恒不落删、请求确定性、请求内容、铁律、CLI 拒绝）。
 - 未做（有意）：请求上行 / 回传的传输层与手机端墓碑索引——等宿主接口面落地再定，不在本件空造协议。
+
+---
+
+## 修订 B（2026-11-17）：候选名单可读（话题不改判据）
+
+真库会话正文多为 markdown，候选名单（归档 md、手机退役请求）只印 `会话-<ISO 时间戳>`，人没法校对要退的到底是什么。判据一行不动。
+
+- `planRetention` 的候选增一个显示用 `topic`：`conv-text.readableTopic(name, content)`（与 memo / predict 同源）。它不参与任何过滤或排序，候选集合与旧实现逐条一致（AC-2 守）。
+- `tools/archive.js` 的归档 md 表头由 `| id | type | name |` 改为 `| id | type | 话题 |`。
+- `mobile-retire.buildRetireRequest` 的候选带 `topic`，并入 sha256 覆盖范围——话题变了摘要就变，请求包仍可复算验签。
+- 测试：`test/test-6.11c-retention-topic.js` 6/6（话题可读、判据不变、归档 md 可读、请求带话题、摘要随正文变、留存规划无写语句）。

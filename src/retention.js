@@ -4,6 +4,8 @@
 // 判据四件全中才候选：到窗 + 无访问 + 无证据 + 可还原（短料）/可重建（知识层）。
 // KESPI 不参与留存判据：实测饱和（均值 0.847、sd 0.075、六维近常数），当证据等于永不删。
 
+const { parseBody, readableTopic } = require('./conv-text.js');
+
 const TIER = { origin: 'origin', short: 'short', knowledge: 'knowledge' };
 const MODES = ['desktop', 'mobile-retire'];
 const TYPE_TIER = {
@@ -54,7 +56,7 @@ function planRetention(store, opts = {}) {
   const now = opts.now ? new Date(opts.now) : new Date();
 
   const ents = _rows(db,
-    `SELECT id, type, name, status, tolaria_strength, last_access, created_at, updated_at, invalid_at
+    `SELECT id, type, name, status, tolaria_strength, last_access, created_at, updated_at, invalid_at, content
      FROM entities WHERE invalid_at IS NULL`);
   const strong = new Set(_rows(db,
     `SELECT source_id AS id FROM links WHERE invalid_at IS NULL AND strength >= ?
@@ -75,6 +77,8 @@ function planRetention(store, opts = {}) {
     const ageDays = _days(now, e.updated_at || e.created_at);
     shortList.push({
       id: e.id, type: e.type, name: e.name, tier,
+      // 显示用话题（SPEC-6.11 修订 B）：只影响名单可读性，不参与任何判据
+      topic: readableTopic(e.name, parseBody({ content: e.content })),
       ageDays: ageDays == null ? null : Math.round(ageDays * 10) / 10,
       accessDays: accessDays == null ? null : Math.round(accessDays * 10) / 10,
       hasStrongEdge: strong.has(e.id),
@@ -93,7 +97,7 @@ function planRetention(store, opts = {}) {
     if (accessed) { skipped.accessed++; continue; }
     if (r.hasStrongEdge) { skipped.evidenced++; continue; }
     candidates.push({
-      id: r.id, type: r.type, name: r.name, tier: r.tier,
+      id: r.id, type: r.type, name: r.name, topic: r.topic, tier: r.tier,
       ageDays: r.ageDays,
       reasons: ['window', 'no-access', 'no-evidence'],
       // 短料无原稿：删前靠归档还原（round-trip 校验）；知识层才谈「从原稿重建」

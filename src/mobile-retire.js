@@ -35,7 +35,7 @@ function buildRetireRequest(store, opts = {}) {
   const candidates = plan.candidates
     .map((c) => {
       const r = _rows(db, 'SELECT updated_at FROM entities WHERE id = ?', [c.id])[0];
-      return { id: c.id, type: c.type, name: c.name, updatedAt: r ? r.updated_at : null, ageDays: c.ageDays };
+      return { id: c.id, type: c.type, name: c.name, topic: c.topic || null, updatedAt: r ? r.updated_at : null, ageDays: c.ageDays };
     })
     .sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
