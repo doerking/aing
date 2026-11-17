@@ -77,6 +77,7 @@
   "test-6.2-distill-points.js": 7,
   "test-6.3-retrieval-fusion.js": 7,
   "test-6.3b-fusion-weights.js": 3,
+  "test-6.3c-conversation-prior.js": 4,
   "test-6.4-trajectory.js": 7,
   "test-6.4b-markdown-conv.js": 5,
   "test-6.4c-trajectory-imports.js": 6,

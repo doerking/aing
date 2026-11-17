@@ -9,6 +9,8 @@ const V = require('./vector.js');
 const derive = require('./derive.js');
 const { shouldEnterRetrieval } = require('./tri-axis-gate.js');
 
+const SOURCE_PRIOR = 0.75;   // 会话原文是源头不是答案（SPEC-7.1 §〇）：向量与词面同折，回忆意图不折
+
 const DEFAULTS = {
   // SPEC-6.3 修订 B（2026-11-17）：缺省后端切语义后，向量通道主导；此处按冻结集 v2 扫描实测定
   // （0.8/0.05/0.15 的 nDCG@10 91.7%、正负名次差 98.75%、粤语 nDCG 87.3% 均优于旧 0.6/0.25/0.15）
@@ -288,11 +290,14 @@ async function search(store, query, opts = {}) {
     add(row, { lexical: lx, nameHit: nm });
   }
 
-  // 3) 三路融合（会话原文是源头不是答案：同分时让位给加工件，SPEC-7.1 §〇）
-  const SOURCE_PRIOR = 0.75;
+  // 3) 三路融合（会话原文是源头不是答案：让位给加工件，SPEC-7.1 §〇 / SPEC-6.3 修订 C）
+  //    向量通道同样打折：语义相似度挤在窄带时，KESPI/新鲜度的绝对加分会把会话原文推上前排。
+  //    回忆意图例外——那时要找的就是会话原文本身。
+  const recallIntent = !!(routed && routed.intent === 'recall');
   for (const e of pool.values()) {
-    const lx = e.type === 'Conversation' ? (e.lexical || 0) * SOURCE_PRIOR : (e.lexical || 0);
-    e.fused = weights.vector * (e.sim || 0) + weights.lexical * lx + weights.name * (e.nameHit || 0);
+    const conv = e.type === 'Conversation' ? (recallIntent ? 1 : SOURCE_PRIOR) : 1;
+    const lx = e.lexical || 0;
+    e.fused = weights.vector * (e.sim || 0) * conv + weights.lexical * lx * conv + weights.name * (e.nameHit || 0);
   }
 
   // 4) 慢回忆：整体向量置信低（或强制）时沿有效边扩一跳
@@ -391,4 +396,4 @@ async function search(store, query, opts = {}) {
   };
 }
 
-module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS, TAG_WEIGHT };
+module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS, TAG_WEIGHT, SOURCE_PRIOR };
