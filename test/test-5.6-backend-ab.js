@@ -106,6 +106,24 @@ function makeSearch() {
     ac('AC-6 未判拒收', code !== 0 && /1|2/.test(out), JSON.stringify({ code, out: out.slice(0, 120) }));
   }
 
+  // AC-7 语义胜率分子是「语义好」——非对称样本才能识破分子分母颠倒
+  // （AC-5 用 1:1 样本，正反算出来都是 50%，掩了这个 bug）
+  {
+    const { parseSheet, score } = require('../tools/judge-score.js');
+    const sheet = [
+      '# 后端对照自测 · ab · 3 条',
+      '| # | 问题 | 字面（hash-64w2） | 语义（onnx-e5-small） | 判定 |',
+      '|---|---|---|---|---|',
+      '| 1 | q1 | A | B | 语义好 |',
+      '| 2 | q2 | A | B | 语义好 |',
+      '| 3 | q3 | A | B | 字面好 |'
+    ].join('\n');
+    const s = score(parseSheet(sheet));
+    ac('AC-7 语义胜率分子是语义好（2:1 → 66.7%）',
+      s.rate != null && Math.abs(s.rate - 2 / 3) < 1e-9,
+      JSON.stringify({ rate: s.rate, counts: s.counts }));
+  }
+
   console.log(`${pass}/${pass + fail} 绿`);
   process.exitCode = fail ? 1 : 0;
 })().catch((e) => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

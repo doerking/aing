@@ -7,10 +7,10 @@ const fs = require('fs');
 
 const NL = String.fromCharCode(10);
 const KINDS = {
-  edges: { head: '判定', ok: ['真', '假', '存疑'], bad: '假', good: '真', name: '假边率' },
-  twohop: { head: '判定', ok: ['应连', '不应连', '存疑'], bad: '不应连', good: '应连', name: '二跳污染率' },
+  edges: { head: '判定', ok: ['真', '假', '存疑'], bad: '假', good: '真', name: '假边率', numerator: 'bad' },
+  twohop: { head: '判定', ok: ['应连', '不应连', '存疑'], bad: '不应连', good: '应连', name: '二跳污染率', numerator: 'bad' },
   // SPEC-5.6：后端对照自测。good/bad 只是分子分母的选择，语义胜率 = 语义好 /(语义好 + 字面好)
-  ab: { head: '判定', ok: ['语义好', '字面好', '打平', '都不好'], bad: '字面好', good: '语义好', name: '语义胜率' }
+  ab: { head: '判定', ok: ['语义好', '字面好', '打平', '都不好'], bad: '字面好', good: '语义好', name: '语义胜率', numerator: 'good' }
 };
 
 function argOf(argv, name, dflt) {
@@ -59,7 +59,9 @@ function score(parsed) {
     counts[r.verdict]++;
   }
   const denom = counts[spec.good] + counts[spec.bad];
-  const rate = denom > 0 ? counts[spec.bad] / denom : null;
+  // 分子按口径取：假边率/污染率取 bad，语义胜率取 good（两者不可混用）
+  const num = counts[spec.numerator === 'good' ? spec.good : spec.bad];
+  const rate = denom > 0 ? num / denom : null;
   return { kind: parsed.kind, name: spec.name, counts, denom, rate, unjudged, bad, sampleSize: parsed.rows.length };
 }
 
@@ -80,6 +82,7 @@ function main(argv) {
     return 2;
   }
   const s = score(parsed);
+  const spec = KINDS[s.kind];
   if (s.unjudged.length) {
     console.error(`未判 ${s.unjudged.length} 行（第 ${s.unjudged.join('、')} 行）：判完再计分，不出半个数。`);
     return 3;
@@ -96,7 +99,7 @@ function main(argv) {
   }
   const pct = s.rate == null ? '样本不足（无有效判定）' : (s.rate * 100).toFixed(1) + '%';
   const detail = Object.entries(s.counts).map(([k, v]) => `${k} ${v}`).join(' / ');
-  console.log(`${s.name} ${pct}（${s.counts[KINDS[s.kind].bad]}/${s.denom}）；样本 ${s.sampleSize} 条；${detail}`);
+  console.log(`${s.name} ${pct}（${s.counts[spec.numerator === 'good' ? spec.good : spec.bad]}/${s.denom}）；样本 ${s.sampleSize} 条；${detail}`);
   return 0;
 }
 
