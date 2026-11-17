@@ -117,6 +117,22 @@ const simple = (v) => ({ name: 'fake-sync', dim: 4, model: 'fake-sync', embed: (
     ac('AC-7 reindex 按请求后端重建', ok, msg);
   }
 
+  // AC-8 注册的后端要保住 embedQuery（注册表重建对象时最易丢）
+  {
+    let ok = true, msg = '';
+    try {
+      let qCalls = 0;
+      V.registerBackend({ name: 'fake-reg-q', dim: 4, model: 'fake-reg-q', embed: () => [0, 0, 0, 1], embedQuery: () => { qCalls++; return [0, 0, 0, 1]; } });
+      const resolved = V.resolveBackend('fake-reg-q');
+      const hasFn = typeof resolved.embedQuery === 'function';
+      await V.vectorStep(store, { backend: 'fake-reg-q' });
+      await V.search(store, '甲', { backend: 'fake-reg-q', k: 1 });
+      ok = hasFn && qCalls === 1;
+      msg = JSON.stringify({ hasFn, qCalls });
+    } catch (e) { ok = false; msg = e.message; }
+    ac('AC-8 注册后端保住 embedQuery', ok, msg);
+  }
+
   console.log(`${pass}/${pass + fail} 绿`);
   process.exitCode = fail ? 1 : 0;
 })().catch((e) => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

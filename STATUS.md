@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 85 档 / 547 条断言全绿 |
+| 测试 | `npm test` → 87 档 / 560 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **85 档 / 547 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **87 档 / 560 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -138,7 +138,9 @@ status: active
 | 5.4 | 语义后端旁路评测（本地 ONNX，只量不接） | ✅ | `spec/SPEC-5.4-语义后端旁路评测.md` | test-5.4-semantic-bench 6/6：零向量余弦安全、同分按 id 升序、前缀各加一次、指标与 bench-retrieval 同源、复跑逐字一致、空集与 k 缺省安全；`tools/semantic-bench.js` 冻结集实测 e5-small（384/量化）顶1 83.8% vs 字面 58.8%、paraphrase 顶1 74.5% vs 38.3%；只改评测面，`src/vector.js` 同步契约与发布默认未动 |
 
 | 5.5 | 语义后端接入（可选开关 + 回退） | ✅ | `spec/SPEC-5.5-语义后端接入.md` | test-5.5-onnx-wiring 7/7：同步路径逐位不变、异步向量校验、题侧 embedQuery 分流、换后端全量重建、模块不可用回退 hash-64w2、默认值不动、`cli reindex` 按请求后端重建；开关 `AING_VECTOR_BACKEND=onnx-e5-small`，切后 `node src/cli.js reindex` 重建（副本实测 320 条全建、memo 覆盖率 100%）|
-- **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
+
+| 5.6 | 后端对照自测（真库语料，人手判定） | ✅ | `spec/SPEC-5.6-后端对照自测.md` | test-5.6-backend-ab 6/6：表结构三列、两列不串源、复跑一致、空集安全、judge-score 认 ab 单（语义胜率）、未判拒收；`tools/backend-ab.js --db <副本>` 两阶段重建出并排单，真库直跑被拒 |
+| 5.7 | 检索结果按内容去重 | ✅ | `spec/SPEC-5.7-检索结果按内容去重.md` | test-5.7-dedupe-content 6/6：同文只出一条、k 去重后计、同名异文保留、双链口径不破、只读、空内容安全；起因是真库 320 实体只有 117 种内容，前 3 张卡被同文副本占满 |- **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
 - **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。
 - **口径落文档**：README「六·补 检索口径」+ `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`（评测集冻结规则、四项指标、粤语单列、测完由使用者自己语料复核）。
 - **memo 可见**：`buildMemo` 多返 `diagnostics.vector`（后端 / dim / model / source / active / indexed / stale / missing / percent / alerts），系统一行形如「健康 ok / 向量 hash-64w2 100% / 蒸馏债 0 …」；`env-override` / `backend-fallback` / `stale-rows` / `low-coverage` 四类固定 code 告警，异常不静默。
