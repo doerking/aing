@@ -74,12 +74,14 @@ async function runBench(opts = {}) {
 
   // 精排消融（SPEC-6.3 修订 D 实验面）：缺省不传，行为与生产同
   const rerank = opts.rerank && typeof opts.rerank === 'object' ? opts.rerank : null;
+  const weights = opts.weights && typeof opts.weights === 'object' ? opts.weights : null;
   const rows = [];
   for (const p of pairs) {
     const res = await R.search(store, p.q, {
       limit: k, now: nowRef,
       ...(backend ? { backend } : {}),
-      ...(rerank ? { rerank } : {})
+      ...(rerank ? { rerank } : {}),
+      ...(weights ? { weights } : {})
     });
     const m = metricsFor(res.candidates.map((c) => c.base || c.id), p, k);
     rows.push({ q: p.q, lang: p.lang, kind: p.kind, ...m });
@@ -130,12 +132,19 @@ if (require.main === module) {
       ? { ...(get('kespi') != null ? { kespi: Number(get('kespi')) } : {}),
           ...(get('recency') != null ? { recency: Number(get('recency')) } : {}) }
       : undefined;
+    // 融合权重消融（SPEC-6.3 修订 E 实验面）：三键任一传入即覆盖整组缺省
+    const weights = (get('vector') != null || get('lexical') != null || get('name') != null)
+      ? { ...(get('vector') != null ? { vector: Number(get('vector')) } : {}),
+          ...(get('lexical') != null ? { lexical: Number(get('lexical')) } : {}),
+          ...(get('name') != null ? { name: Number(get('name')) } : {}) }
+      : undefined;
     const r = await runBench({
       backend: get('backend'),
       k: get('k') ? Number(get('k')) : undefined,
       corpus: get('corpus'),
       pairs: get('pairs'),
       rerank,
+      weights,
       keep: has('keep')
     });
     if (has('json')) console.log(JSON.stringify(r, null, 2));
