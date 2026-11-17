@@ -73,6 +73,7 @@
   "test-6.11b-mobile-retire.js": 6,
   "test-6.11c-retention-topic.js": 6,
   "test-6.12-persist-safety.js": 10,
+  "test-6.13-intent-routing.js": 6,
   "test-6.2-distill-points.js": 7,
   "test-6.3-retrieval-fusion.js": 7,
   "test-6.3b-fusion-weights.js": 3,
