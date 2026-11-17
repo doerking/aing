@@ -13,25 +13,27 @@ const ACTIVE = 'active';
 
 async function distillStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('distill 需要 store 注入（SPEC-1.15 契约）');
-  const stats = { scanned: 0, distilled: 0, skipped: 0, created: 0 };
+  const stats = { scanned: 0, distilled: 0, skipped: 0, created: 0, conflicts: 0 };
   const db = store._getDb();
 
   const selectStmt = db.prepare(
     `SELECT id, name, type, content, tags, confidence, status
      FROM entities
      WHERE status = '${PENDING}' AND invalid_at IS NULL AND id NOT LIKE 'wiki-%'
-       AND NOT (COALESCE(strand, 'past') = 'future' AND metabolized_at IS NOT NULL)`
+       AND COALESCE(strand, 'past') <> 'future'`
   );
+  // AC-19：镜像（加工产物）落 future 档；旧行只翻工作状态，不重写产物
   const insertStmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, '${ACTIVE}', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
-  );
-  const updateStmt = db.prepare(
-    `UPDATE entities SET name = ?, type = ?, content = ?, tags = ?, status = '${ACTIVE}', confidence = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, '${ACTIVE}', ?, 'future', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   const rawActiveStmt = db.prepare(
     `UPDATE entities SET status = '${ACTIVE}', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+  );
+  // AC-19：past → future 加工边（这条产物出自哪条原文）
+  const edgeExists = db.prepare('SELECT 1 AS one FROM links WHERE source_id = ? AND target_id = ? LIMIT 1');
+  const edgeInsert = db.prepare(
+    'INSERT INTO links (source_id, target_id, relation, confidence, strength, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
   );
 
   const rows = [];
@@ -54,19 +56,29 @@ async function distillStep(store, opts = {}) {
     const tags = row.tags == null ? null : row.tags;
     const confidence = row.confidence == null ? null : Number(row.confidence);
 
-    if (store.getEntity(wikiId) == null) {
+    const existing = store.getEntity(wikiId);
+    if (existing == null) {
       insertStmt.run([wikiId, name, type, content, tags, confidence]);
       stats.created++;
       dirty = true;
+      // 保真校验：写后读回，逐字相等（含空白/换行）
+      const written = store.getEntity(wikiId);
+      if (!written || written.content !== content) {
+        throw new Error('fidelity-violation: ' + wikiId + ' 复制内容与源不一致');
+      }
     } else {
-      updateStmt.run([name, type, content, tags, confidence, wikiId]);
-      dirty = true;
+      // AC-19：产物行只读——镜像已存在就不重写；内容不符记为冲突，留给新序列号重算
+      if (existing.content !== content) stats.conflicts++;
     }
 
-    // 保真校验：写后读回，逐字相等（含空白/换行）
-    const written = store.getEntity(wikiId);
-    if (!written || written.content !== content) {
-      throw new Error('fidelity-violation: ' + wikiId + ' 复制内容与源不一致');
+    // AC-19：past → future 加工边；已有则不重复建（幂等）
+    edgeExists.bind([row.id, wikiId]);
+    const hasEdge = edgeExists.step();
+    edgeExists.reset();
+    if (!hasEdge) {
+      edgeInsert.run([row.id, wikiId, 'derived', confidence == null ? null : Number(confidence),
+        confidence == null ? 5 : (Number(confidence) >= 0.7 ? 7 : 5)]);
+      dirty = true;
     }
 
     rawActiveStmt.run([row.id]);
@@ -75,8 +87,9 @@ async function distillStep(store, opts = {}) {
   }
 
   insertStmt.free();
-  updateStmt.free();
   rawActiveStmt.free();
+  edgeExists.free();
+  edgeInsert.free();
   if (dirty) store._persist();
   return stats;
 }
