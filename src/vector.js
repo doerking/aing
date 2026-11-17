@@ -131,7 +131,8 @@ function pickBackend(spec) {
     const dim = Number(spec.dim);
     if (!Number.isInteger(dim) || dim <= 0) throw new Error('后端 dim 非法');
     const name = String(spec.name == null ? '' : spec.name) || 'inline';
-    return { name, dim, model: String(spec.model == null || spec.model === '' ? name : spec.model), embed: spec.embed, requested: name, fallback: false };
+    const embedQuery = typeof spec.embedQuery === 'function' ? spec.embedQuery : undefined; // SPEC-5.5 R1
+    return { name, dim, model: String(spec.model == null || spec.model === '' ? name : spec.model), embed: spec.embed, embedQuery, requested: name, fallback: false };
   }
   throw new Error('backend 参数非法：需后端名或 { dim, model, embed }');
 }
@@ -139,7 +140,11 @@ function pickBackend(spec) {
 function vectorOf(text, opts = {}) {
   const backend = pickBackend(opts.backend);
   const out = backend.embed(String(text == null ? '' : text));
-  if (!Array.isArray(out)) throw new Error(`后端 ${backend.name} 返回非数组`);
+  return _normVector(out, backend);
+}
+
+function _normVector(out, backend) {
+  if (!Array.isArray(out) && !ArrayBuffer.isView(out)) throw new Error(`后端 ${backend.name} 返回非数组`);
   if (out.length !== backend.dim) throw new Error(`后端 ${backend.name} 维度不符：${out.length} ≠ ${backend.dim}`);
   const v = new Array(out.length);
   for (let i = 0; i < out.length; i++) {
@@ -148,6 +153,21 @@ function vectorOf(text, opts = {}) {
     v[i] = x;
   }
   return v;
+}
+
+/** 取编码入参：题侧优先 embedQuery（SPEC-5.5 R1），缺省回落 embed */
+function _embedInput(backend, text, role) {
+  const t = String(text == null ? '' : text);
+  if (role === 'query' && typeof backend.embedQuery === 'function') return backend.embedQuery(t);
+  return backend.embed(t);
+}
+
+/** 异步取向量：后端可返回 Promise（SPEC-5.5 R2/R3） */
+async function vectorOfAsync(text, opts = {}) {
+  const backend = pickBackend(opts.backend);
+  let out = _embedInput(backend, text, opts.role);
+  if (out && typeof out.then === 'function') out = await out;
+  return _normVector(out, backend);
 }
 
 function cosine(a, b) {
@@ -194,7 +214,7 @@ async function vectorStep(store, opts = {}) {
       stats.skipped++;
       continue;
     }
-    const vec = vectorOf(`${row.name || ''}\n${row.content || ''}`, { backend });
+    const vec = await vectorOfAsync(`${row.name || ''}\n${row.content || ''}`, { backend });
     putStmt.run([row.id, backend.dim, backend.model, JSON.stringify(vec), sum]);
     if (existing) stats.rebuilt++; else stats.indexed++;
     dirty = true;
@@ -211,7 +231,7 @@ async function search(store, query, opts = {}) {
   const k = Number.isInteger(opts.k) && opts.k > 0 ? opts.k : 5;
   const backend = pickBackend(opts.backend);
   const db = store._getDb();
-  const qv = vectorOf(query, { backend });
+  const qv = await vectorOfAsync(query, { backend, role: 'query' });
   // 混用防护：只比对同 model 同 dim 的向量（SPEC-5.1 §2.5）
   const stmt = db.prepare(
     `SELECT e.id, e.name, e.tolaria_strength, v.vector
@@ -246,6 +266,6 @@ async function search(store, query, opts = {}) {
 }
 
 module.exports = {
-  vectorStep, search, vectorOf, tokens, rawTokens, fold, DIM, MODEL,
+  vectorStep, search, vectorOf, vectorOfAsync, tokens, rawTokens, fold, DIM, MODEL,
   registerBackend, resolveBackend, listBackends
 };

@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 84 档 / 540 条断言全绿 |
+| 测试 | `npm test` → 85 档 / 547 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **84 档 / 540 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **85 档 / 547 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -137,6 +137,7 @@ status: active
 | 5.3 | 检索排序修正（简繁归一 + 双字权重 + 双链去重） | ✅ | `spec/SPEC-5.3-检索排序修正.md` | test-5.3-retrieval-rank 9/9：默认升 hash-64w2、旧口径逐位不变、簡查询命繁正文、双字证据排散字前、raw/wiki 只出一条且优先 raw、k 按去重后计、强度加权不变、内置不可覆盖 |
 | 5.4 | 语义后端旁路评测（本地 ONNX，只量不接） | ✅ | `spec/SPEC-5.4-语义后端旁路评测.md` | test-5.4-semantic-bench 6/6：零向量余弦安全、同分按 id 升序、前缀各加一次、指标与 bench-retrieval 同源、复跑逐字一致、空集与 k 缺省安全；`tools/semantic-bench.js` 冻结集实测 e5-small（384/量化）顶1 83.8% vs 字面 58.8%、paraphrase 顶1 74.5% vs 38.3%；只改评测面，`src/vector.js` 同步契约与发布默认未动 |
 
+| 5.5 | 语义后端接入（可选开关 + 回退） | ✅ | `spec/SPEC-5.5-语义后端接入.md` | test-5.5-onnx-wiring 7/7：同步路径逐位不变、异步向量校验、题侧 embedQuery 分流、换后端全量重建、模块不可用回退 hash-64w2、默认值不动、`cli reindex` 按请求后端重建；开关 `AING_VECTOR_BACKEND=onnx-e5-small`，切后 `node src/cli.js reindex` 重建（副本实测 320 条全建、memo 覆盖率 100%）|
 - **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
 - **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。
 - **口径落文档**：README「六·补 检索口径」+ `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`（评测集冻结规则、四项指标、粤语单列、测完由使用者自己语料复核）。
