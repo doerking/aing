@@ -25,7 +25,8 @@ const DDL = [
     invalid_at DATETIME,
     invalid_reason TEXT,
     strand TEXT DEFAULT 'past',        -- SPEC-7.1：past=原文/源头｜future=加工产物
-    metabolized_at DATETIME            -- SPEC-7.1：产物被代谢一次即写，此后永不再进
+    metabolized_at DATETIME,           -- SPEC-7.1：产物被代谢一次即写，此后永不再进
+    fingerprint TEXT                   -- SPEC-7.1 §二：内容指纹（同内容不重复落行）
   )`,
   `CREATE TABLE IF NOT EXISTS links (
     source_id TEXT,
@@ -384,6 +385,19 @@ async function init(dbFilePath) {
     db.run('ALTER TABLE entities ADD COLUMN metabolized_at DATETIME');
     migrated = true;
   }
+  if (!columns('entities').includes('fingerprint')) {
+    db.run('ALTER TABLE entities ADD COLUMN fingerprint TEXT');
+    // 回填老行（一次）：用同一指纹函数，保证去重口径单一
+    const { fingerprint } = require('./identity.js');
+    const rows = [];
+    const rs = db.prepare('SELECT id, content FROM entities');
+    while (rs.step()) rows.push(rs.getAsObject());
+    rs.free();
+    const up = db.prepare('UPDATE entities SET fingerprint = ? WHERE id = ?');
+    for (const r of rows) up.run([fingerprint(r.content), r.id]);
+    up.free();
+    migrated = true;
+  }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
   // 只在真有变化时落盘：纯读命令开库不改文件 mtime（否则会干扰 db-stale 检测、白耗 f2fs 写入）
@@ -408,12 +422,13 @@ function columns(table) {
 }
 
 function insertEntity(e) {
+  const fp = e.fingerprint || require('./identity.js').fingerprint(e.content);
   const stmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, fingerprint, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null,
-    e.confidence == null ? null : e.confidence, e.strand || 'past']);
+    e.confidence == null ? null : e.confidence, e.strand || 'past', fp]);
   stmt.free();
   persist();
   return e.id;
