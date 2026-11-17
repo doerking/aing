@@ -485,11 +485,11 @@ function insertLink(l) {
   // PK (source_id, target_id) 重复插抛冲突（AC-5）：默认 INSERT 语句，不用 OR IGNORE/REPLACE
   // SPEC-1.16：可选 cycle_id——本轮催出的边带上轮次，老调用不传仍可写
   const stmt = db.prepare(
-    `INSERT INTO links (source_id, target_id, relation, confidence, cycle_id, created_at)
-     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+    `INSERT INTO links (source_id, target_id, relation, confidence, strength, cycle_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
   );
   stmt.run([l.source_id, l.target_id, l.relation || null, l.confidence == null ? null : l.confidence,
-    l.cycle_id == null ? null : String(l.cycle_id)]);
+    l.strength == null ? null : Number(l.strength), l.cycle_id == null ? null : String(l.cycle_id)]);
   stmt.free();
   persist();
   return { source_id: l.source_id, target_id: l.target_id };
