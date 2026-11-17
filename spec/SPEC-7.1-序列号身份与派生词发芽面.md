@@ -287,3 +287,13 @@ upstream: [SPEC-0.1, SPEC-1.8, SPEC-1.9, SPEC-1.10]
 
 - `agent` 这类超高频词会在强边下成为新 hub（现读数 96 实体）→ 发芽报告需带 hub 警戒线，超线只报不扩。
 - 粤语词典覆盖不足时，拆解会退化为整词命中；报告需同时给「拆解成功率」，不装作全覆盖。
+
+## 十二、落地记录（2026-11-18）
+
+- `entities.title` 独立成列；老库迁移 `ALTER TABLE … ADD COLUMN title` + 回填 `title = name`（旧 name 即题头），`name` 暂留原值不再改写。
+- 新入库走 `identity.ingestEntity`：`name = id`（序列号副本）、`title = 正文派生`（`titleOf`：剥 JSON 外壳取 topic/首行，截 40 字）。
+- 修订走 `identity.reviseEntity`：内容指纹未变 → 返原号；变了 → 新序列号落新行，旧档 `invalid_at` + `invalid_reason`（`<理由> → <新号>`），不覆盖、不物理删。**注意：`invalid_reason` 是文本字段，指新号靠前缀文本，未加外键。**
+- 会话入库（`session-ingest`）：`name = conv-<sessionId>`（既有别名序列号），`title` 取话题或回复首句，不出现 `会话 <sessionId>` 或时间戳。
+- 展示层统一 `title || name`：`memo`、`predict`、`retention`、`trajectory`、`recycle`、`maintenance-report`。
+- 未做（后续）：旧院迁移（`migrateFrom`）仍只搬 `name` 不搬 `title`；`compile`/`import`/`api-gate` 等旧导入路径仍写 `name=题头`、`title` 为空——展示会回落到 name，不入键，不影响检索。
+- 护栏：`test-7.1n-identity-title.js` 6/6（列存在 / name=序列号 / 同内容重投 / 修订新号旧档作废 / 内容未变不新开号 / 会话卡标题无时间戳）。

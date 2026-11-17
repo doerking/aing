@@ -29,7 +29,7 @@ function _scalar(db, sql, binds = []) {
 
 // 正文读法与 predict 同源（SPEC-3.11 修订 A）：markdown 会话取摘要段，唔裸露时间戳名
 const _body = parseBody;
-const _topic = (entity, body) => readableTopic(entity && entity.name, body);
+const _topic = (entity, body) => readableTopic((entity && (entity.title || entity.name)), body);
 
 // 向量诊断（SPEC-5.2 §2.1）：只 SELECT，不建向量、不写表
 function _vectorDiagnostics(db) {

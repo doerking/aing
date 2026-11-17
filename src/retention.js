@@ -78,7 +78,7 @@ function planRetention(store, opts = {}) {
     shortList.push({
       id: e.id, type: e.type, name: e.name, tier,
       // 显示用话题（SPEC-6.11 修订 B）：只影响名单可读性，不参与任何判据
-      topic: readableTopic(e.name, parseBody({ content: e.content })),
+      topic: readableTopic(e.title || e.name, parseBody({ content: e.content })),
       ageDays: ageDays == null ? null : Math.round(ageDays * 10) / 10,
       accessDays: accessDays == null ? null : Math.round(accessDays * 10) / 10,
       hasStrongEdge: strong.has(e.id),

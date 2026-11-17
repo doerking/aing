@@ -108,6 +108,7 @@
   "test-7.1k-synonym-expansion.js": 5,
   "test-7.1l-field-weight.js": 4,
   "test-7.1m-dedupe-twins.js": 3,
+  "test-7.1n-identity-title.js": 6,
   "test-8.1-adapter.js": 4,
   "test-8.2-hard-gates.js": 7
 }

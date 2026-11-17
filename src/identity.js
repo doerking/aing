@@ -94,7 +94,9 @@ function ingestEntity(store, payload = {}) {
   const id = payload.id || nextSerial(store);
   store.insertEntity({
     id,
-    name: title,
+    // SPEC-7.1 §2.1：name 降为「序列号副本」，真正的展示标题落 title 列（正文派生、永不入键）
+    name: id,
+    title,
     type: payload.type || 'Concept',
     content,
     tags: payload.tags || '[]',
@@ -106,7 +108,57 @@ function ingestEntity(store, payload = {}) {
   return { id, deduped: false, title };
 }
 
+/**
+ * 内容修订（SPEC-7.1 §2.2）：新序列号入档，旧档写 invalid_at + invalid_reason（指新号）。
+ * 内容未变则不新开号（返既有 id）。不覆盖、不物理删。
+ * @returns {{id:string, deduped:boolean, title:string, revisedFrom?:string}}
+ */
+function reviseEntity(store, opts = {}) {
+  if (!store || typeof store._getDb !== 'function') throw new Error('identity 需要 store 注入（SPEC-1.15 契约）');
+  const oldId = String(opts.id || '').trim();
+  if (!oldId) throw new Error('revise-required: 需要 id');
+  const db = store._getDb();
+  const cur = db.prepare('SELECT id, content, type, tags, status, strand, title FROM entities WHERE id = ?');
+  cur.bind([oldId]);
+  const old = cur.step() ? cur.getAsObject() : null;
+  cur.free();
+  if (!old) throw new Error('not-found: ' + oldId);
+
+  const content = String(opts.content == null ? '' : opts.content);
+  const fp = fingerprint(content);
+  if (fp === fingerprint(old.content)) {
+    // 内容没变：不新开号（只可能是重复提交）
+    return { id: oldId, deduped: true, title: String(old.title || titleOf(old.content)) };
+  }
+
+  const existing = db.prepare('SELECT id FROM entities WHERE fingerprint = ? AND invalid_at IS NULL ORDER BY created_at LIMIT 1');
+  existing.bind([fp]);
+  const hit = existing.step() ? String(existing.getAsObject().id || '') : '';
+  existing.free();
+  if (hit) return { id: hit, deduped: true, title: titleOf(content), revisedFrom: oldId };
+
+  const id = nextSerial(store);
+  const title = opts.title || titleOf(content);
+  store.insertEntity({
+    id,
+    name: id,
+    title,
+    type: old.type || 'Concept',
+    content,
+    tags: old.tags || '[]',
+    status: old.status || 'active',
+    strand: old.strand || 'past',
+    fingerprint: fp
+  });
+  const reason = (opts.reason ? String(opts.reason) + ' → ' : '') + id;
+  const up = db.prepare('UPDATE entities SET invalid_at = CURRENT_TIMESTAMP, invalid_reason = ? WHERE id = ? AND invalid_at IS NULL');
+  up.run([reason, oldId]);
+  up.free();
+  if (typeof store._persist === 'function') store._persist();
+  return { id, deduped: false, title, revisedFrom: oldId };
+}
+
 /** 查询归一（转调派生器，保持单源） */
 function normalize(text) { return derive.normalizeQuery(text); }
 
-module.exports = { fingerprint, nextSerial, titleOf, ingestEntity, normalize, MAX_TITLE };
+module.exports = { fingerprint, nextSerial, titleOf, ingestEntity, reviseEntity, normalize, MAX_TITLE };
