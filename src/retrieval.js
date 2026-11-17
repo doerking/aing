@@ -176,11 +176,12 @@ function parseTs(v) {
   return Date.parse(s);
 }
 
-/** 新鲜度：30 天半衰 */
-function recencyScore(entity) {
+/** 新鲜度：30 天半衰（now 可注入，评测集用固定参考时刻保确定性） */
+function recencyScore(entity, now) {
   const t = parseTs(entity && entity.updated_at);
   if (Number.isNaN(t)) return 0;
-  const days = Math.max(0, (Date.now() - t) / 86400000);
+  const base = Number.isFinite(now) ? now : Date.now();
+  const days = Math.max(0, (base - t) / 86400000);
   return 1 / (1 + days / 30);
 }
 
@@ -281,13 +282,14 @@ async function search(store, query, opts = {}) {
     }
   }
 
-  // 5) 伪精排：KESPI + 新鲜度
+  // 5) 伪精排：KESPI + 新鲜度（now 可注入：评测须可复现）
+  const nowRef = Number.isFinite(opts.now) ? opts.now : Date.now();
   for (const e of pool.values()) {
     const k = _scalar(db, 'SELECT overall FROM kespi_scores WHERE entity_id = ?', [e.id]);
     const kRaw = k && k.overall != null ? Number(k.overall) : null;
     const kN = kRaw == null ? 0 : (kRaw <= 1 ? kRaw : kRaw / 100);
     const base = e.fused == null ? 0 : e.fused;
-    e.final = base * (1 - rr.kespi - rr.recency) + kN * rr.kespi + recencyScore(e) * rr.recency;
+    e.final = base * (1 - rr.kespi - rr.recency) + kN * rr.kespi + recencyScore(e, nowRef) * rr.recency;
   }
 
   // 6) 排序 + 双链去重 + 截断（同分优先 raw；三路全零不占位）
