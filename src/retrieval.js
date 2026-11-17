@@ -17,7 +17,10 @@ const DEFAULTS = {
   weights: { vector: 0.8, lexical: 0.05, name: 0.15 },
   slowRecallThreshold: 0.35,
   expandTop: 6,
-  rerank: { kespi: 0.15, recency: 0.1 },
+  // SPEC-6.3 修订 D（2026-11-17）：KESPI 度量代谢活跃度、不是本题相关性，
+  // 窄带下 0.15 的绝对加分压过向量差（0.0155 > 0.012）；撤出精排，只留少量新鲜度。
+  // 旧口径可显式传 opts.rerank 恢复；是否以乘性/归一化方式回来等记账数据齐了再议。
+  rerank: { kespi: 0, recency: 0.05 },
   limit: 8
 };
 
