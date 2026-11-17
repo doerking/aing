@@ -305,3 +305,6 @@ upstream: [SPEC-0.1, SPEC-1.8, SPEC-1.9, SPEC-1.10]
 - 依据：AC-12 的口径是「查询扩展 ≤3 条」，原先的实现是逐个词各 3 条，四个词的查询能摊出 6~12 条同义形，等于把整句摊开去撞字面（与 §十八 查明的词面噪声同源）。
 - 双验：判读集 top1 17 / top3 19 / MRR .778、冻结集 P@10 11.6% / R@10 98.5% 与改动前逐位一致。
 - 护栏：`test-7.1p-expansion-cap.js` 5/5（整句 ≤3 / 去重与原词首位 / 长问句不扩 / 短词仍扩 / 名额轮转端到端）。
+- AC-9/13 护栏落地（2026-11-18）：`data/lexicon/README.md` 登记三份词典（`zh-variant.json` / `yue-morph.json` / `zh-synonym.json`）的用途、出处、许可与更新日期，并写明引入外部词典（OpenCC 词典数据、words.hk、HKCanCor、rime-cantonese、同义词词林、HowNet）时必须在表里登记许可与发布范围；文件自带 `_meta.purpose/license/updated` 与之对应。
+- `test-7.1q-lexicon-provenance.js` 5/5：每份词典 `_meta` 齐 → README 逐个列名 → 抽词器同输入同输出（`variants`/`keywordsOf`/`segment`/`synonymsOf` 各两次逐位一致）→ `derive.js`/`sprout-report.js`/`sprout.js`/`pollinate.js` 源码无网络模块、HTTP 客户端、`child_process`、GPU 推理运行时、`fetch`/XHR → 词典只从仓内 `data/lexicon` 读。
+- 未做：断网实跑（沙箱无法可靠模拟断网，以源码扫描代替）。
