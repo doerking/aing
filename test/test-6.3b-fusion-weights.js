@@ -15,8 +15,11 @@ const R = require('../src/retrieval.js');
 (async () => {
   const w = R.DEFAULTS.weights;
   const sum = w.vector + w.lexical + w.name;
-  ac('AC-1 缺省向量主导（向量 ≥0.75、三路和 =1、词面 <0.15）',
-    w.vector >= 0.75 && Math.abs(sum - 1) < 1e-9 && w.lexical < 0.15 && w.name > 0,
+  // SPEC-6.3 修订 E（2026-11-18）：缺省改为 0.5/0.2/0.3——冻结集对本项无分辨力，
+  // 改以真库 24 题人工判读集定；本条只锁「和为 1、向量仍是最大单路、名称通道保留」。
+  ac('AC-1 缺省权重 0.5/0.2/0.3（三路和 =1、向量仍最大单路、名称通道保留）',
+    Math.abs(w.vector - 0.5) < 1e-9 && Math.abs(w.lexical - 0.2) < 1e-9 && Math.abs(w.name - 0.3) < 1e-9 &&
+    Math.abs(sum - 1) < 1e-9 && w.vector > w.name && w.name > w.lexical,
     JSON.stringify({ w, sum }));
 
   await store.init(path.join(yard, 'knowledge.db'));
