@@ -105,6 +105,9 @@ async function promoteEntity(store, opts = {}) {
   if (!gate.passed) return { refused: { id, reason: 'gate-rejected', failed: gate.failed, evidence: ev } };
 
   const m = _conservation(db, store);
+  // 闸读口径必须用 gate.verdict（边层单一量纲）；旧 m.verdict 是「边产/实体退」混口径，
+  // 实体退场为 0 时恒判 growth-only —— 之前提升边全被这条假读数挡住。
+  const verdict = (m && m.gate && m.gate.verdict) || (m && m.verdict);
   if (m.verdict === 'growth-only') return { refused: { id, reason: 'conservation-band', evidence: ev } };
 
   const to = targetStrength;
@@ -124,26 +127,34 @@ async function promoteEdges(store, opts = {}) {
   const stats = { promoted: [], refused: [] };
 
   const m = _conservation(db, store);
+  // 闸读口径必须用 gate.verdict（边层单一量纲）；旧 m.verdict 是「边产/实体退」混口径，
+  // 实体退场为 0 时恒判 growth-only —— 之前提升边全被这条假读数挡住。
+  const verdict = (m && m.gate && m.gate.verdict) || (m && m.verdict);
   const cands = _rows(db,
     `SELECT * FROM links WHERE invalid_at IS NULL AND relation IN (?, ?)`,
     CANDIDATE_RELATIONS);
 
-  if (m.verdict === 'growth-only') {
+  if (verdict === 'growth-only') {
     return { promoted: [], refused: cands.map(c => ({ src: c.source_id, dst: c.target_id, reason: 'conservation-band' })) };
   }
 
   const upd = db.prepare('UPDATE links SET relation = ?, strength = ? WHERE source_id = ? AND target_id = ?');
   for (const c of cands) {
+    // 证据两种形状：老的是字符串数组，sprout/pollinate 写的是 [{kind,detail}]
     let kinds = [];
     try { kinds = JSON.parse(c.evidence || '[]'); } catch (_) { kinds = []; }
     if (!Array.isArray(kinds)) kinds = [];
-    const distinct = [...new Set(kinds.map(String))];
+    const distinct = [...new Set(kinds
+      .map((x) => (x && typeof x === 'object' ? String(x.kind || '') : String(x)))
+      .filter(Boolean))];
     if (distinct.length < 2) { stats.refused.push({ src: c.source_id, dst: c.target_id, reason: 'insufficient-evidence' }); continue; }
     const beforeStrength = Number(c.strength == null ? 4 : c.strength);
-    upd.run(['gen', 6, c.source_id, c.target_id]);
+    // SPEC-7.1 §4.2：提升后必须仍落在发芽面内（三类候选关系 且 strength≥7），
+    // 旧口径升成 'gen'@6 —— 既不在白名单也不够强，等于把候选边踢出发芽面。
+    upd.run(['hydrogen-bond', 7, c.source_id, c.target_id]);
     _record(db, { action: 'promote-edge', target: c.source_id + '->' + c.target_id,
       before: { relation: c.relation, strength: beforeStrength, evidence: distinct },
-      after: { relation: 'gen', strength: 6 }, cycleId: opts.cycleId });
+      after: { relation: 'hydrogen-bond', strength: 7 }, cycleId: opts.cycleId });
     stats.promoted.push({ src: c.source_id, dst: c.target_id, evidence: distinct });
   }
   upd.free();

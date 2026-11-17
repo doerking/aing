@@ -251,7 +251,17 @@ async function maintainStep(store, opts = {}) {
   const reb = await rebond(store, opts);
   const unw = await unwind(store, opts);
   const rec = await reconcile(store, opts);
-  return { ok: true, actions: { bonded: reb.bonded, unwound: unw.unwound, reconciled: rec.reconciled },
+  // SPEC-7.1 §4.2：候选边够证据就提升进发芽面（hydrogen-bond@7）。
+  // 之前 promoteEdges 是孤儿函数，从未进链 —— 候选边永远卡在 strength 6，发芽面恒空。
+  let promoted = 0;
+  let refused = 0;
+  try {
+    const { promoteEdges } = require('./field-promote.js');
+    const pr = await promoteEdges(store, opts);
+    promoted = (pr.promoted || []).length;
+    refused = (pr.refused || []).length;
+  } catch (_) { /* 提升失败不阻断维护步 */ }
+  return { ok: true, actions: { bonded: reb.bonded, unwound: unw.unwound, reconciled: rec.reconciled, promoted, refused },
     skippedOutOfBand: reb.skippedOutOfBand + rec.skippedOutOfBand };
 }
 

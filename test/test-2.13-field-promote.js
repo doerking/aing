@@ -93,14 +93,19 @@ const rows = (sql, b = []) => { const s = store._getDb().prepare(sql); if (b.len
   store.insertEntity({ id: 'cb', name: 'b', type: 'Concept', content: '候选乙时界', status: 'active', confidence: 0.5 });
   store.insertLink({ source_id: 'ca', target_id: 'cb', relation: 'sprout-candidate', confidence: 0.5 });
   db.run("UPDATE links SET strength=4, evidence='[\"tag\",\"kw\"]' WHERE source_id='ca' AND target_id='cb'");
+  // 守恒闸读边层单一量纲（gate.verdict）：先造退边，令 ratio 落带内
+  for (const [a2, b2] of [['ca', 'cx'], ['cb', 'cy'], ['cx', 'cy']]) {
+    store.insertLink({ source_id: a2, target_id: b2, relation: 'related', confidence: 0.2 });
+  }
+  db.run("UPDATE links SET invalid_at=datetime('now') WHERE relation='related'");
   store._persist();
-  // 边提升不受实体带界限制，但受守恒闸：当前 balanced（有退场），放行
+  // 边提升不受实体带界限制，但受守恒闸：当前 balanced（有退边），放行
   const rE = await P.promoteEdges(store, { cycleId: 'c2' });
   const ce = rows("SELECT * FROM links WHERE source_id='ca' AND target_id='cb'")[0];
   const actE = rows("SELECT * FROM field_actions WHERE action='promote-edge'")[0];
   const revE = actE ? await field.revertFieldAction(store, actE.id) : null;
   const ceBack = rows("SELECT * FROM links WHERE source_id='ca' AND target_id='cb'")[0];
-  ac('AC-6 候选边提升 + 可逆', ce.relation === 'gen' && Number(ce.strength) === 6 && rE.promoted.length >= 1 &&
+  ac('AC-6 候选边提升 + 可逆', ce.relation === 'hydrogen-bond' && Number(ce.strength) === 7 && rE.promoted.length >= 1 &&
     revE && revE.reverted && ceBack.relation === 'sprout-candidate' && Number(ceBack.strength) === 4,
     JSON.stringify({ ce, rE, revE, ceBack }));
 
