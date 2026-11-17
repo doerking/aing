@@ -23,7 +23,9 @@ const DDL = [
     created_at DATETIME,
     updated_at DATETIME,
     invalid_at DATETIME,
-    invalid_reason TEXT
+    invalid_reason TEXT,
+    strand TEXT DEFAULT 'past',        -- SPEC-7.1：past=原文/源头｜future=加工产物
+    metabolized_at DATETIME            -- SPEC-7.1：产物被代谢一次即写，此后永不再进
   )`,
   `CREATE TABLE IF NOT EXISTS links (
     source_id TEXT,
@@ -372,6 +374,15 @@ async function init(dbFilePath) {
     db.run('ALTER TABLE meko_cycles ADD COLUMN kespi_source TEXT');
     migrated = true;
   }
+  // 列迁移（SPEC-7.1）：双链分道 + 产物一次加标签
+  if (!columns('entities').includes('strand')) {
+    db.run("ALTER TABLE entities ADD COLUMN strand TEXT DEFAULT 'past'");
+    migrated = true;
+  }
+  if (!columns('entities').includes('metabolized_at')) {
+    db.run('ALTER TABLE entities ADD COLUMN metabolized_at DATETIME');
+    migrated = true;
+  }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
   // 只在真有变化时落盘：纯读命令开库不改文件 mtime（否则会干扰 db-stale 检测、白耗 f2fs 写入）
@@ -397,10 +408,11 @@ function columns(table) {
 
 function insertEntity(e) {
   const stmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
-  stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null, e.confidence == null ? null : e.confidence]);
+  stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null,
+    e.confidence == null ? null : e.confidence, e.strand || null]);
   stmt.free();
   persist();
   return e.id;
@@ -416,6 +428,11 @@ function getEntity(id) {
 }
 
 function insertLink(l) {
+  // SPEC-7.1 AC-14b：加工产物不得回写源头——future → past 的边一律拒
+  const src = getEntity(l.source_id), dst = getEntity(l.target_id);
+  if (src && dst && src.strand === 'future' && dst.strand === 'past') {
+    throw new Error('future→past 边禁止（产物不回写原料，SPEC-7.1 §〇.1）');
+  }
   // PK (source_id, target_id) 重复插抛冲突（AC-5）：默认 INSERT 语句，不用 OR IGNORE/REPLACE
   const stmt = db.prepare(
     `INSERT INTO links (source_id, target_id, relation, confidence, created_at)
@@ -427,6 +444,21 @@ function insertLink(l) {
   return { source_id: l.source_id, target_id: l.target_id };
 }
 
+/** SPEC-7.1 AC-15：产物被代谢一次即写 metabolized_at 并打 meta 标签；重跑不变（幂等） */
+function markMetabolized(id) {
+  const row = getEntity(id);
+  if (!row) return { ok: false, reason: 'not-found' };
+  if (row.metabolized_at) return { ok: true, changed: false, id, metabolized_at: row.metabolized_at };
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  let tags = [];
+  try { tags = JSON.parse(row.tags || '[]'); } catch (_) { tags = []; }
+  if (!Array.isArray(tags)) tags = [];
+  if (!tags.some(t => String(t).replace(/:\d+$/, '') === 'meta')) tags.push('meta:5');
+  db.run('UPDATE entities SET metabolized_at = ?, tags = ? WHERE id = ?', [now, JSON.stringify(tags), id]);
+  persist();
+  return { ok: true, changed: true, id, metabolized_at: now };
+}
+
 function foreignKeysOn() {
   const stmt = db.prepare('PRAGMA foreign_keys');
   let on = false;
@@ -435,4 +467,4 @@ function foreignKeysOn() {
   return on;
 }
 
-module.exports = { init, listTables, columns, insertEntity, getEntity, insertLink, foreignKeysOn, _getDb: () => db, _persist: persist };
+module.exports = { init, listTables, columns, insertEntity, getEntity, insertLink, markMetabolized, foreignKeysOn, _getDb: () => db, _persist: persist };
