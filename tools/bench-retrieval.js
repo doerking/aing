@@ -50,6 +50,11 @@ async function runBench(opts = {}) {
     if (store.getEntity && store.getEntity(e.id)) continue;
     store.insertEntity({ id: e.id, name: e.name, type: 'Concept', content: e.content, tags: '["eval"]' });
   }
+  // 评测确定性（AC-3）：把 updated_at 钉成固定时刻。
+  // 否则 CURRENT_TIMESTAMP 在批量插入跨秒时会把语料切成两组，
+  // 新鲜度打分被墙钟影响，同输入两次跑可能得到不同名次。
+  store._getDb().run("UPDATE entities SET updated_at = '2026-01-01 00:00:00'");
+  store._persist();
   const vstats = await V.vectorStep(store, backend ? { backend } : {});
 
   // 新鲜度参考时刻取语料最新一条（评测可复现；不随墙钟漂移）
