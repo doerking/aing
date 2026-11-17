@@ -6,7 +6,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const initSqlJs = require('sql.js');
+// SPEC-8 AC-8.1：引擎只由插排决定；store 不直接碰 sql.js（arch-lint C6 / test-8.1）
+const adapter = require('./db-adapter.js');
 
 // SPEC-0.1 §二 三表 DDL（spec 即契约）
 const DDL = [
@@ -201,8 +202,7 @@ const DDL = [
   )`
 ];
 
-let SQL = null;      // sql.js 模块
-let db = null;       // 当前连接
+let db = null;       // 当前连接（句柄由插排开，store 只持引用）
 let dbPath = null;   // 当前库文件
 let lastStat = null; // 上次落盘后的 {mtimeMs, size}（SPEC-6.12 外部改写检测）
 
@@ -351,16 +351,15 @@ function persist(opts = {}) {
 }
 
 async function init(dbFilePath) {
-  if (!SQL) SQL = await initSqlJs();
   dbPath = dbFilePath;
   _cleanStaleTmp(dbFilePath);
   _cleanDeadLock(dbFilePath + '.lock');
   if (fs.existsSync(dbFilePath)) {
-    db = new SQL.Database(fs.readFileSync(dbFilePath));
+    db = (await adapter.openFile(dbFilePath)).raw;
     const st = fs.statSync(dbFilePath);
     lastStat = { mtimeMs: st.mtimeMs, size: st.size };
   } else {
-    db = new SQL.Database();
+    db = (await adapter.openEmpty()).raw;
     lastStat = null;
   }
   // 幂等：IF NOT EXISTS，连跑不炸（AC-2）

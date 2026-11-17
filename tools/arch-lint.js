@@ -20,9 +20,21 @@ const EXEC_GUARDED = new Set(['dispatch-swarm.js', 'dispatch-card.js']);
 const REQUIRE_ANY = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
 
 const problems = [];
+// SPEC-8 AC-8.1：引擎只由插排收口——只有 db-adapter.js 可以直接 require('sql.js')
+const SQLJS_ONLY = new Set(['db-adapter.js']);
+const SQLJS_REQUIRE = /require\(\s*['"]sql\.js['"]\s*\)/;
 const files = fs.existsSync(root)
   ? fs.readdirSync(root).filter(f => f.endsWith('.js'))
   : [];
+
+for (const f of files) {
+  if (SQLJS_ONLY.has(f)) continue;
+  const full = path.join(root, f);
+  const lines = fs.readFileSync(full, 'utf8').split('\n');
+  lines.forEach((line, i) => {
+    if (SQLJS_REQUIRE.test(line)) problems.push(`${f}:${i + 1} 直连 sql.js（应经 src/db-adapter.js 插排）`);
+  });
+}
 
 for (const f of files) {
   if (WHITELIST.has(f)) continue;

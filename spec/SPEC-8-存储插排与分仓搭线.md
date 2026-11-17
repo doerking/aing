@@ -31,8 +31,8 @@ close()
 ```
 
 - 配置项 `AING_DB_ENGINE=sqljs|node:sqlite|better-sqlite3`（默认 `sqljs`，与当前定量一致）。
-- 现码 `src/knowledge-store.js` 直连 sql.js。**缺口**：插排这层还没抽，`store._getDb()` 到处泄露 sql.js 句柄。
-  收口动作 = 把 `_getDb()` 收成 `adapter`，谁要用 SQL 就走插排，不在模块外碰 sql.js。
+- 已落地（2026-11-17）：`src/db-adapter.js` 是全仓唯一 `require('sql.js')` 的模块；`knowledge-store` 与 `migrate` 都经插排开库。
+- **剩余缝**：`store._getDb()` 仍被约 60 个组件当作 SQL 入口使用（160 处）。它现在只暴露「已由插排开出的句柄」，换引擎仍能跑（句柄内部实现可换）；但要真正做到「上层不认仓」，后续需逐步把它们改走 `all/get/run`，属分仓时再做。
 - 换仓触发点沿用定量文档：库 > 10MB 或 RSS > 150MB 且 search P95 仍达标 → 换 node:sqlite（省堆 6×，查询慢约 11×）。
 
 ## 二 · 分仓（可调阈值）
@@ -82,7 +82,7 @@ close()
 
 | # | 判据 | 状态 |
 |---|---|---|
-| AC-8.1 | 插排收口：`src/` 内无模块直接 `require('sql.js')`（只 knowledge-store/adapter 可） | 待红测 |
+| AC-8.1 | 插排收口：`src/` 内只有 `db-adapter.js` 可以 `require('sql.js')`；store / migrate 全走插排 | 🟢 已红测（test-8.1-adapter 4/4；arch-lint C6 同步守） |
 | AC-8.2 | `AING_DB_ENGINE` 切换后 21 步全绿、检索结果不变（同库同输入） | 待红测 |
 | AC-8.3 | 分仓阈值可调：超阈值自动封仓，新料进新仓，`shards` 表行数 +1 | 待红测 |
 | AC-8.4 | 封仓只读：对封仓写操作被拒（fail-closed） | 待红测 |

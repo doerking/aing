@@ -48,9 +48,8 @@ async function migrateFrom(store, opts = {}) {
   const db = store._getDb();
   if (!opts.force && _count(db, 'entities') > 0) throw new Error('target-not-empty');
 
-  const initSqlJs = require('sql.js');
-  const SQL = await initSqlJs();
-  const old = new SQL.Database(fs.readFileSync(sourcePath));
+  const adapter = require('./db-adapter.js');
+  const old = (await adapter.openBytes(fs.readFileSync(sourcePath))).raw;
 
   const oldCols = new Set(_rows(old, 'PRAGMA table_info(entities)').map(c => c.name));
   const entCols = ['id', 'name', 'type', 'content', 'tags', 'status', 'confidence', 'tolaria_strength',
