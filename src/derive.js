@@ -74,6 +74,28 @@ function segment(text) {
   return { text: s, tokens, mandarin: [...new Set(mandarin)], hits };
 }
 
+/** 整句粤→普：按词表最长匹配替换，未命中原样保留（查询侧归一用，不改原文） */
+function toMandarin(text) {
+  const s = String(text == null ? '' : text);
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    let matched = '';
+    for (const key of YUE_KEYS) {
+      if (key && s.startsWith(key, i)) { matched = key; break; }
+    }
+    if (matched) {
+      const g = YUE[matched];
+      out += (Array.isArray(g.mandarin) && g.mandarin.length) ? g.mandarin[0] : matched;
+      i += matched.length;
+    } else {
+      out += s[i];
+      i += 1;
+    }
+  }
+  return out;
+}
+
 /** 关键词面：CJK 双字 + 拉丁词 ≥2，叠派生形（供 sprout/vector 入键） */
 function keywordsOf(text) {
   const s = String(text == null ? '' : text);
@@ -94,4 +116,4 @@ function keywordsOf(text) {
   return out;
 }
 
-module.exports = { variants, normalizeQuery, segment, keywordsOf, s2t, t2s, LEX_DIR };
+module.exports = { variants, normalizeQuery, segment, toMandarin, keywordsOf, s2t, t2s, LEX_DIR };
