@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 104 档 / 662 条断言全绿 |
+| 测试 | `npm test` → 105 档 / 668 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **104 档 / 662 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **105 档 / 668 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -156,6 +156,7 @@ status: active
 | 6.1 | 能力显现入库（六段叙事 + 校准合并） | ✅ | `spec/SPEC-6.1-能力显现入库.md` | test-6.1-narrative-ingest 7/7：六段齐、手段/编排归位、截断与思维开关、approval 按 callId 挂工具、feedback/goal 落会话级、落库 content 带 format/turns/stats、幂等、缺料拒入、铁律 |
 | 6.2 | 能力叙事消费与蒸馏点 | ✅ | `spec/SPEC-6.2-能力叙事消费与蒸馏点.md` | test-6.2-distill-points 7/7：区间捕获不截断、h1–h6 双语起锚、止端中文、不过捕、蒸馏点确定性、落 distill_points、幂等+退役跳过、链上可见+铁律 |
 | 6.3 | 检索融合消费（三路 + 慢回忆 + 伪精排） | ✅ | `spec/SPEC-6.3-检索融合消费.md` | test-6.3-retrieval-fusion 7/7：三路融合形状、名称路、词面路、慢回忆走三轴有效边、KESPI 伪精排、双链去重+k+退役、predict 接线+不写 last_access；同隔离库 8 查询 top-1 3/8→5/8、MRR 0.542→0.729（未调参）；修订 B（2026-11-17）：缺省融合权重随语义后端重调为 0.8/0.05/0.15（SPEC-6.3 §十），test-6.3b-fusion-weights 3/3（缺省向量≥0.75 且和为 1、语义命中排词面命中前、显式覆盖仍生效）；冻结集 v2：nDCG@10 90.4→91.7%、正负名次差 97.5→98.75%、粤语 nDCG 83.5→87.3%，R@10 99.0% 不变 |
+| 6.13 | 意图路由（规则分类 + 权重分流） | ✅ | `spec/SPEC-6.13-意图路由.md` | test-6.13-intent-routing 6/6：分类表 8 句（查物/回忆/解释/一般各 ≥2，命中词可解释）、lookup>recall 优先级、lookup 抬名称通道（id 命中排前）、recall 抬新鲜度（recency 0.25、新条排前）、显式权重压过路由且可整件关闭、一般查询逐项等于修订 B 缺省；规则在 `src/intent.js`（无模型），检索 meta 返回 `intent{intent,hits}`；实测：冻结集 80 题 76 general + 4 explain，指标逐位不变（R@10 99.0% / nDCG 91.7% / 名次差 98.8%）；真库 24 条真问题路由分布 general 12 / explain 6 / lookup 4 / recall 2，开/关 top3 有 4 条变化，其中「三三制攻防学说草案落在哪个文件」把真档 todo-…v0落档 从第 2 提到第 1 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |

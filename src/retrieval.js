@@ -245,8 +245,10 @@ async function search(store, query, opts = {}) {
   const db = store._getDb();
   const limit = Number.isInteger(opts.k) && opts.k > 0 ? opts.k
     : (Number.isInteger(opts.limit) && opts.limit > 0 ? opts.limit : DEFAULTS.limit);
-  const weights = { ...DEFAULTS.weights, ...(opts.weights || {}) };
-  const rr = { ...DEFAULTS.rerank, ...(opts.rerank || {}) };
+  // SPEC-6.13：意图路由——显式权重/rerank 以调用方为准；intentRouting:false 可整件关掉
+  const routed = opts.intentRouting === false ? null : require('./intent.js').classifyIntent(query);
+  const weights = { ...DEFAULTS.weights, ...(routed ? routed.weights : {}), ...(opts.weights || {}) };
+  const rr = { ...DEFAULTS.rerank, ...(routed ? routed.rerank : {}), ...(opts.rerank || {}) };
   const pool = new Map();
 
   const rowOf = (id) => _scalar(db, 'SELECT id,name,type,tags,content,updated_at,invalid_at FROM entities WHERE id = ?', [id]);
@@ -380,7 +382,13 @@ async function search(store, query, opts = {}) {
     if (out.length >= limit) break;
   }
 
-  return { candidates: out, meta: { avgSim, slowExpanded, weights, rerank: rr } };
+  return {
+    candidates: out,
+    meta: {
+      avgSim, slowExpanded, weights, rerank: rr,
+      intent: routed ? { intent: routed.intent, hits: routed.hits } : null
+    }
+  };
 }
 
 module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS, TAG_WEIGHT };
