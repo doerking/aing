@@ -130,7 +130,30 @@ function _entityGroupHit(entity, forms) {
 /** 查询侧归一：每个原词带别名组（繁简双形 + 粤普对照）；组内任一形命中即算命中 */
 function _isCjk(s) { return /[一-鿿]/.test(s); }
 
-function _aliasGroup(t) {
+// SPEC-7.1 AC-12（2026-11-18）：扩展是「整句」的预算，不是每个词各 3 条。
+const EXPANSION_BUDGET = 3;      // 一次查询的同义扩展总数上限
+const EXPAND_MAX_CJK = 8;        // 短/模糊才算：整句 CJK 字数 ≤8
+const EXPAND_MAX_TOKENS = 3;     // 且词数 ≤3
+
+function _shouldExpand(tokens, query) {
+  const cjk = (String(query || '').match(/[一-鿿]/g) || []).length;
+  return tokens.length > 0 && tokens.length <= EXPAND_MAX_TOKENS && cjk <= EXPAND_MAX_CJK;
+}
+
+/** 每个词的扩展名额：总数 ≤3，按词轮流分配（单词吃到 3，三词各 1） */
+function _expansionQuota(n, total) {
+  const quota = new Array(n).fill(0);
+  let left = total;
+  let i = 0;
+  while (left > 0 && n > 0 && i < n * 4) {
+    const idx = i % n;
+    if (quota[idx] < 3) { quota[idx]++; left--; }
+    i++;
+  }
+  return quota;
+}
+
+function _aliasGroup(t, maxSyn = 0) {
   const forms = new Set([t]);
   for (const f of derive.variants(t).all) forms.add(f);
   // 粤语词：整句转普通话成一个别名（不把「谁/来」这类单字拆进别名，
@@ -138,11 +161,20 @@ function _aliasGroup(t) {
   // 粤语词：词表对照全部进别名（实测：砍掉单字对照会让冻结集粤语 R@10 掉 6 点，
   // 长句精度交给词面覆盖比 + 长度正则 + 源头让位去压，不在这里动刀）
   for (const g of derive.segment(t).mandarin) forms.add(g);
-  // 同义/别名组排最后：只在扩展名额有剩时才补位，不挤掉繁简与粤普对照
-  for (const s of derive.synonymsOf(t)) forms.add(s);
   const ordered = [...forms].map(_foldLower).filter(Boolean);
   const head = ordered[0];
   const rest = ordered.slice(1).filter((f) => f !== head);
+  // 同义/别名组排最后：只在扩展名额有剩时才补位，不挤掉繁简与粤普对照
+  if (maxSyn > 0) {
+    let taken = 0;
+    for (const s of derive.synonymsOf(t)) {
+      if (taken >= maxSyn) break;
+      const f = _foldLower(s);
+      if (!f || f === head || rest.includes(f)) continue;
+      rest.push(f);
+      taken++;
+    }
+  }
   // AC-12a：原词 + 最多 3 条扩展（_groupHit 的权重表也只有 4 档）
   return [head, ...rest.slice(0, 3)];   // [0] 恒为原词，作 df/idf 键
 }
@@ -151,7 +183,10 @@ function queryTokenGroups(query) {
   // 一句表达按空白/标点切词，每词一组别名（原词/繁简/粤普）；
   // 组内任一形命中即算命中，命中程度按二字覆盖比计。
   // 曾试「长词拆双字组」：冻结评测集 R@10 85.0→84.4、粤语 84→82，故不采用（实测为准）。
-  return queryTokens(query).map(_aliasGroup).filter((g) => g.length > 0);
+  const toks = queryTokens(query);
+  const total = _shouldExpand(toks, query) ? EXPANSION_BUDGET : 0;
+  const quota = _expansionQuota(toks.length, total);
+  return toks.map((t, i) => _aliasGroup(t, quota[i])).filter((g) => g.length > 0);
 }
 
 // SPEC-7.1 AC-12：保留原查询，扩展最多 3 条，权重按序递减（扩展不得压过原词）
