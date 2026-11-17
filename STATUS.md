@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 83 档 / 534 条断言全绿 |
+| 测试 | `npm test` → 84 档 / 540 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **83 档 / 534 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **84 档 / 540 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -135,6 +135,7 @@ status: active
 | 5.1 | 向量后端可插拔 + 只供测试的开关 + 混用防护 | ✅ | `spec/SPEC-5.1-向量后端可插拔与测试口径.md` | test-5.1-vector-backend 9/9：默认快照逐位不变、8 维探针后端可用、环境变量开关、未知名回退 `fallback:true`、非法后端拒收、换后端全量 rebuilt、混库各自只出自己的行 |
 | 5.2 | memo 向量库状态反馈（诊断 + 系统一行 + 四类告警） | ✅ | `spec/SPEC-5.2-memo向量状态反馈.md` | test-5.2-memo-vector-status 8/8：字段齐全、默认态健康、未覆盖/旧后端残留/测试开关/未知名回退各出固定 code 告警、系统一行含后端与覆盖率且 ≤80、纯读、五字段不变 |
 | 5.3 | 检索排序修正（简繁归一 + 双字权重 + 双链去重） | ✅ | `spec/SPEC-5.3-检索排序修正.md` | test-5.3-retrieval-rank 9/9：默认升 hash-64w2、旧口径逐位不变、簡查询命繁正文、双字证据排散字前、raw/wiki 只出一条且优先 raw、k 按去重后计、强度加权不变、内置不可覆盖 |
+| 5.4 | 语义后端旁路评测（本地 ONNX，只量不接） | ✅ | `spec/SPEC-5.4-语义后端旁路评测.md` | test-5.4-semantic-bench 6/6：零向量余弦安全、同分按 id 升序、前缀各加一次、指标与 bench-retrieval 同源、复跑逐字一致、空集与 k 缺省安全；`tools/semantic-bench.js` 冻结集实测 e5-small（384/量化）顶1 83.8% vs 字面 58.8%、paraphrase 顶1 74.5% vs 38.3%；只改评测面，`src/vector.js` 同步契约与发布默认未动 |
 
 - **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
 - **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。

@@ -20,47 +20,9 @@ function readJsonl(p) {
   return fs.readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 }
 
-/** 单题指标：ranked = 前 k 条 id（已按名次排好） */
-function metricsFor(ranked, pair, k = DEFAULTS.k) {
-  const top = ranked.slice(0, k);
-  const pos = new Set(pair.pos || []);
-  const neg = new Set(pair.neg || []);
-  let hit = 0, negHit = 0;
-  for (const id of top) {
-    if (pos.has(id)) hit++;
-    if (neg.has(id)) negHit++;
-  }
-  return {
-    p10: hit / k,
-    r10: pos.size ? hit / pos.size : 0,
-    negHit: negHit > 0 ? 1 : 0,
-    hit
-  };
-}
+/** 指标口径单一真源在 src/eval-metrics.js（SPEC-5.4 起与语义旁路共用） */
+const { metricsFor, aggregate, pct } = require('../src/eval-metrics.js');
 
-function _avg(rows, key) {
-  return rows.length ? rows.reduce((s, r) => s + r[key], 0) / rows.length : 0;
-}
-
-function aggregate(rows) {
-  const shape = (list) => ({
-    n: list.length,
-    p10: _avg(list, 'p10'),
-    r10: _avg(list, 'r10'),
-    negHitRate: _avg(list, 'negHit')
-  });
-  const byLang = {};
-  const byKind = {};
-  for (const r of rows) {
-    (byLang[r.lang] = byLang[r.lang] || []).push(r);
-    (byKind[r.kind] = byKind[r.kind] || []).push(r);
-  }
-  return {
-    overall: shape(rows),
-    byLang: Object.fromEntries(Object.entries(byLang).map(([k, v]) => [k, shape(v)])),
-    byKind: Object.fromEntries(Object.entries(byKind).map(([k, v]) => [k, shape(v)]))
-  };
-}
 
 async function runBench(opts = {}) {
   const t0 = process.hrtime.bigint();
@@ -114,8 +76,6 @@ async function runBench(opts = {}) {
   }
   return result;
 }
-
-function pct(x) { return (x * 100).toFixed(1) + '%'; }
 
 function printTable(r) {
   const line = (label, s) =>
