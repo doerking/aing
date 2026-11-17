@@ -191,7 +191,7 @@ status: active
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
-| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、派生含繁简粤普、关联只收强边与候选关系、链按 links.created_at 升序、两次一致、纯读）+ test-7.1c-index-face 7/7（表头不入键、正文入键、繁简互打、粤普互打、序列号路只认 id、弱 related 不进慢回忆、强候选关系可进）；`src/derive.js`、`src/assemble.js`、`src/retrieval.js`（词面=content+keywords+variants，三路全零不占位）、`src/retrieval-kpi.js`（自指查询改用正文）、`data/lexicon/{zh-variant,yue-morph}.json`；未做：AC-1/2（序列号身份+指纹）、AC-7（发芽度报告）、AC-12（扩展上限）、AC-17（多轮） |
+| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、派生含繁简粤普、关联只收强边与候选关系、链按 links.created_at 升序、两次一致、纯读）+ test-7.1c-index-face 7/7（表头不入键、正文入键、繁简互打、粤普互打、序列号路只认 id、弱 related 不进慢回忆、强候选关系可进）；`src/derive.js`、`src/assemble.js`、`src/retrieval.js`（词面=content+keywords+variants；二字覆盖比、BM25 长度正则、源头让位、三路全零不占位）；冻结评测集 R@10 77.5%→85.0%（paraphrase 63.8→74.5%、粤语 74.0→84.0%、负例命中率 26.3→32.5%）、`src/retrieval-kpi.js`（自指查询改用正文）、`data/lexicon/{zh-variant,yue-morph}.json`；未做：AC-1/2（序列号身份+指纹）、AC-7（发芽度报告）、AC-12（扩展上限）、AC-17（多轮） |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
