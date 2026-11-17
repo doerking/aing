@@ -53,14 +53,14 @@
   "test-3.5-auto-ingest.js": 6,
   "test-3.6-api-gate.js": 5,
   "test-3.7-gates-c0-c9.js": 3,
-  "test-3.8-gates-c10.js": 3,
+  "test-3.8-gates-c10.js": 1,
   "test-3.9-gates-c11-c19.js": 3,
   "test-4.1-migrate.js": 6,
   "test-5.1-vector-backend.js": 9,
   "test-5.2-memo-vector-status.js": 8,
   "test-5.3-retrieval-rank.js": 9,
   "test-5.3b-eval-set.js": 6,
-  "test-5.3c-bench.js": 6,
+  "test-5.3c-bench.js": 5,
   "test-5.3d-idf.js": 6,
   "test-5.4-semantic-bench.js": 6,
   "test-5.5-onnx-wiring.js": 8,
@@ -87,5 +87,6 @@
   "test-6.9b-starlink-wiring.js": 8,
   "test-6.9c-kespi-readers.js": 4,
   "test-7.1-identity-derive.js": 12,
-  "test-7.1b-assemble.js": 7
+  "test-7.1b-assemble.js": 7,
+  "test-7.1c-index-face.js": 7
 }

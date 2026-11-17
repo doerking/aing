@@ -65,10 +65,13 @@ const convBody = (topic, reply) => JSON.stringify({
   ac('AC-1 三路融合形状', shapeOk && t1.channels.lexical === 1 && Math.abs(t1.final - formula) < 1e-9,
     JSON.stringify({ t1: t1 && { ch: t1.channels, final: t1.final, formula } }));
 
-  // AC-2 名称路生效
-  const r2 = await R.search(store, '唯一名称甲乙丙', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off });
-  ac('AC-2 名称路生效', r2.candidates.length > 0 && r2.candidates[0].id === 'exact-name' && r2.candidates[0].channels.name === 1,
-    JSON.stringify(r2.candidates.slice(0, 2).map(c => ({ id: c.id, ch: c.channels }))));
+  // AC-2 序列号路生效（SPEC-7.1 §4.1 修订：表头不入键，序列号 id 才是身份）
+  const r2 = await R.search(store, 'exact-name', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off });
+  const r2t = await R.search(store, '唯一名称甲乙丙', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off });
+  ac('AC-2 序列号路生效（表头伪造无效）',
+    r2.candidates.length > 0 && r2.candidates[0].id === 'exact-name' && r2.candidates[0].channels.name === 1 &&
+    r2t.candidates.length === 0,
+    JSON.stringify({ byId: r2.candidates.slice(0, 2).map(c => ({ id: c.id, ch: c.channels })), byTitle: r2t.candidates.map(c => c.id) }));
 
   // AC-3 词面路生效
   const r3 = await R.search(store, '鲸落', { weights: { vector: 0, lexical: 1, name: 0 }, rerank: off });
@@ -90,9 +93,9 @@ const convBody = (topic, reply) => JSON.stringify({
   ac('AC-5 伪精排', idxHi >= 0 && idxLo >= 0 && idxHi < idxLo, JSON.stringify({ idxHi, idxLo }));
 
   // AC-6 去重 + k + 退役
-  const r6a = await R.search(store, '双链样本', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off });
+  const r6a = await R.search(store, '双链样本', { weights: { vector: 0, lexical: 1, name: 0 }, rerank: off });
   const dup = r6a.candidates.filter(c => c.base === 'doc-x');
-  const r6b = await R.search(store, '双链样本', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off, k: 1 });
+  const r6b = await R.search(store, '双链样本', { weights: { vector: 0, lexical: 1, name: 0 }, rerank: off, k: 1 });
   const r6c = await R.search(store, '鲸落', { weights: { vector: 0, lexical: 1, name: 0 }, rerank: off });
   ac('AC-6 去重 + k + 退役', dup.length === 1 && dup[0].id === 'doc-x' && r6b.candidates.length === 1 &&
     !r6c.candidates.some(c => c.id === 'retired'), JSON.stringify({ dup: dup.map(c => c.id), k1: r6b.candidates.length }));
