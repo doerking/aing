@@ -71,16 +71,20 @@ function _faceOf(entity) {
 }
 
 /** 查询侧归一：每个原词带别名组（繁简双形 + 粤普对照）；组内任一形命中即算命中 */
+function _isCjk(s) { return /[一-鿿]/.test(s); }
+
+function _aliasGroup(t) {
+  const forms = new Set([t]);
+  for (const f of derive.variants(t).all) forms.add(f);
+  for (const g of derive.segment(t).mandarin) forms.add(g);
+  return [...forms].map(_foldLower).filter(Boolean);   // [0] 恒为原词，作 df/idf 键
+}
+
 function queryTokenGroups(query) {
-  const groups = [];
-  for (const t of queryTokens(query)) {
-    const forms = new Set([t]);
-    for (const f of derive.variants(t).all) forms.add(f);
-    for (const g of derive.segment(t).mandarin) forms.add(g);
-    const arr = [...forms].map(_foldLower).filter(Boolean);
-    if (arr.length) groups.push(arr);   // [0] 恒为原词，作 df/idf 键
-  }
-  return groups;
+  // 一句表达按空白/标点切词，每词一组别名（原词/繁简/粤普）；
+  // 组内任一形命中即算命中，命中程度按二字覆盖比计。
+  // 曾试「长词拆双字组」：冻结评测集 R@10 85.0→84.4、粤语 84→82，故不采用（实测为准）。
+  return queryTokens(query).map(_aliasGroup).filter((g) => g.length > 0);
 }
 
 function _groupHit(hay, forms) {
@@ -94,9 +98,13 @@ function tokenHit(hay, token) {
   if (!hay || !token) return 0;
   if (hay.includes(token)) return 1;
   if (token.length >= 2 && /[一-鿿]/.test(token)) {
+    // 二字覆盖比：命中比例越高越相关（只中一个碎片不再拿满分一半）
+    let hit = 0, total = 0;
     for (let i = 0; i + 2 <= token.length; i++) {
-      if (hay.includes(token.slice(i, i + 2))) return 0.5;
+      total++;
+      if (hay.includes(token.slice(i, i + 2))) hit++;
     }
+    return total ? hit / total : 0;
   }
   return 0;
 }
@@ -108,8 +116,18 @@ function idfOf(df, N) {
   return Math.log((n + 1) / (d + 1)) + 1;
 }
 
-/** IDF 加权词面分：Σ idf(t)·hit(t) / Σ idf(t)，上限 1（SPEC-6.3 修订 A；别名组取最佳命中） */
-function keywordScoreIdf(entity, query, df, N) {
+/** 长度正则（BM25 口径，二元命中 tf=1）：长文不再靠覆盖面通吃短卡 */
+const LEN_K1 = 1.2;
+const LEN_B = 0.75;
+function lengthNorm(dl, avgdl) {
+  if (!(dl > 0) || !(avgdl > 0)) return 1;
+  const k = LEN_K1 * (1 - LEN_B + LEN_B * (dl / avgdl)) + 1;
+  return Math.min(1, (LEN_K1 + 1) / k);
+}
+
+/** IDF 加权词面分：Σ idf(t)·hit(t) / Σ idf(t)，上限 1（SPEC-6.3 修订 A；别名组取最佳命中）
+ *  可选 rect = {dl, avgdl} 做长度正则（SPEC-7.1 §4.1：正文入键后长文必须让位） */
+function keywordScoreIdf(entity, query, df, N, rect) {
   const groups = queryTokenGroups(query);
   if (!groups.length) return 0;
   const hay = _faceOf(entity);
@@ -119,7 +137,15 @@ function keywordScoreIdf(entity, query, df, N) {
     den += w;
     num += w * _groupHit(hay, forms);
   }
-  return den > 0 ? Math.min(1, num / den) : 0;
+  if (!(den > 0)) return 0;
+  const raw = Math.min(1, num / den);
+  return rect ? raw * lengthNorm(rect.dl, rect.avgdl) : raw;
+}
+
+/** 正文字符长度（长度正则用；空正文按 1 计避免除零） */
+function _docLen(entity) {
+  const c = String((entity && entity.content) || '');
+  return c.length || 1;
 }
 
 /** 词面覆盖分：content + keywords + variants 的整词/二字滑窗命中率（别名组同权） */
@@ -197,16 +223,19 @@ async function search(store, query, opts = {}) {
     }
   }
   const N = all.length;
+  const avgdl = all.length ? all.reduce((s2, r) => s2 + _docLen(r), 0) / all.length : 0;
   for (const row of all) {
-    const lx = keywordScoreIdf(row, query, df, N);
+    const lx = keywordScoreIdf(row, query, df, N, { dl: _docLen(row), avgdl });
     const nm = nameScore(row, query);
     if (lx <= 0 && nm <= 0) continue;
     add(row, { lexical: lx, nameHit: nm });
   }
 
-  // 3) 三路融合
+  // 3) 三路融合（会话原文是源头不是答案：同分时让位给加工件，SPEC-7.1 §〇）
+  const SOURCE_PRIOR = 0.75;
   for (const e of pool.values()) {
-    e.fused = weights.vector * (e.sim || 0) + weights.lexical * (e.lexical || 0) + weights.name * (e.nameHit || 0);
+    const lx = e.type === 'Conversation' ? (e.lexical || 0) * SOURCE_PRIOR : (e.lexical || 0);
+    e.fused = weights.vector * (e.sim || 0) + weights.lexical * lx + weights.name * (e.nameHit || 0);
   }
 
   // 4) 慢回忆：整体向量置信低（或强制）时沿有效边扩一跳
@@ -241,7 +270,7 @@ async function search(store, query, opts = {}) {
         if (pool.has(nbId)) continue;
         const row = rowOf(nbId);
         if (!row || row.invalid_at) continue;
-        const lx = keywordScoreIdf(row, query, df, N);
+        const lx = keywordScoreIdf(row, query, df, N, { dl: _docLen(row), avgdl });
         const nm = nameScore(row, query);
         const e = add(row, { sim: 0, lexical: lx, nameHit: nm, slowRecall: true });
         if (!e) continue;
