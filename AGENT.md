@@ -15,7 +15,7 @@ status: draft（改写版）
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `npm test` / `node test/run-all.js` | ✅ 可用 | 102 档 / 651 条断言 |
+| `npm test` / `node test/run-all.js` | ✅ 可用 | 103 档 / 659 条断言 |
 | `npm run test:guard` | ✅ 可用 | test 计数只加唔减（R4）|
 | `node verify-deploy.js` | ✅ 可用 | C0–C21 共 33 项门禁 |
 | `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
@@ -81,7 +81,7 @@ node src/neural.js event '{"channel":"anomaly","target":"<单号>","source":"<ag
 | KESPI 八维自检 | `node src/kespi-check.js` |
 | 逻辑退役（非物理删） | `node src/prune.js`（默认 dry-run） |
 
-> **向量后端（只供评测）**：默认 `hash-64w2`（字面级 + t2s 简繁归一 + 双字权重 2）；旧口径 `hash-64` 可切。评测时用环境变量 `AING_VECTOR_BACKEND=<后端名>` 或调用参数 `opts.backend` 临时切换，换后 `vectorStep` 全量重建；检索按 `model`+`dim` 过滤，不同后端永不互比。
+> **向量后端**：缺省 `onnx-e5-small`（语义，SPEC-5.9）；字面 `hash-64w2` / 旧口径 `hash-64` 保留做对照与回退。用 `AING_VECTOR_BACKEND=<后端名>` 或 `opts.backend` 切换，换后 `vectorStep` 全量重建；检索按 `model`+`dim` 过滤，不同后端永不互比。语义后端未注册时缺省回退字面并带 `fallback` 标记（不静默）。
 > **换不换由使用者的语料定**：评测排名只证明「在评测集上谁强」。口径见 README「六·补 检索口径」，记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`；发布默认值不按测试集排名改。
 
 ## 五、验收铁律
