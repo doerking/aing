@@ -5,6 +5,7 @@
 // 组件唔直连 knowledge-store：store 由调用方注入（arch-lint C5 守）。
 
 const V = require('./vector.js');
+const derive = require('./derive.js');
 const { shouldEnterRetrieval } = require('./tri-axis-gate.js');
 
 const DEFAULTS = {
@@ -50,8 +51,42 @@ function queryTokens(query) {
   return _foldLower(query).split(/[\s,，、;；]+/).filter((t) => t.length > 0);
 }
 
-function _hayOf(entity) {
-  return _foldLower([(entity && entity.name) || '', (entity && entity.type) || '', ...tagsOf(entity)].join(' '));
+// ── 词面（SPEC-7.1 §4.1：content + keywords + variants；表头 title/name 不入键）──
+const FACE_CACHE_MAX = 2000;
+const _faceCache = new Map();
+
+function _faceOf(entity) {
+  const content = String((entity && entity.content) || '');
+  const tags = tagsOf(entity).join(' ');
+  const key = String((entity && entity.id) || '') + '\u0000' + content + '\u0000' + tags;
+  const cached = _faceCache.get(key);
+  if (cached !== undefined) return cached;
+  const forms = derive.variants(content).all;              // 繁简双形都进面（等价命中）
+  const base = [content, ...forms, tags].join(' ');
+  const kw = [...derive.keywordsOf(base)];                  // CJK 双字 + 拉丁词 + 派生形 + 粤普对照
+  const face = _foldLower([base, ...kw].join(' '));
+  if (_faceCache.size >= FACE_CACHE_MAX) _faceCache.clear();
+  _faceCache.set(key, face);
+  return face;
+}
+
+/** 查询侧归一：每个原词带别名组（繁简双形 + 粤普对照）；组内任一形命中即算命中 */
+function queryTokenGroups(query) {
+  const groups = [];
+  for (const t of queryTokens(query)) {
+    const forms = new Set([t]);
+    for (const f of derive.variants(t).all) forms.add(f);
+    for (const g of derive.segment(t).mandarin) forms.add(g);
+    const arr = [...forms].map(_foldLower).filter(Boolean);
+    if (arr.length) groups.push(arr);   // [0] 恒为原词，作 df/idf 键
+  }
+  return groups;
+}
+
+function _groupHit(hay, forms) {
+  let best = 0;
+  for (const f of forms) { const h = tokenHit(hay, f); if (h > best) best = h; if (best === 1) break; }
+  return best;
 }
 
 /** 单词命中：整词 1；中文长词的 2 字滑窗 0.5；无 0 */
@@ -73,48 +108,38 @@ function idfOf(df, N) {
   return Math.log((n + 1) / (d + 1)) + 1;
 }
 
-/** IDF 加权词面分：Σ idf(t)·hit(t) / Σ idf(t)，上限 1（SPEC-6.3 修订 A） */
+/** IDF 加权词面分：Σ idf(t)·hit(t) / Σ idf(t)，上限 1（SPEC-6.3 修订 A；别名组取最佳命中） */
 function keywordScoreIdf(entity, query, df, N) {
-  const tokens = queryTokens(query);
-  if (!tokens.length) return 0;
-  const hay = _hayOf(entity);
+  const groups = queryTokenGroups(query);
+  if (!groups.length) return 0;
+  const hay = _faceOf(entity);
   let num = 0, den = 0;
-  for (const t of tokens) {
-    const w = idfOf(df && df[t], N);
+  for (const forms of groups) {
+    const w = idfOf(df && df[forms[0]], N);
     den += w;
-    num += w * tokenHit(hay, t);
+    num += w * _groupHit(hay, forms);
   }
   return den > 0 ? Math.min(1, num / den) : 0;
 }
 
-/** 词面覆盖分：name + type + tags 的整词/二字滑窗命中率（旧院 keywordScore 口径） */
+/** 词面覆盖分：content + keywords + variants 的整词/二字滑窗命中率（别名组同权） */
 function keywordScore(entity, query) {
-  const hay = _foldLower([(entity && entity.name) || '', (entity && entity.type) || '', ...tagsOf(entity)].join(' '));
+  const groups = queryTokenGroups(query);
+  if (!groups.length) return 0;
+  const hay = _faceOf(entity);
   if (!hay) return 0;
-  const tokens = _foldLower(query).split(/[\s,，、;；]+/).filter((t) => t.length > 0);
-  if (!tokens.length) return 0;
   let hit = 0;
-  for (const t of tokens) {
-    if (hay.includes(t)) { hit++; continue; }
-    if (t.length >= 2 && /[一-鿿]/.test(t)) {
-      let sub = false;
-      for (let i = 0; i + 2 <= t.length; i++) {
-        if (hay.includes(t.slice(i, i + 2))) { sub = true; break; }
-      }
-      if (sub) hit += 0.5;
-    }
-  }
-  return Math.min(1, hit / tokens.length);
+  for (const forms of groups) hit += _groupHit(hay, forms);
+  return Math.min(1, hit / groups.length);
 }
 
-/** 名称/ID 匹配分：精确 1 / 包含 0.8 */
+/** 序列号路：只认 id（SPEC-7.1 §二：title 是派生标头，永不入键） */
 function nameScore(entity, query) {
   const q = _foldLower(query);
   if (!q) return 0;
-  const name = _foldLower((entity && entity.name) || '');
   const id = _foldLower((entity && entity.id) || '');
-  if (name === q || id === q) return 1;
-  if (name.includes(q) || id.includes(q)) return 0.8;
+  if (id === q) return 1;
+  if (id.includes(q)) return 0.8;
   return 0;
 }
 
@@ -143,7 +168,7 @@ async function search(store, query, opts = {}) {
   const rr = { ...DEFAULTS.rerank, ...(opts.rerank || {}) };
   const pool = new Map();
 
-  const rowOf = (id) => _scalar(db, 'SELECT id,name,type,tags,updated_at,invalid_at FROM entities WHERE id = ?', [id]);
+  const rowOf = (id) => _scalar(db, 'SELECT id,name,type,tags,content,updated_at,invalid_at FROM entities WHERE id = ?', [id]);
   const add = (row, extra) => {
     if (!row || row.invalid_at) return null;
     const e = pool.get(row.id) || { id: row.id, name: row.name, type: row.type, tags: row.tags, updated_at: row.updated_at, sim: 0, lexical: 0, nameHit: 0, slowRecall: false };
@@ -161,13 +186,14 @@ async function search(store, query, opts = {}) {
   }
 
   // 2) 词面/名称路（只收真命中，不全库倾倒；词面用 IDF 加权，SPEC-6.3 修订 A）
-  const all = _rows(db, 'SELECT id,name,type,tags,updated_at FROM entities WHERE invalid_at IS NULL');
-  const tokens = queryTokens(query);
+  //    词面口径 SPEC-7.1 §4.1：content + keywords + variants；name/title 不入键
+  const all = _rows(db, 'SELECT id,name,type,tags,content,updated_at FROM entities WHERE invalid_at IS NULL');
+  const groups = queryTokenGroups(query);
   const df = {};
-  if (tokens.length) {
+  if (groups.length) {
     for (const row of all) {
-      const hay = _hayOf(row);
-      for (const t of tokens) if (tokenHit(hay, t) > 0) df[t] = (df[t] || 0) + 1;
+      const hay = _faceOf(row);
+      for (const forms of groups) if (_groupHit(hay, forms) > 0) df[forms[0]] = (df[forms[0]] || 0) + 1;
     }
   }
   const N = all.length;
@@ -235,8 +261,10 @@ async function search(store, query, opts = {}) {
     e.final = base * (1 - rr.kespi - rr.recency) + kN * rr.kespi + recencyScore(e) * rr.recency;
   }
 
-  // 6) 排序 + 双链去重 + 截断（同分优先 raw）
-  const sorted = [...pool.values()].sort((a, b) =>
+  // 6) 排序 + 双链去重 + 截断（同分优先 raw；三路全零不占位）
+  const sorted = [...pool.values()]
+    .filter((e) => (e.fused || 0) > 0)
+    .sort((a, b) =>
     b.final - a.final ||
     (String(a.id).startsWith('wiki-') ? 1 : 0) - (String(b.id).startsWith('wiki-') ? 1 : 0));
   const out = [];

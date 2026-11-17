@@ -30,12 +30,13 @@ function _requireStore(store, who) {
 
 function _base(id) { return String(id).replace(/^wiki-/, ''); }
 
-/** 取样：活跃、有名、同 base 去重且优先 raw；按 id 升序保证可复现。 */
+/** 取样：活跃、有正文、同 base 去重且优先 raw；按 id 升序保证可复现。
+ *  SPEC-7.1 §4.1：表头不入键，自指查询一律用正文（title 不再参与检索）。 */
 function sampleEntities(db, n) {
   const rows = _rows(db,
-    `SELECT id, name, type FROM entities
+    `SELECT id, name, content FROM entities
      WHERE status = 'active' AND invalid_at IS NULL
-       AND name IS NOT NULL AND name <> ''
+       AND content IS NOT NULL AND content <> ''
      ORDER BY id`);
   const seen = new Set();
   const out = [];
@@ -43,7 +44,7 @@ function sampleEntities(db, n) {
     const base = _base(r.id);
     if (seen.has(base)) continue;
     seen.add(base);
-    out.push({ id: String(r.id), base, name: String(r.name) });
+    out.push({ id: String(r.id), base, name: String(r.name), content: String(r.content) });
     if (out.length >= n) break;
   }
   return out;
@@ -98,8 +99,9 @@ async function runKpi(store, opts = {}) {
 
   for (const item of sample) {
     let candidates = [];
+    const probe = String(item.content || '').slice(0, 60) || String(item.name || '');
     try {
-      const res = await retrieval.search(store, item.name, { k });
+      const res = await retrieval.search(store, probe, { k });
       candidates = Array.isArray(res && res.candidates) ? res.candidates : [];
     } catch (_) { candidates = []; }
     const rank = candidates.findIndex(c => _base(c.base || c.id) === item.base || String(c.id) === item.id);

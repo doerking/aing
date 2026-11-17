@@ -20,9 +20,10 @@ const OFF = { kespi: 0, recency: 0 };
   const DB = path.join(yard, 'k.db');
   await store.init(DB);
   const put = (id, name, content = '') => store.insertEntity({ id, name, type: 'Concept', content, tags: '["t"]' });
-  put('rare', '鲸落深潜');
-  put('c1', '日志归档一'); put('c2', '日志归档二'); put('c3', '日志归档三');
-  put('c4', '日志归档四'); put('c5', '日志归档五');
+  // SPEC-7.1 §4.1：表头不入键，词面吃正文 —— 关键词一律写进 content
+  put('rare', '表头甲', '鲸落深潜');
+  put('c1', '表头乙', '日志归档一'); put('c2', '表头丙', '日志归档二'); put('c3', '表头丁', '日志归档三');
+  put('c4', '表头戊', '日志归档四'); put('c5', '表头己', '日志归档五');
   const db = store._getDb();
   const N = rowsOf(db, 'SELECT COUNT(*) AS n FROM entities')[0].n;
 
@@ -35,8 +36,8 @@ const OFF = { kespi: 0, recency: 0 };
 
   // AC-2 稀有词加权：各命中一个词，稀有者分更高（旧口径两者都是 0.5）
   const df = { '鲸落': 1, '日志': 5 };
-  const sRare = has ? R.keywordScoreIdf({ id: 'rare', name: '鲸落深潜', type: 'Concept', tags: '["t"]' }, '鲸落 日志', df, N) : NaN;
-  const sCommon = has ? R.keywordScoreIdf({ id: 'c1', name: '日志归档一', type: 'Concept', tags: '["t"]' }, '鲸落 日志', df, N) : NaN;
+  const sRare = has ? R.keywordScoreIdf({ id: 'rare', name: '表头甲', type: 'Concept', content: '鲸落深潜', tags: '["t"]' }, '鲸落 日志', df, N) : NaN;
+  const sCommon = has ? R.keywordScoreIdf({ id: 'c1', name: '表头乙', type: 'Concept', content: '日志归档一', tags: '["t"]' }, '鲸落 日志', df, N) : NaN;
   ac('AC-2 稀有词加权', has && sRare > sCommon && sRare <= 1 && sCommon > 0,
     JSON.stringify({ sRare, sCommon }));
 

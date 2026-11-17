@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 89 档 / 579 条断言全绿 |
+| 测试 | `npm test` → 90 档 / 586 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **89 档 / 579 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **90 档 / 586 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -191,7 +191,7 @@ status: active
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
-| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、派生含繁简粤普、关联只收强边与候选关系、链按 links.created_at 升序、两次一致、纯读）；`src/derive.js`、`src/assemble.js`、`data/lexicon/{zh-variant,yue-morph}.json`；未做：AC-1/2（序列号身份+指纹）、AC-5/6（入键与强边发芽）、AC-7（发芽度报告）、AC-12（扩展上限）、AC-17（多轮） |
+| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、派生含繁简粤普、关联只收强边与候选关系、链按 links.created_at 升序、两次一致、纯读）+ test-7.1c-index-face 7/7（表头不入键、正文入键、繁简互打、粤普互打、序列号路只认 id、弱 related 不进慢回忆、强候选关系可进）；`src/derive.js`、`src/assemble.js`、`src/retrieval.js`（词面=content+keywords+variants，三路全零不占位）、`src/retrieval-kpi.js`（自指查询改用正文）、`data/lexicon/{zh-variant,yue-morph}.json`；未做：AC-1/2（序列号身份+指纹）、AC-7（发芽度报告）、AC-12（扩展上限）、AC-17（多轮） |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 

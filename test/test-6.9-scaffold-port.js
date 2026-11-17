@@ -46,9 +46,9 @@ const snap = (db) => JSON.stringify({
     (id,name,type,content,tags,status,confidence,tolaria_strength,created_at,updated_at,last_access)
     VALUES (?,?,?,?,?, 'active',0.5,5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
   for (const [id, name, content] of [
-    ['raw-alpha', 'AlphaOne', LONG],
-    ['raw-beta', 'BetaTwo', LONG],
-    ['raw-gamma', 'GammaThree', LONG],
+    ['raw-alpha', 'AlphaOne', 'AlphaOne 的正文：' + LONG],
+    ['raw-beta', 'BetaTwo', 'BetaTwo 的正文：' + LONG],
+    ['raw-gamma', 'GammaThree', 'GammaThree 的正文：' + LONG],
     ['raw-narr', 'NarrativeOne', NARR],
     ['raw-consumed', 'ConsumedOne', NARR]
   ]) insEnt.run([id, name, 'Concept', content, '["t"]']);
