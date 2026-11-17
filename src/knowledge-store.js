@@ -41,6 +41,21 @@ const DDL = [
     created_at DATETIME,
     PRIMARY KEY (source_id, target_id)
   )`,
+  // SPEC-7.1 §〇.1 / 双铰链 AC-18：库层硬闸——future → past 的边一律拒（绕过应用层直写 SQL 也拦）
+  `CREATE TRIGGER IF NOT EXISTS trg_links_no_future_to_past_ins
+   BEFORE INSERT ON links
+   WHEN EXISTS (SELECT 1 FROM entities WHERE id = NEW.source_id AND strand = 'future')
+    AND EXISTS (SELECT 1 FROM entities WHERE id = NEW.target_id AND strand = 'past')
+   BEGIN
+     SELECT RAISE(ABORT, 'future→past 边禁止（产物不回写原料，SPEC-7.1 §〇.1）');
+   END`,
+  `CREATE TRIGGER IF NOT EXISTS trg_links_no_future_to_past_upd
+   BEFORE UPDATE OF source_id, target_id ON links
+   WHEN EXISTS (SELECT 1 FROM entities WHERE id = NEW.source_id AND strand = 'future')
+    AND EXISTS (SELECT 1 FROM entities WHERE id = NEW.target_id AND strand = 'past')
+   BEGIN
+     SELECT RAISE(ABORT, 'future→past 边禁止（产物不回写原料，SPEC-7.1 §〇.1）');
+   END`,
   `CREATE TABLE IF NOT EXISTS meko_cycles (
     id TEXT PRIMARY KEY,
     cycle_type TEXT,
@@ -422,12 +437,14 @@ function columns(table) {
 
 function insertEntity(e) {
   const fp = e.fingerprint || require('./identity.js').fingerprint(e.content);
+  // AC-20：past 的 created_at 是原始时间——给了就照收，没给才落到当前时刻
   const stmt = db.prepare(
     `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, fingerprint, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)`
   );
   stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null,
-    e.confidence == null ? null : e.confidence, e.strand || 'past', fp]);
+    e.confidence == null ? null : e.confidence, e.strand || 'past', fp,
+    e.created_at == null || e.created_at === '' ? null : String(e.created_at)]);
   stmt.free();
   persist();
   return e.id;
