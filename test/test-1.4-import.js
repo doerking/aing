@@ -96,6 +96,18 @@ const count = (sql) => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'import.js'), 'utf8');
   ac('AC-7 无物理删 + 行数只增不减', !/DELETE\s+FROM/i.test(src) && nEnt1 >= 5, `nEnt1=${nEnt1}`);
 
+  // AC-8 产物（strand=future）不被当原料建双链
+  // 起因 2026-11-18 真库：失败轮留下 future 产物 raw-insight-*，import 给它建 wiki 镜像时撞
+  // 「future→past 边禁止」，整轮 deadlock（import 永远先跑、永远失败）。
+  const putF = require('../src/knowledge-store.js').insertEntity;
+  putF({ id: 'raw-product-x', name: 'product-x', type: 'MetaKnowledge', content: '产物正文', tags: '[]', status: 'active' });
+  db.run("UPDATE entities SET strand = 'future' WHERE id = 'raw-product-x'");
+  let err8 = null, r8 = null;
+  try { r8 = await importStep(store, {}); } catch (e) { err8 = e.message; }
+  ac('AC-8 future 产物不建双链（不抛 future→past）',
+    !err8 && store.getEntity('wiki-product-x') == null,
+    JSON.stringify({ err8, wiki: store.getEntity('wiki-product-x') ? 'created' : null, r8 }));
+
   console.log(`${pass}/${pass + fail} 绿`);
   process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

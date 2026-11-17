@@ -51,5 +51,23 @@ const rows = (sql) => { const s = store._getDb().prepare(sql); const out = []; w
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'pollinate.js'), 'utf8');
   ac('AC-6 铁律', la.every(v => v === '2021-06-01 00:00:00') && !/DELETE\s+FROM/i.test(src));
 
+  // AC-7 退役边不重复插（2026-11-18 真库重跑事故：UNIQUE constraint failed: links.source_id, links.target_id）
+  // 口径：边表 PK 与 invalid_at 无关；退役边仍然占位，按「已存在」跳过，不重复发种。
+  db.run("UPDATE links SET invalid_at = CURRENT_TIMESTAMP WHERE relation = 'pollinate-candidate'");
+  let r3 = null, err3 = null;
+  try { r3 = await pollinateStep(store, { floor: 2, cap: 4 }); } catch (e) { err3 = e.message; }
+  const totalCand = rows("SELECT COUNT(*) AS n FROM links WHERE relation = 'pollinate-candidate'")[0].n;
+  // AC-8 future 产物不参与授粉（2026-11-18 真库：产物被当作物件连边，撞 future→past 禁）
+  store.insertEntity({ id: 'p-future', name: 'p-future', type: 'Paper', content: '向量检索 未来产物', tags: JSON.stringify(['检索:7']), status: 'active' });
+  db.run("UPDATE entities SET strand = 'future' WHERE id = 'p-future'");
+  let r4 = null, err4 = null;
+  try { r4 = await pollinateStep(store, { floor: 2, cap: 4 }); } catch (e) { err4 = e.message; }
+  const futEdges = rows("SELECT COUNT(*) AS n FROM links WHERE source_id = 'p-future' OR target_id = 'p-future'")[0].n;
+  ac('AC-8 future 产物不参与授粉（不抛、不连边）', !err4 && futEdges === 0, JSON.stringify({ err4, futEdges, r4 }));
+
+  ac('AC-7 退役边不重复插（重跑不抛错）',
+    !err3 && totalCand === seeded2.length,
+    JSON.stringify({ err3, totalCand, before: seeded2.length, r3 }));
+
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });

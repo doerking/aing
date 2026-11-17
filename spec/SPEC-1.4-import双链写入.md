@@ -73,3 +73,9 @@ upstream: [SPEC-0.1, SPEC-0.6 §五, SPEC-1.2, SPEC-1.15, INVENTORY A 行 import
 
 - 上游：SPEC-0.1（表）、SPEC-0.6 §五（链归属前缀）、SPEC-1.2（strength 映射）
 - 消费者：1.5 distill、1.14 编排
+
+## 八、修订 B（2026-11-18，产物不建双链）
+
+- 事故：真库一轮失败后留下 `strand='future'` 的产物（`raw-insight-*`），下一轮 import 先跑，给它建 `wiki-` 镜像并连 `raw→wiki` 边，撞「future→past 边禁止」（SPEC-7.1 §〇.1），整轮 deadlock——import 永远排最前，永远失败。
+- 契约：`strand='future'` 的实体不是原料，**不建镜像、不连边**，计入 `stats.skippedProduct`；待其按代谢流程转变后再按常规处理。
+- 测试：test-1.4-import AC-8。

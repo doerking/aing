@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 108 档 / 683 条断言全绿 |
+| 测试 | `npm test` → 108 档 / 686 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -57,11 +57,12 @@ status: active
 | 1.8 | vector 向量（strength 加权）| ✅ | 1.8 | test-1.8-vector 7/7 |
 | 1.9 | sprout 发芽（含 P3 sproutFloor）| ✅ | 1.9 | test-1.9-sprout 6/6 |
 | 1.10 | pollinate 授粉 | ✅ | 1.10 | test-1.10-pollinate 6/6 |
+| 1.10 修订 A | 退役边仍占位（pollinate 重跑幂等） | ✅ | `spec/SPEC-1.10-pollinate授粉.md` §七 | test-1.10-pollinate 8/8（AC-7 退役边重跑不抛 UNIQUE、不增行；AC-8 future 产物不参与授粉）；起因 2026-11-18 真库连跑第二轮撞 `UNIQUE constraint failed: links.source_id, links.target_id`——去重集合只装有效边，退役边仍占 PK |
 | 1.11 | compress 换锚 | ✅ | 1.11 | test-1.11-compress 7/7 |
 | 1.12 | kespi 八维 | ✅ | 1.12 | test-1.12-kespi 7/7 |
 | 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 7/7（判据已切 SPEC-6.11 四件） |
 | 1.14 | **meko-orchestrator 编排（关键路径尾）** | ✅ | 1.14 | test-1.14-orchestrator 6/6 |
-| 1.16 | 轮账与逐条存活（代谢记账层） | ✅ | `spec/SPEC-1.16-轮账与逐条存活.md` | test-1.16-round-ledger 6/6：建表与 links.cycle_id 迁移、每轮 320 类实体快照（alive/accessed/degree/content_len/strand）且同轮幂等、访问锚取 last_access 与 access_hits 更近者（≤7 天）、上一轮后新边归本轮（历史边留空）、账本按轮次有界（keepRounds）、编排 _writeCycle 接线且失败不阻断；真库副本实测：320 行/轮、单轮约 69KB，缺省保留 30 轮≈2.1MB（60 轮≈4.2MB 会顶手机端 10MB 上限，故定为 30）；边归属 0 条（真库 2292 条历史边均早于上一轮，保持记账前，符合预期）|
+| 1.16 | 轮账与逐条存活（代谢记账层） | ✅ | `spec/SPEC-1.16-轮账与逐条存活.md` | test-1.16-round-ledger 6/6：建表与 links.cycle_id 迁移、每轮 320 类实体快照（alive/accessed/degree/content_len/strand）且同轮幂等、访问锚取 last_access 与 access_hits 更近者（≤7 天）、上一轮后新边归本轮（历史边留空）、账本按轮次有界（keepRounds）、编排 _writeCycle 接线且失败不阻断；真库副本实测：320 行/轮、单轮约 69KB，缺省保留 30 轮≈2.1MB（60 轮≈4.2MB 会顶手机端 10MB 上限，故定为 30）；边归属 0 条（真库 2292 条历史边均早于上一轮，保持记账前，符合预期）；真库实跑（2026-11-18，冷备 knowledge-20261118-011305-preledger.db）：首轮 320 行/8 条归属边，暴露并修复 pollinate 撞退役边 UNIQUE（修订 A）与 import/pollinate 撞 future→past 两个幂等 bug；修复后一轮 21 步全绿，账本 322 行、8 条新边归属，future 产物已正常打标；库体积 4.80→5.29MB（5 轮账≈0.35MB）|
 | **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |
 
 ## 三、M2 meko 四顶职责 + 进化团入驻（4/8 已落地 + 3 健康修复 + 3 进化团）
@@ -124,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **108 档 / 683 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **108 档 / 686 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`

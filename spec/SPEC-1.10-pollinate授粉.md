@@ -65,3 +65,16 @@ upstream: [SPEC-1.9, SPEC-0.1 §2.4, SPEC-0.6]
 
 - 上游：SPEC-1.9（证据词表复用）
 - 消费者：2.10 守恒闸
+
+## 七、修订 A（2026-11-18，退役边仍占位）
+
+- 事故：真库连跑两轮，第二轮在 pollinate 撞 `UNIQUE constraint failed: links.source_id, links.target_id`，整轮判 failed。
+- 根因：候选去重集合只装 `invalid_at IS NULL` 的边；`links` 的主键是 `(source_id, target_id)`，与 `invalid_at` 无关——一条**退役边**仍占着这个 PK，却被当成「没有边」，于是重复插入。
+- 契约：去重集合装**全部**边行（含退役），退役边按「已存在」跳过；不自动复活退役边（复活是场域动作，不是授粉的职责）。
+- 测试：test-1.10 AC-7（退役全部 pollinate-candidate 边后重跑：不抛错、不增行）。
+
+## 八、修订 B（2026-11-18，产物不参与授粉）
+
+- 事故：同一轮真实代谢里，pollinate 把 `strand='future'` 的产物当作物件参与配对，连边时撞「future→past 边禁止」，整轮判失败。
+- 契约：候选集合排除 `strand='future'` 实体（`strand IS NULL OR strand != 'future'`）。
+- 测试：test-1.10-pollinate AC-8。
