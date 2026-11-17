@@ -41,6 +41,32 @@ class MekoOrchestrator {
     return Math.max(1, at.getTime() - _nowMs());
   }
 
+  // SPEC-7.1 §0.2：本轮开局时在场、尚未打标的产物 id 清单。
+  // 本轮新生的产物不在清单里——它还没被任何步骤读取，不能算「过了一回代谢」。
+  _openProducts() {
+    try {
+      const db = this.store._getDb();
+      const stmt = db.prepare("SELECT id FROM entities WHERE strand = 'future' AND metabolized_at IS NULL");
+      const ids = [];
+      while (stmt.step()) ids.push(String(stmt.getAsObject().id));
+      stmt.free();
+      return ids;
+    } catch (_) { return []; }
+  }
+
+  // 读物即标记：写 metabolized_at + meta 标签，不改正文/身份/原始时间（只加不减）
+  _closeProducts(ids) {
+    if (!Array.isArray(ids) || !ids.length) return [];
+    const marked = [];
+    for (const id of ids) {
+      try {
+        const r = this.store.markMetabolized(id);
+        if (r && r.changed) marked.push(id);
+      } catch (_) { /* 单条打标失败不阻断本轮 */ }
+    }
+    return marked;
+  }
+
   _writeCycle(cycleType, round, status, kespi, kespiSource) {
     const db = this.store._getDb();
     const id = `cyc-${Date.now()}-${round}-${Math.floor(Math.random() * 1e6)}`;
@@ -76,6 +102,8 @@ class MekoOrchestrator {
 
     for (let round = 1; round <= rounds; round++) {
       let failed = null;
+      // SPEC-7.1 §0.2：产物只被代谢一次——本轮开局已在库的 future 产物，读完即打标
+      const roundStartProducts = this._openProducts();
       for (const strand of STRANDS) {
         const steps = this.steps.filter(s => s.strand === strand);
         for (const step of steps) {
@@ -102,6 +130,9 @@ class MekoOrchestrator {
         }
         if (failed) break;
       }
+
+      // SPEC-7.1 §0.2：本轮全绿 → 给开局已在库的产物写 metabolized_at + meta（幂等，重跑不变）
+      if (!failed) this._closeProducts(roundStartProducts);
 
       // 通感快照（SPEC-6.9b）：优先真 KESPI 均值；无读数才写占位并标记来源
       let kespi = null;

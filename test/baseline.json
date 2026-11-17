@@ -60,7 +60,7 @@
   "test-5.2-memo-vector-status.js": 8,
   "test-5.3-retrieval-rank.js": 9,
   "test-5.3b-eval-set.js": 6,
-  "test-5.3c-bench.js": 5,
+  "test-5.3c-bench.js": 6,
   "test-5.3d-idf.js": 6,
   "test-5.4-semantic-bench.js": 6,
   "test-5.5-onnx-wiring.js": 8,
@@ -92,5 +92,6 @@
   "test-7.1d-identity.js": 5,
   "test-7.1e-yue.js": 11,
   "test-7.1f-sprout-degree.js": 5,
-  "test-7.1g-expansion.js": 3
+  "test-7.1g-expansion.js": 3,
+  "test-7.1h-rounds.js": 8
 }

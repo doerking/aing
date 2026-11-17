@@ -140,6 +140,8 @@ async function reconcile(store, opts = {}) {
   const pairs = [];
   for (const [id, e] of ents) {
     if (e.invalid_at) continue;
+    // SPEC-7.1 §0.2：产物不产生产物——future 档不建镜像、不算缺口
+    if (e.strand === 'future') continue;
     if (id.startsWith('raw-')) {
       const twin = 'wiki-' + _base(id);
       if (!ents.has(twin)) pairs.push({ from: e, to: twin });

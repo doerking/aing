@@ -19,7 +19,8 @@ async function distillStep(store, opts = {}) {
   const selectStmt = db.prepare(
     `SELECT id, name, type, content, tags, confidence, status
      FROM entities
-     WHERE status = '${PENDING}' AND invalid_at IS NULL AND id NOT LIKE 'wiki-%'`
+     WHERE status = '${PENDING}' AND invalid_at IS NULL AND id NOT LIKE 'wiki-%'
+       AND NOT (COALESCE(strand, 'past') = 'future' AND metabolized_at IS NOT NULL)`
   );
   const insertStmt = db.prepare(
     `INSERT INTO entities (id, name, type, content, tags, status, confidence, created_at, updated_at)
