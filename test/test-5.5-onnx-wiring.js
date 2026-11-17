@@ -91,10 +91,12 @@ const simple = (v) => ({ name: 'fake-sync', dim: 4, model: 'fake-sync', embed: (
     ac('AC-5 不可用则回退', ok, msg);
   }
 
-  // AC-6 默认值不动
+  // AC-6 默认值（SPEC-5.9 已切语义；未注册时回退字面且可解释）
   {
-    ac('AC-6 默认仍是 hash-64w2', V.MODEL === 'hash-64w2' && V.resolveBackend().name === 'hash-64w2',
-      JSON.stringify({ model: V.MODEL }));
+    const d = V.resolveBackend();
+    ac('AC-6 缺省指 onnx，未注册回退 hash-64w2', V.DEFAULT_BACKEND === 'onnx-e5-small' && V.MODEL === 'hash-64w2' &&
+      d.requested === 'onnx-e5-small' && d.name === 'hash-64w2' && d.fallback === true,
+      JSON.stringify({ def: d, model: V.MODEL }));
   }
 
   // AC-7 reindex 子命令：按请求的后端全量重建（换后端的标准动作）

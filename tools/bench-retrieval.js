@@ -44,6 +44,15 @@ async function runBench(opts = {}) {
   const V = require('../src/vector.js');
   const R = require('../src/retrieval.js');
 
+  // SPEC-5.9：缺省后端已是语义；跑冻结集前按缺省/显式请求注册，注册不上才回退字面并告警
+  {
+    const want = String(backend || process.env.AING_VECTOR_BACKEND || V.DEFAULT_BACKEND);
+    if (want.startsWith('onnx-')) {
+      const reg = await require('../src/onnx-backend.js').ensureRegistered();
+      if (!reg.ok) console.error(`[vector] 语义后端不可用（${reg.reason}），回退 ${V.MODEL}`);
+    }
+  }
+
   await store.init(dbPath);
   for (const e of corpus) {
     // 幂等：同库复跑不重复插入（也保证实体逐字段不被改写）

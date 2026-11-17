@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 102 档 / 651 条断言全绿 |
+| 测试 | `npm test` → 103 档 / 659 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **102 档 / 651 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **103 档 / 659 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -143,6 +143,7 @@ status: active
 | 5.7 | 检索结果按内容去重 | ✅ | `spec/SPEC-5.7-检索结果按内容去重.md` | test-5.7-dedupe-content 6/6：同文只出一条、k 去重后计、同名异文保留、双链口径不破、只读、空内容安全；起因是真库 320 实体只有 117 种内容，前 3 张卡被同文副本占满 |- **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
 
 | 5.8 | 强度加权收窄（0.9–1.0） | ✅ | `spec/SPEC-5.8-强度加权收窄.md` | 修订 SPEC-5.3 AC-7：强 9 段仍排 3 段前，但系数比落在 1.0–1.12；起因是真库上「存量安全债」余弦 0.910 全库第 1 被强度 9 挤到第 32，24/24 题去掉强度后前 3 全变；收窄后该查询回到第 1；冻结集强度恒 5，指标逐位不变（8.5/77.5/26.3）|- **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。
+| 5.9 | 默认后端切换为语义（onnx-e5-small） | ✅ | `spec/SPEC-5.9-默认后端切换为语义.md` | test-5.9-default-backend 7/7：未注册不静默（requested=onnx、回退字面、fallback 标记）、注册后缺省即语义、环境变量与显式参数仍优先、memo 缺省报 onnx 且旧 model 行计 stale、隔离库缺省建行全为 onnx/384；依据 SPEC-5.6 对照单 24/24 语义好（owner 拍板）；真库切换已完成：冷备 `data/backup/knowledge-20261117-224324-predflip.db`（sha256 e286e6ca…），reindex 扫 320 重建 320/跳过 0，实体指纹 fc3f195a、边指纹 bd22ad79 与切前逐位一致，向量 320 行全部 onnx-e5-small/384；冻结集 v2 语义基线（新默认）：R@10 99.0%、nDCG@10 90.4%、正负名次差 97.5%（字面历史对照 86.9% / 74.1% / 86.3%）；粤语 96.7% / 83.5% / 92.0%、改述 98.2% / 85.2% / 95.7% |
 - **口径落文档**：README「六·补 检索口径」+ `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`（评测集冻结规则、四项指标、粤语单列、测完由使用者自己语料复核）。
 - **memo 可见**：`buildMemo` 多返 `diagnostics.vector`（后端 / dim / model / source / active / indexed / stale / missing / percent / alerts），系统一行形如「健康 ok / 向量 hash-64w2 100% / 蒸馏债 0 …」；`env-override` / `backend-fallback` / `stale-rows` / `low-coverage` 四类固定 code 告警，异常不静默。
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。

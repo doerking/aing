@@ -13,11 +13,13 @@ const sameVec = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b
 function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
 
 (async () => {
-  // AC-1 默认已升
+  // AC-1 缺省指语义（SPEC-5.9）；本档验字面后端，进程未注册语义时按缺省回退 hash-64w2（带 requested 标记）
   const def = m.resolveBackend();
   const names = (typeof m.listBackends === 'function' ? m.listBackends() : []).map(b => b.name);
-  ac('AC-1 默认已升（hash-64w2）', def.name === 'hash-64w2' && m.MODEL === 'hash-64w2' && m.DIM === 64 &&
-    names.includes('hash-64') && names.includes('hash-64w2'), JSON.stringify({ def: def.name, MODEL: m.MODEL, names }));
+  ac('AC-1 缺省指语义、本档回退字面（SPEC-5.9）', def.requested === 'onnx-e5-small' && def.fallback === true &&
+    def.name === 'hash-64w2' && m.DEFAULT_BACKEND === 'onnx-e5-small' && m.MODEL === 'hash-64w2' && m.DIM === 64 &&
+    names.includes('hash-64') && names.includes('hash-64w2'),
+    JSON.stringify({ def: def.name, requested: def.requested, fallback: def.fallback, MODEL: m.MODEL, names }));
 
   // AC-2 旧口径可切且逐位不变
   const old = m.vectorOf('苹果手机', { backend: 'hash-64' });

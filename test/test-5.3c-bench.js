@@ -32,12 +32,14 @@ const B = require('../tools/bench-retrieval.js');
 
   // AC-2 跑通 + 分层单列：65 题，zh/yue/en 题数与 FROZEN 一致，yue 单列存在
   const frozen = JSON.parse(fs.readFileSync(B.DEFAULTS.frozen, 'utf8'));
-  const r1 = await B.runBench({ keep: false });
+  const r1 = await B.runBench({ backend: 'hash-64w2', keep: false }); // SPEC-5.9：本档验执行器口径，显式指定字面后端（语义基线另跑）
   const langOk = r1.byLang.zh && r1.byLang.yue && r1.byLang.en &&
     r1.byLang.zh.n === frozen.counts.langs.zh && r1.byLang.yue.n === frozen.counts.langs.yue &&
     r1.byLang.en.n === frozen.counts.langs.en;
   ac('AC-2 跑通且分层单列', r1.pairs === frozen.counts.pairs && langOk && r1.backend === 'hash-64w2',
     JSON.stringify({ pairs: r1.pairs, byLang: Object.fromEntries(Object.entries(r1.byLang).map(([k, v]) => [k, v.n])), backend: r1.backend }));
+
+  ac('AC-9 缺省后端为语义（SPEC-5.9）', require('../src/vector.js').DEFAULT_BACKEND === 'onnx-e5-small', String(require('../src/vector.js').DEFAULT_BACKEND));
 
   ac('AC-8 汇总含名次质量指标',
     typeof r1.overall.ndcg10 === 'number' && r1.overall.ndcg10 > 0 && r1.overall.ndcg10 <= 1 &&
@@ -45,7 +47,7 @@ const B = require('../tools/bench-retrieval.js');
     JSON.stringify({ ndcg10: r1.overall.ndcg10, negMargin: r1.overall.negMargin }));
 
   // AC-3 确定性：同输入两次跑，名次与指标完全一致
-  const r2 = await B.runBench({ keep: false });
+  const r2 = await B.runBench({ backend: 'hash-64w2', keep: false });
   const sig = (r) => JSON.stringify({ o: r.overall, l: r.byLang, k: r.byKind, rows: r.rows.map((x) => [x.q, x.p10, x.r10, x.negHit]) });
   ac('AC-3 确定性', sig(r1) === sig(r2), '两次结果不同');
 
@@ -57,7 +59,7 @@ const B = require('../tools/bench-retrieval.js');
   // AC-5 只读实体：跑完 name/content/last_access/status 逐字段不变（向量表可写）
   const yard = fs.mkdtempSync(path.join(os.tmpdir(), 'aingv2-bench-t-'));
   const store = require('../src/knowledge-store.js');
-  await B.runBench({ dbPath: yard, keep: true });
+  await B.runBench({ dbPath: yard, backend: 'hash-64w2', keep: true });
   const snap = () => {
     const db = store._getDb();
     const s = db.prepare('SELECT id,name,content,last_access,status,invalid_at FROM entities ORDER BY id');
@@ -65,7 +67,7 @@ const B = require('../tools/bench-retrieval.js');
     return JSON.stringify(out);
   };
   const before = snap();
-  await B.runBench({ dbPath: yard, keep: true });
+  await B.runBench({ dbPath: yard, backend: 'hash-64w2', keep: true });
   const after = snap();
   ac('AC-5 只读实体', before === after && JSON.parse(after).length === frozen.counts.corpus,
     JSON.stringify({ same: before === after, n: JSON.parse(after).length }));

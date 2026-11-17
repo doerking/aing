@@ -22,8 +22,10 @@ const T2S_RAW = require('./t2s-chars.json');
 const T2S = new Map(Object.entries(T2S_RAW).filter(([k]) => !k.startsWith('_')));
 
 const DIM = 64;
-const MODEL = 'hash-64w2';   // 默认（SPEC-5.3）：CJK 双字 / 拉丁词权重 2
+const MODEL = 'hash-64w2';   // 字面后端（SPEC-5.3）：CJK 双字 / 拉丁词权重 2；切换后仍保留做对照与回退
 const LEGACY = 'hash-64';    // 旧口径（SPEC-1.8），可切回做对照
+// SPEC-5.9：缺省后端切成语义。未注册时不许静默——回退字面但带 fallback/requested 可解释。
+const DEFAULT_BACKEND = 'onnx-e5-small';
 const BIGRAM_WEIGHT = 2;
 
 function fnv1a(str) {
@@ -111,16 +113,16 @@ function registerBackend(backend) {
   return { name, dim, model };
 }
 
-/** 解析后端：显式名 > 环境变量 > hash-64；未知名回退并警告一次 */
+/** 解析后端：显式名 > 环境变量 > 缺省（SPEC-5.9：语义）；未知名/未注册回退字面并警告一次 */
 function resolveBackend(name) {
   const requested = name == null || name === ''
-    ? String(process.env.AING_VECTOR_BACKEND || MODEL)
+    ? String(process.env.AING_VECTOR_BACKEND || DEFAULT_BACKEND)
     : String(name);
   const hit = backends.get(requested);
   if (hit) return { ...hit, requested, fallback: false };
   if (!warned.has(requested)) {
     warned.add(requested);
-    console.warn(`[vector] 未知后端 ${requested}，回退 ${MODEL}`);
+    console.warn(`[vector] 后端 ${requested} 未注册，回退 ${MODEL}`);
   }
   return { ...backends.get(MODEL), requested, fallback: true };
 }
@@ -287,6 +289,6 @@ async function search(store, query, opts = {}) {
 }
 
 module.exports = {
-  vectorStep, search, vectorOf, vectorOfAsync, tokens, rawTokens, fold, DIM, MODEL,
+  vectorStep, search, vectorOf, vectorOfAsync, tokens, rawTokens, fold, DIM, MODEL, DEFAULT_BACKEND,
   registerBackend, resolveBackend, listBackends
 };

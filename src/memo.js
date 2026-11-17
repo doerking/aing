@@ -182,4 +182,4 @@ async function buildMemo(store, opts = {}) {
   };
 }
 
-module.exports = { buildMemo, SYSTEM_LINE_MAX };
+module.exports = { buildMemo, SYSTEM_LINE_MAX, vectorStatus: (x) => _vectorDiagnostics(x && typeof x._getDb === 'function' ? x._getDb() : x) };

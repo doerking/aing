@@ -48,7 +48,7 @@ function rowsOf(db) { const st = db.prepare('SELECT entity_id, dim, model FROM e
     envOk = r && r.name === 'probe-8' && r.fallback !== true;
     delete process.env.AING_VECTOR_BACKEND;
     const back = m.resolveBackend();
-    envOk = envOk && back && back.name === 'hash-64w2';
+    envOk = envOk && back && back.name === 'hash-64w2' && back.requested === 'onnx-e5-small' && back.fallback === true;
   }
   ac('AC-3 环境变量开关（只供测试）', envOk);
 
@@ -72,8 +72,8 @@ function rowsOf(db) { const st = db.prepare('SELECT entity_id, dim, model FROM e
   db.run("UPDATE entities SET last_access='2021-06-01 00:00:00'");
   store._persist();
 
-  // AC-6 默认后端建向量记后端
-  const r1 = await m.vectorStep(store, {});
+  // AC-6 字面后端建向量记后端（SPEC-5.9 后缺省已是语义；本档验字面口径，显式指定）
+  const r1 = await m.vectorStep(store, { backend: 'hash-64w2' });
   const rows1 = rowsOf(db);
   ac('AC-6 建向量记后端（64 / 默认）', r1.indexed === 3 && rows1.length === 3 && rows1.every(r => r.dim === 64 && r.model === 'hash-64w2'), JSON.stringify(rows1));
 

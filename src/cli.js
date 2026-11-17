@@ -16,9 +16,9 @@ async function openStore(dbPath) {
   return store;
 }
 
-/** SPEC-5.5：请求了 onnx-* 后端就先注册；注册不上只告警并回退，不拦开库 */
+/** SPEC-5.5 / SPEC-5.9：按缺省或显式请求注册语义后端；注册不上只告警并回退，不拦开库 */
 async function ensureRequestedBackend() {
-  const want = String(process.env.AING_VECTOR_BACKEND || '');
+  const want = String(process.env.AING_VECTOR_BACKEND || require('./vector.js').DEFAULT_BACKEND);
   if (!want.startsWith('onnx-')) return null;
   const O = require('./onnx-backend.js');
   const r = await O.ensureRegistered();
