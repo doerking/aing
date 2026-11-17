@@ -18,6 +18,14 @@ const B = require('../tools/bench-retrieval.js');
     Math.abs(m2.p10 - 0) < 1e-9 && Math.abs(m2.r10 - 0) < 1e-9 && m2.negHit === 0,
     JSON.stringify({ m1, m2 }));
 
+  // AC-7 名次质量：nDCG@10 + 正负例名次差（neg-hit@10 太钝，看不到「从第 3 掉到第 9」）
+  const m3 = B.metricsFor(['eval-001', 'eval-022', 'eval-003'], { pos: ['eval-001'], neg: ['eval-022'] }, 10);
+  const m4 = B.metricsFor(['eval-022', 'eval-003', 'eval-001'], { pos: ['eval-001'], neg: ['eval-022'] }, 10);
+  ac('AC-7 nDCG 与正负名次差',
+    Math.abs(m3.ndcg10 - 1) < 1e-9 && m3.negMargin === 1 &&
+    m4.ndcg10 > 0 && m4.ndcg10 < 0.6 && m4.negMargin === 0,
+    JSON.stringify({ m3, m4 }));
+
   // 基准：真库与评测集快照
   const REAL = path.join(__dirname, '..', 'data', 'knowledge.db');
   const realBefore = fs.existsSync(REAL) ? (() => { const s = fs.statSync(REAL); return s.size + ':' + s.mtimeMs; })() : null;
@@ -30,6 +38,11 @@ const B = require('../tools/bench-retrieval.js');
     r1.byLang.en.n === frozen.counts.langs.en;
   ac('AC-2 跑通且分层单列', r1.pairs === frozen.counts.pairs && langOk && r1.backend === 'hash-64w2',
     JSON.stringify({ pairs: r1.pairs, byLang: Object.fromEntries(Object.entries(r1.byLang).map(([k, v]) => [k, v.n])), backend: r1.backend }));
+
+  ac('AC-8 汇总含名次质量指标',
+    typeof r1.overall.ndcg10 === 'number' && r1.overall.ndcg10 > 0 && r1.overall.ndcg10 <= 1 &&
+    typeof r1.overall.negMargin === 'number' && r1.overall.negMargin >= 0 && r1.overall.negMargin <= 1,
+    JSON.stringify({ ndcg10: r1.overall.ndcg10, negMargin: r1.overall.negMargin }));
 
   // AC-3 确定性：同输入两次跑，名次与指标完全一致
   const r2 = await B.runBench({ keep: false });

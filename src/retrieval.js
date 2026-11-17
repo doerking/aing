@@ -81,7 +81,13 @@ function _aliasGroup(t) {
   // 粤语词：词表对照全部进别名（实测：砍掉单字对照会让冻结集粤语 R@10 掉 6 点，
   // 长句精度交给词面覆盖比 + 长度正则 + 源头让位去压，不在这里动刀）
   for (const g of derive.segment(t).mandarin) forms.add(g);
-  return [...forms].map(_foldLower).filter(Boolean);   // [0] 恒为原词，作 df/idf 键
+  // 同义/别名组排最后：只在扩展名额有剩时才补位，不挤掉繁简与粤普对照
+  for (const s of derive.synonymsOf(t)) forms.add(s);
+  const ordered = [...forms].map(_foldLower).filter(Boolean);
+  const head = ordered[0];
+  const rest = ordered.slice(1).filter((f) => f !== head);
+  // AC-12a：原词 + 最多 3 条扩展（_groupHit 的权重表也只有 4 档）
+  return [head, ...rest.slice(0, 3)];   // [0] 恒为原词，作 df/idf 键
 }
 
 function queryTokenGroups(query) {

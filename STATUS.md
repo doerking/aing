@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 99 档 / 636 条断言全绿 |
+| 测试 | `npm test` → 100 档 / 643 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -123,7 +123,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **99 档 / 636 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **100 档 / 643 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -191,7 +191,7 @@ status: active
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
-| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、链按 links.created_at 升序、纯读）+ test-7.1c-index-face 7/7（表头不入键/正文入键/繁简互打/粤普互打/序列号路只认 id/弱 related 不进慢回忆）+ test-7.1d-identity 5/5（序列号 e-YYYYMMDD-NNNN + 号段账本不回收/标题派生/指纹去重/同号拒写）+ test-7.1e-yue 11/11（九条真实粤语问句可转普通话、非粤语不乱猜）+ test-7.1f-sprout-degree 5/5（sprout 只数强候选边/variants/死胡同分布/提升后仍进发芽面/对象形证据）+ test-7.1g-expansion 3/3（扩展 ≤3、权重递减、原词优先）+ test-7.1h-rounds 8/8（单轮全绿/上轮产物过一轮即标记/新产物落 future/已标记产物不再进蒸馏/两轮产物数不增/重跑标记不变/稳态轮实体零增长/边按配额有界增长）+ test-7.1i-distill-stock 4/4（旧行不动/产物落 future/past→future 加工边/重跑不重写产物）+ test-8.1-adapter 4/4（只有插排碰 sql.js/接口独立读写/未接引擎显式报错/换引擎不改上层）+ test-8.2-hard-gates 7/7（入库保原始时间/迁移拒无时间行并复核/库层触发器拒 future→past 的 INSERT 与 UPDATE/past→future 放行）+ test-7.1j-migration-idempotent 3/3（schema 迁移两趟快照一致/别名映射不变/旧库第二趟拒且目标不动，护栏）；`src/{derive,assemble,identity,retrieval,sprout-report}.js`、`data/lexicon/{zh-variant,yue-morph}.json`；修 field-promote 三处（闸读边层口径 / 证据对象形 / 提升落 hydrogen-bond@7）并接进 field-maintain；实测：冻结评测集 R@10 77.5%→85.6%（paraphrase 63.8→74.5%、粤语 74.0→86.0%）；真库副本跑一轮后关键词死胡同 92/92→30/92、中位 0→2、p90 0→8；AC-17 已收口（orchestrator 每轮开局收产物清单、本轮全绿即 markMetabolized；insight-extract 落 future；distill 只处理 past 源、产物落 future；reconcile 不为 future 建镜像）；AC-19 已落地（distill 旧行只翻状态、镜像落 future、建 past→future derived 边、产物行只读）；插排 AC-8.1 已收口（src/db-adapter.js 唯一碰 sql.js，arch-lint C6 守）；AC-18 落成库层触发器（INSERT/UPDATE 都拦 future→past）；AC-20 落地（insertEntity 保留原始时间；迁移拒收无时间行并逐行复核）；AC-8 迁移幂等已锁（schema 两趟快照一致、旧库第二趟拒且目标不动）。SPEC-7.1 全部 AC 收口 |
+| 7.1 | 序列号身份 × 派生词发芽面 | 🟡 部分 | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、链按 links.created_at 升序、纯读）+ test-7.1c-index-face 7/7（表头不入键/正文入键/繁简互打/粤普互打/序列号路只认 id/弱 related 不进慢回忆）+ test-7.1d-identity 5/5（序列号 e-YYYYMMDD-NNNN + 号段账本不回收/标题派生/指纹去重/同号拒写）+ test-7.1e-yue 11/11（九条真实粤语问句可转普通话、非粤语不乱猜）+ test-7.1f-sprout-degree 5/5（sprout 只数强候选边/variants/死胡同分布/提升后仍进发芽面/对象形证据）+ test-7.1g-expansion 3/3（扩展 ≤3、权重递减、原词优先）+ test-7.1h-rounds 8/8（单轮全绿/上轮产物过一轮即标记/新产物落 future/已标记产物不再进蒸馏/两轮产物数不增/重跑标记不变/稳态轮实体零增长/边按配额有界增长）+ test-7.1i-distill-stock 4/4（旧行不动/产物落 future/past→future 加工边/重跑不重写产物）+ test-8.1-adapter 4/4（只有插排碰 sql.js/接口独立读写/未接引擎显式报错/换引擎不改上层）+ test-8.2-hard-gates 7/7（入库保原始时间/迁移拒无时间行并复核/库层触发器拒 future→past 的 INSERT 与 UPDATE/past→future 放行）+ test-7.1j-migration-idempotent 3/3（schema 迁移两趟快照一致/别名映射不变/旧库第二趟拒且目标不动，护栏）+ test-7.1k-synonym-expansion 5/5（同义词可查/别名上限≤4/无关词不乱扩/写盘→落盘端到端/找东西→检索）；`src/{derive,assemble,identity,retrieval,sprout-report}.js`、`data/lexicon/{zh-variant,yue-morph}.json`；修 field-promote 三处（闸读边层口径 / 证据对象形 / 提升落 hydrogen-bond@7）并接进 field-maintain；实测：冻结评测集 R@10 77.5%→85.6%（paraphrase 63.8→74.5%、粤语 74.0→86.0%）；真库副本跑一轮后关键词死胡同 92/92→30/92、中位 0→2、p90 0→8；AC-17 已收口（orchestrator 每轮开局收产物清单、本轮全绿即 markMetabolized；insight-extract 落 future；distill 只处理 past 源、产物落 future；reconcile 不为 future 建镜像）；AC-19 已落地（distill 旧行只翻状态、镜像落 future、建 past→future derived 边、产物行只读）；插排 AC-8.1 已收口（src/db-adapter.js 唯一碰 sql.js，arch-lint C6 守）；AC-18 落成库层触发器（INSERT/UPDATE 都拦 future→past）；AC-20 落地（insertEntity 保留原始时间；迁移拒收无时间行并逐行复核）；AC-8 迁移幂等已锁；同义/别名扩展层落地（data/lexicon/zh-synonym.json，查询侧、仍受 ≤3 扩展上限）：冻结集 R@10 85.6→86.9%、nDCG@10 73.5→74.1%、正负名次差 85.0→86.3%、粤语 86.0→90.0%、改述 75.5→77.7%（负例命中率 32.5→33.8% 是 top10 变宽，名次差同涨 1.3 说明排序变好）；评测指标加 nDCG@10 + 正负名次差。SPEC-7.1 全部 AC 收口 |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
