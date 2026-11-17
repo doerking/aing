@@ -1,6 +1,6 @@
 ---
 tags: [aing-v2, 状态, 进度, single-source-of-truth:9, must-read:9]
-description: aing-v2 重写进度唯一真源——72 任务状态/spec/test/证据三指针，其余文档只引用不复述
+description: aing-v2 重写进度唯一真源——78 任务状态/spec/test/证据三指针，其余文档只引用不复述
 date: 2026-11-16
 status: active
 ---
@@ -20,7 +20,7 @@ status: active
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
 | 测试 | `npm test` → 87 档 / 560 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
-| 任务总数口径 | **77 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15）|
+| 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
 > **2026-11-16 owner 取态（SPEC-0.6）**：aing 全组件转 DNA 范式；meko 中间质贯彻全架构（编排唯一入口 + 组件契约）；9 段分三带，**中间 6/5/4 段跑星闪场域**负责双铰链维护与提升；全仓 md 走 Tolaria 9 段格式（门禁 C4）。本取态取代「meko 旁挂四件类」薄版。
 > **2026-11-16 摆位裁定（SPEC-0.8）**：进化团旧院一直旁挂无定位，今次**入驻 meko 中间质**——五成员（gene-keeper / omni-gate / pilot / tri-cross / poll）按组件契约注册，蜂巢形态共享同一中间质，T0 定焦 / T1 复核 / T2 度量 / T3 演化 四时点 × 六维（结构/强度/度量/时序/成员/用户）全程维护；判定与执行分离，写入仍由场域件 2.12/2.13 做。
@@ -184,6 +184,14 @@ status: active
 - **6.9 脚手架三件移植**：取证结论是原版 14 件只通 1 条活线（`panel ← gap-detector`），return 是 stdout 日志投递、非契约，四个头全绑 v1 数据模型。本件只搬能力不搬壳：`src/retrieval-kpi.js`（自指 Q&A → recall@k/MRR → 一条轨迹）、`src/lineage-reflect.js`（`field_actions` 归组 + 撤回计失败 + KESPI 走势 → 反思轨迹）、`src/capability-dispatch.js`（有原文无蒸馏点 → `dim='cap'` 工单）。三件只写 `task_trajectories` / `opt_tickets`，同 cycle 覆盖不堆行；`verifyTickets` 扩到 `proposed`，cap 工单以 `distill_points` 出现为消费证据，且不毕业成 gene。默认链插入三步（18→21），共用 6.8 的维护开关，迁移/首跑不改库。不搬 `parasite-return` / `meko-switchboard` / `meko-patrol` 存在性核单 / `growth-exploration-graph`。
 - **6.9b 星闪真接**：`meko_cycles` 增 `kespi_source`（新库建表即带，旧库 `PRAGMA table_info` 后幂等补列）；`probeTopologyHealth` 改取 `kespi_scores.overall` 的活跃实体均值，无读数才写占位并标 `placeholder`。`T_bound` 的 base 改 `max(cycleType base, Σ budgetTick)`，运算类显式 120/300 秒、未知类型不再落 3 秒；每步按 `budgetTick × loadFactor × 1s` 记软配额（`quotaMs/elapsedMs/overBudget` 入结果与轨迹），硬停仍是整轮 deadline。`lineage-reflect` 走势只取 `kespi_source='kespi_scores'`，占位/NULL 行排除。`feedback-delta` / `insight-extract` 的同类读数未在本件改，登记为后续。
 - **6.9c 读数同源**：`feedback-delta` 的最近两轮与 `insight-extract` 的轮级序列都加 `kespi_source='kespi_scores'`，占位行不再进入 Delta 与洞察效果；真读数不足两轮则诚实报 `insufficient`，不拿占位凑数。旧库历史占位行保留原样，新读者直接跳过。6.9b 登记的残留至此清完。
+
+## 五·补四 M7 身份与派生面（0/1 已落地）
+
+> **2026-11-17 owner 定调**：知识进 aing 后表头只是序列号，aing 不处理它；内容才是要加工的对象；新内容另有序列号。关联由内容产生——**关键词能把库中多少派生词关联得越多，就是知识链**。另两条硬要求：粤语本身可以拆（词素级）；繁体是粤语最常用形、也是海外圈主用形，生成器必须同产繁体。
+
+| # | 任务 | 状态 | spec | 证据 |
+|---|---|---|---|---|
+| 7.1 | 序列号身份 × 派生词发芽面 | ⬜ | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | 待写 test-7.1；现状读数：92 关键词 / 72 个强边下零外扩 / related 占 88% |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
