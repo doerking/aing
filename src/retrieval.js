@@ -91,9 +91,16 @@ function queryTokenGroups(query) {
   return queryTokens(query).map(_aliasGroup).filter((g) => g.length > 0);
 }
 
+// SPEC-7.1 AC-12：保留原查询，扩展最多 3 条，权重按序递减（扩展不得压过原词）
+const EXPANSION_WEIGHTS = [1, 0.7, 0.55, 0.4];
+
 function _groupHit(hay, forms) {
   let best = 0;
-  for (const f of forms) { const h = tokenHit(hay, f); if (h > best) best = h; if (best === 1) break; }
+  const n = Math.min(forms.length, EXPANSION_WEIGHTS.length);
+  for (let i = 0; i < n; i++) {
+    const h = tokenHit(hay, forms[i]) * EXPANSION_WEIGHTS[i];
+    if (h > best) best = h;
+  }
   return best;
 }
 
@@ -324,4 +331,4 @@ async function search(store, query, opts = {}) {
   return { candidates: out, meta: { avgSim, slowExpanded, weights, rerank: rr } };
 }
 
-module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, nameScore, recencyScore, parseTs, tagsOf };
+module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS };
