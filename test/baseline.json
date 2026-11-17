@@ -94,5 +94,6 @@
   "test-7.1f-sprout-degree.js": 5,
   "test-7.1g-expansion.js": 3,
   "test-7.1h-rounds.js": 8,
+  "test-7.1i-distill-stock.js": 4,
   "test-8.1-adapter.js": 4
 }
