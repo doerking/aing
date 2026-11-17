@@ -52,9 +52,15 @@ async function runBench(opts = {}) {
   }
   const vstats = await V.vectorStep(store, backend ? { backend } : {});
 
+  // 新鲜度参考时刻取语料最新一条（评测可复现；不随墙钟漂移）
+  const nowRef = corpus.reduce((mx, e) => {
+    const t = R.parseTs((store.getEntity(e.id) || {}).updated_at);
+    return Number.isNaN(t) ? mx : Math.max(mx, t);
+  }, 0) || undefined;
+
   const rows = [];
   for (const p of pairs) {
-    const res = await R.search(store, p.q, { limit: k, ...(backend ? { backend } : {}) });
+    const res = await R.search(store, p.q, { limit: k, now: nowRef, ...(backend ? { backend } : {}) });
     const m = metricsFor(res.candidates.map((c) => c.base || c.id), p, k);
     rows.push({ q: p.q, lang: p.lang, kind: p.kind, ...m });
   }
