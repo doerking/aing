@@ -102,7 +102,9 @@ async function extractInsights(store, opts = {}) {
       content: contentOf(g.condition, g.action, g.effect, g.samples),
       tags: '["insight"]',
       status: 'pending-distillation',
-      confidence: 0
+      confidence: 0,
+      // SPEC-7.1 §0.1：候选洞察是加工产物，落 future 档；过一轮代谢即打标，此后只读
+      strand: 'future'
     });
     ids.push(id); extracted++;
   }
