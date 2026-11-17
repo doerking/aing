@@ -46,7 +46,7 @@ async function recycleStep(store, opts = {}) {
     const body = String(s.content == null ? '' : s.content).slice(0, MAX_CONTENT) +
       '\n\n[recycled-from:' + s.entity_id + ']';
     // 回炉名取可读话题（SPEC-2.9 修订 A）：markdown 会话原名是时间戳，不能直接当微粒名
-    insertMz.run([mzId, '回炉·' + readableTopic(s.name, parseBody({ content: s.content })), body, '["recycled:5"]']);
+    insertMz.run([mzId, '回炉·' + readableTopic(s.title || s.name, parseBody({ content: s.content })), body, '["recycled:5"]']);
     markRecycled.run([s.entity_id]);
     stats.recycled++;
     dirty = true;

@@ -27,7 +27,8 @@ const DDL = [
     invalid_reason TEXT,
     strand TEXT DEFAULT 'past',        -- SPEC-7.1：past=原文/源头｜future=加工产物
     metabolized_at DATETIME,           -- SPEC-7.1：产物被代谢一次即写，此后永不再进
-    fingerprint TEXT                   -- SPEC-7.1 §二：内容指纹（同内容不重复落行）
+    fingerprint TEXT,                  -- SPEC-7.1 §二：内容指纹（同内容不重复落行）
+    title TEXT                         -- SPEC-7.1 §2.1：展示层，正文派生、永不入键；name 降为序列号副本
   )`,
   `CREATE TABLE IF NOT EXISTS links (
     source_id TEXT,
@@ -416,6 +417,12 @@ async function init(dbFilePath) {
     db.run('ALTER TABLE entities ADD COLUMN metabolized_at DATETIME');
     migrated = true;
   }
+  // 列迁移（SPEC-7.1 §2.1）：title 独立成列；老库 name=题头，回填到 title（name 暂留原值）
+  if (!columns('entities').includes('title')) {
+    db.run('ALTER TABLE entities ADD COLUMN title TEXT');
+    db.run('UPDATE entities SET title = name WHERE title IS NULL AND name IS NOT NULL');
+    migrated = true;
+  }
   if (!columns('entities').includes('fingerprint')) {
     db.run('ALTER TABLE entities ADD COLUMN fingerprint TEXT');
     // 回填老行（一次）：用同一指纹函数，保证去重口径单一
@@ -456,11 +463,12 @@ function insertEntity(e) {
   const fp = e.fingerprint || require('./identity.js').fingerprint(e.content);
   // AC-20：past 的 created_at 是原始时间——给了就照收，没给才落到当前时刻
   const stmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, fingerprint, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, fingerprint, title, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)`
   );
   stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null,
     e.confidence == null ? null : e.confidence, e.strand || 'past', fp,
+    e.title == null ? null : String(e.title),
     e.created_at == null || e.created_at === '' ? null : String(e.created_at)]);
   stmt.free();
   persist();

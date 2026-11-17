@@ -121,7 +121,7 @@ async function predict(store, opts = {}) {
       if (basis.length >= 3) break;
     }
 
-    const topic = _readableTopic(h.name, h.body);
+    const topic = _readableTopic(h.title || h.name, h.body);
     const ids = basis.map(b => b.id);
     plans.push({
       id: _planId(topic, ids),

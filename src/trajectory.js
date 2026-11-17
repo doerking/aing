@@ -36,7 +36,7 @@ function _body(entity) {
 function buildSessionTrajectory(entity) {
   if (!entity || !entity.id) return null;
   const b = _body(entity);
-  const route = [readableTopic(entity.name, b) || entity.id];
+  const route = [readableTopic(entity.title || entity.name, b) || entity.id];
   const isNarrative = b.format === 'capability-narrative-v1' || Array.isArray(b.turns);
 
   if (isNarrative) {
@@ -122,7 +122,7 @@ function buildMarkdownTrajectory(entity) {
   return {
     id: 'traj-' + entity.id,
     task_type: 'session',
-    route: [readableTopic(entity.name, parseBody(entity)) || title || entity.id],
+    route: [readableTopic(entity.title || entity.name, parseBody(entity)) || title || entity.id],
     tools: [],
     step_sequence: sections.length ? sections : ['正文'],
     success: 1,

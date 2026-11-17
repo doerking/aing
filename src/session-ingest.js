@@ -43,11 +43,14 @@ async function ingestSession(store, payload = {}) {
   });
   const tags = JSON.stringify([TAG_HEAD, SOURCE_TAGS.reply, SOURCE_TAGS.search, SOURCE_TAGS.rationale]);
 
+  // SPEC-7.1 §2.1：name 降为序列号副本（这里是既有 conv-<sessionId> 作为该档的别名序列号），
+  // 展示标题落 title——取话题/正文首句，不裸露 sessionId 或时间戳。
+  const title = require('./conv-text.js').readableTopic(payload.topic || null, { topic: payload.topic || null, reply });
   const stmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, created_at, updated_at)
-     VALUES (?, ?, 'Conversation', ?, ?, 'active', 0.6, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
+     VALUES (?, ?, 'Conversation', ?, ?, 'active', 0.6, 5, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
-  stmt.run([id, (payload.topic || ('会话 ' + sessionId)).slice(0, 60), content, tags]);
+  stmt.run([id, id, content, tags, title.slice(0, 60)]);
   stmt.free();
   store._persist();
   return { ingested: true, id, sources: SOURCES.slice() };

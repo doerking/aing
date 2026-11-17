@@ -61,7 +61,7 @@ function buildReport(store, opts = {}) {
         // 名取可读话题（SPEC-6.6 修订 A）：markdown 实体的 name 是时间戳
         items: pending.slice(0, PENDING_INSIGHT_MAX).map(e => ({
           id: String(e.id),
-          name: String(readableTopic(e.name, parseBody({ content: e.content })))
+          name: String(readableTopic(e.title || e.name, parseBody({ content: e.content })))
         }))
       }
     }
