@@ -297,3 +297,7 @@ upstream: [SPEC-0.1, SPEC-1.8, SPEC-1.9, SPEC-1.10]
 - 展示层统一 `title || name`：`memo`、`predict`、`retention`、`trajectory`、`recycle`、`maintenance-report`。
 - 未做（后续）：旧院迁移（`migrateFrom`）仍只搬 `name` 不搬 `title`；`compile`/`import`/`api-gate` 等旧导入路径仍写 `name=题头`、`title` 为空——展示会回落到 name，不入键，不影响检索。
 - 护栏：`test-7.1n-identity-title.js` 6/6（列存在 / name=序列号 / 同内容重投 / 修订新号旧档作废 / 内容未变不新开号 / 会话卡标题无时间戳）。
+- AC-7 补落地（2026-11-18）：发芽度报告工具 `tools/sprout-report.js`（默认在真库副本上跑，`--keywords` / `--json` / `--top`；源库文件 mtime 与内容逐位不动）+ hub 警戒线：单关键词 `sprout ≥ max(HUB_MIN=5, 实体数×HUB_RATIO=20%)` 标 `hub`、只报不扩；实体级 hub：被 ≥3 个关键词触达的实体单列（`byKeywords` + 词表）。
+- 真库读数（2026-11-18，322 实体）：关键词 93 个，死胡同 68，中位 0，p90 2，最大 4 —— **发芽面近乎为空**，原因是 strength≥7 的候选边太少（候选边多停在 4–6，等场域提升）。词级 hub：无。实体级 hub：`raw-memory-02-form形式` 与三张 `wiki-skill-registry-*` 卡各被 8–9 个词触达，正是 §十一 预警的「泛词把同一张卡连到所有人身上」。
+- PMI 强度映射**未做**：把共现 PMI/NPMI 映射到 9 段强度会改变候选边的 strength 分布（进而改发芽面），属独立一轮，需单独 spec + 失败测试 + 两组数据集复核。
+- 护栏：`test-7.1o-sprout-hub.js` 8/8（两列 + hubLine / 超线只报不扩 / 实体级 hub / 可复算 / 纯读 / CLI JSON / CLI 人读 / CLI 不动源库）。

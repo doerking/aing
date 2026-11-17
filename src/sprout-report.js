@@ -10,6 +10,11 @@ const derive = require('./derive.js');
 
 const STRONG = 7;
 const QUALIFIED = new Set(['sprout-candidate', 'pollinate-candidate', 'hydrogen-bond']);
+// hub 警戒线：单关键词发芽度 ≥ max(HUB_MIN, 实体数×HUB_RATIO) 即判 hub（只报不扩）
+const HUB_RATIO = 0.2;
+const HUB_MIN = 5;
+// 实体级 hub：被 ≥ 这么多个关键词触达
+const HUB_ENTITY_KEYWORDS = 3;
 
 function _rows(db, sql, binds = []) {
   const s = db.prepare(sql);
@@ -78,27 +83,52 @@ function report(store, opts = {}) {
   const add = (a, b) => { if (!adj.has(a)) adj.set(a, new Set()); adj.get(a).add(b); };
   for (const e of edges) { add(e.source_id, e.target_id); add(e.target_id, e.source_id); }
 
+  // hub 警戒线（SPEC-7.1 §十一）：超高频词在强边下会长成新 hub（真库现读数：agent 96 实体）。
+  // 沿线只报不扩——报告里标出，绝不因此自动补边/发芽。
+  const hubRatio = Number.isFinite(opts.hubRatio) ? opts.hubRatio : HUB_RATIO;
+  const hubMin = Number.isFinite(opts.hubMin) ? opts.hubMin : HUB_MIN;
+  const hubEntityKeywords = Number.isInteger(opts.hubEntityKeywords) ? opts.hubEntityKeywords : HUB_ENTITY_KEYWORDS;
+  const hubLine = Math.max(hubMin, Math.ceil(ents.length * hubRatio));
+
   const keywords = kwList.map((kw) => {
     const seeds = ents.filter((e) => tagsOf(e).includes(kw) || String(e.content || '').includes(kw)).map((e) => e.id);
     const reached = new Set();
     for (const s of seeds) for (const nb of (adj.get(s) || [])) if (!seeds.includes(nb) && byId.has(nb)) reached.add(nb);
     const forms = formsOf(kw);
-    return { kw, seeds: seeds.length, sprout: reached.size, reached: [...reached].sort(), variants: forms.length, forms };
+    return {
+      kw, seeds: seeds.length, sprout: reached.size, reached: [...reached].sort(),
+      variants: forms.length, forms,
+      hub: reached.size >= hubLine
+    };
   }).sort((a, b) => b.sprout - a.sprout || a.kw.localeCompare(b.kw));
+
+  // 实体级 hub：被 ≥ hubEntityKeywords 个关键词触达的实体（泛词把同一张卡连到所有人身上）
+  const entityKw = new Map();
+  for (const k of keywords) for (const id of k.reached) {
+    if (!entityKw.has(id)) entityKw.set(id, new Set());
+    entityKw.get(id).add(k.kw);
+  }
+  const entityHubs = [...entityKw.entries()]
+    .map(([id, kws]) => ({ id, byKeywords: kws.size, keywords: [...kws].sort() }))
+    .filter((h) => h.byKeywords >= hubEntityKeywords)
+    .sort((a, b) => b.byKeywords - a.byKeywords || a.id.localeCompare(b.id));
 
   const sp = keywords.map((k) => k.sprout);
   const sorted = [...sp].sort((a, b) => a - b);
   const p90 = sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.9))] : 0;
   return {
     keywords,
+    entityHubs,
     distribution: {
       n: keywords.length,
       dead: sp.filter((x) => x === 0).length,
       median: _median(sp),
       p90,
-      max: sorted.length ? sorted[sorted.length - 1] : 0
+      max: sorted.length ? sorted[sorted.length - 1] : 0,
+      hubLine,
+      hubs: keywords.filter((k) => k.hub).map((k) => k.kw)
     }
   };
 }
 
-module.exports = { report, keywordsFromTags, formsOf, STRONG, QUALIFIED };
+module.exports = { report, keywordsFromTags, formsOf, STRONG, QUALIFIED, HUB_RATIO, HUB_MIN, HUB_ENTITY_KEYWORDS };
