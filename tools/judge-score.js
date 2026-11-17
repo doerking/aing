@@ -8,7 +8,9 @@ const fs = require('fs');
 const NL = String.fromCharCode(10);
 const KINDS = {
   edges: { head: '判定', ok: ['真', '假', '存疑'], bad: '假', good: '真', name: '假边率' },
-  twohop: { head: '判定', ok: ['应连', '不应连', '存疑'], bad: '不应连', good: '应连', name: '二跳污染率' }
+  twohop: { head: '判定', ok: ['应连', '不应连', '存疑'], bad: '不应连', good: '应连', name: '二跳污染率' },
+  // SPEC-5.6：后端对照自测。good/bad 只是分子分母的选择，语义胜率 = 语义好 /(语义好 + 字面好)
+  ab: { head: '判定', ok: ['语义好', '字面好', '打平', '都不好'], bad: '字面好', good: '语义好', name: '语义胜率' }
 };
 
 function argOf(argv, name, dflt) {
@@ -27,8 +29,8 @@ function cellsOf(line) {
 
 function parseSheet(text) {
   const lines = String(text || '').split(NL);
-  const title = lines.find((l) => /^#\s*链接质量人工判定/.test(l)) || '';
-  const m = title.match(/·\s*(edges|twohop)\s*·/);
+  const title = lines.find((l) => /^#\s*(链接质量人工判定|后端对照自测)/.test(l)) || '';
+  const m = title.match(/·\s*(edges|twohop|ab)\s*·/);
   const kind = m ? m[1] : null;
   const headerLine = lines.find((l) => /^\|\s*#\s*\|/.test(l));
   if (!kind || !headerLine) return { kind, rows: [], header: null };
@@ -70,7 +72,7 @@ function main(argv) {
   }
   const parsed = parseSheet(fs.readFileSync(file, 'utf8'));
   if (!parsed.kind) {
-    console.error('读不出类型：样本单标题应为「# 链接质量人工判定 · edges|twohop · …」');
+    console.error('读不出类型：样本单标题应为「# 链接质量人工判定 · edges|twohop · …」或「# 后端对照自测 · ab · …」');
     return 2;
   }
   if (!parsed.rows.length) {

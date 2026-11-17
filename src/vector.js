@@ -101,7 +101,13 @@ function registerBackend(backend) {
   if (!Number.isInteger(dim) || dim <= 0) throw new Error(`后端 ${name} 的 dim 非法：${backend.dim}`);
   if (typeof backend.embed !== 'function') throw new Error(`后端 ${name} 缺 embed 函数`);
   const model = String(backend.model == null || backend.model === '' ? name : backend.model);
-  backends.set(name, { name, dim, model, embed: backend.embed, builtin: false });
+  // SPEC-5.5 R1：注册时保留题侧 embedQuery，缺了就把题当文档编码（前缀错位，分数系统性偏低）
+  backends.set(name, {
+    name, dim, model,
+    embed: backend.embed,
+    embedQuery: typeof backend.embedQuery === 'function' ? backend.embedQuery : undefined,
+    builtin: false
+  });
   return { name, dim, model };
 }
 
@@ -177,6 +183,15 @@ function cosine(a, b) {
   return dot; // 两边已归一
 }
 
+/** 内容指纹（SPEC-5.7）：同文不同 id 视为同一份知识；读取失败返回 null 退化为基名去重 */
+function _contentFingerprint(content) {
+  try {
+    return crypto.createHash('sha1').update(String(content == null ? '' : content)).digest('hex').slice(0, 16);
+  } catch (_) {
+    return null;
+  }
+}
+
 function checksum(row) {
   return crypto.createHash('sha1')
     .update(String(row.name == null ? '' : row.name) + '\u0000' + String(row.content == null ? '' : row.content) + '\u0000' + String(row.tags == null ? '' : row.tags))
@@ -234,7 +249,7 @@ async function search(store, query, opts = {}) {
   const qv = await vectorOfAsync(query, { backend, role: 'query' });
   // 混用防护：只比对同 model 同 dim 的向量（SPEC-5.1 §2.5）
   const stmt = db.prepare(
-    `SELECT e.id, e.name, e.tolaria_strength, v.vector
+    `SELECT e.id, e.name, e.content, e.tolaria_strength, v.vector
      FROM entity_vectors v JOIN entities e ON e.id = v.entity_id
      WHERE e.invalid_at IS NULL AND v.model = ? AND v.dim = ?`
   );
@@ -247,7 +262,7 @@ async function search(store, query, opts = {}) {
     const sim = cosine(qv, vec);
     if (sim <= 0) continue;
     const strength = Number(r.tolaria_strength == null ? 5 : r.tolaria_strength);
-    hits.push({ id: r.id, name: r.name, score: sim * (0.5 + 0.5 * Math.min(9, Math.max(1, strength)) / 9), similarity: sim, strength });
+    hits.push({ id: r.id, name: r.name, content: r.content, score: sim * (0.5 + 0.5 * Math.min(9, Math.max(1, strength)) / 9), similarity: sim, strength });
   }
   stmt.free();
   // 双链去重（SPEC-5.3 §2.2）：同 base 只留一条；同分优先 raw（wiki 是镜像）
@@ -255,11 +270,16 @@ async function search(store, query, opts = {}) {
     (String(a.id).startsWith('wiki-') ? 1 : 0) - (String(b.id).startsWith('wiki-') ? 1 : 0));
   const out = [];
   const seen = new Set();
+  const seenContent = new Set(); // SPEC-5.7：同文多份只出一条（真库 320 实体仅 117 种内容）
   for (const h of hits) {
     const base = String(h.id).replace(/^wiki-/, '');
     if (seen.has(base)) continue;
+    const fp = _contentFingerprint(h.content);
+    if (fp && seenContent.has(fp)) continue;
     seen.add(base);
-    out.push({ ...h, base });
+    if (fp) seenContent.add(fp);
+    const { content, ...rest } = h;
+    out.push({ ...rest, base });
     if (out.length >= k) break;
   }
   return out;
