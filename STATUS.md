@@ -141,7 +141,8 @@ status: active
 
 | 5.6 | 后端对照自测（真库语料，人手判定） | ✅ | `spec/SPEC-5.6-后端对照自测.md` | test-5.6-backend-ab 6/6：表结构三列、两列不串源、复跑一致、空集安全、judge-score 认 ab 单（语义胜率）、未判拒收；`tools/backend-ab.js --db <副本>` 两阶段重建出并排单，真库直跑被拒 |
 | 5.7 | 检索结果按内容去重 | ✅ | `spec/SPEC-5.7-检索结果按内容去重.md` | test-5.7-dedupe-content 6/6：同文只出一条、k 去重后计、同名异文保留、双链口径不破、只读、空内容安全；起因是真库 320 实体只有 117 种内容，前 3 张卡被同文副本占满 |- **默认口径**：5.1 时默认仍是 `hash-64`；5.3 起默认升为 `hash-64w2`（简繁归一 + 双字权重），旧 `hash-64` 保留可切且与 SPEC-1.8 逐位一致（特征化快照锁）。
-- **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。
+
+| 5.8 | 强度加权收窄（0.9–1.0） | ✅ | `spec/SPEC-5.8-强度加权收窄.md` | 修订 SPEC-5.3 AC-7：强 9 段仍排 3 段前，但系数比落在 1.0–1.12；起因是真库上「存量安全债」余弦 0.910 全库第 1 被强度 9 挤到第 32，24/24 题去掉强度后前 3 全变；收窄后该查询回到第 1；冻结集强度恒 5，指标逐位不变（8.5/77.5/26.3）|- **测试开关**：`opts.backend` / `AING_VECTOR_BACKEND` 只供评测；发布包不设，默认值不按评测排名改。
 - **口径落文档**：README「六·补 检索口径」+ `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md`（评测集冻结规则、四项指标、粤语单列、测完由使用者自己语料复核）。
 - **memo 可见**：`buildMemo` 多返 `diagnostics.vector`（后端 / dim / model / source / active / indexed / stale / missing / percent / alerts），系统一行形如「健康 ok / 向量 hash-64w2 100% / 蒸馏债 0 …」；`env-override` / `backend-fallback` / `stale-rows` / `low-coverage` 四类固定 code 告警，异常不静默。
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
