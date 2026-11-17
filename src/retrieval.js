@@ -29,6 +29,10 @@ const DEFAULTS = {
   // 窄带下 0.15 的绝对加分压过向量差（0.0155 > 0.012）；撤出精排，只留少量新鲜度。
   // 旧口径可显式传 opts.rerank 恢复；是否以乘性/归一化方式回来等记账数据齐了再议。
   rerank: { kespi: 0, recency: 0.05 },
+  // SPEC-6.3 修订 H（2026-11-18）：名称路补「部分命中」档。整句包含对自然语言查询几乎恒为 0，
+  // 0.3 的名称权重在真库上等于空转；改成查询词在 id 上的二字覆盖比后，判读集 top1 13→17。
+  // 0 = 关闭（回到只认整句包含的旧口径）。
+  namePartial: 0.85,
   limit: 8
 };
 
@@ -227,13 +231,33 @@ function keywordScore(entity, query) {
 }
 
 /** 序列号路：只认 id（SPEC-7.1 §二：title 是派生标头，永不入键） */
-function nameScore(entity, query) {
+const _qgCache = new Map();
+function _queryGroupsMemo(query) {
+  const key = String(query || '');
+  const hit = _qgCache.get(key);
+  if (hit) return hit;
+  const g = queryTokenGroups(key);
+  if (_qgCache.size >= 200) _qgCache.clear();
+  _qgCache.set(key, g);
+  return g;
+}
+
+function nameScore(entity, query, partial) {
   const q = _foldLower(query);
   if (!q) return 0;
   const id = _foldLower((entity && entity.id) || '');
   if (id === q) return 1;
   if (id.includes(q)) return 0.8;
-  return 0;
+  // 真问题很少整句出现在 id 里（整句包含对自然语言查询几乎恒为 0，名称路等于白设 0.3 权重）。
+  // 补一档「查询词在 id 上的二字覆盖比」，与词面同口径，上限压在 0.8 之下：
+  // 整句命中仍是最高档，部分命中按覆盖比例给分。名称只认 id（SPEC-7.1 §二：派生标题不入键）。
+  const scale = Number.isFinite(partial) ? partial : DEFAULTS.namePartial;
+  if (!(scale > 0) || !id) return 0;
+  const groups = _queryGroupsMemo(query);
+  if (!groups.length) return 0;
+  let sum = 0;
+  for (const forms of groups) sum += _groupHit(id, forms);
+  return Math.min(0.8, sum / groups.length) * scale;
 }
 
 function parseTs(v) {
@@ -262,6 +286,7 @@ async function search(store, query, opts = {}) {
   const routed = opts.intentRouting === false ? null : require('./intent.js').classifyIntent(query);
   const weights = { ...DEFAULTS.weights, ...(routed ? routed.weights : {}), ...(opts.weights || {}) };
   const rr = { ...DEFAULTS.rerank, ...(routed ? routed.rerank : {}), ...(opts.rerank || {}) };
+  const namePartial = Number.isFinite(opts.namePartial) ? opts.namePartial : DEFAULTS.namePartial;
   const pool = new Map();
 
   const rowOf = (id) => _scalar(db, 'SELECT id,name,type,tags,content,updated_at,invalid_at FROM entities WHERE id = ?', [id]);
@@ -300,7 +325,7 @@ async function search(store, query, opts = {}) {
   const avgdl = all.length ? all.reduce((s2, r) => s2 + _docLen(r), 0) / all.length : 0;
   for (const row of all) {
     const lx = keywordScoreIdf(row, query, df, N, { dl: _docLen(row), avgdl });
-    const nm = nameScore(row, query);
+    const nm = nameScore(row, query, namePartial);
     if (lx <= 0 && nm <= 0) continue;
     add(row, { lexical: lx, nameHit: nm });
   }
@@ -350,7 +375,7 @@ async function search(store, query, opts = {}) {
         const row = rowMap.get(String(nbId)) || rowOf(nbId);
         if (!row || row.invalid_at) continue;
         const lx = keywordScoreIdf(row, query, df, N, { dl: _docLen(row), avgdl });
-        const nm = nameScore(row, query);
+        const nm = nameScore(row, query, namePartial);
         const e = add(row, { sim: 0, lexical: lx, nameHit: nm, slowRecall: true });
         if (!e) continue;
         e.fused = weights.vector * 0.3 * topSim + weights.lexical * lx + weights.name * nm + 0.05;
