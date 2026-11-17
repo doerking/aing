@@ -54,7 +54,12 @@ async function migrateFrom(store, opts = {}) {
   const oldCols = new Set(_rows(old, 'PRAGMA table_info(entities)').map(c => c.name));
   const entCols = ['id', 'name', 'type', 'content', 'tags', 'status', 'confidence', 'tolaria_strength',
     'last_access', 'created_at', 'updated_at', 'invalid_at', 'invalid_reason'];
-  const entities = _rows(old, `SELECT ${entCols.map(c => oldCols.has(c) ? c : 'NULL AS ' + c).join(', ')} FROM entities ORDER BY id`);
+  const allEntities = _rows(old, `SELECT ${entCols.map(c => oldCols.has(c) ? c : 'NULL AS ' + c).join(', ')} FROM entities ORDER BY id`);
+  // AC-20：past 必须有原始时间——没有原始时间的旧行不准进 past（收进报告，不静默丢）
+  const rejected = allEntities
+    .filter((e) => e.created_at == null || String(e.created_at).trim() === '')
+    .map((e) => ({ id: String(e.id), reason: 'no-created-at' }));
+  const entities = allEntities.filter((e) => e.created_at != null && String(e.created_at).trim() !== '');
   const allLinks = _rows(old, `SELECT source_id, target_id, relation, confidence, created_at, strength, invalid_at
     FROM links ORDER BY source_id, target_id`);
 
@@ -103,12 +108,19 @@ async function migrateFrom(store, opts = {}) {
   };
   if (!verified.entities || !verified.links) throw new Error('migration-mismatch: ' + JSON.stringify(verified));
 
+  // AC-20：迁完逐行复核——past 档不许有缺原始时间的行
+  const pastMissingTime = Number(_rows(db,
+    "SELECT COUNT(*) AS n FROM entities WHERE strand = 'past' AND (created_at IS NULL OR created_at = '')")[0].n || 0);
+  if (pastMissingTime > 0) throw new Error('past-needs-original-time: ' + pastMissingTime + ' 行缺 created_at');
+
   return {
     source: { path: sourcePath, sha256: _sha256(fs.readFileSync(sourcePath)) },
     entities: newEnt.length,
     links: newLnk.length,
     droppedLinks: dropped.length,
     droppedSamples: dropped.slice(0, 5),
+    rejected,
+    pastMissingTime,
     verified
   };
 }
