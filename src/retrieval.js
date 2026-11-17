@@ -4,6 +4,7 @@
 // 差异：不写 last_access（v2 铁律）；慢回忆直接走 links 有效边 + 三轴判定；权重在模块默认值。
 // 组件唔直连 knowledge-store：store 由调用方注入（arch-lint C5 守）。
 
+const crypto = require('crypto');
 const V = require('./vector.js');
 const derive = require('./derive.js');
 const { shouldEnterRetrieval } = require('./tri-axis-gate.js');
@@ -52,8 +53,18 @@ function queryTokens(query) {
 }
 
 // ── 词面（SPEC-7.1 §4.1：content + keywords + variants；表头 title/name 不入键）──
+// 字段权重：正文命中满分，只在标签里命中降权（真库上泛标签在抢分）
+const TAG_WEIGHT = 0.6;
 const FACE_CACHE_MAX = 2000;
 const _faceCache = new Map();
+const _bodyCache = new Map();
+const _tagCache = new Map();
+
+function _cacheSet(cache, key, value) {
+  if (cache.size >= FACE_CACHE_MAX) cache.clear();
+  cache.set(key, value);
+  return value;
+}
 
 function _faceOf(entity) {
   const content = String((entity && entity.content) || '');
@@ -65,9 +76,36 @@ function _faceOf(entity) {
   const base = [content, ...forms, tags].join(' ');
   const kw = [...derive.keywordsOf(base)];                  // CJK 双字 + 拉丁词 + 派生形 + 粤普对照
   const face = _foldLower([base, ...kw].join(' '));
-  if (_faceCache.size >= FACE_CACHE_MAX) _faceCache.clear();
-  _faceCache.set(key, face);
-  return face;
+  return _cacheSet(_faceCache, key, face);
+}
+
+/** 正文面（不含标签）：正文 + 派生形 + 关键词 */
+function _bodyFaceOf(entity) {
+  const content = String((entity && entity.content) || '');
+  const key = String((entity && entity.id) || '') + '\u0000' + content;
+  const cached = _bodyCache.get(key);
+  if (cached !== undefined) return cached;
+  const base = [content, ...derive.variants(content).all].join(' ');
+  const face = _foldLower([base, ...derive.keywordsOf(base)].join(' '));
+  return _cacheSet(_bodyCache, key, face);
+}
+
+/** 标签面：标签本身 + 繁简双形（标签常是短词，不进双字切分） */
+function _tagFaceOf(entity) {
+  const tags = tagsOf(entity).join(' ');
+  const key = String((entity && entity.id) || '') + '\u0000' + tags;
+  const cached = _tagCache.get(key);
+  if (cached !== undefined) return cached;
+  const face = tags ? _foldLower([tags, ...derive.variants(tags).all].join(' ')) : '';
+  return _cacheSet(_tagCache, key, face);
+}
+
+/** 一条实体对一个别名组的命中：正文优先，标签降权 */
+function _entityGroupHit(entity, forms) {
+  const bodyHit = _groupHit(_bodyFaceOf(entity), forms);
+  if (bodyHit >= 1) return 1;
+  const tagHit = _groupHit(_tagFaceOf(entity), forms) * TAG_WEIGHT;
+  return Math.max(bodyHit, tagHit);
 }
 
 /** 查询侧归一：每个原词带别名组（繁简双形 + 粤普对照）；组内任一形命中即算命中 */
@@ -147,12 +185,11 @@ function lengthNorm(dl, avgdl) {
 function keywordScoreIdf(entity, query, df, N, rect) {
   const groups = queryTokenGroups(query);
   if (!groups.length) return 0;
-  const hay = _faceOf(entity);
   let num = 0, den = 0;
   for (const forms of groups) {
     const w = idfOf(df && df[forms[0]], N);
     den += w;
-    num += w * _groupHit(hay, forms);
+    num += w * _entityGroupHit(entity, forms);
   }
   if (!(den > 0)) return 0;
   const raw = Math.min(1, num / den);
@@ -169,10 +206,8 @@ function _docLen(entity) {
 function keywordScore(entity, query) {
   const groups = queryTokenGroups(query);
   if (!groups.length) return 0;
-  const hay = _faceOf(entity);
-  if (!hay) return 0;
   let hit = 0;
-  for (const forms of groups) hit += _groupHit(hay, forms);
+  for (const forms of groups) hit += _entityGroupHit(entity, forms);
   return Math.min(1, hit / groups.length);
 }
 
@@ -309,19 +344,26 @@ async function search(store, query, opts = {}) {
     e.final = base * (1 - rr.kespi - rr.recency) + kN * rr.kespi + recencyScore(e, nowRef) * rr.recency;
   }
 
-  // 6) 排序 + 双链去重 + 截断（同分优先 raw；三路全零不占位）
+  // 6) 排序 + 双链去重（同基名镜像折叠）+ 截断（同分优先 raw；三路全零不占位）
   const sorted = [...pool.values()]
     .filter((e) => (e.fused || 0) > 0)
     .sort((a, b) =>
     b.final - a.final ||
     (String(a.id).startsWith('wiki-') ? 1 : 0) - (String(b.id).startsWith('wiki-') ? 1 : 0));
   const out = [];
-  const seenBase = new Set();
+  const seenBase = new Map();
+  // 双链去重：raw-x / x / wiki-x 是同一份知识的三个镜像（真库已核：正文逐字相同），
+  // 只留名次最高的那份，折叠掉的 id 记在 mergedIds 上（可解释）。
+  // 只按 id 基名折，不按正文指纹折——两条独立条目偶然同文时不该互相吞掉。
+  const baseOf = (id) => String(id).replace(/^(?:wiki-|raw-)/, '');
   for (const e of sorted) {
-    const base = String(e.id).replace(/^wiki-/, '');
-    if (seenBase.has(base)) continue;
-    seenBase.add(base);
-    out.push({
+    const base = baseOf(e.id);
+    const keeper = seenBase.get(base);
+    if (keeper) {
+      (keeper.mergedIds || (keeper.mergedIds = [])).push(e.id);
+      continue;
+    }
+    const cand = {
       id: e.id,
       base,
       name: e.name,
@@ -330,11 +372,13 @@ async function search(store, query, opts = {}) {
       final: e.final,
       channels: { vector: e.sim || 0, lexical: e.lexical || 0, name: e.nameHit || 0 },
       ...(e.slowRecall ? { slowRecall: true } : {})
-    });
+    };
+    seenBase.set(base, cand);
+    out.push(cand);
     if (out.length >= limit) break;
   }
 
   return { candidates: out, meta: { avgSim, slowExpanded, weights, rerank: rr } };
 }
 
-module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS };
+module.exports = { DEFAULTS, search, keywordScore, keywordScoreIdf, idfOf, queryTokens, queryTokenGroups, nameScore, recencyScore, parseTs, tagsOf, EXPANSION_WEIGHTS, TAG_WEIGHT };
