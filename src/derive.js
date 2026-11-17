@@ -20,6 +20,24 @@ const YUE = (loadJson('yue-morph.json') || { entries: {} }).entries || {};
 // 长词优先，保证「唔返来」不被拆成「唔」+「返来」
 const YUE_KEYS = Object.keys(YUE).sort((a, b) => b.length - a.length);
 
+// 同义/别名组（查询侧扩展）：同组任一词可查到其它词
+const SYN_GROUPS = (loadJson('zh-synonym.json') || { groups: [] }).groups || [];
+const SYN = (() => {
+  const m = new Map();
+  for (const g of Array.isArray(SYN_GROUPS) ? SYN_GROUPS : []) {
+    if (!Array.isArray(g) || g.length < 2) continue;
+    for (const term of g) {
+      if (typeof term !== 'string' || !term) continue;
+      const list = m.get(term) || [];
+      for (const other of g) if (other !== term && !list.includes(other)) list.push(other);
+      m.set(term, list);
+    }
+  }
+  return m;
+})();
+// 长词优先：查「写盘安全」先命中整词，再命中「写盘」
+const SYN_KEYS = [...SYN.keys()].sort((a, b) => b.length - a.length || a.localeCompare(b));
+
 function s2t(text) {
   let out = '';
   for (const ch of String(text == null ? '' : text)) out += S2T[ch] || ch;
@@ -74,8 +92,20 @@ function segment(text) {
   return { text: s, tokens, mandarin: [...new Set(mandarin)], hits };
 }
 
-/** 整句粤→普：按词表最长匹配替换，未命中原样保留（查询侧归一用，不改原文） */
-function toMandarin(text) {
+/** 同义/别名（查询侧扩展）：子串最长键命中，返回组内其它词（确定性顺序） */
+function synonymsOf(text) {
+  const s = String(text == null ? '' : text);
+  if (!s) return [];
+  const out = [];
+  for (const key of SYN_KEYS) {
+    if (!s.includes(key)) continue;
+    for (const a of SYN.get(key)) if (a !== s && !out.includes(a)) out.push(a);
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
+/** 整句粤→普：按词表最长匹配替换，未命中原样保留（查询侧归一用，不改原文） */function toMandarin(text) {
   const s = String(text == null ? '' : text);
   let out = '';
   let i = 0;
@@ -116,4 +146,4 @@ function keywordsOf(text) {
   return out;
 }
 
-module.exports = { variants, normalizeQuery, segment, toMandarin, keywordsOf, s2t, t2s, LEX_DIR };
+module.exports = { variants, normalizeQuery, segment, toMandarin, synonymsOf, keywordsOf, s2t, t2s, LEX_DIR };
