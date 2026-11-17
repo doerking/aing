@@ -56,14 +56,15 @@ const convBody = (topic, reply) => JSON.stringify({
 
   const off = { kespi: 0, recency: 0 };
 
-  // AC-1 三路融合形状
+  // AC-1 三路融合形状（tagged 只在标签命中 → 词面分按 7.1l 字段权重打六折）
   const r1 = await R.search(store, '鲸落', { rerank: off });
   const t1 = (r1.candidates || []).find(c => c.id === 'tagged');
   const shapeOk = !!t1 && t1.channels && ['vector', 'lexical', 'name'].every(k => typeof t1.channels[k] === 'number');
   const w = R.DEFAULTS.weights;
   const formula = t1 ? w.vector * t1.channels.vector + w.lexical * t1.channels.lexical + w.name * t1.channels.name : NaN;
-  ac('AC-1 三路融合形状', shapeOk && t1.channels.lexical === 1 && Math.abs(t1.final - formula) < 1e-9,
-    JSON.stringify({ t1: t1 && { ch: t1.channels, final: t1.final, formula } }));
+  ac('AC-1 三路融合形状', shapeOk && Math.abs(t1.channels.lexical - R.TAG_WEIGHT) < 1e-9 &&
+    Math.abs(t1.final - formula) < 1e-9,
+    JSON.stringify({ t1: t1 && { ch: t1.channels, final: t1.final, formula, tagWeight: R.TAG_WEIGHT } }));
 
   // AC-2 序列号路生效（SPEC-7.1 §4.1 修订：表头不入键，序列号 id 才是身份）
   const r2 = await R.search(store, 'exact-name', { weights: { vector: 0, lexical: 0, name: 1 }, rerank: off });
@@ -73,10 +74,11 @@ const convBody = (topic, reply) => JSON.stringify({
     r2t.candidates.length === 0,
     JSON.stringify({ byId: r2.candidates.slice(0, 2).map(c => ({ id: c.id, ch: c.channels })), byTitle: r2t.candidates.map(c => c.id) }));
 
-  // AC-3 词面路生效
+  // AC-3 词面路生效（标签命中按 TAG_WEIGHT 计分，仍能召回排前）
   const r3 = await R.search(store, '鲸落', { weights: { vector: 0, lexical: 1, name: 0 }, rerank: off });
   ac('AC-3 词面路生效', r3.candidates.length > 0 && r3.candidates[0].id === 'tagged' &&
-    r3.candidates[0].channels.lexical === 1 && r3.candidates[0].final > (r3.candidates[1] ? r3.candidates[1].final : 0),
+    Math.abs(r3.candidates[0].channels.lexical - R.TAG_WEIGHT) < 1e-9 &&
+    r3.candidates[0].final > (r3.candidates[1] ? r3.candidates[1].final : 0),
     JSON.stringify(r3.candidates.slice(0, 2).map(c => ({ id: c.id, ch: c.channels, f: c.final }))));
 
   // AC-4 慢回忆
