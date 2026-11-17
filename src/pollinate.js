@@ -20,14 +20,16 @@ async function pollinateStep(store, opts = {}) {
 
   const ents = [];
   const es = db.prepare(
-    "SELECT id, type, content, tags FROM entities WHERE invalid_at IS NULL AND type IS NOT NULL AND type != '' ORDER BY updated_at DESC, id LIMIT " + MAX_ENTITIES
+    "SELECT id, type, content, tags FROM entities WHERE invalid_at IS NULL AND (strand IS NULL OR strand != 'future') AND type IS NOT NULL AND type != '' ORDER BY updated_at DESC, id LIMIT " + MAX_ENTITIES
   );
   while (es.step()) ents.push(es.getAsObject());
   es.free();
   stats.scanned = ents.length;
 
   const hasEdge = new Set();
-  const ls = db.prepare('SELECT source_id, target_id FROM links WHERE invalid_at IS NULL');
+  // SPEC-1.10 修订 A：边表 PK 与 invalid_at 无关——退役边仍占位，须按「已存在」跳过，
+  // 否则重跑会撞 UNIQUE constraint（2026-11-18 真库重跑事故）。
+  const ls = db.prepare('SELECT source_id, target_id FROM links');
   while (ls.step()) {
     const l = ls.getAsObject();
     hasEdge.add(l.source_id + '\u0000' + l.target_id);

@@ -29,11 +29,11 @@ function baseOf(id) {
 
 async function importStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('import 需要 store 注入（SPEC-1.15 契约）');
-  const stats = { scanned: 0, mirrored: 0, bonds: 0, skipped: 0, skippedRetired: 0 };
+  const stats = { scanned: 0, mirrored: 0, bonds: 0, skipped: 0, skippedRetired: 0, skippedProduct: 0 };
   const db = store._getDb();
 
   const selectStmt = db.prepare(
-    `SELECT id, name, type, content, tags, status, confidence, tolaria_strength, invalid_at
+    `SELECT id, name, type, content, tags, status, confidence, tolaria_strength, invalid_at, strand
      FROM entities WHERE id NOT LIKE 'wiki-%'`
   );
   const insertStmt = db.prepare(
@@ -62,6 +62,9 @@ async function importStep(store, opts = {}) {
     stats.scanned++;
 
     if (row.invalid_at != null) { stats.skippedRetired++; continue; }
+    // SPEC-1.4 修订 B：产物（strand=future）不是原料，不建镜像不连边——
+    // 否则建边时撞「future→past 边禁止」（2026-11-18 真库失败轮留下的产物导致 import deadlock）。
+    if (String(row.strand || '') === 'future') { stats.skippedProduct++; continue; }
 
     if (store.getEntity(wikiId) == null) {
       const strength = Number.isInteger(Number(row.tolaria_strength)) ? Number(row.tolaria_strength) : 5;
