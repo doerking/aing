@@ -11,8 +11,28 @@ function resolveDbPath(dbPath) {
 }
 
 async function openStore(dbPath) {
+  await ensureRequestedBackend();
   await store.init(resolveDbPath(dbPath));
   return store;
+}
+
+/** SPEC-5.5：请求了 onnx-* 后端就先注册；注册不上只告警并回退，不拦开库 */
+async function ensureRequestedBackend() {
+  const want = String(process.env.AING_VECTOR_BACKEND || '');
+  if (!want.startsWith('onnx-')) return null;
+  const O = require('./onnx-backend.js');
+  const r = await O.ensureRegistered();
+  if (!r.ok) {
+    console.error(`[vector] 语义后端 ${want} 不可用（${r.reason}），回退 ${require('./vector.js').MODEL}`);
+  }
+  return r;
+}
+
+async function cmdReindex(dbPath) {
+  const s = await openStore(dbPath);
+  const V = require('./vector.js');
+  const stats = await V.vectorStep(s);
+  return { backend: V.resolveBackend().name, ...stats };
 }
 
 async function cmdMemo(dbPath, opts = {}) {
@@ -119,7 +139,8 @@ function usage() {
     '  node src/cli.js ingest --payload <json>',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
-    '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]'
+    '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]',
+    '  node src/cli.js reindex [--db <path>]   # SPEC-5.5：换后端后全量重建向量'
   ].join('\n'));
 }
 
@@ -140,6 +161,11 @@ async function main(argv) {
       }
       const out = await cmdMemo(dbPath, opts);
       console.log(flags.json ? JSON.stringify(out, null, 2) : humanMemo(out));
+      return 0;
+    }
+    if (cmd === 'reindex') {
+      const out = await cmdReindex(dbPath);
+      console.log(flags.json ? JSON.stringify(out, null, 2) : `重建：后端 ${out.backend}，扫描 ${out.scanned}，新建 ${out.indexed}，重建 ${out.rebuilt}，跳过 ${out.skipped}`);
       return 0;
     }
     if (cmd === 'predict') {
@@ -193,4 +219,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
