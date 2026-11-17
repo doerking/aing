@@ -124,6 +124,18 @@ const DDL = [
     source TEXT DEFAULT 'unknown'
   )`,
   `CREATE INDEX IF NOT EXISTS idx_access_entity ON access_hits(entity_id, hit_at)`,
+  `CREATE TABLE IF NOT EXISTS entity_rounds (
+    entity_id TEXT NOT NULL,      -- 逐轮逐条快照（SPEC-1.16 代谢记账层）
+    cycle_id TEXT NOT NULL,
+    alive INTEGER DEFAULT 1,
+    accessed INTEGER DEFAULT 0,   -- 近 7 天有 last_access 或 access_hits
+    degree INTEGER DEFAULT 0,     -- 有效边双向计数（与 KD 同口径）
+    content_len INTEGER DEFAULT 0,
+    strand TEXT,
+    recorded_at DATETIME,
+    PRIMARY KEY (entity_id, cycle_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_entity_rounds_cycle ON entity_rounds(cycle_id)`,
   `CREATE TABLE IF NOT EXISTS field_actions (
     id TEXT PRIMARY KEY,
     action TEXT,                  -- rebond/unwind/reconcile/demote/promote
@@ -389,6 +401,11 @@ async function init(dbFilePath) {
     db.run('ALTER TABLE meko_cycles ADD COLUMN kespi_source TEXT');
     migrated = true;
   }
+  // 列迁移（SPEC-1.16）：边归属轮次；历史行留空 = 记账前
+  if (!columns('links').includes('cycle_id')) {
+    db.run('ALTER TABLE links ADD COLUMN cycle_id TEXT');
+    migrated = true;
+  }
   // 列迁移（SPEC-7.1）：双链分道 + 产物一次加标签
   if (!columns('entities').includes('strand')) {
     db.run("ALTER TABLE entities ADD COLUMN strand TEXT DEFAULT 'past'");
@@ -466,11 +483,13 @@ function insertLink(l) {
     throw new Error('future→past 边禁止（产物不回写原料，SPEC-7.1 §〇.1）');
   }
   // PK (source_id, target_id) 重复插抛冲突（AC-5）：默认 INSERT 语句，不用 OR IGNORE/REPLACE
+  // SPEC-1.16：可选 cycle_id——本轮催出的边带上轮次，老调用不传仍可写
   const stmt = db.prepare(
-    `INSERT INTO links (source_id, target_id, relation, confidence, created_at)
-     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`
+    `INSERT INTO links (source_id, target_id, relation, confidence, cycle_id, created_at)
+     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
   );
-  stmt.run([l.source_id, l.target_id, l.relation || null, l.confidence == null ? null : l.confidence]);
+  stmt.run([l.source_id, l.target_id, l.relation || null, l.confidence == null ? null : l.confidence,
+    l.cycle_id == null ? null : String(l.cycle_id)]);
   stmt.free();
   persist();
   return { source_id: l.source_id, target_id: l.target_id };

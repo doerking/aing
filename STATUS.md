@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 107 档 / 677 条断言全绿 |
+| 测试 | `npm test` → 108 档 / 683 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -61,6 +61,7 @@ status: active
 | 1.12 | kespi 八维 | ✅ | 1.12 | test-1.12-kespi 7/7 |
 | 1.13 | prune 逻辑退役 | ✅ | 1.13 | test-1.13-prune 7/7（判据已切 SPEC-6.11 四件） |
 | 1.14 | **meko-orchestrator 编排（关键路径尾）** | ✅ | 1.14 | test-1.14-orchestrator 6/6 |
+| 1.16 | 轮账与逐条存活（代谢记账层） | ✅ | `spec/SPEC-1.16-轮账与逐条存活.md` | test-1.16-round-ledger 6/6：建表与 links.cycle_id 迁移、每轮 320 类实体快照（alive/accessed/degree/content_len/strand）且同轮幂等、访问锚取 last_access 与 access_hits 更近者（≤7 天）、上一轮后新边归本轮（历史边留空）、账本按轮次有界（keepRounds）、编排 _writeCycle 接线且失败不阻断；真库副本实测：320 行/轮、单轮约 69KB，缺省保留 30 轮≈2.1MB（60 轮≈4.2MB 会顶手机端 10MB 上限，故定为 30）；边归属 0 条（真库 2292 条历史边均早于上一轮，保持记账前，符合预期）|
 | **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |
 
 ## 三、M2 meko 四顶职责 + 进化团入驻（4/8 已落地 + 3 健康修复 + 3 进化团）
@@ -123,7 +124,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **107 档 / 677 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **108 档 / 683 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
