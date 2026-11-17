@@ -10,6 +10,11 @@ const derive = require('./derive.js');
 const { shouldEnterRetrieval } = require('./tri-axis-gate.js');
 
 const SOURCE_PRIOR = 0.75;   // 会话原文是源头不是答案（SPEC-7.1 §〇）：向量与词面同折，回忆意图不折
+// SPEC-6.3 修订 F（2026-11-18）：向量路取全库、融合后再截断。
+// 原先 k=limit*3——只从词面/名称路进来的候选拿不到向量分（sim=0），同一张卡在 K=6 与 K=12 下
+// 融合分差 3.7 倍（真库实测 0.148 vs 0.554），名次跟着 K 翻转（23/24 题）。缺考不能记 0 分。
+const POOL_ALL = 1000000;
+const SLOW_STAT_TOP = 10;   // 慢回忆的置信统计只看最像的 10 条，与池大小无关
 
 const DEFAULTS = {
   // SPEC-6.3 修订 B（2026-11-17）：缺省后端切语义后，向量通道主导；此处按冻结集 v2 扫描实测定
@@ -268,17 +273,21 @@ async function search(store, query, opts = {}) {
     return e;
   };
 
+  // 0) 全库行表（词面路本来就要全扫；这里复用，免掉逐条回表）
+  const all = _rows(db, 'SELECT id,name,type,tags,content,updated_at FROM entities WHERE invalid_at IS NULL');
+  const rowMap = new Map(all.map((r) => [String(r.id), r]));
+
   // 1) 向量路（沿用 5.3：强度加权 + 简繁归一 + 双链去重）
-  const hits = opts.namesOnly ? [] : await V.search(store, query, { k: limit * 3, backend: opts.backend });
+  //    SPEC-6.3 修订 F：取全库，不按 limit 缩池——否则被挤在池外的候选拿不到向量分
+  const hits = opts.namesOnly ? [] : await V.search(store, query, { k: POOL_ALL, backend: opts.backend });
   for (const h of hits) {
-    const row = rowOf(h.id);
+    const row = rowMap.get(String(h.id));
     if (!row || row.invalid_at) continue;
     add(row, { sim: Number(h.score) || 0 });
   }
 
   // 2) 词面/名称路（只收真命中，不全库倾倒；词面用 IDF 加权，SPEC-6.3 修订 A）
   //    词面口径 SPEC-7.1 §4.1：content + keywords + variants；name/title 不入键
-  const all = _rows(db, 'SELECT id,name,type,tags,content,updated_at FROM entities WHERE invalid_at IS NULL');
   const groups = queryTokenGroups(query);
   const df = {};
   if (groups.length) {
@@ -308,7 +317,9 @@ async function search(store, query, opts = {}) {
 
   // 4) 慢回忆：整体向量置信低（或强制）时沿有效边扩一跳
   const withSim = [...pool.values()].filter((e) => (e.sim || 0) > 0.01).sort((a, b) => b.sim - a.sim);
-  const avgSim = withSim.length ? withSim.reduce((s, e) => s + e.sim, 0) / withSim.length : 0;
+  // SPEC-6.3 修订 F：置信统计取最像的 SLOW_STAT_TOP 条，池子变大不会把均值拖低
+  const statTop = withSim.slice(0, SLOW_STAT_TOP);
+  const avgSim = statTop.length ? statTop.reduce((s, e) => s + e.sim, 0) / statTop.length : 0;
   const threshold = typeof opts.slowRecallThreshold === 'number' ? opts.slowRecallThreshold : DEFAULTS.slowRecallThreshold;
   const needSlow = !!opts.forceSlow || (withSim.length > 0 && avgSim < threshold);
   const expandTop = Number.isInteger(opts.expandTop) && opts.expandTop > 0 ? opts.expandTop : DEFAULTS.expandTop;
@@ -336,7 +347,7 @@ async function search(store, query, opts = {}) {
         if (nbId === seed.id || seen.has(nbId)) continue;
         seen.add(nbId);
         if (pool.has(nbId)) continue;
-        const row = rowOf(nbId);
+        const row = rowMap.get(String(nbId)) || rowOf(nbId);
         if (!row || row.invalid_at) continue;
         const lx = keywordScoreIdf(row, query, df, N, { dl: _docLen(row), avgdl });
         const nm = nameScore(row, query);
