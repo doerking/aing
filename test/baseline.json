@@ -86,5 +86,6 @@
   "test-6.9-scaffold-port.js": 8,
   "test-6.9b-starlink-wiring.js": 8,
   "test-6.9c-kespi-readers.js": 4,
-  "test-7.1-identity-derive.js": 12
+  "test-7.1-identity-derive.js": 12,
+  "test-7.1b-assemble.js": 7
 }
