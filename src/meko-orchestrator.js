@@ -82,6 +82,8 @@ class MekoOrchestrator {
     const now = new Date().toISOString();
     stmt.run([id, `${cycleType}:round${round}`, now, now, status, kespi, kespiSource || null, edge.growth, edge.pruned, edge.ratio]);
     stmt.free();
+    // SPEC-1.16：本轮记账（实体快照 + 新边归属 + 上限裁剪）；失败不阻断本轮
+    try { require('./round-ledger.js').recordRound(this.store, id); } catch (_) { /* 记账失败不阻断编排 */ }
     this.store._persist();
     return cons;
   }
