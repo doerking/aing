@@ -76,6 +76,10 @@ function _isCjk(s) { return /[一-鿿]/.test(s); }
 function _aliasGroup(t) {
   const forms = new Set([t]);
   for (const f of derive.variants(t).all) forms.add(f);
+  // 粤语词：整句转普通话成一个别名（不把「谁/来」这类单字拆进别名，
+  // 否则任意含该字的档都拿满分——假命中主要来源）
+  // 粤语词：词表对照全部进别名（实测：砍掉单字对照会让冻结集粤语 R@10 掉 6 点，
+  // 长句精度交给词面覆盖比 + 长度正则 + 源头让位去压，不在这里动刀）
   for (const g of derive.segment(t).mandarin) forms.add(g);
   return [...forms].map(_foldLower).filter(Boolean);   // [0] 恒为原词，作 df/idf 键
 }
