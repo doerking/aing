@@ -53,7 +53,7 @@
   "test-3.5-auto-ingest.js": 6,
   "test-3.6-api-gate.js": 5,
   "test-3.7-gates-c0-c9.js": 3,
-  "test-3.8-gates-c10.js": 1,
+  "test-3.8-gates-c10.js": 3,
   "test-3.9-gates-c11-c19.js": 3,
   "test-4.1-migrate.js": 6,
   "test-5.1-vector-backend.js": 9,
@@ -90,5 +90,6 @@
   "test-7.1b-assemble.js": 7,
   "test-7.1c-index-face.js": 7,
   "test-7.1d-identity.js": 5,
-  "test-7.1e-yue.js": 11
+  "test-7.1e-yue.js": 11,
+  "test-7.1f-sprout-degree.js": 5
 }
