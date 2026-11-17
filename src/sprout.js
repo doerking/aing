@@ -46,7 +46,8 @@ async function sproutStep(store, opts = {}) {
   stats.scanned = ents.length;
 
   const links = [];
-  const ls = db.prepare('SELECT source_id, target_id FROM links WHERE invalid_at IS NULL');
+  // SPEC-1.9 修订 A：边表 PK 与 invalid_at 无关——退役边仍占位（2026-11-18 真库重跑撞 UNIQUE）
+  const ls = db.prepare('SELECT source_id, target_id FROM links');
   while (ls.step()) links.push(ls.getAsObject());
   ls.free();
 

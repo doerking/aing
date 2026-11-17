@@ -61,6 +61,14 @@ const rows = (sql) => { const s = store._getDb().prepare(sql); const out = []; w
 
   const la = rows('SELECT last_access FROM entities').map(r => String(r.last_access));
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'sprout.js'), 'utf8');
+  // AC-7 退役边不重复插（2026-11-18 真库：sprout 与 pollinate 同款 PK 坑）
+  db.run("UPDATE links SET invalid_at = CURRENT_TIMESTAMP WHERE relation = 'sprout-candidate'");
+  const nRetired = rows("SELECT COUNT(*) AS n FROM links WHERE relation = 'sprout-candidate'")[0].n;
+  let err7 = null;
+  try { await sproutStep(store, {}); } catch (e) { err7 = e.message; }
+  const nAfter = rows("SELECT COUNT(*) AS n FROM links WHERE relation = 'sprout-candidate'")[0].n;
+  ac('AC-7 退役边不重复插（重跑不抛错）', !err7 && nAfter === nRetired, JSON.stringify({ err7, nRetired, nAfter }));
+
   ac('AC-6 铁律', la.every(v => v === '2021-06-01 00:00:00') && !/DELETE\s+FROM/i.test(src));
 
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;

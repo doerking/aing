@@ -68,3 +68,10 @@ upstream: [SPEC-0.1, SPEC-0.4, SPEC-0.6, SPEC-1.8]
 
 - 上游：SPEC-0.4（三轴）、SPEC-0.1 §2.4（evidence 列）
 - 消费者：2.10 守恒闸、2.13 提升
+
+## 七、修订 A（2026-11-18，退役边仍占位）
+
+- 事故：真库轮次在 sprout 撞 `UNIQUE constraint failed: links.source_id, links.target_id`，与 pollinate 同源（SPEC-1.10 §七）。
+- 根因：去重集合只装 `invalid_at IS NULL` 的边；边表主键与 `invalid_at` 无关，退役边仍占 PK。
+- 契约：去重集合装全部边行（含退役），退役边按「已存在」跳过，不自动复活。
+- 测试：test-1.9-sprout AC-7。

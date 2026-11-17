@@ -8,20 +8,20 @@
 
 const crypto = require('crypto');
 
-const ZONES = { red: 0.65, green: 0.80 };
+// SPEC-1.12 修订 A：五维绝对值整体下移（真库五维实测 p25 0.46 / p50 0.51 / p90 0.71），分区随之下调
+const ZONES = { red: 0.45, green: 0.60 };
 const MAX_TICKETS = 20;
 const VERIFY_ATTEMPTS = 2;
 
 // 每维一条工单规则：below = 触发线；action = 场域动作或 memo-card（提案，不写场域）
+// SPEC-1.12 修订 A：KG/KM/KB 退役（不再有列值）；KD 改为催化率——零催化是常态，
+// 只有「被引用却不向外催化」（入向强边 ≥2）才值得回炉，其余不开单。
 const DIM_RULES = {
-  kg: { below: 0.50, kind: 'kg-low', action: 'rebond' },
-  kd: { below: 0.40, kind: 'kd-low', action: 'rebond' },
-  km: { below: 0.99, kind: 'km-low', action: 'reconcile' },
-  kc: { below: 0.80, kind: 'kc-low', action: 'reconcile' },
-  kq: { below: 0.60, kind: 'kq-low', action: 'memo-card' },
+  kq: { below: 0.50, kind: 'kq-low', action: 'memo-card' },
   ka: { below: 0.30, kind: 'ka-low', action: 'memo-card' },
-  kb: { below: 0.40, kind: 'kb-low', action: 'demote' },
-  kr: { below: 0.30, kind: 'kr-low', action: 'memo-card' }
+  kc: { below: 0.40, kind: 'kc-low', action: 'reconcile' },
+  kr: { below: 0.30, kind: 'kr-low', action: 'memo-card' },
+  kd: { below: 0.40, kind: 'kd-low', action: 'rebond', requireInStrong: 2 }
 };
 const DIM_NAMES = Object.keys(DIM_RULES);
 const ACTION_ORDER = { reconcile: 0, rebond: 1, demote: 2, 'memo-card': 3 };
@@ -85,6 +85,11 @@ function scanTickets(store, opts = {}) {
   const scores = _latestScores(db);
   const open = _openKeys(db);
   const cands = [];
+  // SPEC-1.12 修订 A：KD 催化率的 rebond 单只给「入向强边 ≥2」的实体
+  const inStrong = new Map();
+  for (const r of _rows(db, "SELECT target_id, COUNT(*) AS n FROM links WHERE invalid_at IS NULL AND strength >= 7 AND relation NOT IN ('sprout-candidate','pollinate-candidate') GROUP BY target_id")) {
+    inStrong.set(String(r.target_id), Number(r.n || 0));
+  }
 
   for (const s of scores) {
     const entityId = String(s.entity_id);
@@ -92,6 +97,7 @@ function scanTickets(store, opts = {}) {
       const rule = DIM_RULES[dim];
       const v = s[dim] == null ? null : Number(s[dim]);
       if (v == null || !Number.isFinite(v) || v >= rule.below) continue;
+      if (rule.requireInStrong != null && (inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
       if (open.has(entityId + '\u0000' + dim)) continue;
       cands.push({
         entity_id: entityId, dim, kind: rule.kind, action: rule.action,

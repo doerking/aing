@@ -80,7 +80,8 @@ const HANDLERS = {
       proposal: {
         type: 'score',
         dims: { D3: { kespiOverall: overall, conservationRatio: c.ratio, inBand: c.inBand } },
-        geneCandidates: overall != null && overall >= 0.6 ? ['kespi-high'] : [],
+        // SPEC-1.12 修订 A：五维均值整体下移（真库约 0.46），阈值从 0.6 调到 0.45（≈中位）
+        geneCandidates: overall != null && overall >= 0.45 ? ['kespi-high'] : [],
         tickets,
         trainerStages: TRAINER_STAGES
       }
