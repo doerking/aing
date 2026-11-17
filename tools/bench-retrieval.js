@@ -72,9 +72,15 @@ async function runBench(opts = {}) {
     return Number.isNaN(t) ? mx : Math.max(mx, t);
   }, 0) || undefined;
 
+  // 精排消融（SPEC-6.3 修订 D 实验面）：缺省不传，行为与生产同
+  const rerank = opts.rerank && typeof opts.rerank === 'object' ? opts.rerank : null;
   const rows = [];
   for (const p of pairs) {
-    const res = await R.search(store, p.q, { limit: k, now: nowRef, ...(backend ? { backend } : {}) });
+    const res = await R.search(store, p.q, {
+      limit: k, now: nowRef,
+      ...(backend ? { backend } : {}),
+      ...(rerank ? { rerank } : {})
+    });
     const m = metricsFor(res.candidates.map((c) => c.base || c.id), p, k);
     rows.push({ q: p.q, lang: p.lang, kind: p.kind, ...m });
   }
@@ -120,11 +126,16 @@ if (require.main === module) {
     const args = process.argv.slice(2);
     const get = (key) => { const i = args.indexOf('--' + key); return i >= 0 ? args[i + 1] : undefined; };
     const has = (key) => args.includes('--' + key);
+    const rerank = (get('kespi') != null || get('recency') != null)
+      ? { ...(get('kespi') != null ? { kespi: Number(get('kespi')) } : {}),
+          ...(get('recency') != null ? { recency: Number(get('recency')) } : {}) }
+      : undefined;
     const r = await runBench({
       backend: get('backend'),
       k: get('k') ? Number(get('k')) : undefined,
       corpus: get('corpus'),
       pairs: get('pairs'),
+      rerank,
       keep: has('keep')
     });
     if (has('json')) console.log(JSON.stringify(r, null, 2));
