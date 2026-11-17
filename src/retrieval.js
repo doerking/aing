@@ -10,7 +10,9 @@ const derive = require('./derive.js');
 const { shouldEnterRetrieval } = require('./tri-axis-gate.js');
 
 const DEFAULTS = {
-  weights: { vector: 0.6, lexical: 0.25, name: 0.15 },
+  // SPEC-6.3 修订 B（2026-11-17）：缺省后端切语义后，向量通道主导；此处按冻结集 v2 扫描实测定
+  // （0.8/0.05/0.15 的 nDCG@10 91.7%、正负名次差 98.75%、粤语 nDCG 87.3% 均优于旧 0.6/0.25/0.15）
+  weights: { vector: 0.8, lexical: 0.05, name: 0.15 },
   slowRecallThreshold: 0.35,
   expandTop: 6,
   rerank: { kespi: 0.15, recency: 0.1 },
