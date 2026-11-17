@@ -377,6 +377,7 @@ async function init(dbFilePath) {
   // 列迁移（SPEC-7.1）：双链分道 + 产物一次加标签
   if (!columns('entities').includes('strand')) {
     db.run("ALTER TABLE entities ADD COLUMN strand TEXT DEFAULT 'past'");
+    db.run("UPDATE entities SET strand = 'past' WHERE strand IS NULL");
     migrated = true;
   }
   if (!columns('entities').includes('metabolized_at')) {
@@ -412,7 +413,7 @@ function insertEntity(e) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   stmt.run([e.id, e.name || null, e.type || null, e.content || null, e.tags || null, e.status || null,
-    e.confidence == null ? null : e.confidence, e.strand || null]);
+    e.confidence == null ? null : e.confidence, e.strand || 'past']);
   stmt.free();
   persist();
   return e.id;
