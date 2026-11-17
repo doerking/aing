@@ -262,7 +262,8 @@ async function search(store, query, opts = {}) {
     const sim = cosine(qv, vec);
     if (sim <= 0) continue;
     const strength = Number(r.tolaria_strength == null ? 5 : r.tolaria_strength);
-    hits.push({ id: r.id, name: r.name, content: r.content, score: sim * (0.5 + 0.5 * Math.min(9, Math.max(1, strength)) / 9), similarity: sim, strength });
+    // SPEC-5.8：强度只做同类内的次序（系数 0.9–1.0），不再压过相似度
+    hits.push({ id: r.id, name: r.name, content: r.content, score: sim * (0.9 + 0.1 * Math.min(9, Math.max(1, strength)) / 9), similarity: sim, strength });
   }
   stmt.free();
   // 双链去重（SPEC-5.3 §2.2）：同 base 只留一条；同分优先 raw（wiki 是镜像）

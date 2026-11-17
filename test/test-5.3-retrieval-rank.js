@@ -40,7 +40,7 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
   ins('wiki-doc-a', '文档甲', '沙盒隔离验证不上真库，跑完即撤。', 5);
   // 强度加权
   ins('strong', '强度高', '向量重建之后检索按模型过滤。', 9);
-  ins('weak', '强度低', '向量重建之后检索按模型过滤。', 3);
+  ins('weak', '强度低', '向量重建之后检索按模型过滤！', 3); // 只差标点：同词元、异内容（去重不误伤），用于单看强度系数
   db.run("UPDATE entities SET last_access='2021-06-01 00:00:00'");
   store._persist();
 
@@ -68,10 +68,15 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
   const bases = two.map(h => h.base || String(h.id).replace(/^wiki-/, ''));
   ac('AC-6 k 按去重后计', two.length === 2 && new Set(bases).size === 2, JSON.stringify(bases));
 
-  // AC-7 强度加权不变
-  const s = await m.search(store, '向量重建模型过滤', { k: 3 });
+  // AC-7 强度加权收窄（SPEC-5.8）：9 段仍排 3 段前，但系数只在 0.9–1.0 之间
+  const s = await m.search(store, '向量重建模型过滤', { k: 5 });
   const sIds = s.map(h => h.id);
-  ac('AC-7 强度加权不变（9 段排 3 段前）', sIds.indexOf('strong') >= 0 && (sIds.indexOf('weak') === -1 || sIds.indexOf('strong') < sIds.indexOf('weak')), JSON.stringify(s.map(h => [h.id, +h.score.toFixed(3)])));
+  const strong = s.find(h => h.id === 'strong');
+  const weak = s.find(h => h.id === 'weak');
+  const gap = strong && weak ? (strong.score / weak.similarity) / (weak.score / weak.similarity) : 0;
+  ac('AC-7 强度加权收窄', sIds.indexOf('strong') >= 0 && sIds.indexOf('weak') >= 0 &&
+    sIds.indexOf('strong') < sIds.indexOf('weak') && gap > 1 && gap <= 1.12,
+    JSON.stringify({ sIds, gap }));
 
   // AC-8 内置不可覆盖 + 铁律
   const noHijack = throws(() => m.registerBackend({ name: 'hash-64w2', dim: 64, model: 'hijack', embed: () => new Array(64).fill(0) })) &&
