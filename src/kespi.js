@@ -47,7 +47,19 @@ function cleanBody(content) {
 // 口径：覆盖率只对六段叙事生效；非叙事实体 factor 恒为 1，读数不变
 const NARRATIVE_SECTIONS = ['场景（触发）', '思维（能力内核）', '手段（工具执行）', '编排（子agent）', '产出', '会话级校准'];
 const COVERAGE_FLOOR = 0.6;   // 零段 ×0.6，六段齐 ×1.0，线性
-const MIN_SECTION_CHARS = 20; // SPEC-6.31：段正文去空白不足 20 字不算「有这一段」
+const MIN_SECTION_CHARS = 20; // 基准；实际按实体滑动 ±5（SPEC-6.35）
+const SECTION_CHARS_JITTER = 5;
+
+function _hash32(s) {
+  let h = 2166136261;
+  for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+/** SPEC-6.35：段有效阈值按实体散列在 15/25 间定——同实体跨轮恒定，防贴线 20 字 */
+function sectionThreshold(entityId) {
+  if (entityId == null || entityId === '') return MIN_SECTION_CHARS;
+  return MIN_SECTION_CHARS + ((_hash32(entityId) & 1) ? SECTION_CHARS_JITTER : -SECTION_CHARS_JITTER);
+}
 
 /** 按标题行切段：返回 [{title, body}]（任何 1~4 级标题都切） */
 function _sectionBodies(md) {
@@ -59,21 +71,22 @@ function _sectionBodies(md) {
   }
   return out;
 }
-function narrativeCoverage(markdown) {
+function narrativeCoverage(markdown, opts = {}) {
   const md = String(markdown == null ? '' : markdown);
+  const min = sectionThreshold(opts && opts.entityId);
   const bodies = _sectionBodies(md);
   let n = 0;
   for (const key of NARRATIVE_SECTIONS) {
     const hit = bodies.find(b => b.title === key);
-    if (hit && hit.body.replace(/\s+/g, '').length >= MIN_SECTION_CHARS) n++;
+    if (hit && hit.body.replace(/\s+/g, '').length >= min) n++;
   }
   return n / NARRATIVE_SECTIONS.length;
 }
-function narrativeFactor(content) {
+function narrativeFactor(content, opts = {}) {
   const raw = String(content == null ? '' : content);
   const body = narrativeBody(raw);
   if (body === raw) return 1;   // 不是叙事 → 不参与覆盖率
-  return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body);
+  return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body, opts);
 }
 
 // SPEC-6.32：叙事长度只量六段正文——段外填充（别处几写字）不进 kq 长度分
@@ -190,7 +203,7 @@ async function kespiStep(store, opts = {}) {
       : cleanBody(content).length;
     const kq = clamp01((Math.min(1, bodyLen / 400) * 0.6 +
       Math.min(1, tagCount(e.tags) / 3) * 0.25 +
-      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content));
+      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content, { entityId: eid }));
 
     // KA 活跃：last_access 与访问事件取更近者
     const laDays = daysSince(now, e.last_access);
@@ -240,4 +253,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, sectionThreshold, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, ROUND_WINDOW, CANDIDATE_RELATIONS };

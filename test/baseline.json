@@ -137,5 +137,6 @@
   "test-6.31-section-validity.js": 6,
   "test-6.32-narrative-ticket.js": 7,
   "test-6.33-p1-round.js": 7,
-  "test-6.34-narrative-sliding.js": 7
+  "test-6.34-narrative-sliding.js": 7,
+  "test-6.35-threshold-slide.js": 6
 }
