@@ -84,6 +84,7 @@ function scanTickets(store, opts = {}) {
   const persist = opts.persist !== false;
   const max = Number.isInteger(opts.maxTickets) && opts.maxTickets > 0 ? opts.maxTickets : MAX_TICKETS;
   const scores = _latestScores(db);
+  const scoreById = new Map(scores.map(r => [String(r.entity_id), r]));
   const open = _openKeys(db);
   const cands = [];
   // SPEC-1.12 修订 A：KD 催化率的 rebond 单只给「入向强边 ≥2」的实体
@@ -146,7 +147,10 @@ function scanTickets(store, opts = {}) {
     for (const c of picked) {
       const id = _id('ticket');
       const demand = require('./ticket-demand.js').demandFor(c.kind);
-      const evidence = JSON.stringify({ score: c.score, zone: c.zone, source: 'kespi', ...(demand ? { demand } : {}) });
+      // SPEC-6.20：留读数快照，否则 improved 类判据回单时无从比
+      const sr = scoreById.get(String(c.entity_id)) || {};
+      const readings = { kq: sr.kq, ka: sr.ka, kd: sr.kd, kc: sr.kc, kr: sr.kr, overall: sr.overall };
+      const evidence = JSON.stringify({ score: c.score, zone: c.zone, source: 'kespi', readings, ...(demand ? { demand } : {}) });
       ins.run([id, c.entity_id, c.dim, c.kind, c.action, c.score, c.zone, evidence, opts.cycleId || null]);
       tickets.push({ id, ...c, status: 'open' });
     }
@@ -277,6 +281,38 @@ function verifyTickets(store, opts = {}) {
       const dm = (ev.demand && typeof ev.demand === 'object') ? ev.demand : {};
       const ttl = Number.isFinite(Number(dm.ttlRounds)) ? Number(dm.ttlRounds) : require('./ticket-demand.js').DEFAULT_TTL;
       const beat = heartbeatOf(ev, { at: opts.at });
+
+      // SPEC-6.20 需求穿透最后一跳：回单在时先过内容闸，再按 demand.acceptance 判。
+      // 之前这里只打心跳——外部件回了单也到不了判定，需求断在这一跳。
+      if (ev.result && typeof ev.result === 'object') {
+        const { admit } = require('./ticket-gate.js');
+        const verdict = admit(ev.result, { membrane: opts.membrane || 'semi' });
+        if (!verdict.admitted) {
+          const reason = 'gate:' + verdict.stage + ':' + (verdict.reasons || []).join('+');
+          _mark(db, t.id, 'rejected', { ...beat, reason, gate: verdict }, cycleId, { bump: false });
+          out.rejected.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason,
+            stage: verdict.stage, reasons: verdict.reasons || [] });
+          continue;
+        }
+        const now = _scalar(db, 'SELECT kq, ka, kd, kc, kr, overall FROM kespi_scores WHERE entity_id = ?', [t.entity_id]) || {};
+        const check = require('./ticket-demand.js').checkAcceptance(dm, now, { before: ev.readings || {} });
+        const primary = (Array.isArray(dm.acceptance) && dm.acceptance[0] && dm.acceptance[0].dim) || t.dim;
+        const before = (ev.readings && ev.readings[primary] != null) ? Number(ev.readings[primary]) : Number(t.score);
+        const after = now[primary] == null ? null : Number(now[primary]);
+        if (check.ok) {
+          _mark(db, t.id, 'verified',
+            { ...beat, reason: 'accepted', acceptance: check, before, after }, cycleId, { bump: false });
+          out.verified.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, before, after, delta: (after == null ? 0 : after - before) });
+        } else {
+          // 回单到了但判据不过：接受但退单，不留着占名额到 TTL
+          _mark(db, t.id, 'rejected',
+            { ...beat, reason: 'acceptance-failed', acceptance: check }, cycleId, { bump: false });
+          out.rejected.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: 'acceptance-failed',
+            failures: check.failures });
+        }
+        continue;
+      }
+
       if (Number(beat.followup.beats) > ttl) {
         _mark(db, t.id, 'rejected', { ...beat, reason: 'proposal-expired' }, cycleId, { bump: false });
         out.rejected.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: 'proposal-expired' });

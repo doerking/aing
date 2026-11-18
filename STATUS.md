@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 124 档 / 804 条断言全绿 |
+| 测试 | `npm test` → 125 档 / 812 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **124 档 / 804 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **125 档 / 812 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（22/22 已落地）
+## 五·补三 M6 能力叙事入库与消费（23/23 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -165,6 +165,7 @@ status: active
 | **6.17** | **kd 催化率与派单匹配（闭环可转）** | ✅ | `spec/SPEC-6.17-kd催化率与派单匹配.md` | test-6.17-kd-alignment 10/10；修四处断裂——① rebond 镜像键封底 strength 7（真库 126 条氢键里 118 条原是 strength=1，补键永不被催化率看见）② kd 门槛 0.40 → 0.30（kd 离散为 0/1/3/2/3/1，0.40 把 1/3 判死）③ kd 单分两路：raw 缺键 → `rebond`、被引用不催化 → `memo-card`/`kd-cited`，越界 rebond 当场 `out-of-scope`④ rebond 不再谎报：未来档 `skippedFuture`、已有 effective 边 `skippedExisting`、非主键冲突的错一律抛出 （原状：3 次记账 0 条边）。真库副本两轮：不再产生注定落空的 kd 单，改为 8 张提案；87 个 raw 已全部有键，故真库上 kd 无事可做（正确）。 |
 | **6.18** | **提案单需求定义与 TTL（+ 寄生位点位表）** | ✅ | `spec/SPEC-6.18-提案单需求定义与寄生位.md` | test-6.18-proposal-demand 8/8；提案单不再只有「哪一维低了」——每张 `memo-card` 单带五段需求 `demand{want/acceptance/evidence/mode/slot/ttlRounds}`（`src/ticket-demand.js` 单源，纯函数校验）：want 要具体、acceptance 可测（dim∈五维/overall，op∈gte/gt/improved）、evidence 与发布门同源、mode 分 semi/full、slot 指向寄生位；TTL 到期（`beats > ttlRounds`，默认 3 轮）→ `rejected: proposal-expired` 并释放 `(entity,dim)` 名额，心跳复用 6.15 律三，`dispatched` 单不受影响。同文附 **寄生位点位表 P1–P7**（入口成形/蒸馏/关联建边/蒸馏点/洞察提取/提案承接/回单校验），每点定半寄生与寄生两形态、写回点与拒绝条件；P7 校验层明确不可外包。**模拟已跑**：`tools/sim-derive.js`（拒在真库跑）——工作区成文 10,510 字入库副本，distill 产 1 件 future 产物 + 1 条 `derived@7`，kd 0→0.3333；提案单落单即带五段 demand。 |
 | **6.19** | **寄生位注册表与取单口（P1–P7 声明面）** | ✅ | `spec/SPEC-6.19-寄生位注册表与取单口.md` | test-6.19-parasite-slot 8/8；`src/parasite-slot.js` 只做声明与取单，纯函数无 I/O（取单口只读库）：`SLOTS` 落 P1–P7 七点位（位置/输入/输出/写回点/两形态/拒绝条件），`validateSlot` 拦未知点位与非法形态，`claim(slot,reg,demand)` 按序判不可外包（P7）→ slot 不匹配 → 形态过窄（semi 接不了 full）→ 证据缺件，`claimable(store,reg)` 只列能被这份注册接走的 `proposed` 单。外部件仍不写库——交回单，系统按写回点落库。 |
+| **6.20** | **需求穿透最后一跳（回单按 demand.acceptance 判）** | ✅ | `spec/SPEC-6.20-需求穿透-回单按需求判.md` | test-6.20-demand-acceptance 8/8；**审计先行**：`tools/audit-demand.js` 逐跳验需求是否被读到，初跑 H4/H5 两处断——回单到了 `verifyTickets` 的 `proposed` 分支只打心跳，`demand.acceptance` 在 `src/` 里 0 处被读。修：`ticket-demand.checkAcceptance(demand, readings, {before})`（gte/gt/improved，improved 无快照不假通过）；`proposed` 有回单时先过内容闸（6.14）再按需求判——达标 `verified`、不达标 `rejected: acceptance-failed`（不退成 `gate:`）；扫单时落 `readings` 五维快照，`improved` 判据才有 before。TTL 与心跳不动。审计现全程通。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
