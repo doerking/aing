@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 126 档 / 821 条断言全绿 |
+| 测试 | `npm test` → 127 档 / 830 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **126 档 / 821 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **127 档 / 830 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（24/24 已落地）
+## 五·补三 M6 能力叙事入库与消费（25/25 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -167,6 +167,7 @@ status: active
 | **6.19** | **寄生位注册表与取单口（P1–P7 声明面）** | ✅ | `spec/SPEC-6.19-寄生位注册表与取单口.md` | test-6.19-parasite-slot 8/8；`src/parasite-slot.js` 只做声明与取单，纯函数无 I/O（取单口只读库）：`SLOTS` 落 P1–P7 七点位（位置/输入/输出/写回点/两形态/拒绝条件），`validateSlot` 拦未知点位与非法形态，`claim(slot,reg,demand)` 按序判不可外包（P7）→ slot 不匹配 → 形态过窄（semi 接不了 full）→ 证据缺件，`claimable(store,reg)` 只列能被这份注册接走的 `proposed` 单。外部件仍不写库——交回单，系统按写回点落库。 |
 | **6.20** | **需求穿透最后一跳（回单按 demand.acceptance 判）** | ✅ | `spec/SPEC-6.20-需求穿透-回单按需求判.md` | test-6.20-demand-acceptance 8/8；**审计先行**：`tools/audit-demand.js` 逐跳验需求是否被读到，初跑 H4/H5 两处断——回单到了 `verifyTickets` 的 `proposed` 分支只打心跳，`demand.acceptance` 在 `src/` 里 0 处被读。修：`ticket-demand.checkAcceptance(demand, readings, {before})`（gte/gt/improved，improved 无快照不假通过）；`proposed` 有回单时先过内容闸（6.14）再按需求判——达标 `verified`、不达标 `rejected: acceptance-failed`（不退成 `gate:`）；扫单时落 `readings` 五维快照，`improved` 判据才有 before。TTL 与心跳不动。审计现全程通。 |
 | **6.21** | **memo 节拍强标识（pulse：PROGRESSING/IDLE/STUCK）** | ✅ | `spec/SPEC-6.21-memo节拍强标识.md` | test-6.21-memo-pulse 9/9；交付后看不到部署方调度器，心跳从「要求对方打的拍」改为「从底账读出的差」：memo 每次被读就用 `meko_cycles` + `kernel_state.stagnation_count` + 积压（pending-distillation + 未闭环工单）现算三态。`pulse.code` 是强标识且恒等于 `state`（机器只认这一个），`marker` ▶/⏸/⚠；非 PROGRESSING 时系统行行首加 `marker code /`，正常时不占字数。冷启动与无积压一律 IDLE，**有活不干才报 STUCK**。零新表、纯读。 |
+| **6.22** | **跟单判死改用轮次拍，区分 no-beat / no-progress** | ✅ | `spec/SPEC-6.22-跟单判死轮次拍.md` | test-6.22-stale-rounds 9/9；48 小时墙钟在部署环境不成立（空闲库即误判），改判死顺序：有轮次用轮次拍（`since = round - beatRound > 2`），无轮次才回退墙钟并标 `clock: wall`——两套钟不再混口径。心跳多记 `beatRound` / `stageSig` / `sameStage`；`staleTickets` 分报 **no-beat**（进程没了→重派）与 **no-progress**（拍在走、同签名≥3→换件），只扫 `dispatched`，提案单仍归 6.18 TTL。`verifyTickets` 心跳带轮次与阶段签名（读数两位小数 + 有无回单）。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |

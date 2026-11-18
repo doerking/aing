@@ -253,6 +253,9 @@ function verifyTickets(store, opts = {}) {
   const tickets = _rows(db,
     `SELECT * FROM opt_tickets WHERE status IN ('dispatched', 'proposed') ORDER BY created_at, id`);
   const out = { verified: [], stillOpen: [], rejected: [], escalated: [] };
+  // SPEC-6.22：心跳带轮次与阶段签名，判死才不用墙钟
+  const round = Number.isFinite(Number(opts.round)) ? Number(opts.round)
+    : Number((_scalar(db, 'SELECT COUNT(*) AS n FROM meko_cycles') || {}).n || 0);
 
   for (const t of tickets) {
     const cycleId = opts.cycleId || t.cycle_id || null;
@@ -280,7 +283,7 @@ function verifyTickets(store, opts = {}) {
     if (t.status === 'proposed') {
       const dm = (ev.demand && typeof ev.demand === 'object') ? ev.demand : {};
       const ttl = Number.isFinite(Number(dm.ttlRounds)) ? Number(dm.ttlRounds) : require('./ticket-demand.js').DEFAULT_TTL;
-      const beat = heartbeatOf(ev, { at: opts.at });
+      const beat = heartbeatOf(ev, { at: opts.at, round });
 
       // SPEC-6.20 需求穿透最后一跳：回单在时先过内容闸，再按 demand.acceptance 判。
       // 之前这里只打心跳——外部件回了单也到不了判定，需求断在这一跳。
@@ -357,17 +360,17 @@ function verifyTickets(store, opts = {}) {
     } else if (!(ev && ev.result)) {
       // 律一 追单不补位：还没回单就别判失败——只追单、只打心跳，attempts 不动
       _mark(db, t.id, 'dispatched',
-        { ...heartbeatOf(ev, { at: opts.at }), reason: CHASE_REASON, before, after }, cycleId, { bump: false });
+        { ...heartbeatOf(ev, { at: opts.at, round, stage: 'v' + (after == null ? 'na' : Number(after).toFixed(2)) + ':n' }), reason: CHASE_REASON, before, after }, cycleId, { bump: false });
       out.stillOpen.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: CHASE_REASON, before, after });
     } else if (Number(t.attempts) >= VERIFY_ATTEMPTS) {
       // 律二 失败≥2 改派：回单来了但不达标且已试过两次 → 交深工
       _mark(db, t.id, 'rejected',
-        { ...heartbeatOf(ev, { at: opts.at }), reason: ESCALATE_REASON, before, after }, cycleId);
+        { ...heartbeatOf(ev, { at: opts.at, round, stage: 'v' + (after == null ? 'na' : Number(after).toFixed(2)) + ':r' }), reason: ESCALATE_REASON, before, after }, cycleId);
       out.rejected.push({ id: t.id, reason: ESCALATE_REASON, before, after });
       out.escalated.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: ESCALATE_REASON, before, after });
     } else {
       _mark(db, t.id, 'dispatched',
-        { ...heartbeatOf(ev, { at: opts.at }), reason: 'waiting-next-cycle', before, after }, cycleId);
+        { ...heartbeatOf(ev, { at: opts.at, round, stage: 'v' + (after == null ? 'na' : Number(after).toFixed(2)) + ':r' }), reason: 'waiting-next-cycle', before, after }, cycleId);
       out.stillOpen.push({ id: t.id, reason: 'waiting-next-cycle', before, after });
     }
   }
