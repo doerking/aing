@@ -124,5 +124,6 @@
   "test-6.18-proposal-demand.js": 8,
   "test-6.19-parasite-slot.js": 8,
   "test-6.20-demand-acceptance.js": 8,
-  "test-6.21-memo-pulse.js": 9
+  "test-6.21-memo-pulse.js": 9,
+  "test-6.22-stale-rounds.js": 9
 }
