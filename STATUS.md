@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 131 档 / 856 条断言全绿 |
+| 测试 | `npm test` → 132 档 / 862 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **131 档 / 856 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **132 档 / 862 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（29/29 已落地）
+## 五·补三 M6 能力叙事入库与消费（30/30 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -172,6 +172,7 @@ status: active
 | **6.24** | **P2 半寄生端到端（取单→回单→写回→判→上屏）** | ✅ | `spec/SPEC-6.24-P2半寄生端到端.md` | test-6.24-parasite-e2e 6/6；工具 `tools/parasite-round.js`（拒在真库跑）。锁的是**边界**：外部件只 SELECT 产回单（前后两张表快照必须一致），写入只走系统 `applyReturn` 按 P2 写回点执行；回单缺自评在 `gate:publish` 先拒，轮不到判据兜底。真库副本实跑：kq 0.2393→0.85，`verified/accepted`，屏上已收单 1 条。**发现**：`MAX_TICKETS=20` 全局上限会被 kd(0)/ka(0.2) 占满，kq 单进不来——按维配额列入下一步。 |
 | **6.25** | **扫单按维配额（kq 不再饿死）** | ✅ | `spec/SPEC-6.25-扫单按维配额.md` | test-6.25-scan-quota 6/6；`DIM_QUOTA={kq5,ka5,kr5,kc5,kd8,overall3}`，逐条按维计数取位，总上限仍是硬顶，`opts.quota` 可覆盖。真库副本对照：kq 单 **0→5**、ka 12→5、kd 8、overall 0→3；配额后 P2 半寄生仍跑通（kq 0.2393→0.85 verified）。**背景**：kd/ka 分数天然偏低，全局抢 20 位时 kq 永远排不上——这是「自优化覆盖不到质量维」的真因。 |
 | **6.26** | **维护轮闸（L3 只在维护轮执行）** | ✅ | `spec/SPEC-6.26-维护轮闸.md` | test-6.26-maintenance-guard 6/6；把 `maintenanceGuard` 在链上的真实行为钉住——真库副本实测：`代谢` 轮 `skipped:true` 且 0 单，`维护` 轮 `scanned 20 / proposed 20`，`代谢 + selfOptimize:true` 亦执行；跳过不算失败（轮 ok）。链序 `kespi → self-optimize` 由测试锁死，防止重排链导致排单用旧读数。**这解释了真库 14 轮 0 工单**：不是没信号，是从来没跑过维护轮。 |
+| **6.27** | **pulse 报上次维护轮（lastMaintenanceAt）** | ✅ | `spec/SPEC-6.27-pulse维护轮读数.md` | test-6.27-pulse-maintenance 6/6；`pulse` 增 `lastMaintenanceAt` 与 `maintenanceRoundsSince`——取 `meko_cycles` 里最近一条「维护/自优化」轮，并数其后又跑了多少轮；从未跑过时为 `null`（不伪造 0）。三态判定不受影响，仍是纯读。这也让部署方看得出「自优化 L3 该开了」——6.26 已证明普通轮里它不跑。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
