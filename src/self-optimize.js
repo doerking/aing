@@ -254,6 +254,21 @@ function verifyTickets(store, opts = {}) {
     const after = cur && cur.v != null ? Number(cur.v) : null;
     let ev = {};
     try { ev = JSON.parse(t.evidence_json || '{}'); } catch (_) { ev = {}; }
+
+    // SPEC-6.14 修订 A：回单在时先过内容闸（膜 → 粒度 → 发布门），不过即拒，不看读数。
+    // 理由：「无自评不发布」是硬红线，读数上升也不能抵消。
+    if (ev && ev.result && typeof ev.result === 'object') {
+      const { admit } = require('./ticket-gate.js');
+      const verdict = admit(ev.result, { membrane: opts.membrane || 'semi' });
+      if (!verdict.admitted) {
+        const reason = 'gate:' + verdict.stage + ':' + (verdict.reasons || []).join('+');
+        _mark(db, t.id, 'rejected', { reason, gate: verdict }, cycleId);
+        out.rejected.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason,
+          stage: verdict.stage, reasons: verdict.reasons || [] });
+        continue;
+      }
+    }
+
     const before = ev.score == null ? Number(t.score) : Number(ev.score);
     if (after == null) {
       _mark(db, t.id, 'dispatched', { reason: 'no-score' }, cycleId);

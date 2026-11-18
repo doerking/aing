@@ -77,6 +77,7 @@
   "test-6.12-persist-safety.js": 10,
   "test-6.13-intent-routing.js": 6,
   "test-6.14-ticket-gate.js": 10,
+  "test-6.14b-verify-gate.js": 6,
   "test-6.2-distill-points.js": 7,
   "test-6.3-retrieval-fusion.js": 7,
   "test-6.3b-fusion-weights.js": 3,
