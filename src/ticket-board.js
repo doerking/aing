@@ -12,6 +12,8 @@ const SECTIONS = [
 ];
 
 const NO_BEAT = '无心跳';
+const NO_PROGRESS = '无进展';
+const F = require('./ticket-followup.js');
 
 function _rows(db, sql, binds = []) {
   const s = db.prepare(sql);
@@ -37,14 +39,24 @@ function _display(r) {
   return n || String(r.entity_id || r.id || '');
 }
 
-/** 单行：待回单（含心跳） */
-function _pendingRow(r, ev) {
+/** 单行：待回单（含心跳与失效分类，SPEC-6.23） */
+function _pendingRow(r, ev, round) {
   const f = (ev.followup && typeof ev.followup === 'object') ? ev.followup : {};
   const beats = _num(f.beats);
   const beatAt = f.beatAt == null ? null : String(f.beatAt);
+  let kind = 'ok', note = '', roundsSince = null, sameStage = null;
+  if (!beatAt) { kind = 'no-beat'; note = NO_BEAT; }
+  else {
+    const verdict = F.isStale(ev, { round });
+    if (verdict.stale) { kind = 'no-beat'; note = NO_BEAT; roundsSince = verdict.roundsSince; }
+    else {
+      sameStage = _num(f.sameStage);
+      if (sameStage != null && sameStage >= F.SAME_STAGE_LIMIT) { kind = 'no-progress'; note = NO_PROGRESS; }
+    }
+  }
   return {
     id: String(r.id), entity: _display(r), dim: r.dim == null ? null : String(r.dim),
-    beatAt, beats, note: beatAt && beats != null ? '' : NO_BEAT
+    beatAt, beats, kind, note, roundsSince, sameStage
   };
 }
 
@@ -87,9 +99,13 @@ function _lines(summary, sections) {
     out.push(`▌${s.label}（${s.rows.length}）`);
     for (const r of s.rows) {
       if (s.key === 'pending') {
-        out.push(r.note === NO_BEAT
-          ? `  · ${r.entity} · ${r.dim || '—'} · ${NO_BEAT}`
-          : `  · ${r.entity} · ${r.dim || '—'} · 心跳 ${r.beatAt}（${r.beats} 拍）`);
+        if (r.kind === 'no-beat') {
+          out.push(`  · ${r.entity} · ${r.dim || '—'} · ⚠ 无心跳${r.roundsSince != null ? '（' + r.roundsSince + ' 轮未拍）' : ''}`);
+        } else if (r.kind === 'no-progress') {
+          out.push(`  · ${r.entity} · ${r.dim || '—'} · ⏳ 无进展（同阶段 ${r.sameStage} 拍）`);
+        } else {
+          out.push(`  · ${r.entity} · ${r.dim || '—'} · 心跳 ${r.beatAt}（${r.beats} 拍）`);
+        }
       } else if (s.key === 'blocked') {
         if (r.kind === 'gate') out.push(`  ✗ ${r.entity} · 内容闸 ${r.stage} · ${r.reasons.join('+') || '未列原因'}`);
         else if (r.kind === 'escalate') out.push(`  ⇗ ${r.entity} · 交深工（连试 ≥2 未见改善）`);
@@ -106,6 +122,9 @@ function boardOf(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('boardOf 需要 store 注入（SPEC-1.15 契约）');
   const db = store._getDb();
   const limit = opts.limit == null ? null : Math.max(0, Number(opts.limit));
+  // SPEC-6.23：判死轮次；缺省取系统轮次（meko_cycles 行数），调用方可覆盖
+  const round = Number.isFinite(Number(opts.round)) ? Number(opts.round)
+    : Number((_rows(db, 'SELECT COUNT(*) AS n FROM meko_cycles')[0] || {}).n || 0);
 
   const rows = _rows(db, `
     SELECT t.id, t.entity_id, t.dim, t.status, t.evidence_json, t.updated_at,
@@ -117,7 +136,7 @@ function boardOf(store, opts = {}) {
   const buckets = { pending: [], blocked: [], verified: [] };
   for (const r of rows) {
     const ev = _parse(r.evidence_json);
-    if (r.status === 'dispatched') buckets.pending.push(_pendingRow(r, ev));
+    if (r.status === 'dispatched') buckets.pending.push(_pendingRow(r, ev, round));
     else if (r.status === 'rejected') buckets.blocked.push(_blockedRow(r, ev));
     else if (r.status === 'verified') buckets.verified.push(_verifiedRow(r, ev));
   }
@@ -130,10 +149,12 @@ function boardOf(store, opts = {}) {
     pending: buckets.pending.length,
     blocked: buckets.blocked.length,
     escalated: buckets.blocked.filter(r => r.kind === 'escalate').length,
+    noBeat: buckets.pending.filter(r => r.kind === 'no-beat').length,
+    noProgress: buckets.pending.filter(r => r.kind === 'no-progress').length,
     verified: buckets.verified.length,
     other: Math.max(0, rows.length - shown)
   };
   return { summary, sections, lines: _lines(summary, sections) };
 }
 
-module.exports = { SECTIONS, NO_BEAT, boardOf };
+module.exports = { SECTIONS, NO_BEAT, NO_PROGRESS, boardOf };
