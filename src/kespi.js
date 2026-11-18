@@ -55,10 +55,29 @@ function _hash32(s) {
   for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }
-/** SPEC-6.35：段有效阈值按实体散列在 15/25 间定——同实体跨轮恒定，防贴线 20 字 */
-function sectionThreshold(entityId) {
+/** 洗牌：种子决定顺序，可复算（Fisher-Yates） */
+function _shuffle(arr, seed) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = _hash32(seed + '|' + i) % (i + 1);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+const SLIDE_CYCLE = 6;   // 1 次基准 + 5 个幅度 = 一个周期
+/**
+ * SPEC-6.36：阈值游标——20 出现一次，随后 ±5..±1 各走一遍再回 20，
+ * 方向按周期交替；shuffle 种子 = 实体 id + 周期号，同实体同轮可复算。
+ */
+function sectionThreshold(entityId, opts = {}) {
   if (entityId == null || entityId === '') return MIN_SECTION_CHARS;
-  return MIN_SECTION_CHARS + ((_hash32(entityId) & 1) ? SECTION_CHARS_JITTER : -SECTION_CHARS_JITTER);
+  const round = Number.isFinite(Number(opts && opts.round)) ? Math.max(0, Math.floor(Number(opts.round))) : 0;
+  const cycle = Math.floor(round / SLIDE_CYCLE);
+  const pos = round % SLIDE_CYCLE;
+  if (pos === 0) return MIN_SECTION_CHARS;
+  const sign = (cycle % 2 === 0) ? 1 : -1;
+  const mags = _shuffle([1, 2, 3, 4, 5], String(entityId) + '#' + cycle);
+  return MIN_SECTION_CHARS + sign * mags[pos - 1];
 }
 
 /** 按标题行切段：返回 [{title, body}]（任何 1~4 级标题都切） */
@@ -73,7 +92,7 @@ function _sectionBodies(md) {
 }
 function narrativeCoverage(markdown, opts = {}) {
   const md = String(markdown == null ? '' : markdown);
-  const min = sectionThreshold(opts && opts.entityId);
+  const min = sectionThreshold(opts && opts.entityId, opts);
   const bodies = _sectionBodies(md);
   let n = 0;
   for (const key of NARRATIVE_SECTIONS) {
@@ -127,6 +146,10 @@ async function kespiStep(store, opts = {}) {
   const stats = { scanned: 0, scored: 0 };
   const now = Number.isInteger(opts.now) ? opts.now : Date.now();
   const db = store._getDb();
+  // SPEC-6.36：阈值游标的轮次——显式 opts.round 优先，否则取代谢轮计数
+  const round = Number.isFinite(Number(opts.round))
+    ? Number(opts.round)
+    : Number((_scalar(db, 'SELECT COUNT(*) AS n FROM meko_cycles') || {}).n || 0);
 
   const ents = [];
   const es = db.prepare('SELECT * FROM entities WHERE invalid_at IS NULL');
@@ -203,7 +226,7 @@ async function kespiStep(store, opts = {}) {
       : cleanBody(content).length;
     const kq = clamp01((Math.min(1, bodyLen / 400) * 0.6 +
       Math.min(1, tagCount(e.tags) / 3) * 0.25 +
-      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content, { entityId: eid }));
+      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content, { entityId: eid, round }));
 
     // KA 活跃：last_access 与访问事件取更近者
     const laDays = daysSince(now, e.last_access);
