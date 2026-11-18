@@ -34,12 +34,12 @@ const narrative = (markdown, turnsChars) => JSON.stringify({
     sc('c-thin') != null && sc('c-thin') <= sc('p-thin') + 0.1,
     JSON.stringify({ narrative: sc('c-thin'), plain: sc('p-thin') }));
 
-  // AC-2 正文够厚 → 读数正常上升
-  put('c-rich', narrative('### 场景（触发）\n' + '甲'.repeat(400) + '\n\n### 产出\n' + '乙'.repeat(400), 10));
+  // AC-2 正文够厚且六段齐 → 读数正常上升（覆盖率 1，隔离 6.30 的掉分）
+  put('c-rich', narrative(N.SECTIONS.map((k, i) => `### ${k}\n` + (i % 2 ? '乙' : '甲').repeat(130)).join('\n\n'), 10));
   put('p-rich', '# 会话\n\n' + '甲'.repeat(400) + '乙'.repeat(400));
   store._persist();
   await K.kespiStep(store, {});
-  ac('AC-2 厚叙事读数与同长度纯文本相当（差 ≤ 0.15）',
+  ac('AC-2 厚叙事（六段齐）读数与同长度纯文本相当（差 ≤ 0.15）',
     sc('c-rich') != null && Math.abs(sc('c-rich') - sc('p-rich')) <= 0.15,
     JSON.stringify({ narrative: sc('c-rich'), plain: sc('p-rich') }));
 
