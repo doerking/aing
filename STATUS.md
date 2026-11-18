@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 128 档 / 838 条断言全绿 |
+| 测试 | `npm test` → 129 档 / 844 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **128 档 / 838 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **129 档 / 844 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（26/26 已落地）
+## 五·补三 M6 能力叙事入库与消费（27/27 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -169,6 +169,7 @@ status: active
 | **6.21** | **memo 节拍强标识（pulse：PROGRESSING/IDLE/STUCK）** | ✅ | `spec/SPEC-6.21-memo节拍强标识.md` | test-6.21-memo-pulse 9/9；交付后看不到部署方调度器，心跳从「要求对方打的拍」改为「从底账读出的差」：memo 每次被读就用 `meko_cycles` + `kernel_state.stagnation_count` + 积压（pending-distillation + 未闭环工单）现算三态。`pulse.code` 是强标识且恒等于 `state`（机器只认这一个），`marker` ▶/⏸/⚠；非 PROGRESSING 时系统行行首加 `marker code /`，正常时不占字数。冷启动与无积压一律 IDLE，**有活不干才报 STUCK**。零新表、纯读。 |
 | **6.22** | **跟单判死改用轮次拍，区分 no-beat / no-progress** | ✅ | `spec/SPEC-6.22-跟单判死轮次拍.md` | test-6.22-stale-rounds 9/9；48 小时墙钟在部署环境不成立（空闲库即误判），改判死顺序：有轮次用轮次拍（`since = round - beatRound > 2`），无轮次才回退墙钟并标 `clock: wall`——两套钟不再混口径。心跳多记 `beatRound` / `stageSig` / `sameStage`；`staleTickets` 分报 **no-beat**（进程没了→重派）与 **no-progress**（拍在走、同签名≥3→换件），只扫 `dispatched`，提案单仍归 6.18 TTL。`verifyTickets` 心跳带轮次与阶段签名（读数两位小数 + 有无回单）。 |
 | **6.23** | **回单屏分两种失效（no-beat / no-progress）** | ✅ | `spec/SPEC-6.23-回单屏分两种失效.md` | test-6.23-board-stale-kinds 8/8；待回单行加 `kind`（ok / no-beat / no-progress），复用 `ticket-followup.isStale` 与 `SAME_STAGE_LIMIT` 单源；屏上 `⚠ 无心跳（N 轮未拍）` / `⏳ 无进展（同阶段 N 拍）` 可分辨；`summary.noBeat` / `summary.noProgress` 为强标识，下游只读数字即可分重派与换件。`boardOf(store,{round})` 可指定轮次，缺省取 `meko_cycles` 行数；仍是纯读。 |
+| **6.24** | **P2 半寄生端到端（取单→回单→写回→判→上屏）** | ✅ | `spec/SPEC-6.24-P2半寄生端到端.md` | test-6.24-parasite-e2e 6/6；工具 `tools/parasite-round.js`（拒在真库跑）。锁的是**边界**：外部件只 SELECT 产回单（前后两张表快照必须一致），写入只走系统 `applyReturn` 按 P2 写回点执行；回单缺自评在 `gate:publish` 先拒，轮不到判据兜底。真库副本实跑：kq 0.2393→0.85，`verified/accepted`，屏上已收单 1 条。**发现**：`MAX_TICKETS=20` 全局上限会被 kd(0)/ka(0.2) 占满，kq 单进不来——按维配额列入下一步。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
