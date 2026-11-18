@@ -60,7 +60,10 @@ async function rebond(store, opts = {}) {
   const ents = _entities(db);
   const links = _activeLinks(db);
   const bonded = new Set(links.filter(l => l.relation === REL_BOND).map(l => l.source_id + '\u0000' + l.target_id));
-  const stats = { scanned: 0, bonded: 0, skippedOutOfBand: 0 };
+  // SPEC-6.17：links 的主键是 (source,target)——同一对只能挂一条关系。
+  // 已有任何有效边（如 distill 的 derived）就不能再插氢键，也不该覆盖它。
+  const anyPair = new Set(links.map(l => l.source_id + '\u0000' + l.target_id));
+  const stats = { scanned: 0, bonded: 0, skippedOutOfBand: 0, skippedFuture: 0, skippedExisting: 0 };
 
   const insert = db.prepare(
     `INSERT INTO links (source_id, target_id, relation, confidence, strength, created_at)
@@ -76,18 +79,27 @@ async function rebond(store, opts = {}) {
     if (e.invalid_at) continue;
     if (opts.entityId && id !== opts.entityId) continue;
     stats.scanned++;
+    if (String(e.strand || 'past') === 'future') { stats.skippedFuture++; continue; }
     if (!_inBand(e)) { stats.skippedOutOfBand++; continue; }
     const wiki = ents.get('wiki-' + _base(id));
     if (!wiki || wiki.invalid_at) continue;
     if (bonded.has(id + '\u0000' + wiki.id)) continue;
-    const strength = _mapStrength(e.confidence);
+    if (anyPair.has(id + '\u0000' + wiki.id)) { stats.skippedExisting++; continue; }
+    // SPEC-6.17：带内母件的镜像键封底为强边——镜像键记的是结构事实（派生件存在），
+    // 不是语义强度；按 confidence 走会把真库（confidence=0）的键压成 strength 1，
+    // 于是「补键」这个动作永远不被催化率看见。
+    const strength = Math.max(7, _mapStrength(e.confidence));
+    let revived = false;
     try {
       insert.run([id, wiki.id, REL_BOND, e.confidence == null ? null : e.confidence, strength]);
-    } catch (_) {
-      // PK 已存在（曾断过）→ 复键
+    } catch (err) {
+      // 只把主键冲突（同对曾有退役行）当复键；库层闸等其他错误必须抛出——
+      // 吞掉它会变成「记账成功、边没建」的假成功（SPEC-6.17）。
+      if (!/UNIQUE|PRIMARY KEY|constraint/i.test(String(err && err.message))) throw err;
       revive.run([id, wiki.id]);
+      revived = true;
     }
-    _record(db, { action: 'rebond', target: id + '->' + wiki.id, before: null, after: { relation: REL_BOND, strength }, cycleId: opts.cycleId });
+    _record(db, { action: 'rebond', target: id + '->' + wiki.id, before: null, after: { relation: REL_BOND, strength, revived }, cycleId: opts.cycleId });
     bonded.add(id + '\u0000' + wiki.id);
     stats.bonded++;
     dirty = true;

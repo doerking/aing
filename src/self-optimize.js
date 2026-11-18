@@ -22,7 +22,7 @@ const DIM_RULES = {
   ka: { below: 0.30, kind: 'ka-low', action: 'memo-card' },
   kc: { below: 0.40, kind: 'kc-low', action: 'reconcile' },
   kr: { below: 0.30, kind: 'kr-low', action: 'memo-card' },
-  kd: { below: 0.40, kind: 'kd-low', action: 'rebond', requireInStrong: 2 }
+  kd: { below: 0.30, kind: 'kd-low', action: 'rebond', requireInStrong: 2 }
 };
 const DIM_NAMES = Object.keys(DIM_RULES);
 const ACTION_ORDER = { reconcile: 0, rebond: 1, demote: 2, 'memo-card': 3 };
@@ -91,6 +91,13 @@ function scanTickets(store, opts = {}) {
   for (const r of _rows(db, "SELECT target_id, COUNT(*) AS n FROM links WHERE invalid_at IS NULL AND strength >= 7 AND relation NOT IN ('sprout-candidate','pollinate-candidate') GROUP BY target_id")) {
     inStrong.set(String(r.target_id), Number(r.n || 0));
   }
+  // SPEC-6.17：kd 单的作用域要看 rebond 真能修谁——raw 母件、有活跃镜像、缺键
+  const wikiActive = new Set(_rows(db, "SELECT id FROM entities WHERE invalid_at IS NULL AND id LIKE 'wiki-%'").map(r => String(r.id)));
+  // SPEC-6.17：未来档实体不得落过去边（库层硬闸会 ABORT），别为它们开 rebond 单
+  const futureIds = new Set(_rows(db, "SELECT id FROM entities WHERE invalid_at IS NULL AND strand = 'future'").map(r => String(r.id)));
+  // 已有任何有效边的对，rebond 也插不进去（links 主键只看 source+target）
+  const anyPair = new Set(_rows(db, "SELECT source_id, target_id FROM links WHERE invalid_at IS NULL")
+    .map(r => String(r.source_id) + '\u0000' + String(r.target_id)));
 
   for (const s of scores) {
     const entityId = String(s.entity_id);
@@ -98,6 +105,18 @@ function scanTickets(store, opts = {}) {
       const rule = DIM_RULES[dim];
       const v = s[dim] == null ? null : Number(s[dim]);
       if (v == null || !Number.isFinite(v) || v >= rule.below) continue;
+      // SPEC-6.17：kd 分两路——能自愈的（raw 缺键）派真动作，不能自愈的（被引用却不催化）只出提案
+      if (dim === 'kd') {
+        if (open.has(entityId + '\u0000' + dim)) continue;
+        const twinId = 'wiki-' + entityId.replace(/^raw-/, '');
+        if (entityId.startsWith('raw-') && !futureIds.has(entityId) && wikiActive.has(twinId) && !anyPair.has(entityId + '\u0000' + twinId)) {
+          cands.push({ entity_id: entityId, dim, kind: rule.kind, action: 'rebond', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
+          continue;
+        }
+        if ((inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
+        cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'memo-card', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
+        continue;
+      }
       if (rule.requireInStrong != null && (inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
       if (open.has(entityId + '\u0000' + dim)) continue;
       cands.push({
@@ -188,6 +207,13 @@ async function dispatchTickets(store, opts = {}) {
     if (!FIELD_ACTIONS.includes(t.action)) {
       _mark(db, t.id, 'rejected', { reason: 'unknown-action' }, cycleId);
       out.rejected.push({ id: t.id, reason: 'unknown-action' });
+      continue;
+    }
+    // SPEC-6.17 护栏：rebond 只作用于 raw 母件。派到别处必然 scanned=0，
+    // 与其派了再报 no-effect，不如当场判越界（原因可查、不浪费一轮）。
+    if (t.action === 'rebond' && !String(t.entity_id).startsWith('raw-')) {
+      _mark(db, t.id, 'rejected', { reason: 'out-of-scope', action: 'rebond', entity_id: t.entity_id }, cycleId);
+      out.rejected.push({ id: t.id, entity_id: t.entity_id, reason: 'out-of-scope' });
       continue;
     }
     try {
