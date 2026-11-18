@@ -56,28 +56,61 @@ function applyReturn(store, claim, ret) {
   store._persist();
 }
 
-/** SPEC-6.33 外部件（P1 全寄生）：只读单 + 原料，产出六段回单，不写库 */
+/** SPEC-6.34 外部件（P1 全寄生）：六段从实体事实抽出——骨架恒定，内容随实体滑动 */
 function externalPartNarrative(db, claim) {
   const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
   s.bind([claim.entity_id]); const e = s.step() ? s.getAsObject() : null; s.free();
   if (!e) return null;
   const N = require('../src/capability-narrative.js');
-  const id = claim.entity_id;
-  const bodies = {
-    '场景（触发）': `实体 ${id} 在质量复查中被判正文不足，触发本轮六段重写；触发源为 kq 低分工单 ${claim.id}。`,
-    '思维（能力内核）': '思维主线：先按单上需求核对缺的是哪几段，再按原会话事实补写，不引入新结论，不改动既有判据。',
-    '手段（工具执行）': '手段：只读库内该实体原正文与工单证据，渲染六段文本；不调用写接口，不改任何其它实体。',
-    '编排（子agent）': '编排：单轮单人完成，未拆子agent；需要并行时按场景/思维/手段三段各自独立成稿再合并。',
-    '产出': '产出：本实体六段叙事各不少于二十字，正文合计超过四百字，交由系统按 P1 写回点落库。',
-    '会话级校准': '校准：本轮回单带四样证据（事实/指针/来源分级/自评），自评只声明补写六段，是否达标由系统按 kq 验收。'
+  let doc;
+  try { doc = JSON.parse(String(e.content)); } catch (_) { return null; }
+  if (!doc || doc.format !== N.FORMAT) return null;
+
+  const turns = Array.isArray(doc.turns) ? doc.turns : [];
+  const cals = Array.isArray(doc.calibrations) ? doc.calibrations : [];
+  const clip = (v, n) => { const t = String(v == null ? '' : v).trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
+  const scenes = turns.map(t => String(t.scene || '')).filter(Boolean);
+  const thinks = turns.map(t => String(t.thinking || '')).filter(Boolean);
+  const outs = turns.map(t => String(t.output || '')).filter(Boolean);
+  const tools = turns.flatMap(t => Array.isArray(t.tools) ? t.tools : []);
+  const plain = tools.filter(x => !x.isSub);
+  const subs = tools.filter(x => x.isSub);
+  const uniq = (xs) => [...new Set(xs.map(x => String(x.name || '')))].filter(Boolean).join('、');
+
+  const sections = {
+    '场景（触发）': scenes.length
+      ? `本单元共 ${turns.length} 轮会话；首轮触发为「${clip(scenes[0], 60)}」。`
+      : `本单元共 ${turns.length} 轮会话，首轮无用户输入记录。`,
+    '思维（能力内核）': thinks.length
+      ? `推理线索：${clip(thinks.join(' '), 80)}`
+      : '本单元无显式推理块，思维只能由产出反推。',
+    '手段（工具执行）': plain.length
+      ? `调用工具 ${plain.length} 次：${uniq(plain)}；参数摘要见各轮 tools[].input。`
+      : '本单元无工具调用，手段仅为对话推理。',
+    '编排（子agent）': subs.length
+      ? `派发子agent ${subs.length} 次：${uniq(subs)}。`
+      : '本单元无子agent 派发，全部工作单轮内完成。',
+    '产出': outs.length
+      ? `产出：${clip(outs.join(' '), 80)}`
+      : '本单元无文本产出记录。',
+    '会话级校准': cals.length
+      ? `校准 ${cals.length} 条：${clip(cals.map(c => String(c.summary || c.type || '')).join('；'), 60)}`
+      : '本单元无会话级校准记录。'
   };
   return {
-    patch: { sections: bodies },
+    patch: { sections },
     result: {
-      facts: [`按六段重写：${Object.keys(bodies).length} 段，总正文 ${Object.values(bodies).join('').length} 字`],
-      pointers: [`entities/${id}`, `opt_tickets/${claim.id}`],
+      facts: [
+        `场景取自 turns[0].scene（共 ${turns.length} 轮）`,
+        `思维取自 ${thinks.length} 段推理块`,
+        `手段取自工具调用 ${plain.length} 次`,
+        `编排取自子agent ${subs.length} 次`,
+        `产出取自 ${outs.length} 段文本`,
+        `校准取自 ${cals.length} 条会话级校准`
+      ],
+      pointers: [`entities/${claim.entity_id}`, `opt_tickets/${claim.id}`],
       sourceGrade: 'medium',
-      selfAssessment: '自评：六段均为重写文本，事实来自原会话，未改结论；达标与否以系统 kq 验收为准'
+      selfAssessment: '自评：六段均按实体既有轨迹抽取，无证据的段只写声明；达标与否以系统 kq 验收为准'
     }
   };
 }
