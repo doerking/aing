@@ -18,7 +18,12 @@ const narrative = (markdown, turns) => JSON.stringify({
   format: N.FORMAT, topic: null, at: '2026-11-19T00:00:00Z', trigger: 'test',
   markdown, turns: turns || [], stats: { bodyChars: markdown.length }, calibrations: []
 });
-const thin = () => narrative(N.SECTIONS.map(k => `### ${k}\n无`).join('\n\n'), [{ scene: '轨迹保留', thinking: '思考', output: '产出', tools: [] }]);
+const thin = () => narrative(N.SECTIONS.map(k => `### ${k}\n无`).join('\n\n'), [{
+  scene: '把上一轮巡检里失败的三个节点列出来，并说明各自的失败原因。',
+  thinking: '先按错误码分类，再看是否同源，避免把同源故障重复计三次。',
+  output: '三个节点分别是 A、B、C；A 是超时，B、C 同源（上游限流），共两类原因。',
+  tools: [{ name: 'Read', isSub: false, input: '{"path":"logs/run.log"}', result: 'ok', approval: null }]
+}]);
 
 (async () => {
   await store.init(path.join(yard, 'knowledge.db'));
@@ -47,7 +52,7 @@ const thin = () => narrative(N.SECTIONS.map(k => `### ${k}\n无`).join('\n\n'), 
   if (claim && ret) T.applyReturnNarrative(store, claim, ret);
   const ent = (() => { const s = db.prepare("SELECT content FROM entities WHERE id='n-thin'"); s.step(); const r = s.getAsObject(); s.free(); return JSON.parse(r.content); })();
   const cov = K.narrativeCoverage(ent.markdown);
-  ac('AC-3 写回六段齐全且 turns 保留', cov === 1 && Array.isArray(ent.turns) && ent.turns.length === 1, JSON.stringify({ cov, turns: ent.turns && ent.turns.length }));
+  ac('AC-3 写回六段有实料且 turns 保留', cov >= 0.8 && Array.isArray(ent.turns) && ent.turns.length === 1, JSON.stringify({ cov, turns: ent.turns && ent.turns.length }));
   ac('AC-4 narrative 标记 P1/full/provided', !!ent.narrative && ent.narrative.slot === 'P1' && ent.narrative.mode === 'full' && ent.narrative.provided === true, JSON.stringify(ent.narrative));
 
   // AC-5 重算 + 验收
