@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 116 档 / 735 条断言全绿 |
+| 测试 | `npm test` → 117 档 / 742 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **116 档 / 735 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **117 档 / 742 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -175,7 +175,7 @@ status: active
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
 - **差异登记**：手段与编排拆成两个 `###` 段（六段要数得出来）；AB 写 `raw/inbox` 中间文件，v2 直接写 Conversation 实体；校准由调用方传数组，不依赖 cordis 事件。
-- **待接（2026-11-18，owner 定：六段叙事是给新版定的，要接）**：`ingestNarrative` 必须接到真实入口——CLI 的 `ingest`（`src/cli.js:52` → `auto-ingest`）与 `src/auto-ingest.js` 目前只走 `session-ingest`（三源）与 `ingest-scrub` / `api-gate`，**尚未调用六段**（`grep ingestNarrative` 仅命中两档测试）。缺口保留为待办，不属「旧版遗留」。
+- **已接（2026-11-18）**：六段叙事接到唯一真实入口 `autoIngest`——按载荷形状分流：`payload.messages` 非空走 `capability-narrative.ingestNarrative`，否则走三源（3.13 不动）；CLI `ingest` 经 payload 透传自动继承，无需另加分支（真跑验证：`cli.js ingest --payload {messages…}` → `route=narrative`，库里 `conv-cli1` name=id、title=「命令行六段」）。两径同号 `conv-<sessionId>` 先到先得、后到 skipped（只追加）。顺带纠正六段落库的身份面（此前写 `name=话题`、`title` 空），现按 SPEC-7.1 AC-1 落 `name=id` + `title` 派生。护栏 `test-6.1b-narrative-wiring` 7/7；SPEC-6.1 已补「修订 A · 接线」。
 - **swarm33 规则库（AB 六模块 135 断言）**：不按「是否移植」判，按 DNA 范式 0.5 版的三层流层结构重组——见 §七 D17。
 - **6.2 消费侧**：旧院 `distill.js:103` 的区间捕获口径已迁入 `src/distill-points.js`；蒸馏点落辅助表 `distill_points`（不改正文、不破逐字保真），默认链 14→15 步（`distill` 之后插 `distill-points`）。缺口来源与其余三组真缺口见 `docs/Engineering/CONSUMER-AUDIT-2026-11-16.md`。
 - **6.3 检索侧**：旧院 `query.js` 的三路融合（向量 .6 / 词面 .25 / 名称 .15）、慢回忆、KESPI+新鲜度伪精排已迁入 `src/retrieval.js`；`predict` 改接本模块。唯一硬差异：**不写 `last_access`**（旧院 P0 写回，v2 铁律禁写）。慢回忆只走通过三轴判定的有效边。

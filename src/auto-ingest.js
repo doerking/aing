@@ -8,6 +8,7 @@
 const { scrubCollectionTrace } = require('./ingest-scrub.js');
 const { assertActor } = require('./api-gate.js');
 const { ingestSession } = require('./session-ingest.js');
+const { ingestNarrative } = require('./capability-narrative.js');
 
 const PRODUCED_SECTIONS = ['用户提问', 'Agent 回复', 'Agent 分析', '收集资料'];
 const RAW_SECTIONS = ['用户提问', 'Agent 回复', 'Agent 分析', '收集资料'];
@@ -25,7 +26,23 @@ async function autoIngest(store, payload = {}) {
   // 1) 身份闸（C10i）：写面只认 hana（纯校验，唔落任何行）
   assertActor(payload.actor);
 
-  // 2) 三源剥除
+  // 2) 分流（SPEC-6.1 修订 A）：有 messages 走六段叙事，否则走三源。
+  //    两条路径同号 conv-<sessionId>，先到先得、后到跳过（只追加）。
+  const messages = Array.isArray(payload.messages) ? payload.messages : [];
+  if (messages.length) {
+    const r = await ingestNarrative(store, {
+      sessionId: payload.sessionId,
+      topic: payload.topic,
+      at: payload.at,
+      trigger: payload.trigger,
+      messages,
+      calibrations: Array.isArray(payload.calibrations) ? payload.calibrations : [],
+      cfg: payload.cfg
+    });
+    return { ...r, route: 'narrative', scrubTrace: 0 };
+  }
+
+  // 3) 三源剥除
   const reply = scrubCollectionTrace(payload.reply);
   const searchShown = (Array.isArray(payload.searchShown) ? payload.searchShown : []).map(x => scrubCollectionTrace(x));
   const rationale = scrubCollectionTrace(payload.rationale);
@@ -33,7 +50,7 @@ async function autoIngest(store, payload = {}) {
     + searchShown.reduce((n, x) => n + x.scrubbed, 0)
     + rationale.scrubbed;
 
-  // 3) 三源入库（G1：缺回复拒入）
+  // 4) 三源入库（G1：缺回复拒入）
   const r = await ingestSession(store, {
     sessionId: payload.sessionId,
     at: payload.at,
@@ -43,7 +60,7 @@ async function autoIngest(store, payload = {}) {
     rationale: rationale.text,
     outcome: payload.outcome
   });
-  return { ...r, scrubTrace };
+  return { ...r, route: 'three-source', scrubTrace };
 }
 
 module.exports = { PRODUCED_SECTIONS, RAW_SECTIONS, assertSectionContract, autoIngest };
