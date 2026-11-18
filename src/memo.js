@@ -82,6 +82,11 @@ function pulseOf(db) {
   const kern = _scalar(db, `SELECT stagnation_count FROM kernel_state WHERE id = 'kernel'`);
   const stallRounds = kern ? Number(kern.stagnation_count || 0) : 0;
   const backlog = pendingDistill + openTickets;
+  // SPEC-6.27：上次维护轮（自优化 L3 只在维护轮跑，看不出来就不知道该不该开）
+  const maint = _scalar(db, "SELECT rowid AS rid, executed_at FROM meko_cycles WHERE cycle_type LIKE '%维护%' OR cycle_type LIKE '%自优化%' ORDER BY executed_at DESC, rowid DESC LIMIT 1");
+  const lastMaintenanceAt = maint && maint.executed_at ? String(maint.executed_at) : null;
+  const maintenanceRoundsSince = lastMaintenanceAt == null ? null
+    : Number(_scalar(db, 'SELECT COUNT(*) AS n FROM meko_cycles WHERE rowid > ?', [maint.rid]).n || 0);
 
   let state, reason;
   if (!last || !last.executed_at) { state = 'IDLE'; reason = 'cold-start'; }
@@ -98,7 +103,9 @@ function pulseOf(db) {
     lastCycleAt: last ? String(last.executed_at) : null,
     cyclesTotal,
     stallRounds,
-    backlog
+    backlog,
+    lastMaintenanceAt,
+    maintenanceRoundsSince
   };
 }
 
