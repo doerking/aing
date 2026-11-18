@@ -214,8 +214,8 @@ status: active
 |---|---|---|
 | D1 | meko 四件先于 M1 代谢件落地（顺序倒挂）| 已重标 M2；M1 关键路径仍 1.1→1.6→1.14 |
 | D2 | M1 任务数 12/14 两口径 | **统一 14**（1.1–1.14）|
-| D3 | 文档待更新：ds superagent 复刻标记、双蜂群口径 | 待补 INVENTORY |
-| D4 | 轴 3 行号 prune.js:190 vs :245 | minor，随 1.13 落地一并核 |
+| D3 | 文档待更新：ds superagent 复刻标记、双蜂群口径 | **已补（2026-11-18）**：INVENTORY 增 §K（内外两蜂群 + ds 复刻保真要点）+ MASTER §四 + 任务级 M2/M3 保真注；F 家族 tri-path 标「外蜂群三路突击本体」、H 家族 guide-chain 去掉「蜂群」称谓 |
+| D4 | 轴 3 行号 prune.js:190 vs :245 | **已核（2026-11-18，旧院 aing 冻结版）**：190 = 三条件 AND 闸（`if (checks.inactive && checks.lowQuality && checks.lowDegree)`）；245–266 = invalid_at 打戳 + 搬 pruned/，两处行号对得上，无偏移 |
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
