@@ -97,3 +97,35 @@ admit(record, { membrane: 'semi' })  // -> { admitted, stage?, reasons[], payloa
 ## 七、落地记录
 
 - 2026-11-18 立件：`src/ticket-gate.js` + `test-6.14-ticket-gate.js`（护栏）。归位表「留」档 58 条中，本件先落 L4 的 14 条（core §6 膜 7 + combat §4 发布门 5 + tensions T4 粒度 2 的同义面）。
+
+## 八、修订 A · 接入 `self-optimize.verifyTickets`（2026-11-18）
+
+> 目的：让闸真正拦住东西——回单不达标就不许标 `verified`，这是自优化环「verifications 恒 0」以外的另一半：**不合格的回单现在会明确被拒，并留下原因码**。
+
+### 8.1 回单从哪来
+
+工单 `opt_tickets.evidence_json` 里可选带 `result`：
+
+```json
+{ "score": 0.31, "result": { "facts": [...], "pointers": [...], "evidence": [...],
+  "sourceGrade": "high|medium|low", "selfAssessment": "...", "landing": "...",
+  "conclusion": "...", "fulltext": "..." } }
+```
+
+### 8.2 判序
+
+1. **有 `result` → 先过闸**（`admit(result, {membrane: opts.membrane || 'semi'})`），不过即 `rejected`，原因码形如 `gate:<stage>:<code1+code2>`，**不再看读数**。理由：「无自评不发布」是硬红线，读数上升也不能抵消。
+2. 过闸（或无 `result`）→ 走原读数复核逻辑，**行为与之前完全一致**（向后兼容：不带 result 的工单不受影响）。
+
+### 8.3 输出
+
+`verifyTickets` 的 `out.rejected[]` 中，闸拒项额外带 `stage` 与 `reasons[]`，供外接屏分阶段显示。
+
+### 8.4 铁律
+
+- 闸是纯判据，不改工单以外的任何表。
+- `result` 可以只带部分字段——缺哪项就由发布门给对应原因码，不补默认值。
+
+### 8.5 护栏
+
+`test-6.14b-verify-gate.js`：缺自评的达标读数仍被拒 → 回单齐且读数上升才 verified → 只有结论无事实被膜拦 → 不带 result 的工单行为不变（回归）→ 原因码可读。
