@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 六段叙事, 段有效性, 阈值, 滑动, 游标, engineering:8, must-read:7, capability, delivery, operations]
 description: SPEC-6.36 阈值游标——20 出现一次后，±(1..5) 幅度各用一遍再回 20，方向按周期交替；同实体同轮可复算
 date: 2026-11-19
-status: 已落地（test-6.36-threshold-cursor 6/6）
+status: 已落地（test-6.36-threshold-cursor 6/6）；方向串细化见 SPEC-6.37
 owner: hana
 upstream: [spec/SPEC-6.35-段有效阈值滑动.md]
 ---

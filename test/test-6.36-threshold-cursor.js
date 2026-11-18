@@ -36,7 +36,7 @@ const TH = (id, r) => (K.sectionThreshold ? K.sectionThreshold(id, { round: r })
   // AC-5 方向交替：第 2 周期符号全反
   const s0 = cycle0.slice(1).map(v => Math.sign(v - 20));
   const s1 = cycle1.slice(1).map(v => Math.sign(v - 20));
-  ac('AC-5 第 2 周期方向全反', s0.every(x => x === s0[0]) && s1.every(x => x === -s0[0]), JSON.stringify({ s0, s1 }));
+  ac('AC-5 第 2 周期逐位反相', s1.every((x, i) => x === -s0[i]), JSON.stringify({ s0, s1 }));
 
   // AC-6 非叙事读数不变
   await store.init(path.join(yard, 'knowledge.db'));

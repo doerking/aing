@@ -65,6 +65,8 @@ function _shuffle(arr, seed) {
   return a;
 }
 const SLIDE_CYCLE = 6;   // 1 次基准 + 5 个幅度 = 一个周期
+// SPEC-6.37：方向符号串 ++-+----+-++，12 轮一循环，前后 6 个互为反相
+const SIGN_CHART = ['+', '+', '-', '+', '-', '-', '-', '-', '+', '-', '+', '+'];
 /**
  * SPEC-6.36：阈值游标——20 出现一次，随后 ±5..±1 各走一遍再回 20，
  * 方向按周期交替；shuffle 种子 = 实体 id + 周期号，同实体同轮可复算。
@@ -75,7 +77,7 @@ function sectionThreshold(entityId, opts = {}) {
   const cycle = Math.floor(round / SLIDE_CYCLE);
   const pos = round % SLIDE_CYCLE;
   if (pos === 0) return MIN_SECTION_CHARS;
-  const sign = (cycle % 2 === 0) ? 1 : -1;
+  const sign = SIGN_CHART[round % SIGN_CHART.length] === '+' ? 1 : -1;
   const mags = _shuffle([1, 2, 3, 4, 5], String(entityId) + '#' + cycle);
   return MIN_SECTION_CHARS + sign * mags[pos - 1];
 }
@@ -276,4 +278,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, sectionThreshold, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, sectionThreshold, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, SIGN_CHART, ROUND_WINDOW, CANDIDATE_RELATIONS };
