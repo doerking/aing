@@ -47,12 +47,25 @@ function cleanBody(content) {
 // 口径：覆盖率只对六段叙事生效；非叙事实体 factor 恒为 1，读数不变
 const NARRATIVE_SECTIONS = ['场景（触发）', '思维（能力内核）', '手段（工具执行）', '编排（子agent）', '产出', '会话级校准'];
 const COVERAGE_FLOOR = 0.6;   // 零段 ×0.6，六段齐 ×1.0，线性
+const MIN_SECTION_CHARS = 20; // SPEC-6.31：段正文去空白不足 20 字不算「有这一段」
+
+/** 按标题行切段：返回 [{title, body}]（任何 1~4 级标题都切） */
+function _sectionBodies(md) {
+  const out = []; let cur = null;
+  for (const line of String(md).split(/\r?\n/)) {
+    const m = /^#{1,4}\s*(.+?)\s*$/.exec(line);
+    if (m) { cur = { title: m[1], body: '' }; out.push(cur); continue; }
+    if (cur) cur.body += line + '\n';
+  }
+  return out;
+}
 function narrativeCoverage(markdown) {
   const md = String(markdown == null ? '' : markdown);
+  const bodies = _sectionBodies(md);
   let n = 0;
   for (const key of NARRATIVE_SECTIONS) {
-    const re = new RegExp('^#{1,4}\\s*' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$', 'm');
-    if (re.test(md)) n++;
+    const hit = bodies.find(b => b.title === key);
+    if (hit && hit.body.replace(/\s+/g, '').length >= MIN_SECTION_CHARS) n++;
   }
   return n / NARRATIVE_SECTIONS.length;
 }
@@ -214,4 +227,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, NARRATIVE_SECTIONS, COVERAGE_FLOOR, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, ROUND_WINDOW, CANDIDATE_RELATIONS };
