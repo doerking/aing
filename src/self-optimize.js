@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const ZONES = { red: 0.45, green: 0.60 };
 const MAX_TICKETS = 20;
 const VERIFY_ATTEMPTS = 2;
+const { heartbeatOf, CHASE_REASON, ESCALATE_REASON } = require('./ticket-followup.js');
 
 // 每维一条工单规则：below = 触发线；action = 场域动作或 memo-card（提案，不写场域）
 // SPEC-1.12 修订 A：KG/KM/KB 退役（不再有列值）；KD 改为催化率——零催化是常态，
@@ -138,13 +139,15 @@ function scanTickets(store, opts = {}) {
   return { created: persist ? tickets.length : 0, skipped: cands.length - picked.length, tickets };
 }
 
-function _mark(db, id, status, evidence, cycleId) {
+function _mark(db, id, status, evidence, cycleId, opts = {}) {
   const cur = _scalar(db, 'SELECT evidence_json FROM opt_tickets WHERE id = ?', [id]);
   let merged = {};
   try { merged = JSON.parse((cur && cur.evidence_json) || '{}'); } catch (_) { merged = {}; }
   Object.assign(merged, evidence || {});
+  // SPEC-6.15 律一：追单不是失败——bump:false 时 attempts 不动
+  const bump = opts.bump === false ? 0 : 1;
   const stmt = db.prepare(
-    `UPDATE opt_tickets SET status = ?, attempts = attempts + 1, evidence_json = ?,
+    `UPDATE opt_tickets SET status = ?, attempts = attempts + ${bump}, evidence_json = ?,
        cycle_id = COALESCE(?, cycle_id), updated_at = CURRENT_TIMESTAMP WHERE id = ?`
   );
   stmt.run([status, JSON.stringify(merged), cycleId || null, id]);
@@ -218,7 +221,7 @@ function verifyTickets(store, opts = {}) {
   const db = store._getDb();
   const tickets = _rows(db,
     `SELECT * FROM opt_tickets WHERE status IN ('dispatched', 'proposed') ORDER BY created_at, id`);
-  const out = { verified: [], stillOpen: [], rejected: [] };
+  const out = { verified: [], stillOpen: [], rejected: [], escalated: [] };
 
   for (const t of tickets) {
     const cycleId = opts.cycleId || t.cycle_id || null;
@@ -278,11 +281,20 @@ function verifyTickets(store, opts = {}) {
     if (after > before + 1e-9) {
       _mark(db, t.id, 'verified', { before, after, delta: Math.round((after - before) * 10000) / 10000 }, cycleId);
       out.verified.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, before, after, delta: after - before });
+    } else if (!(ev && ev.result)) {
+      // 律一 追单不补位：还没回单就别判失败——只追单、只打心跳，attempts 不动
+      _mark(db, t.id, 'dispatched',
+        { ...heartbeatOf(ev, { at: opts.at }), reason: CHASE_REASON, before, after }, cycleId, { bump: false });
+      out.stillOpen.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: CHASE_REASON, before, after });
     } else if (Number(t.attempts) >= VERIFY_ATTEMPTS) {
-      _mark(db, t.id, 'rejected', { reason: 'no-improvement', before, after }, cycleId);
-      out.rejected.push({ id: t.id, reason: 'no-improvement', before, after });
+      // 律二 失败≥2 改派：回单来了但不达标且已试过两次 → 交深工
+      _mark(db, t.id, 'rejected',
+        { ...heartbeatOf(ev, { at: opts.at }), reason: ESCALATE_REASON, before, after }, cycleId);
+      out.rejected.push({ id: t.id, reason: ESCALATE_REASON, before, after });
+      out.escalated.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: ESCALATE_REASON, before, after });
     } else {
-      _mark(db, t.id, 'dispatched', { reason: 'waiting-next-cycle', before, after }, cycleId);
+      _mark(db, t.id, 'dispatched',
+        { ...heartbeatOf(ev, { at: opts.at }), reason: 'waiting-next-cycle', before, after }, cycleId);
       out.stillOpen.push({ id: t.id, reason: 'waiting-next-cycle', before, after });
     }
   }
