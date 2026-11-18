@@ -11,6 +11,8 @@ const crypto = require('crypto');
 // SPEC-1.12 修订 A：五维绝对值整体下移（真库五维实测 p25 0.46 / p50 0.51 / p90 0.71），分区随之下调
 const ZONES = { red: 0.45, green: 0.60 };
 const MAX_TICKETS = 20;
+// SPEC-6.25：按维配额——一维不能挤占全部名额（kd/ka 分数天然偏低，会饿死 kq）
+const DIM_QUOTA = { kq: 5, ka: 5, kr: 5, kc: 5, kd: 8, overall: 3 };
 const VERIFY_ATTEMPTS = 2;
 const { heartbeatOf, CHASE_REASON, ESCALATE_REASON } = require('./ticket-followup.js');
 
@@ -136,7 +138,18 @@ function scanTickets(store, opts = {}) {
   }
 
   cands.sort((a, b) => a.score - b.score || a.entity_id.localeCompare(b.entity_id) || a.dim.localeCompare(b.dim));
-  const picked = cands.slice(0, max);
+  // 逐条按维计数，取到该维上限就跳过；总上限仍是硬顶
+  const quota = { ...DIM_QUOTA, ...(opts.quota && typeof opts.quota === 'object' ? opts.quota : {}) };
+  const used = new Map();
+  const picked = [];
+  for (const c of cands) {
+    if (picked.length >= max) break;
+    const cap = Number.isFinite(Number(quota[c.dim])) ? Number(quota[c.dim]) : max;
+    const n = used.get(c.dim) || 0;
+    if (n >= cap) continue;
+    used.set(c.dim, n + 1);
+    picked.push(c);
+  }
   const tickets = [];
 
   if (persist && picked.length) {
