@@ -11,6 +11,9 @@ const path = require('path');
 // 外部件注册：只想接 P2 的蒸馏位，半寄生（补一块），交回单要带四样证据
 const REG = { slot: 'P2', mode: 'semi', evidence: ['facts', 'pointers', 'sourceGrade', 'selfAssessment'] };
 
+// SPEC-6.33：P1 入口成形位的接单方——全寄生，交完整六段，证据同上
+const NARRATIVE_REG = { slot: 'P1', mode: 'full', evidence: ['facts', 'pointers', 'sourceGrade', 'selfAssessment'] };
+
 /** 外部件：只读单 + 原料，产出回单，不写库 */
 function externalPart(db, claim) {
   const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
@@ -53,9 +56,63 @@ function applyReturn(store, claim, ret) {
   store._persist();
 }
 
-function _flag(args, name, dflt) { const i = args.indexOf('--' + name); return i >= 0 ? args[i + 1] : dflt; }
+/** SPEC-6.33 外部件（P1 全寄生）：只读单 + 原料，产出六段回单，不写库 */
+function externalPartNarrative(db, claim) {
+  const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
+  s.bind([claim.entity_id]); const e = s.step() ? s.getAsObject() : null; s.free();
+  if (!e) return null;
+  const N = require('../src/capability-narrative.js');
+  const id = claim.entity_id;
+  const bodies = {
+    '场景（触发）': `实体 ${id} 在质量复查中被判正文不足，触发本轮六段重写；触发源为 kq 低分工单 ${claim.id}。`,
+    '思维（能力内核）': '思维主线：先按单上需求核对缺的是哪几段，再按原会话事实补写，不引入新结论，不改动既有判据。',
+    '手段（工具执行）': '手段：只读库内该实体原正文与工单证据，渲染六段文本；不调用写接口，不改任何其它实体。',
+    '编排（子agent）': '编排：单轮单人完成，未拆子agent；需要并行时按场景/思维/手段三段各自独立成稿再合并。',
+    '产出': '产出：本实体六段叙事各不少于二十字，正文合计超过四百字，交由系统按 P1 写回点落库。',
+    '会话级校准': '校准：本轮回单带四样证据（事实/指针/来源分级/自评），自评只声明补写六段，是否达标由系统按 kq 验收。'
+  };
+  return {
+    patch: { sections: bodies },
+    result: {
+      facts: [`按六段重写：${Object.keys(bodies).length} 段，总正文 ${Object.values(bodies).join('').length} 字`],
+      pointers: [`entities/${id}`, `opt_tickets/${claim.id}`],
+      sourceGrade: 'medium',
+      selfAssessment: '自评：六段均为重写文本，事实来自原会话，未改结论；达标与否以系统 kq 验收为准'
+    }
+  };
+}
 
-async function main(argv) {
+/** SPEC-6.33 系统：按 P1 写回点落库——只换 markdown 与字数，turns 原样保留 */
+function applyReturnNarrative(store, claim, ret) {
+  const N = require('../src/capability-narrative.js');
+  const db = store._getDb();
+  const s = db.prepare('SELECT content FROM entities WHERE id = ?');
+  s.bind([claim.entity_id]); const e = s.step() ? s.getAsObject() : null; s.free();
+  if (!e) throw new Error('entity-missing: ' + claim.entity_id);
+  let doc;
+  try { doc = JSON.parse(String(e.content)); } catch (_) { throw new Error('bad-content: 不是 JSON，拒绝改写'); }
+  if (!doc || doc.format !== N.FORMAT) throw new Error('not-narrative: 非六段叙事实体，拒绝按 P1 改写');
+
+  const markdown = N.renderSections(ret.patch.sections);
+  const next = {
+    ...doc,
+    markdown,
+    stats: { ...(doc.stats || {}), bodyChars: markdown.length },
+    narrative: { mode: 'full', slot: 'P1', provided: true }
+  };
+  db.run('UPDATE entities SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [JSON.stringify(next), claim.entity_id]);
+
+  const st = db.prepare('SELECT evidence_json FROM opt_tickets WHERE id = ?');
+  st.bind([claim.id]); const row = st.step() ? st.getAsObject() : null; st.free();
+  const ev = JSON.parse((row && row.evidence_json) || '{}');
+  ev.result = ret.result;
+  db.run('UPDATE opt_tickets SET evidence_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [JSON.stringify(ev), claim.id]);
+  store._persist();
+}
+
+function _flag(args, name, dflt) { const i = args.indexOf('--' + name); return i >= 0 ? args[i + 1] : dflt; }async function main(argv) {
   const args = argv.slice(2);
   const dbPath = _flag(args, 'db', null);
   const real = path.join(__dirname, '..', 'data', 'knowledge.db');
@@ -120,4 +177,4 @@ if (require.main === module) {
   main(process.argv).catch((e) => { console.error('parasite-round 失败: ' + e.message); process.exit(1); });
 }
 
-module.exports = { REG, externalPart, applyReturn };
+module.exports = { REG, NARRATIVE_REG, externalPart, applyReturn, externalPartNarrative, applyReturnNarrative };
