@@ -53,7 +53,7 @@ async function migrateFrom(store, opts = {}) {
 
   const oldCols = new Set(_rows(old, 'PRAGMA table_info(entities)').map(c => c.name));
   const entCols = ['id', 'name', 'type', 'content', 'tags', 'status', 'confidence', 'tolaria_strength',
-    'last_access', 'created_at', 'updated_at', 'invalid_at', 'invalid_reason'];
+    'last_access', 'created_at', 'updated_at', 'invalid_at', 'invalid_reason', 'title'];
   const allEntities = _rows(old, `SELECT ${entCols.map(c => oldCols.has(c) ? c : 'NULL AS ' + c).join(', ')} FROM entities ORDER BY id`);
   // AC-20：past 必须有原始时间——没有原始时间的旧行不准进 past（收进报告，不静默丢）
   const rejected = allEntities
@@ -67,16 +67,25 @@ async function migrateFrom(store, opts = {}) {
   const links = allLinks.filter(l => ids.has(l.source_id) && ids.has(l.target_id));
   const dropped = allLinks.filter(l => !ids.has(l.source_id) || !ids.has(l.target_id));
 
+  // AC-1：旧库 name 是题头 → 迁入 title（展示面，永不入键）；旧 title 优先，缺了才用旧 name 兜底
+  const titleOfRow = (e) => {
+    const t = e.title == null ? '' : String(e.title).trim();
+    if (t) return t;
+    const n = e.name == null ? '' : String(e.name).trim();
+    return n || null;
+  };
+
   db.run('BEGIN TRANSACTION');
   try {
     const ent = db.prepare(`INSERT INTO entities
-      (id, name, type, content, tags, status, confidence, tolaria_strength, last_access, created_at, updated_at, invalid_at, invalid_reason)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      (id, name, type, content, tags, status, confidence, tolaria_strength, last_access, created_at, updated_at, invalid_at, invalid_reason, title)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     for (const e of entities) {
       ent.run([e.id, e.name, e.type, e.content, e.tags, e.status,
         e.confidence == null ? null : Number(e.confidence),
         e.tolaria_strength == null ? 5 : Number(e.tolaria_strength),
-        e.last_access, e.created_at, e.updated_at, e.invalid_at, e.invalid_reason == null ? null : e.invalid_reason]);
+        e.last_access, e.created_at, e.updated_at, e.invalid_at, e.invalid_reason == null ? null : e.invalid_reason,
+        titleOfRow(e)]);
     }
     ent.free();
 

@@ -132,8 +132,8 @@ async function reconcile(store, opts = {}) {
   const ents = _entities(db);
   const stats = { gaps: 0, reconciled: 0, skippedOutOfBand: 0 };
   const insert = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   let dirty = false;
 
@@ -161,7 +161,9 @@ async function reconcile(store, opts = {}) {
     if (!_inBand(p.from)) { stats.skippedOutOfBand++; continue; }
     insert.run([p.to, p.from.name || null, p.from.type || null, p.from.content || null, p.from.tags || null,
       p.from.status || null, p.from.confidence == null ? null : p.from.confidence,
-      p.from.tolaria_strength == null ? null : p.from.tolaria_strength]);
+      p.from.tolaria_strength == null ? null : p.from.tolaria_strength,
+      // SPEC-7.1 AC-1：产物带 title——镜像继承源题头，缺了回落 name，不裸露 slug
+      (p.from.title != null && String(p.from.title).trim() !== '') ? String(p.from.title) : (p.from.name || null)]);
     _record(db, { action: 'reconcile', target: p.to, before: null,
       after: { id: p.to, from: p.from.id, content: p.from.content }, cycleId: opts.cycleId });
     stats.reconciled++;
