@@ -139,5 +139,6 @@
   "test-6.33-p1-round.js": 7,
   "test-6.34-narrative-sliding.js": 7,
   "test-6.35-threshold-slide.js": 6,
-  "test-6.36-threshold-cursor.js": 6
+  "test-6.36-threshold-cursor.js": 6,
+  "test-6.37-sign-chart.js": 6
 }

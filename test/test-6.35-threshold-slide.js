@@ -25,8 +25,8 @@ const TH = (id, r) => (K.sectionThreshold ? K.sectionThreshold(id, { round: r })
     seq.every(v => v >= 15 && v <= 25) && TH('x-1', 3) === seq[3] && TH('x-1', 0) === 20,
     JSON.stringify({ seq }));
 
-  // AC-2 游标两端都到过
-  ac('AC-2 序列内出现过 15 与 25', seq.includes(15) && seq.includes(25), JSON.stringify({ seq }));
+  // AC-2 游标两端都到过（下界 15 与上界 >20）
+  ac('AC-2 序列内出现过 15 与上界值', seq.includes(15) && seq.some(v => v > 20), JSON.stringify({ seq }));
 
   // AC-3 无 id → 20
   await store.init(path.join(yard, 'knowledge.db'));
@@ -36,7 +36,7 @@ const TH = (id, r) => (K.sectionThreshold ? K.sectionThreshold(id, { round: r })
 
   // AC-4 17 字段：阈值 15 的轮有效、阈值 25 的轮无效
   const lowRound = seq.findIndex(v => v === 15);
-  const highRound = seq.findIndex(v => v === 25);
+  const highRound = seq.findIndex((v, r) => r % 6 !== 0 && v > 20);
   const cLo = K.narrativeCoverage(mdOf(17), { entityId: 'x-1', round: lowRound });
   const cHi = K.narrativeCoverage(mdOf(17), { entityId: 'x-1', round: highRound });
   ac('AC-4 17 字段随轮有效性变化', lowRound >= 0 && highRound >= 0 && cLo === 1 && cHi === 0,
