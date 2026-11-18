@@ -101,6 +101,9 @@ function scanTickets(store, opts = {}) {
   // 已有任何有效边的对，rebond 也插不进去（links 主键只看 source+target）
   const anyPair = new Set(_rows(db, "SELECT source_id, target_id FROM links WHERE invalid_at IS NULL")
     .map(r => String(r.source_id) + '\u0000' + String(r.target_id)));
+  // SPEC-6.32：叙事实体的 kq 工单改走 P1（六段口径），与读数同源
+  const narrativeIds = new Set(_rows(db, "SELECT id FROM entities WHERE invalid_at IS NULL AND substr(content, 1, 200) LIKE '%capability-narrative-v1%'")
+    .map(r => String(r.id)));
 
   for (const s of scores) {
     const entityId = String(s.entity_id);
@@ -159,7 +162,8 @@ function scanTickets(store, opts = {}) {
     );
     for (const c of picked) {
       const id = _id('ticket');
-      const demand = require('./ticket-demand.js').demandFor(c.kind);
+      const demandKind = (c.dim === 'kq' && narrativeIds.has(String(c.entity_id))) ? 'kq-low-narrative' : c.kind;
+      const demand = require('./ticket-demand.js').demandFor(demandKind);
       // SPEC-6.20：留读数快照，否则 improved 类判据回单时无从比
       const sr = scoreById.get(String(c.entity_id)) || {};
       const readings = { kq: sr.kq, ka: sr.ka, kd: sr.kd, kc: sr.kc, kr: sr.kr, overall: sr.overall };

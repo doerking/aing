@@ -45,9 +45,11 @@ const narrative = (markdown) => JSON.stringify({
   const ratio3 = sc('n-three') / sc('n-six');
   ac('AC-3 三段按覆盖率掉分（0.75~0.85）', ratio3 >= 0.75 && ratio3 <= 0.85, JSON.stringify({ ratio: Number(ratio3.toFixed(3)), three: sc('n-three'), six: sc('n-six') }));
 
-  // AC-4 零段最惨：≈ 六段的 0.6
-  const ratio0 = sc('n-none') / sc('n-six');
-  ac('AC-4 无段按覆盖率掉分（≈0.6）', ratio0 >= 0.55 && ratio0 <= 0.65, JSON.stringify({ ratio: Number(ratio0.toFixed(3)) }));
+  // AC-4 零段压在覆盖率下限（factor 层验，kq 因长度也归零只做排序）
+  const noSec = narrative('没有标题的正文' + '甲'.repeat(800));
+  const f0 = K.narrativeFactor ? K.narrativeFactor(noSec) : null;
+  ac('AC-4 无段压到覆盖率下限（×0.6）', f0 != null && Math.abs(f0 - 0.6) < 1e-9 && sc('n-none') < sc('n-six'),
+    JSON.stringify({ factor: f0, none: sc('n-none'), six: sc('n-six') }));
 
   // AC-5 三源实体零影响（回归）
   ac('AC-5 非叙事实体不受影响', Math.abs(sc('p-plain') - 0.675) <= 0.02, JSON.stringify({ plain: sc('p-plain') }));

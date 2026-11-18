@@ -18,6 +18,13 @@ const DEMANDS = {
     evidence: EVIDENCE_KEYS.slice(),
     mode: 'semi', slot: 'P2', ttlRounds: DEFAULT_TTL
   },
+  // SPEC-6.32：叙事实体走入口成形位，需求与六段口径同源
+  'kq-low-narrative': {
+    want: '把六段叙事写齐：场景/思维/手段/编排/产出/会话级校准，每段正文不少于 20 字，总正文 ≥ 400 字，并给 ≥3 个标签',
+    acceptance: [{ dim: 'kq', op: 'gte', value: 0.50 }],
+    evidence: EVIDENCE_KEYS.slice(),
+    mode: 'full', slot: 'P1', ttlRounds: DEFAULT_TTL
+  },
   'ka-low': {
     want: '重新激活（有访问）或体面退场',
     acceptance: [{ dim: 'ka', op: 'gte', value: 0.30 }],

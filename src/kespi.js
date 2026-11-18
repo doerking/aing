@@ -76,6 +76,15 @@ function narrativeFactor(content) {
   return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body);
 }
 
+// SPEC-6.32：叙事长度只量六段正文——段外填充（别处几写字）不进 kq 长度分
+function narrativeSectionText(markdown) {
+  const wanted = new Set(NARRATIVE_SECTIONS);
+  return _sectionBodies(String(markdown == null ? '' : markdown))
+    .filter(b => wanted.has(b.title))
+    .map(b => b.body)
+    .join('\n');
+}
+
 function _cleanText(content) {
   return String(content == null ? '' : content)
     .replace(/^#.*$/m, '')
@@ -173,8 +182,12 @@ async function kespiStep(store, opts = {}) {
     const eid = String(e.id);
 
     // KQ 质量：去壳正文长度 + 标签 + 置信度（SPEC-1.12 修订 A），
-    // 叙事再乘六段覆盖率（SPEC-6.30）
-    const bodyLen = cleanBody(content).length;
+    // 叙事只量六段正文（SPEC-6.32），再乘六段覆盖率（SPEC-6.30）
+    const narrBody = narrativeBody(content);
+    const isNarr = narrBody !== content;
+    const bodyLen = isNarr
+      ? narrativeSectionText(narrBody).replace(/\s+/g, '').length
+      : cleanBody(content).length;
     const kq = clamp01((Math.min(1, bodyLen / 400) * 0.6 +
       Math.min(1, tagCount(e.tags) / 3) * 0.25 +
       (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content));
@@ -227,4 +240,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, ROUND_WINDOW, CANDIDATE_RELATIONS };
