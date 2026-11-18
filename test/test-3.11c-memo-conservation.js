@@ -66,8 +66,10 @@ const consPart = (line) => (String(line).split(' / ').find((x) => x.startsWith('
 
   // AC-4 顺序与长度：健康在前、向量紧随、守恒在前半段；整行 ≤ 80
   const line = m3.systemLine;
-  ac('AC-4 顺序与长度', line.startsWith('健康') && line.indexOf('向量') < 30 &&
-    line.length <= 80 && consPart(line).length > 0 && line.indexOf('守恒') < 50,
+  // SPEC-6.21：非 PROGRESSING 时行首带节拍强标识，判序前先剥掉
+  const bare = line.replace(/^[▶⏸⚠] (PROGRESSING|IDLE|STUCK) \/ /, '');
+  ac('AC-4 顺序与长度', bare.startsWith('健康') && bare.indexOf('向量') < 30 &&
+    line.length <= 80 && consPart(bare).length > 0 && bare.indexOf('守恒') < 50,
     JSON.stringify({ line, len: line.length }));
 
   // AC-5 只读

@@ -65,6 +65,43 @@ function _clipSystemLine(line) {
   return out.length + 2 <= SYSTEM_LINE_MAX ? out + ' …' : line.slice(0, SYSTEM_LINE_MAX - 1) + '…';
 }
 
+// ── 节拍强标识（SPEC-6.21）────────────────────────────────────
+// 交付后看不到部署方的调度器，所以心跳只能是「从底账读出来的差」：
+// 最后一条轮次 + 积压 + 内核停滞计数 → 三态强标识。IDLE 不是故障，STUCK 才是。
+const PULSE_STATES = ['PROGRESSING', 'IDLE', 'STUCK'];
+const PULSE_MARKERS = { PROGRESSING: '▶', IDLE: '⏸', STUCK: '⚠' };
+const STALL_THRESHOLD = 3;
+
+function pulseOf(db) {
+  const last = _scalar(db, `SELECT executed_at FROM meko_cycles ORDER BY executed_at DESC, rowid DESC LIMIT 1`);
+  const cyclesTotal = Number(_scalar(db, `SELECT COUNT(*) AS n FROM meko_cycles`).n || 0);
+  const pendingDistill = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM entities WHERE status = 'pending-distillation' AND invalid_at IS NULL`).n || 0);
+  const openTickets = Number(_scalar(db,
+    `SELECT COUNT(*) AS n FROM opt_tickets WHERE status IN ('open','dispatched','proposed')`).n || 0);
+  const kern = _scalar(db, `SELECT stagnation_count FROM kernel_state WHERE id = 'kernel'`);
+  const stallRounds = kern ? Number(kern.stagnation_count || 0) : 0;
+  const backlog = pendingDistill + openTickets;
+
+  let state, reason;
+  if (!last || !last.executed_at) { state = 'IDLE'; reason = 'cold-start'; }
+  else if (backlog === 0) { state = 'IDLE'; reason = 'no-backlog'; }
+  else if (stallRounds >= STALL_THRESHOLD) { state = 'STUCK'; reason = 'backlog-stalled'; }
+  else { state = 'PROGRESSING'; reason = 'backlog-moving'; }
+  if (!PULSE_STATES.includes(state)) { state = 'IDLE'; reason = 'unknown'; }
+
+  return {
+    state,
+    code: state,                 // 强标识：code 恒等于 state，机器只认这一个
+    marker: PULSE_MARKERS[state],
+    reason,
+    lastCycleAt: last ? String(last.executed_at) : null,
+    cyclesTotal,
+    stallRounds,
+    backlog
+  };
+}
+
 async function buildMemo(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('memo 需要 store 注入（SPEC-3.11 契约）');
   const db = store._getDb();
@@ -133,7 +170,7 @@ async function buildMemo(store, opts = {}) {
   try { cons = require('./conservation.js').measureConservation(store, {}); } catch (_) { /* 保持默认 */ }
   const seeds = Number(_scalar(db, `SELECT COUNT(*) AS n FROM compressed_seeds WHERE active = 1`).n || 0);
   const pendingDistill = Number(_scalar(db, `SELECT COUNT(*) AS n FROM entities WHERE status = 'pending-distillation' AND invalid_at IS NULL`).n || 0);
-  const lastCycle = _scalar(db, `SELECT * FROM meko_cycles ORDER BY executed_at DESC, rowid DESC LIMIT 1`);
+  const pulse = pulseOf(db);
   const lastField = _scalar(db, `SELECT COUNT(*) AS n FROM field_actions`);
   // 守恒读数只印边层（SPEC-2.10 修订 C）：分子分母同量纲；实体退场单列「待退」存量。
   const edge = cons.edge || { growth: cons.growth, pruned: cons.pruned };
@@ -155,6 +192,8 @@ async function buildMemo(store, opts = {}) {
   // 向量段紧跟健康——超长截断时先保它（SPEC-5.2 §2.3）
   const vecTag = `向量 ${vector.backend} ${vector.percent}%${vector.source === 'env' ? '(测试)' : ''}`;
   let systemLine = `健康 ${cons.inBand ? 'ok' : cons.verdict} / ${vecTag} / ${consText} / 蒸馏债 ${pendingDistill} / 缺口 ${gapTotal} ${trendGlyph} / 籽 ${seeds} / 场域动作 ${lastField ? lastField.n : 0}`;
+  // SPEC-6.21 强标识：只在非 PROGRESSING 时打头，正常不占字数（系统行 80 字上限）
+  if (pulse.state !== 'PROGRESSING') systemLine = `${pulse.marker} ${pulse.code} / ${systemLine}`;
   systemLine = _clipSystemLine(systemLine);
 
   // 外派派单卡（SPEC-3.15 挂载）：传了就挂，没传就明说未接——不摆空位、不假装已派
@@ -176,10 +215,11 @@ async function buildMemo(store, opts = {}) {
       maintenance
     },
     swarm,
+    pulse,
     systemLine,
     diagnostics: { vector },
     agentTodos: []
   };
 }
 
-module.exports = { buildMemo, SYSTEM_LINE_MAX, vectorStatus: (x) => _vectorDiagnostics(x && typeof x._getDb === 'function' ? x._getDb() : x) };
+module.exports = { buildMemo, SYSTEM_LINE_MAX, PULSE_STATES, PULSE_MARKERS, STALL_THRESHOLD, pulseOf, vectorStatus: (x) => _vectorDiagnostics(x && typeof x._getDb === 'function' ? x._getDb() : x) };

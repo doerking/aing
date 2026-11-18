@@ -37,8 +37,9 @@ const M = require('../src/memo.js');
   ac('AC-1 不留半字段', /…$/.test(line) && !/\d…$/.test(line),
     JSON.stringify({ line, len: line.length }));
 
-  // AC-2 健康与向量两段必留
-  ac('AC-2 头两段必留', line.startsWith('健康') && /向量 hash-\d+w?\d* \d+%/.test(line),
+  // AC-2 健康与向量两段必留（SPEC-6.21：非 PROGRESSING 时行首多一段节拍强标识）
+  const bare = line.replace(/^[▶⏸⚠] (PROGRESSING|IDLE|STUCK) \/ /, '');
+  ac('AC-2 头两段必留', bare.startsWith('健康') && /向量 hash-\d+w?\d* \d+%/.test(bare),
     JSON.stringify({ line }));
 
   // AC-3 长度不超上限，且按段收口（每段都是完整「字段 值」）
