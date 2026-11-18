@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 122 档 / 788 条断言全绿 |
+| 测试 | `npm test` → 123 档 / 796 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **122 档 / 788 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **123 档 / 796 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（20/20 已落地）
+## 五·补三 M6 能力叙事入库与消费（21/21 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
@@ -163,6 +163,7 @@ status: active
 | **6.15** | **跟单三律（L3）** | ✅ | `spec/SPEC-6.15-跟单三律.md` | test-6.15-ticket-followup 10/10；修掉「假跟单」——原先每轮 `_mark` 都 `attempts+1`，回单只是慢的工单两轮就被判死，现改为：① 追单不补位（无回单 → `awaiting-return`、`attempts` 不动、不新增 field_actions）② 失败≥2 改派（回单合格但读数不改善且 `attempts≥2` → `rejected` + `escalate-deep-work`，`out.escalated[]` 外露）③ 心跳保活（每轮写 `followup.{beatAt,beats}`，`staleTickets({maxHours})` 扫跟单已断的 dispatched 单）；`src/ticket-followup.js` 纯函数 + store 扫描 |
 | **6.16** | **回单外接屏（L4）** | ✅ | `spec/SPEC-6.16-回单外接屏.md` | test-6.16-ticket-board 10/10；`src/ticket-board.js` 只读汇整 `opt_tickets` → 三节（待回单／闸拒改派／已收单）+ 文本屏 `lines`；只显事实与指针（结论/全文不入屏，膜透性口径的展示面延续）、闸拒带 `stage`+`reasons`、改派单列 `kind='escalate'`、待回单带心跳（缺则明说「无心跳」）、空库诚实、屏外状态（proposed 等）点名不静默吞；纯读（前后快照一致、不碰 `last_access`、源码无写语句/无 I/O）；CLI 面 `node src/cli.js board [--limit N] [--json]` 真跑绿 |
 | **6.17** | **kd 催化率与派单匹配（闭环可转）** | ✅ | `spec/SPEC-6.17-kd催化率与派单匹配.md` | test-6.17-kd-alignment 10/10；修四处断裂——① rebond 镜像键封底 strength 7（真库 126 条氢键里 118 条原是 strength=1，补键永不被催化率看见）② kd 门槛 0.40 → 0.30（kd 离散为 0/1/3/2/3/1，0.40 把 1/3 判死）③ kd 单分两路：raw 缺键 → `rebond`、被引用不催化 → `memo-card`/`kd-cited`，越界 rebond 当场 `out-of-scope`④ rebond 不再谎报：未来档 `skippedFuture`、已有 effective 边 `skippedExisting`、非主键冲突的错一律抛出 （原状：3 次记账 0 条边）。真库副本两轮：不再产生注定落空的 kd 单，改为 8 张提案；87 个 raw 已全部有键，故真库上 kd 无事可做（正确）。 |
+| **6.18** | **提案单需求定义与 TTL（+ 寄生位点位表）** | ✅ | `spec/SPEC-6.18-提案单需求定义与寄生位.md` | test-6.18-proposal-demand 8/8；提案单不再只有「哪一维低了」——每张 `memo-card` 单带五段需求 `demand{want/acceptance/evidence/mode/slot/ttlRounds}`（`src/ticket-demand.js` 单源，纯函数校验）：want 要具体、acceptance 可测（dim∈五维/overall，op∈gte/gt/improved）、evidence 与发布门同源、mode 分 semi/full、slot 指向寄生位；TTL 到期（`beats > ttlRounds`，默认 3 轮）→ `rejected: proposal-expired` 并释放 `(entity,dim)` 名额，心跳复用 6.15 律三，`dispatched` 单不受影响。同文附 **寄生位点位表 P1–P7**（入口成形/蒸馏/关联建边/蒸馏点/洞察提取/提案承接/回单校验），每点定半寄生与寄生两形态、写回点与拒绝条件；P7 校验层明确不可外包。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |

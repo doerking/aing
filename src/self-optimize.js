@@ -145,7 +145,8 @@ function scanTickets(store, opts = {}) {
     );
     for (const c of picked) {
       const id = _id('ticket');
-      const evidence = JSON.stringify({ score: c.score, zone: c.zone, source: 'kespi' });
+      const demand = require('./ticket-demand.js').demandFor(c.kind);
+      const evidence = JSON.stringify({ score: c.score, zone: c.zone, source: 'kespi', ...(demand ? { demand } : {}) });
       ins.run([id, c.entity_id, c.dim, c.kind, c.action, c.score, c.zone, evidence, opts.cycleId || null]);
       tickets.push({ id, ...c, status: 'open' });
     }
@@ -251,6 +252,8 @@ function verifyTickets(store, opts = {}) {
 
   for (const t of tickets) {
     const cycleId = opts.cycleId || t.cycle_id || null;
+    let ev = {};
+    try { ev = JSON.parse(t.evidence_json || '{}'); } catch (_) { ev = {}; }
 
     // 能力叙事工单（6.9）：消费证据 = distill_points 出现该实体；提案单不毕业。
     if (t.dim === 'cap') {
@@ -268,9 +271,19 @@ function verifyTickets(store, opts = {}) {
       continue;
     }
 
-    // KESPI 提案单（memo-card）：只出提案，不参与读数复核。
+    // KESPI 提案单（memo-card）：只出提案，不参与读数复核；但要有期限——
+    // 没人接的提案不能永久占名额（SPEC-6.18 §1.4）。心跳复用 6.15 律三。
     if (t.status === 'proposed') {
-      out.stillOpen.push({ id: t.id, reason: 'proposal-only' });
+      const dm = (ev.demand && typeof ev.demand === 'object') ? ev.demand : {};
+      const ttl = Number.isFinite(Number(dm.ttlRounds)) ? Number(dm.ttlRounds) : require('./ticket-demand.js').DEFAULT_TTL;
+      const beat = heartbeatOf(ev, { at: opts.at });
+      if (Number(beat.followup.beats) > ttl) {
+        _mark(db, t.id, 'rejected', { ...beat, reason: 'proposal-expired' }, cycleId, { bump: false });
+        out.rejected.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, reason: 'proposal-expired' });
+        continue;
+      }
+      _mark(db, t.id, 'proposed', { ...beat, reason: 'proposal-only' }, cycleId, { bump: false });
+      out.stillOpen.push({ id: t.id, reason: 'proposal-only', beats: beat.followup.beats, ttl });
       continue;
     }
 
@@ -281,8 +294,6 @@ function verifyTickets(store, opts = {}) {
     }
     const cur = _scalar(db, `SELECT ${t.dim} AS v FROM kespi_scores WHERE entity_id = ?`, [t.entity_id]);
     const after = cur && cur.v != null ? Number(cur.v) : null;
-    let ev = {};
-    try { ev = JSON.parse(t.evidence_json || '{}'); } catch (_) { ev = {}; }
 
     // SPEC-6.14 修订 A：回单在时先过内容闸（膜 → 粒度 → 发布门），不过即拒，不看读数。
     // 理由：「无自评不发布」是硬红线，读数上升也不能抵消。
