@@ -120,5 +120,6 @@
   "test-7.1q-lexicon-provenance.js": 5,
   "test-7.1r-identity-closeout.js": 7,
   "test-8.1-adapter.js": 4,
-  "test-8.2-hard-gates.js": 7
+  "test-8.2-hard-gates.js": 7,
+  "test-6.18-proposal-demand.js": 8
 }
