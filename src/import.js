@@ -33,12 +33,12 @@ async function importStep(store, opts = {}) {
   const db = store._getDb();
 
   const selectStmt = db.prepare(
-    `SELECT id, name, type, content, tags, status, confidence, tolaria_strength, invalid_at, strand
+    `SELECT id, name, type, content, tags, status, confidence, tolaria_strength, invalid_at, strand, title
      FROM entities WHERE id NOT LIKE 'wiki-%'`
   );
   const insertStmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   const linkExistsStmt = db.prepare('SELECT 1 AS one FROM links WHERE source_id = ? AND target_id = ? LIMIT 1');
   const insertLinkStmt = db.prepare(
@@ -68,10 +68,13 @@ async function importStep(store, opts = {}) {
 
     if (store.getEntity(wikiId) == null) {
       const strength = Number.isInteger(Number(row.tolaria_strength)) ? Number(row.tolaria_strength) : 5;
+      // SPEC-7.1 AC-1：镜像骨架也带 title——继承源题头，缺了回落 name
+      const skeletonTitle = (row.title != null && String(row.title).trim() !== '')
+        ? String(row.title) : (row.name == null ? null : String(row.name));
       insertStmt.run([wikiId, row.name == null ? null : row.name, row.type == null ? null : row.type,
         row.content == null ? null : row.content, row.tags == null ? null : row.tags,
         row.status == null ? null : row.status,
-        row.confidence == null ? null : Number(row.confidence), strength]);
+        row.confidence == null ? null : Number(row.confidence), strength, skeletonTitle]);
       stats.mirrored++;
       dirty = true;
     } else {
