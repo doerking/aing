@@ -34,7 +34,7 @@ upstream: [SPEC-1.12, SPEC-2.12, SPEC-2.13, SPEC-2.15, SPEC-2.16, SPEC-6.7, SPEC
 | 维 | 触发线 | 工单 kind | 路由 action |
 |---|---|---|---|
 | KG 成长 | `< 0.50` | `kg-low` | `rebond` |
-| KD 连接 | `< 0.40` | `kd-low` | `rebond` |
+| KD 连接 | `< 0.30`（SPEC-6.17 修订） | `kd-low` / `kd-cited` | `rebond`（raw 缺键）/ `memo-card`（被引用不催化） |
 | KM 完整 | `< 0.99` | `km-low` | `reconcile` |
 | KC 双链一致 | `< 0.80` | `kc-low` | `reconcile` |
 | KQ 质量 | `< 0.60` | `kq-low` | `memo-card` |
@@ -168,3 +168,7 @@ CLI：`node src/cli.js self-optimize [--cycle <id>] [--no-rescore]`。
 - 成员零写权（I7）：`gene-keeper` 只读扫描，不落工单。
 - 无闸不放行（I8）：gene 必过 `omni-gate`。
 - 每轮留 T2 快照（I9）：`self-optimize` 的 `verified/genes` 计入快照读数。
+
+## 七、修订记录
+
+- **2026-11-18 · SPEC-6.17 修订**：KD 门槛 0.40 → 0.30（kd 取值离散为 0/1/3/2/3/1，0.40 把 1/3 判死）；kd 单分两路——raw 缺键派 `rebond`（能修），其余被引用不催化派 `memo-card`（kind `kd-cited`）；`rebond` 加越界护栏与「不谎报」约束。详见 `spec/SPEC-6.17-kd催化率与派单匹配.md`。
