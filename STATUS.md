@@ -175,7 +175,7 @@ status: active
 - **口径来自 AB**：`G:\AB.7z` → `AB/capability-narrative.js` 纯逻辑 1:1 移植（CJS 化），只取 `aing-bridge.js` 的数据契约，不搬 dsh 壳。
 - **与三源并存**：3.13（reply/search/rationale）保留；六段是更完整的入库单元（产出=回复、思维≈事由分析、手段≈搜索展示与工具调用）。
 - **差异登记**：手段与编排拆成两个 `###` 段（六段要数得出来）；AB 写 `raw/inbox` 中间文件，v2 直接写 Conversation 实体；校准由调用方传数组，不依赖 cordis 事件。
-- **裁定不接（2026-11-18，owner）**：六段叙事 `ingestNarrative` **不接** CLI / auto-ingest——六段本身来自对当前工作区旧包的分析定出，属「旧版接得上」的面，新构造不接；模块与测试原地保留（`src/capability-narrative.js`、`test/test-6.1-narrative-ingest.js`），不删不改、不再列为待办。
+- **待接（2026-11-18，owner 定：六段叙事是给新版定的，要接）**：`ingestNarrative` 必须接到真实入口——CLI 的 `ingest`（`src/cli.js:52` → `auto-ingest`）与 `src/auto-ingest.js` 目前只走 `session-ingest`（三源）与 `ingest-scrub` / `api-gate`，**尚未调用六段**（`grep ingestNarrative` 仅命中两档测试）。缺口保留为待办，不属「旧版遗留」。
 - **swarm33 规则库（AB 六模块 135 断言）**：不按「是否移植」判，按 DNA 范式 0.5 版的三层流层结构重组——见 §七 D17。
 - **6.2 消费侧**：旧院 `distill.js:103` 的区间捕获口径已迁入 `src/distill-points.js`；蒸馏点落辅助表 `distill_points`（不改正文、不破逐字保真），默认链 14→15 步（`distill` 之后插 `distill-points`）。缺口来源与其余三组真缺口见 `docs/Engineering/CONSUMER-AUDIT-2026-11-16.md`。
 - **6.3 检索侧**：旧院 `query.js` 的三路融合（向量 .6 / 词面 .25 / 名称 .15）、慢回忆、KESPI+新鲜度伪精排已迁入 `src/retrieval.js`；`predict` 改接本模块。唯一硬差异：**不写 `last_access`**（旧院 P0 写回，v2 铁律禁写）。慢回忆只走通过三轴判定的有效边。
@@ -220,7 +220,7 @@ status: active
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
-| **D17** | swarm33 规则库（AB 六模块 135 断言）的定位与接线口径 | **owner 口径（2026-11-18）**：不是「要不要移植」的问题，是它本来就属 **DNA 范式 0.5 版**——**三层流层结构**：`aing →（信号）→ memo（单向）→ meko`，meko **直接派单至 skill 或寄生**，meko 跟单，得回单后上 **meko 外接屏**显示，**处理单次**。meko 与 aing 平行，不经 memo 之外的旁路。**待对账**：D12（2026-11-17）写的是「meko 不派粒、不接外派工单、外派面在 memo 挂载」——本口径下 meko 要派单，两者需分域：推定读法是「外派**采集**面仍在 memo、meko 不接外派单；meko 所派是本域**内场**单（skill / 寄生）」，此读法待 owner 一句确认。**落地动作**：135 断言按三层流层逐条归位（信号层 / memo 阀门 / meko 派单跟单 / 回单与外接屏 / 单次处理），归位结果为「留、改、弃」三档，再谈搬运 |
+| **D17** | swarm33 规则库（AB 六模块 135 断言）的定位与接线口径 | **owner 口径（2026-11-18）**：不是「要不要移植」的问题，是它本来就属 **DNA 范式 0.5 版**——**三层流层结构**：`aing →（信号）→ memo（单向）→ meko`，meko **直接派单至 skill 或寄生**，meko 跟单，得回单后上 **meko 外接屏**显示，**处理单次**。meko 与 aing 平行，不经 memo 之外的旁路。**待对账**：D12（2026-11-17）写的是「meko 不派粒、不接外派工单、外派面在 memo 挂载」——本口径下 meko 要派单，两者需分域：推定读法是「外派**采集**面仍在 memo、meko 不接外派单；meko 所派是本域**内场**单（skill / 寄生）」，此读法待 owner 一句确认。**六件源码本身不接进新构造**（它们是对旧包的分析产物）；**取的是口径不是代码**——135 断言按三层流层逐条归位（信号层 / memo 阀门 / meko 派单跟单 / 回单与外接屏 / 单次处理），归位结果为「留、改、弃」三档，再谈是否落实现。**六段叙事与此不冲突**：六段是给新版定的入库单元，要接到 CLI / auto-ingest（见 §五·补三 6.1 待接条）|
 | **D16** | SPEC-7.1 §七 迁移口径与实现三处偏离（别名列 / 存量 name / 旧导入路径）| **已裁（2026-11-18，M7 收口复核）**：① §七.1「新增 alias 列 + 重排序列号」不实施——旧 id 原地充当序列号，等价形态，避免动 links 端点与推翻 AC-2 只追加；② 存量旧档不重写 name，题头一律落 title（旧 name 原值保留）；③ **title 面已补**：distill / meko-field（镜像）/ import（骨架）三条产物路径改为带 title（源有题头就继承、缺了回落 name），真库副本「迁移 + 首跑 21 步」后 320 实体空 title 由 203→**0**；仍属已知偏离的是 compile / api-gate / capability-narrative / recycle 四条旧导入路径（不在代谢链上跑）仍写 name=题头、title 空——展示回落 name、不入键、不影响检索；改造要推翻 1.1/1.4/1.5/2.9b/6.11b 既有断言，须独立 spec 轮次 |
 | **D15** | 「无物理删」铁律与 2 万/月短料 + 手机端容量冲突 | **已裁（2026-11-17，owner 批准）**：改为「带归档的两段式删除」——退役打戳 → 归档校验（条数/SHA）→ 物理清热库 → 墓碑永久；原稿层永不删。落 SPEC-6.11；代码已补（retention/archive/tombstone/prune 切换） |
 | **D14** | KESPI 总公式口径（旧八维加权 vs v2 算术均值）与六个未登记小件 | **已裁（2026-11-17）**：KESPI 维持算术均值（维度语义已换，权重只给旧数字假可比）；sensory-ends / scheduler 登记「有意不迁」，batch-ingest / search-and-ingest / api-server entity REST / host 杂件随宿主接口面与发布范围一次性裁定 |
