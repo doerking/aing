@@ -95,3 +95,34 @@ upstream: [SPEC-3.13, AB/capability-narrative.js, AB/aing-bridge.js]
 | 落库 | 写 `raw/inbox/dsh-<sid>.md` | 直接写 Conversation 实体（带结构化 turns） | v2 是库内实体制；不落中间文件 |
 | 校准来源 | cordis 事件 → `feed.jsonl` | 调用方直接传 `calibrations` 数组 | 壳层差异；v2 不依赖 dsh 运行时 |
 | 幂等水位 | `$.store` 键 | 实体存在即跳过 | 库内单一真源 |
+
+## 八、修订 A · 接线（2026-11-18，owner 定：六段叙事是给新版定的，要接）
+
+> 背景：本件模块与七条 AC 早已绿，但**从未接到任何真实入口**——`grep ingestNarrative` 只命中测试。owner 定：六段是新版入库单元，必须接。
+
+### 8.1 接入点（唯一一处，CLI 自动继承）
+
+`src/auto-ingest.js` 的 `autoIngest(store, payload)` 按**载荷形状**分流，CLI 的 `ingest`（`cli.js:52` → `autoIngest`）无需另加分支：
+
+| 形状判据 | 路由 | 说明 |
+|---|---|---|
+| `payload.messages` 是非空数组 | **六段叙事**（`capability-narrative.ingestNarrative`） | 带 `calibrations` 一并传 |
+| 否则 | 三源（`session-ingest`，3.13 不动） | 缺 reply 仍按 G1 拒入 |
+
+返回值统一带 `route: 'narrative' | 'three-source'`，调用方可判读。
+
+### 8.2 双形同号：先到先得，后到跳过
+
+两条路径的实体号同为 `conv-<sessionId>`。同一会话先以任一种形状落库，另一形状再来一律 `{skipped:true}`——**不覆盖、不合并、不补写**（只追加铁律）。
+
+### 8.3 身份面（承 SPEC-7.1 AC-1）
+
+六段落库时 `name = id`（`conv-<sessionId>` 作该档序列号），`title` 由话题或正文首句派生（`conv-text.readableTopic`），**不裸露 sessionId 与时间戳**。此前 `ingestNarrative` 写 `name = 话题`、`title` 为空，本修订一并纠正。
+
+### 8.4 铁律不变
+
+不碰 `last_access`；无 `DELETE FROM`；组件不直连 store。
+
+### 8.5 护栏
+
+`test-6.1b-narrative-wiring.js`：六段走 `autoIngest` 落库（format/六段/route）→ `name=id` 且 `title` 非空无时间戳 → 同会话重复投 skipped → 三源形状仍走旧路（回归）→ 身份闸（非 hana 拒）→ 缺 messages 仍报 `narrative-required`。

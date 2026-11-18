@@ -190,11 +190,14 @@ async function ingestNarrative(store, payload = {}) {
   if (calibrations.length) tags.push('src:calibration');
 
   const db = store._getDb();
+  // SPEC-7.1 AC-1 / SPEC-6.1 修订 A §8.3：name=序列号副本（conv-<sessionId>），title 由话题或正文首句派生
+  const title = require('./conv-text.js').readableTopic(payload.topic || null,
+    { topic: payload.topic || null, reply: payload.topic || markdown });
   const stmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, created_at, updated_at)
-     VALUES (?, ?, 'Conversation', ?, ?, 'active', 0.6, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
+     VALUES (?, ?, 'Conversation', ?, ?, 'active', 0.6, 5, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
-  stmt.run([id, String(payload.topic || ('会话 ' + sessionId)).slice(0, 60), content, JSON.stringify(tags)]);
+  stmt.run([id, id, content, JSON.stringify(tags), title.slice(0, 60)]);
   stmt.free();
   store._persist();
   return { ingested: true, id, stats };
