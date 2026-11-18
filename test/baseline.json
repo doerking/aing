@@ -135,5 +135,6 @@
   "test-6.29-narrative-kq.js": 5,
   "test-6.30-narrative-coverage.js": 6,
   "test-6.31-section-validity.js": 6,
-  "test-6.32-narrative-ticket.js": 7
+  "test-6.32-narrative-ticket.js": 7,
+  "test-6.33-p1-round.js": 7
 }
