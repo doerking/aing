@@ -57,7 +57,7 @@ function applyReturn(store, claim, ret) {
 }
 
 /** SPEC-6.34 外部件（P1 全寄生）：六段从实体事实抽出——骨架恒定，内容随实体滑动 */
-function externalPartNarrative(db, claim) {
+function externalPartNarrative(db, claim, opts = {}) {
   const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
   s.bind([claim.entity_id]); const e = s.step() ? s.getAsObject() : null; s.free();
   if (!e) return null;
@@ -65,6 +65,16 @@ function externalPartNarrative(db, claim) {
   let doc;
   try { doc = JSON.parse(String(e.content)); } catch (_) { return null; }
   if (!doc || doc.format !== N.FORMAT) return null;
+
+  // SPEC-6.38：摘录起点按阈值游标的偏移前后滑动（±1..±5 字）
+  const round = Number.isFinite(Number(opts && opts.round)) ? Number(opts.round) : 0;
+  const delta = Number(require('../src/kespi.js').sectionThreshold(claim.entity_id, { round })) - 20;
+  const excerpt = (text, width) => {
+    const t = String(text == null ? '' : text).trim();
+    const start = Math.min(Math.max(delta, 0), Math.max(0, t.length - width));
+    const s = t.slice(start, start + width);
+    return start + width < t.length ? s + '…' : s;
+  };
 
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   const cals = Array.isArray(doc.calibrations) ? doc.calibrations : [];
@@ -79,10 +89,10 @@ function externalPartNarrative(db, claim) {
 
   const sections = {
     '场景（触发）': scenes.length
-      ? `本单元共 ${turns.length} 轮会话；首轮触发为「${clip(scenes[0], 60)}」。`
+      ? `本单元共 ${turns.length} 轮会话；首轮触发为「${excerpt(scenes[0], 60)}」。`
       : `本单元共 ${turns.length} 轮会话，首轮无用户输入记录。`,
     '思维（能力内核）': thinks.length
-      ? `推理线索：${clip(thinks.join(' '), 80)}`
+      ? `推理线索：${excerpt(thinks.join(' '), 80)}`
       : '本单元无显式推理块，思维只能由产出反推。',
     '手段（工具执行）': plain.length
       ? `调用工具 ${plain.length} 次：${uniq(plain)}；参数摘要见各轮 tools[].input。`
@@ -91,7 +101,7 @@ function externalPartNarrative(db, claim) {
       ? `派发子agent ${subs.length} 次：${uniq(subs)}。`
       : '本单元无子agent 派发，全部工作单轮内完成。',
     '产出': outs.length
-      ? `产出：${clip(outs.join(' '), 80)}`
+      ? `产出：${excerpt(outs.join(' '), 80)}`
       : '本单元无文本产出记录。',
     '会话级校准': cals.length
       ? `校准 ${cals.length} 条：${clip(cals.map(c => String(c.summary || c.type || '')).join('；'), 60)}`
@@ -167,7 +177,9 @@ function _flag(args, name, dflt) { const i = args.indexOf('--' + name); return i
   if (args.includes('--scan')) await S.scanTickets(store, { maxTickets: Number(_flag(args, 'max', '200')) });
   await S.dispatchTickets(store, {});
 
-  const list = P.claimable(store, REG);
+  const isP1 = _flag(args, 'slot', 'P2') === 'P1';
+  const reg = isP1 ? NARRATIVE_REG : REG;
+  const list = P.claimable(store, reg);
   const wantId = _flag(args, 'ticket', null);
   const claim = wantId ? list.find(t => t.id === wantId) : list[0];
   if (!claim) {
@@ -176,9 +188,9 @@ function _flag(args, name, dflt) { const i = args.indexOf('--' + name); return i
   }
   const before = scalar(`SELECT kq, overall FROM kespi_scores WHERE entity_id = '${claim.entity_id}'`) || {};
 
-  const ret = externalPart(db, claim);
+  const ret = isP1 ? externalPartNarrative(db, claim, { round }) : externalPart(db, claim);
   if (!ret) { console.log(JSON.stringify({ ok: false, reason: '原料不存在' })); process.exit(1); }
-  applyReturn(store, claim, ret);                 // 系统写回
+  (isP1 ? applyReturnNarrative : applyReturn)(store, claim, ret);   // 系统写回
 
   await K.kespiStep(store, {});
   const v = await S.verifyTickets(store, { round });
@@ -194,10 +206,12 @@ function _flag(args, name, dflt) { const i = args.indexOf('--' + name); return i
   console.log(JSON.stringify({
     ok: row.status === 'verified',
     round,
-    slot: REG.slot, mode: REG.mode,
+    slot: reg.slot, mode: reg.mode,
     claim: { id: claim.id, entity: claim.entity_id, want: claim.demand.want, acceptance: claim.demand.acceptance },
     return: ret.result,
-    writeBack: { charsAdded: ret.patch.appendText.length, tagsAdded: ret.patch.addTags },
+    writeBack: isP1
+      ? { sections: Object.keys(ret.patch.sections || {}).length }
+      : { charsAdded: ret.patch.appendText.length, tagsAdded: ret.patch.addTags },
     kq: { before: before.kq, after: after.kq },
     ticket: { status: row.status, reason: ev.reason || null, acceptance: ev.acceptance || null },
     verify: { verified: v.verified.length, rejected: v.rejected.length, stillOpen: v.stillOpen.length },
