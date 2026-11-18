@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 六段叙事, 段有效性, 阈值, 滑动, 反拟合, engineering:8, must-read:7, capability, delivery, operations]
 description: SPEC-6.35 段有效阈值滑动（20±5）——阈值按实体散列在 15/25 间定，同实体跨轮稳定，防「刚好 20 字」贴线过关
 date: 2026-11-19
-status: 已落地（test-6.35-threshold-slide 6/6）
+status: 已落地（test-6.35-threshold-slide 6/6）；细化口径见 SPEC-6.36
 owner: hana
 upstream: [spec/SPEC-6.31-段有效性阈值.md, spec/SPEC-6.34-六段由实体事实抽出.md]
 ---
