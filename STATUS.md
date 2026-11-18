@@ -65,7 +65,7 @@ status: active
 | 1.16 | 轮账与逐条存活（代谢记账层） | ✅ | `spec/SPEC-1.16-轮账与逐条存活.md` | test-1.16-round-ledger 6/6：建表与 links.cycle_id 迁移、每轮 320 类实体快照（alive/accessed/degree/content_len/strand）且同轮幂等、访问锚取 last_access 与 access_hits 更近者（≤7 天）、上一轮后新边归本轮（历史边留空）、账本按轮次有界（keepRounds）、编排 _writeCycle 接线且失败不阻断；真库副本实测：320 行/轮、单轮约 69KB，缺省保留 30 轮≈2.1MB（60 轮≈4.2MB 会顶手机端 10MB 上限，故定为 30）；边归属 0 条（真库 2292 条历史边均早于上一轮，保持记账前，符合预期）；真库实跑（2026-11-18，冷备 knowledge-20261118-011305-preledger.db）：首轮 320 行/8 条归属边，暴露并修复 pollinate 撞退役边 UNIQUE（修订 A）与 import/pollinate 撞 future→past 两个幂等 bug；修复后一轮 21 步全绿，账本 322 行、8 条新边归属，future 产物已正常打标；库体积 4.80→5.29MB（5 轮账≈0.35MB）|
 | **1.15** | **场域骨架 + 组件契约门禁（arch-lint C5）** | ✅ | 1.15 | test-1.15-field 8/8 + C5 |
 
-## 三、M2 meko 四顶职责 + 进化团入驻（4/8 已落地 + 3 健康修复 + 3 进化团）
+## 三、M2 meko 四顶职责 + 进化团入驻（19/19 已落地）
 
 | # | 任务 | 状态 | spec | test |
 |---|---|---|---|---|
@@ -151,7 +151,7 @@ status: active
 - **文档投喂试用**（2026-11-16）：18 份真实工作区文档（README/AGENTS/SPEC/模板/规范）隔离库跑通 compile→import→vector，memo 覆盖 100%；实测暴露排序问题，直接催生 5.3。记录见 `docs/Engineering/EMBEDDING-BENCH-2026-11-16.md` §八。
 - **评测集已冻结 v1**（2026-11-17）：`data/eval/embedding-pairs.jsonl` 65 题（zh 33 / yue 20 / en 12）、`corpus.jsonl` 60 实体、`FROZEN.json` 记 sha1（`d79f91d2ccdf`）；守门 `test-5.3b-eval-set.js` 6/6，改一条即红。**v2 已扩**：80 题（zh 40 / yue 25 / en 15，`eec651fc2515`），含 15 题多正例/噪声题，v1 结论作废。**执行器已落**：`tools/bench-retrieval.js`（P@10 / R@10 / 负例命中率，zh/yue/en 分层单列；隔离库、真库零扰动；test-5.3c 6/6）。v2 结果：hash-64 R@10 81.9% / 负例 37.5%，hash-64w2 77.5% / 26.2%，yue R@10 78.0% / 74.0%。**词面 IDF 通道已接**（SPEC-6.3 修订 A；test-5.3d 6/6；v1 指标逐位未变——该集命中是二值的，增益留待 v2 多正例题）。**compile 侧 type 推断已接**（SPEC-1.1 修订 A；test-1.1b 7/7：显式优先、路径推断会话/待办/论文/元知识/洞察、未知不猜、推断不出不清空）。真库副本 dry-run：旧院 raw 85 档，显式 75 / 可推断 0 / 未知 10，仅 1 档会被纠正、无批量降级。**真库暂不跑**（owner 取态：以后跑几次再定，不合再调）。**未做（下一步）**：假边率与二跳污染率（需链接构建器）、评测集 v3（补噪声对）。
 
-## 五·补三 M6 能力叙事入库与消费（15/15 已落地）
+## 五·补三 M6 能力叙事入库与消费（18/18 已落地）
 
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
