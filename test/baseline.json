@@ -132,5 +132,6 @@
   "test-6.26-maintenance-guard.js": 6,
   "test-6.27-pulse-maintenance.js": 6,
   "test-6.28-p1-narrative.js": 7,
-  "test-6.29-narrative-kq.js": 5
+  "test-6.29-narrative-kq.js": 5,
+  "test-6.30-narrative-coverage.js": 6
 }

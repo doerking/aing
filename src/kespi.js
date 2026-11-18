@@ -43,6 +43,26 @@ function cleanBody(content) {
   return _cleanText(narrativeBody(content));
 }
 
+// SPEC-6.30：六段覆盖率进 kq——缺段要掉分，外部件才有动力写全六段
+// 口径：覆盖率只对六段叙事生效；非叙事实体 factor 恒为 1，读数不变
+const NARRATIVE_SECTIONS = ['场景（触发）', '思维（能力内核）', '手段（工具执行）', '编排（子agent）', '产出', '会话级校准'];
+const COVERAGE_FLOOR = 0.6;   // 零段 ×0.6，六段齐 ×1.0，线性
+function narrativeCoverage(markdown) {
+  const md = String(markdown == null ? '' : markdown);
+  let n = 0;
+  for (const key of NARRATIVE_SECTIONS) {
+    const re = new RegExp('^#{1,4}\\s*' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$', 'm');
+    if (re.test(md)) n++;
+  }
+  return n / NARRATIVE_SECTIONS.length;
+}
+function narrativeFactor(content) {
+  const raw = String(content == null ? '' : content);
+  const body = narrativeBody(raw);
+  if (body === raw) return 1;   // 不是叙事 → 不参与覆盖率
+  return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body);
+}
+
 function _cleanText(content) {
   return String(content == null ? '' : content)
     .replace(/^#.*$/m, '')
@@ -139,11 +159,12 @@ async function kespiStep(store, opts = {}) {
     const content = String(e.content == null ? '' : e.content);
     const eid = String(e.id);
 
-    // KQ 质量：去壳正文长度 + 标签 + 置信度（SPEC-1.12 修订 A）
+    // KQ 质量：去壳正文长度 + 标签 + 置信度（SPEC-1.12 修订 A），
+    // 叙事再乘六段覆盖率（SPEC-6.30）
     const bodyLen = cleanBody(content).length;
-    const kq = clamp01(Math.min(1, bodyLen / 400) * 0.6 +
+    const kq = clamp01((Math.min(1, bodyLen / 400) * 0.6 +
       Math.min(1, tagCount(e.tags) / 3) * 0.25 +
-      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15);
+      (e.confidence == null ? 0.5 : Number(e.confidence)) * 0.15) * narrativeFactor(content));
 
     // KA 活跃：last_access 与访问事件取更近者
     const laDays = daysSince(now, e.last_access);
@@ -193,4 +214,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, NARRATIVE_SECTIONS, COVERAGE_FLOOR, ROUND_WINDOW, CANDIDATE_RELATIONS };
