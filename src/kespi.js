@@ -27,7 +27,23 @@ const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const round4 = (x) => Math.round(x * 10000) / 10000;
 
 // 去卡片壳：首行标题、来源/关系/KESPI 状态段、原始资料行——只量真正的内容
+// SPEC-6.29：六段叙事的正文在 JSON 的 markdown 字段里，别拿 JSON 外壳量质量
+const NARRATIVE_FORMAT = 'capability-narrative-v1';
+function narrativeBody(content) {
+  const s = String(content == null ? '' : content);
+  const t = s.trim();
+  if (t.charCodeAt(0) !== 123) return s;   // 不是 '{' 就原样返回
+  let j = null;
+  try { j = JSON.parse(t); } catch (_) { return s; }
+  if (j && j.format === NARRATIVE_FORMAT && typeof j.markdown === 'string') return j.markdown;
+  return s;
+}
+
 function cleanBody(content) {
+  return _cleanText(narrativeBody(content));
+}
+
+function _cleanText(content) {
   return String(content == null ? '' : content)
     .replace(/^#.*$/m, '')
     .replace(/##\s*(来源|关系|KESPI 状态)[\s\S]*?(?=\n##|$)/g, '')
@@ -177,4 +193,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, ROUND_WINDOW, CANDIDATE_RELATIONS };
