@@ -83,4 +83,34 @@ function validateDemand(d) {
   return { ok: reasons.length === 0, reasons: [...new Set(reasons)] };
 }
 
-module.exports = { DEMANDS, OPS, DIMS, MODES, EVIDENCE_KEYS, DEFAULT_TTL, demandFor, validateDemand };
+/**
+ * 按需求判回单（SPEC-6.20）：跑一遍读数就该能判。
+ * @param {object} demand 单上的需求
+ * @param {object} readings 当前五维读数 {kq,ka,kd,kc,kr,overall}
+ * @param {{before?:object}} opts before = 开单时的读数快照（improved 判据要用）
+ * @returns {{ok:boolean, checked:number, failures:Array}}
+ */
+function checkAcceptance(demand, readings = {}, opts = {}) {
+  const acc = (demand && Array.isArray(demand.acceptance)) ? demand.acceptance : [];
+  if (!acc.length) return { ok: false, checked: 0, failures: [{ reason: 'no-acceptance' }] };
+  const now = readings || {};
+  const before = opts.before || {};
+  const failures = [];
+  for (const a of acc) {
+    const dim = a && a.dim;
+    const after = now[dim] == null ? null : Number(now[dim]);
+    const was = before[dim] == null ? null : Number(before[dim]);
+    if (after == null || !Number.isFinite(after)) { failures.push({ dim, op: a && a.op, reason: 'no-reading' }); continue; }
+    let ok = false;
+    if (a.op === 'gte') ok = after >= Number(a.value);
+    else if (a.op === 'gt') ok = after > Number(a.value);
+    else if (a.op === 'improved') {
+      if (was == null || !Number.isFinite(was)) { failures.push({ dim, op: 'improved', reason: 'no-before' }); continue; }
+      ok = after > was + 1e-9;
+    }
+    if (!ok) failures.push({ dim, op: a.op, value: a.value, before: was, after });
+  }
+  return { ok: failures.length === 0, checked: acc.length, failures };
+}
+
+module.exports = { DEMANDS, OPS, DIMS, MODES, EVIDENCE_KEYS, DEFAULT_TTL, demandFor, validateDemand, checkAcceptance };
