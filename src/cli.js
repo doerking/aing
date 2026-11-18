@@ -55,6 +55,12 @@ async function cmdIngest(dbPath, payload = {}) {
   return autoIngest(s, payload);
 }
 
+async function cmdBoard(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { boardOf } = require('./ticket-board.js');
+  return boardOf(s, opts);
+}
+
 async function cmdAccess(dbPath, ids, opts = {}) {
   const s = await openStore(dbPath);
   const { recordAccess } = require('./access.js');
@@ -140,6 +146,7 @@ function usage() {
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
     '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]',
+    '  node src/cli.js board [--limit N] [--json] [--db <path>]   # SPEC-6.16：回单外接屏（只读）',
     '  node src/cli.js reindex [--db <path>]   # SPEC-5.5：换后端后全量重建向量'
   ].join('\n'));
 }
@@ -186,6 +193,11 @@ async function main(argv) {
       console.log(JSON.stringify(out, null, 2));
       return 0;
     }
+    if (cmd === 'board') {
+      const out = await cmdBoard(dbPath, { limit: flags.limit ? Number(flags.limit) : undefined });
+      console.log(flags.json ? JSON.stringify(out, null, 2) : (out.lines || []).join(String.fromCharCode(10)));
+      return 0;
+    }
     if (cmd === 'access') {
       const ids = String(flags.ids || '').split(',').map(x => x.trim()).filter(Boolean);
       const out = await cmdAccess(dbPath, ids, { source: flags.source || 'cli' });
@@ -219,4 +231,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
