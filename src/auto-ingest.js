@@ -37,7 +37,8 @@ async function autoIngest(store, payload = {}) {
       trigger: payload.trigger,
       messages,
       calibrations: Array.isArray(payload.calibrations) ? payload.calibrations : [],
-      cfg: payload.cfg
+      cfg: payload.cfg,
+      narrative: payload.narrative
     });
     return { ...r, route: 'narrative', scrubTrace: 0 };
   }

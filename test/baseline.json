@@ -130,5 +130,6 @@
   "test-6.24-parasite-e2e.js": 6,
   "test-6.25-scan-quota.js": 6,
   "test-6.26-maintenance-guard.js": 6,
-  "test-6.27-pulse-maintenance.js": 6
+  "test-6.27-pulse-maintenance.js": 6,
+  "test-6.28-p1-narrative.js": 7
 }

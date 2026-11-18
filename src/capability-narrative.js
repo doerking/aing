@@ -16,6 +16,34 @@ const DEFAULTS = {
 const SECTIONS = ['场景（触发）', '思维（能力内核）', '手段（工具执行）', '编排（子agent）', '产出', '会话级校准'];
 const SUBAGENT_TOOL_NAMES = DEFAULTS.subagentToolNames.slice();
 const FORMAT = 'capability-narrative-v1';
+const NARRATIVE_MODES = ['semi', 'full'];
+
+// ── P1 入口成形位（SPEC-6.28）：外部件交叙事，系统只验不重写 ──────
+function validateNarrative(n) {
+  const reasons = [];
+  if (!n || typeof n !== 'object') return { ok: false, reasons: ['no-narrative'] };
+  if (!NARRATIVE_MODES.includes(n.mode)) reasons.push('bad-mode');
+  if (n.mode === 'full') {
+    const s = n.sections;
+    if (!s || typeof s !== 'object') reasons.push('missing-section');
+    else {
+      for (const k of SECTIONS) {
+        if (!(k in s)) reasons.push('missing-section:' + k);
+        else if (String(s[k] == null ? '' : s[k]).trim() === '') reasons.push('empty-section:' + k);
+      }
+    }
+  } else if (n.mode === 'semi') {
+    const t = String(n.title || '').trim();
+    const tags = Array.isArray(n.tags) ? n.tags.filter(x => String(x).trim()) : [];
+    if (!t && !tags.length) reasons.push('nothing-provided');
+  }
+  return { ok: reasons.length === 0, reasons: [...new Set(reasons)] };
+}
+
+/** 六段原样渲染（full 形态用；不做任何加工） */
+function renderSections(sections) {
+  return SECTIONS.map(k => `### ${k}\n${String(sections[k]).trim()}`).join('\n\n');
+}
 
 // ── block / 字段 helpers ───────────────────────────────────
 function normalizeBlocks(content) {
@@ -174,7 +202,22 @@ async function ingestNarrative(store, payload = {}) {
   if (typeof store.getEntity === 'function' && store.getEntity(id) != null) return { skipped: true, id };
 
   const calibrations = Array.isArray(payload.calibrations) ? payload.calibrations : [];
-  const { markdown, stats, turns } = buildCapabilityNarrative(messages, payload.cfg || {}, calibrations);
+  const external = payload.narrative && typeof payload.narrative === 'object' ? payload.narrative : null;
+  if (external) {
+    const v = validateNarrative(external);
+    if (!v.ok) throw new Error('narrative-invalid: ' + v.reasons.join('+'));
+  }
+
+  let markdown, stats, turns;
+  if (external && external.mode === 'full') {
+    // 寄生：六段全由外部件给，系统只渲染与校验，不重写
+    markdown = renderSections(external.sections);
+    turns = [];
+    stats = { bodyChars: markdown.length, reasoningBlocks: 0, toolCalls: 0, subagentCalls: 0, turnCount: 0, external: true };
+  } else {
+    const built = buildCapabilityNarrative(messages, payload.cfg || {}, calibrations);
+    markdown = built.markdown; stats = built.stats; turns = built.turns;
+  }
 
   const content = JSON.stringify({
     format: FORMAT,
@@ -184,15 +227,24 @@ async function ingestNarrative(store, payload = {}) {
     markdown,
     turns,
     stats,
-    calibrations
+    calibrations,
+    ...(external ? { narrative: { mode: external.mode, slot: 'P1', provided: true } } : {})
   });
   const tags = ['conv:9', 'src:narrative'];
   if (calibrations.length) tags.push('src:calibration');
+  if (external && Array.isArray(external.tags)) {
+    for (const t of external.tags) {
+      const s = String(t == null ? '' : t).trim();
+      if (s && !tags.includes(s)) tags.push(s);
+    }
+  }
 
   const db = store._getDb();
   // SPEC-7.1 AC-1 / SPEC-6.1 修订 A §8.3：name=序列号副本（conv-<sessionId>），title 由话题或正文首句派生
-  const title = require('./conv-text.js').readableTopic(payload.topic || null,
+  const derivedTitle = require('./conv-text.js').readableTopic(payload.topic || null,
     { topic: payload.topic || null, reply: payload.topic || markdown });
+  const extTitle = external && typeof external.title === 'string' ? external.title.trim() : '';
+  const title = extTitle || derivedTitle;
   const stmt = db.prepare(
     `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
      VALUES (?, ?, 'Conversation', ?, ?, 'active', 0.6, 5, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
@@ -204,7 +256,7 @@ async function ingestNarrative(store, payload = {}) {
 }
 
 module.exports = {
-  DEFAULTS, SECTIONS, SUBAGENT_TOOL_NAMES, FORMAT,
+  DEFAULTS, SECTIONS, SUBAGENT_TOOL_NAMES, FORMAT, NARRATIVE_MODES, validateNarrative, renderSections,
   buildCapabilityNarrative, renderTurn, renderSessionCalibration, partitionCalibrations,
   normalizeBlocks, appendBlockText, pickThinking, extractToolResult, safeJson, trunc,
   ingestNarrative
