@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 150 档 / 986 条断言全绿 |
+| 测试 | `npm test` → 151 档 / 993 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **84/85 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 22；M2 2.7/2.8 占位另计）
-- **150 档 / 986 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **85/86 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 23；M2 2.7/2.8 占位另计）
+- **151 档 / 993 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -191,6 +191,7 @@ status: active
 | **6.43** | **编译前闸（shared-spine 替代物）** | ✅ | `spec/SPEC-6.43-编译前闸.md` | test-6.43-compile-gate 8/8；三级闸：**L0 完整性**默认开（空正文 / 坏 id 拒收）、**L1 质量** `opts.quality` 开（无 tags / 短于 200 字拒收）、**L2 KESPI** 只在既有 `kq<0.40` 且新文不比旧文长时拒（只防降级，不拿入库后的分做准入）。每轮落一行 `compile_audit`（五项计数 + `rejected_json`，只追加，旧库自动补表）。拒收档不写库、不影响其他档；真库默认行为零变化。 |
 | **6.44** | **红队沙盘演练** | ✅ | `spec/SPEC-6.44-红队沙盘演练.md` | test-6.44-red-drill 7/7 + `tools/red-drill.js` CLI 6/6；五类载荷对现有防线双向断言：S1 惰性注入（正文逐字入库、tags 不染）、S2 脏标签（6.42 白名单零入列）、S3 空壳覆盖（6.43 L0 拒收、旧档不动）、S4 降级覆盖（L2 拒收）、S5 身份自报（3.6 身份闸拒非授权 + 自报标签降为正文提议）；C1 干净对照防「见什么都拒」。全程 mkdtemp 临时库、跑完即删（`--keep` 留现场），真库零接触。旧院 shell/URL 类载荷在 v2 无攻击面，已登记。 |
 | **6.45** | **P1 自动领单循环** | ✅ | `spec/SPEC-6.45-P1自动领单循环.md` | test-6.45-p1-runner 7/7 + `tools/parasite-loop.js`；`runP1Once(store, opts)` 一轮跑完「评分→只认 P1/full 领单→外部件回单→系统写回→重算→验收」，返回 `{round, scored, claimed, rewritten, verify}`；幂等（verified 单不再领）、单轮失败记 `error` 不中断、`score/verify` 可单关。CLI 必须 `--db` 副本、真库拒跑（exit 3）、默认 `--once`、`--interval` 才定频；**不装守护进程**，常驻与否留给宿主。真库副本实测 round=14、领单 0。 |
+| **6.46** | **错误码行动表** | ✅ | `spec/SPEC-6.46-错误码行动表.md` | test-6.46-error-codes 7/7 + `tools/errors.js`；`src/error-handler.js` 把 src 里所有带码 `throw` 收成一张表（30 个码 + 4 个中文/符号前缀模式），分四类处置：`wiring`（未注入依赖）/ `fix-input`（补输入）/ `retryable`（持锁、外部改写、落盘失败）/ `operator`（身份闸、迁移指纹、容量、批间闸）。`classify(errOrString)` 接受字符串或 Error，未知码返回 `unknown` 不抛；wiring 家族（「X 需要 store 注入」）按模式识别，不逐条登记。**结构守卫**：测试扫 `src/*.js` 的 `throw new Error('<code>`，新增码不登记即红。只做分类，不改 throw、不改消息文本。CLI `--json` / `--explain "<消息>"`。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
