@@ -237,6 +237,28 @@ const DDL = [
     rejected INTEGER DEFAULT 0,
     rejected_json TEXT,
     created_at DATETIME
+  )`,
+  // SPEC-6.50 结合部：aing→memo 差量信号（指纹幂等，水位在 config）
+  `CREATE TABLE IF NOT EXISTS bridge_signals (
+    fp TEXT PRIMARY KEY,
+    face TEXT,
+    code TEXT,
+    target TEXT,
+    round TEXT,
+    note TEXT,
+    sent_at DATETIME
+  )`,
+  // SPEC-6.50 结合部：meko→memo 回单队列（待核 → 核过才进摘要）
+  `CREATE TABLE IF NOT EXISTS bridge_returns (
+    fp TEXT PRIMARY KEY,
+    head_id TEXT,
+    layer TEXT,
+    status TEXT DEFAULT 'pending-verify',
+    payload_json TEXT,
+    summary TEXT,
+    returned_at DATETIME,
+    verified_at DATETIME,
+    verify_note TEXT
   )`
 ];
 

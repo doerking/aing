@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 154 档 / 1015 条断言全绿 |
+| 测试 | `npm test` → 155 档 / 1023 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **88/89 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 26；M2 2.7/2.8 占位另计）
-- **154 档 / 1015 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **89/90 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 27；M2 2.7/2.8 占位另计）
+- **155 档 / 1023 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -195,6 +195,7 @@ status: active
 | **6.47** | **冷启动初始化** | ✅ | `spec/SPEC-6.47-冷启动初始化.md` | test-6.47-init-workspace 7/7 + `tools/init-kb.js`；新机器部署原先没有建目录工具（`compile` 找不到 `raw/` 就静默扫 0 档）。`initWorkspace({root,dbPath,store})` 建 `raw/` `raw/inbox/` `data/` `archive/` 与库父目录，返回 `{created, existing, db:{path,tables}}`。铁律：只增不删（既有文件逐字不动）、幂等（二跑 created 空）、root 必须已存在（`root-missing`/`root-not-dir` 拒建，防误造目录树）、**CLI 无缺省 root**（不显式给就 exit 2）。store 由调用方注入，符合 C5 分层。两个新错误码已登记进 6.46 行动表。 |
 | **6.48** | **开机自检** | ✅ | `spec/SPEC-6.48-开机自检.md` | test-6.48-boot-check 7/7 + `tools/boot-check.js`；七项体检（root / 四目录 / 库文件 / 必需表 / 可写 / 实体边计数 / 待编译 md），三档结论 `ok→degraded→broken`，`ok = verdict!=='broken'`。**纯读**：不建目录、不写库、不落探针文件（可写性走 `accessSync`），跑前后库 mtime/size 不变。CLI 退出码 ok 0 / degraded 1 / broken 4 / 参数缺 2，可当部署闸。缺目录只报不补——补归 6.47。 |
 | **6.49** | **演示语料播种与拆除** | ✅ | `spec/SPEC-6.49-演示语料播种与拆除.md` | test-6.49-seed-demo 8/8 + `tools/seed-demo.js` / `tools/unseed-demo.js`；播种写 4 份原稿（概念/会话/边两端）→ `compile` 入库 → 建一条演示边 → 记账 `data/demo-seed.json`（id + 内容摘要）。拆除只拆账上 id，逐条比对摘要：**改过的档记 `modified` 不拆**；拆走「墓碑→关联表→实体」同一套级联（与 `archive.js` 同源），`archive_ref='demo-seed'`；幂等，二跑 `no-marker` ok。只认账本不按标签扫——手插的 `demo` 标签外人不受影响。CLI 均需 `--root`、`--dry` 只看不拆。 |
+| **6.50** | **meko-bridge 结合部** | ✅ | `spec/SPEC-6.50-meko-bridge.md` | test-6.50-meko-bridge 8/8 + `tools/bridge.js`；两条表（`bridge_signals` / `bridge_returns`）追加进 schema。**单向**：aing→memo 只发差量信号（指纹 `sha1(face+code+target+round)` + 水位存 `config[bridge.watermark]`，同信号幂等）；meko→memo 只交回单（同指纹重复提交报 `duplicate` 不重复入库）。**核单后入视野**：`summarize` 对 `pending-verify` 只给计数，`verified` 才进摘要（summary 截 60 字）；**失败可见**：超 `staleHours`(24) 计 `stalePending` 并报最长滞留。分层按 `headId` 推（注册表优先/关键词兜底），`own` 只出当前截面明细。`summarize` 纯读（跑前后库 mtime/size 不变）。CLI `status` / `publish <json>` / `verify <fp> [--reject]`。**不实现 meko 派单**（D17：派单归 meko）。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
@@ -256,6 +257,7 @@ status: active
 | D5 | AGENT.md 命令超前（memo/neural/query 等未实现）| 已加可用性标注 |
 | D6 | T_bound p99 真值未测 | 随 2.4 补离线实测 |
 | **D7** | 双链 id 前缀（`raw-`/`wiki-`）只喺实现约定 | 已入 SPEC-0.6 §五，待 0.1 修订落列 |
+| **D20** | 余三项缺口口径（meko-bridge / kespi-enhance / batch-ingest） | **owner 裁定（2026-11-19，本会话问答）**：① `meko-bridge` 按 D17 推定读法确认——**外派采集面在 memo、meko 不接外派单；meko 派的是本域内场单（skill / 寄生）**，据此刻 6.50（信号+回单结合部，不实现派单）；② `kespi-enhance`（五维 metadata 第二轴）**裁定不迁**——v2 KESPI 已按 D14 走算术均值，加第二轴会毁可比性；③ `batch-ingest` / `search-and-ingest` **仍等 D14 宿主接口面一次性裁定**。 |
 | **D19** | 旧院冷启动 8 件与真能力 7 项的收口口径 | **已裁（2026-11-19，hana；见 `docs/COVERAGE-…-2026-11-18.md` §七）**：冷启动 8 件——`init-knowledge-base`/`bootstrap` 走 6.47（`init-kb`）、`boot-sequence`/`start-all` 走 6.48（`boot-check`，单进程不装守护）、`seed-demo`/`unseed-demo` 走 6.49（账本制）；`sync-opt` **裁定不迁**（单点部署，第二台机已停用）。真能力 7 项已清 4（shared-spine 6.43 / tag-decontaminate 6.42 / red-drill 6.44 / error-handler 6.46）。**余 3 项仍卡 owner**：`meko-bridge` 等 D17 一句确认、`kespi-enhance` 等去留裁定、`batch-ingest`/`search-and-ingest` 等 D14 宿主接口面。 |
 | **D18** | 自优化闭环在真库从未闭合过（14 轮 / 865 次场域动作 / 20 单 / **0 verified**） | **已诊（2026-11-18，hana；真库副本实测）**：四处断裂同时存在——① **规则**：五维里 kq/ka/kr/overall 全走 `memo-card`，只出提案不碰场域（真库 ka<0.3 有 205 个实体，只开出 12 单，`MAX_TICKETS=20` 额满）；② **状态机**：`proposed` 无消费方、不回 `open`，却又被 `_openKeys` 算作在途 → 出应单＝永久占坑；③ **作用域**：kd 开单要求「入向强边≥2」，命中的全是 `wiki-/dispatch-/skill-registry-` 实体，而 `rebond` 硬过滤 `raw-*` → `scanned=0` 必然（8 单全 `no-effect`）；④ **计量**：真库 126 条有效氢键中 118 条 `strength=1`，而 kd 只数 `strength≥7` 出向边；kd 又是离散步长（0/1/3/2/3/1），门槛 0.40 把单条边（0.333）判死 —— 动作造的东西、指标测的东西、单子派的对象三者不相交。**另查**：`kc` 全库恒 0.5（322/322，无派生件），`kc<0.40` 永不触发 → reconcile 这条真动作一次都开不出单；真库 0 条 `derived` 边，286 条 `strength≥7` 的 `related` 边全是旧库迁移遗产，v2 无任何步骤产出它们。**已修（SPEC-6.17）**：③④ 两条 + `rebond` 假成功（库层 future→past 闸被 catch 吞成「复键」，3 次记账 0 条边）。**未修（另立线）**：① proposal 单的消费方与 TTL（现两轮即堆积 32 单）；② 催化率长期口径——v2 不产强 `related` 边，kd 现在只能靠镜像键与派生边有分；③ 闭环缺「真能造结构边」的动作，派生链（distill 仅 2 条原料待产）尚未铺开。 |
 | **D17** | swarm33 规则库（AB 六模块 135 断言）的定位与接线口径 | **owner 口径（2026-11-18）**：不是「要不要移植」的问题，是它本来就属 **DNA 范式 0.5 版**——**三层流层结构**：`aing →（信号）→ memo（单向）→ meko`，meko **直接派单至 skill 或寄生**，meko 跟单，得回单后上 **meko 外接屏**显示，**处理单次**。meko 与 aing 平行，不经 memo 之外的旁路。**待对账**：D12（2026-11-17）写的是「meko 不派粒、不接外派工单、外派面在 memo 挂载」——本口径下 meko 要派单，两者需分域：推定读法是「外派**采集**面仍在 memo、meko 不接外派单；meko 所派是本域**内场**单（skill / 寄生）」，此读法待 owner 一句确认。**六件源码本身不接进新构造**（它们是对旧包的分析产物）；**取的是口径不是代码**——135 断言按三层流层逐条归位（信号层 / memo 阀门 / meko 派单跟单 / 回单与外接屏 / 单次处理），归位结果为「留、改、弃」三档——**已归位（2026-11-18）**：134 条 = 留 58 / 改 57 / 弃 19，逐段表见 `docs/M6-SWARM33-三层流层归位-2026-11-18.md`；最值钱三条为膜透性三档、发布门、追单不补位。**六段叙事与此不冲突**：六段是给新版定的入库单元，要接到 CLI / auto-ingest（见 §五·补三 6.1 待接条）|
