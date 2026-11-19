@@ -122,9 +122,13 @@ function walkMarkdown(dir, out) {
 
 // ---------- 主步：compile(rawDir) ----------
 
-async function compile(rawDir, store) {
+async function compile(rawDir, store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('compile 需要 store 注入（SPEC-1.14 契约）');
-  const stats = { scanned: 0, created: 0, updated: 0, skipped: 0, tagsDropped: 0 };
+  const stats = { scanned: 0, created: 0, updated: 0, skipped: 0, rejected: 0, tagsDropped: 0, rejectedReasons: [] };
+  // SPEC-6.43 编译前闸：L0 完整性默认开；L1 质量按 opts.quality；L2 KESPI 只在有分数时防降级
+  const quality = opts.quality === true;
+  const minContent = Number.isFinite(Number(opts.minContent)) ? Number(opts.minContent) : 200;
+  const minKq = Number.isFinite(Number(opts.minKq)) ? Number(opts.minKq) : 0.40;
   if (!fs.existsSync(rawDir)) return stats;
 
   const files = walkMarkdown(rawDir, []);
@@ -150,6 +154,32 @@ async function compile(rawDir, store) {
     // 推断不出时不清空既有类型（迁移/旧编译已定的 type 不能被降级）
     if (row.type == null && existing && existing.type != null) row.type = existing.type;
 
+    // ── 闸：逐级判，命中即拒，本轮不写库 ──────────────────
+    const reasons = [];
+    const body = String(content == null ? '' : content).trim();
+    if (!body) reasons.push('empty-content');
+    if (!id || /\s/.test(String(id))) reasons.push('bad-id');
+    if (quality) {
+      let tags = [];
+      try { tags = JSON.parse(row.tags || '[]'); } catch (_) { tags = []; }
+      if (!Array.isArray(tags) || tags.length === 0) reasons.push('no-tags');
+      if (body.length < minContent) reasons.push('short-content');
+    }
+    if (!reasons.length && existing && row.content != null) {
+      const kqRow = db.prepare('SELECT kq FROM kespi_scores WHERE entity_id = ?');
+      kqRow.bind([id]);
+      const kq = kqRow.step() ? Number(kqRow.getAsObject().kq) : null;
+      kqRow.free();
+      const oldLen = String(existing.content == null ? '' : existing.content).trim().length;
+      const newLen = String(row.content == null ? '' : row.content).trim().length;
+      if (kq != null && Number.isFinite(kq) && kq < minKq && newLen <= oldLen) reasons.push('kespi-downgrade');
+    }
+    if (reasons.length) {
+      stats.rejected++;
+      stats.rejectedReasons.push({ id, reasons });
+      continue;
+    }
+
     if (!existing) {
       insertStmt.run([id, row.name, row.type, row.content, row.tags, row.status, row.confidence]);
       stats.created++;
@@ -165,6 +195,15 @@ async function compile(rawDir, store) {
 
   insertStmt.free();
   updateStmt.free();
+  // 审计：每轮一行，只追加（SPEC-6.43 §1.2）
+  try {
+    db.run('INSERT INTO compile_audit (scanned, created, updated, skipped, rejected, rejected_json, created_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
+      [stats.scanned, stats.created, stats.updated, stats.skipped, stats.rejected, JSON.stringify(stats.rejectedReasons)]);
+    const s = db.prepare('SELECT MAX(id) AS id FROM compile_audit');
+    stats.auditId = s.step() ? s.getAsObject().id : null;
+    s.free();
+    dirty = true;
+  } catch (e) { stats.auditError = e.message; }
   if (dirty) store._persist();
   return stats;
 }

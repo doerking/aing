@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 147 档 / 964 条断言全绿 |
+| 测试 | `npm test` → 148 档 / 972 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **81/82 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 19；M2 2.7/2.8 占位另计）
-- **147 档 / 964 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **82/83 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 20；M2 2.7/2.8 占位另计）
+- **148 档 / 972 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -188,6 +188,7 @@ status: active
 | **6.40** | **游标推进兜底（轮次三级源 + 按日推进）** | ✅ | `spec/SPEC-6.40-游标推进兜底.md` | test-6.40-round-fallback 8/8；轮次源三级优先：显式 `opts.round` > `meko_cycles` 行数 > **按日推进的评分轮次**（`config[kespi.scoreDay] = {day, round}`）。不跑代谢轮的部署原先轮次恒 0、段门槛恒 20，游标白搭；现在同日重复幂等、跨日 +1、时钟回拨不倒退。有代谢轮时完全走轮数，两种源不混算。非叙事读数零影响。 |
 | **6.41** | **摘录起点对齐句读** | ✅ | `spec/SPEC-6.41-摘录起点对齐句读.md` | test-6.41-excerpt-snap 7/7；6.38 偏移后从句子中腰起的摘录，现在就近吸附到句读（`。！？；，、：`/换行）之后，半径 12 字、平手向后；段首不吸附，半径内无句读不动；窗口宽度改为**上限**（宁可短不中腰起）。只动 P1 摘录渲染，kq/阈值/覆盖率零影响。 |
 | **6.42** | **标签白名单与存量洗消** | ✅ | `spec/SPEC-6.42-标签白名单与存量洗消.md` | test-6.42-tag-hygiene 9/9；标签只认 `name` / `name:1..9` / 已登记命名空间 `src:<word>`；全角冒号归一、去重保留首个、上限 24 条，每条丢弃带理由码。`compile` 写入前净化（`stats.tagsDropped` 计数）；存量走 `tools/tag-scrub.js`（必须 `--db` 副本、默认真库拒跑、默认 dry-run、`--apply` 只改 tags 列、幂等）。迁移面保真不洗。真库副本实测扫描 322 实体、命中 0。 |
+| **6.43** | **编译前闸（shared-spine 替代物）** | ✅ | `spec/SPEC-6.43-编译前闸.md` | test-6.43-compile-gate 8/8；三级闸：**L0 完整性**默认开（空正文 / 坏 id 拒收）、**L1 质量** `opts.quality` 开（无 tags / 短于 200 字拒收）、**L2 KESPI** 只在既有 `kq<0.40` 且新文不比旧文长时拒（只防降级，不拿入库后的分做准入）。每轮落一行 `compile_audit`（五项计数 + `rejected_json`，只追加，旧库自动补表）。拒收档不写库、不影响其他档；真库默认行为零变化。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
