@@ -212,12 +212,36 @@ async function buildMemo(store, opts = {}) {
     }
     : { attached: false, line: '外派：本批未接入（宿主侧派单口）' };
 
+  // 待接提案（SPEC-6.53）：只列 proposed，纯读；want 取 demand.want，缺了就是 null
+  const proposalsLimit = Number.isInteger(opts.proposalsLimit) && opts.proposalsLimit > 0 ? opts.proposalsLimit : 5;
+  const proposals = _rows(db,
+    `SELECT t.id, t.dim, t.entity_id, t.score, t.created_at, t.evidence_json, e.title
+     FROM opt_tickets t LEFT JOIN entities e ON e.id = t.entity_id
+     WHERE t.status = 'proposed' ORDER BY t.score ASC, t.id ASC LIMIT ?`, [proposalsLimit]
+  ).map(r => {
+    let want = null;
+    try {
+      const ev = JSON.parse(r.evidence_json || '{}');
+      if (ev && ev.demand && ev.demand.want != null) want = String(ev.demand.want);
+    } catch (_) { want = null; }
+    return {
+      id: String(r.id),
+      dim: r.dim == null ? null : String(r.dim),
+      target: r.entity_id == null ? null : String(r.entity_id),
+      title: r.title == null ? null : String(r.title),
+      want,
+      score: r.score == null ? null : Number(r.score),
+      createdAt: r.created_at == null ? null : String(r.created_at)
+    };
+  });
+
   return {
     user: {
       recent,
       openLoops,
       patterns,
       plans,
+      proposals,
       coldStart: convs.length === 0,
       maintenance
     },
