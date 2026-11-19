@@ -35,6 +35,8 @@ const ERROR_TABLE = {
   'unknown-component': { klass: 'fix-input', action: '组件名未注册：查五组件/狼位登记' },
   'unknown-knob': { klass: 'fix-input', action: '旋钮名未登记：查 SPEC-1.17 登记表' },
   'unknown-membrane': { klass: 'fix-input', action: '膜透性档位未登记：查三档（透/半透/不透）' },
+  'root-missing': { klass: 'fix-input', action: '给对 workspace root：路径不存在时不代建，防误造目录树' },
+  'root-not-dir': { klass: 'fix-input', action: 'root 必须给目录：指到文件上了' },
 
   // ── wiring：调用方没接好，不是用户能处理的事 ──
   'db-adapter': { klass: 'wiring', action: '插排未接引擎：先 init 打开库再调用' },
