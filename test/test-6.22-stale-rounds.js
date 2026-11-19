@@ -46,7 +46,7 @@ const F = require('../src/ticket-followup.js');
 
   // 造单：一条进程丢了（轮次断），一条有心跳不推进（同阶段累计）
   const mk = (id, ev, status = 'dispatched') => db.run(
-    "INSERT INTO opt_tickets (id,entity_id,dim,kind,action,score,zone,status,attempts,evidence_json,cycle_id,created_at,updated_at) VALUES (?,? ,'ka','ka-low','rebond',0.2,'red',?,0,?,'c',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+    "INSERT INTO opt_tickets (id,entity_id,dim,kind,action,score,zone,status,attempts,evidence_json,cycle_id,created_at,updated_at) VALUES (?,? ,'kc','kc-low','reconcile',0.2,'red',?,0,?,'c',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
     [id, 'e-' + id, status, JSON.stringify(ev)]);
   db.run("INSERT INTO meko_cycles (id,cycle_type,executed_at,status,growth,pruned) VALUES ('c1','field',CURRENT_TIMESTAMP,'ok',0,0)");
   db.run("INSERT INTO meko_cycles (id,cycle_type,executed_at,status,growth,pruned) VALUES ('c2','field',CURRENT_TIMESTAMP,'ok',1,0)");
@@ -84,7 +84,7 @@ const F = require('../src/ticket-followup.js');
 
   // AC-9 接线：verifyTickets 的心跳真的带上轮次与阶段签名
   const S = require('../src/self-optimize.js');
-  db.run("INSERT INTO kespi_scores (entity_id,kq,ka,kd,kc,kr,overall,computed_at) VALUES ('e-wired',0.5,0.20,0.5,0.5,0.5,0.44,CURRENT_TIMESTAMP)");
+  db.run("INSERT INTO kespi_scores (entity_id,kq,ka,kd,kc,kr,overall,computed_at) VALUES ('e-wired',0.5,0.5,0.5,0.20,0.5,0.44,CURRENT_TIMESTAMP)");
   mk('wired', { score: 0.2 });
   store._persist();
   await S.verifyTickets(store, { round: 3 });

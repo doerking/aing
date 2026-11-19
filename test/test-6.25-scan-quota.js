@@ -25,13 +25,13 @@ const S = require('../src/self-optimize.js');
   const kq1 = r1.tickets.filter(t => t.dim === 'kq');
   ac('AC-1 默认配额：10 个 kq 低只开 5 张', kq1.length === 5, JSON.stringify({ kq: kq1.length }));
 
-  // 再加 10 个 ka 低
-  for (let i = 0; i < 10; i++) { mkEnt('a' + i); mkScore('a' + i, { kq: 0.9, ka: 0.1, kd: 0.5, kc: 0.5, kr: 1, overall: 0.6 }); }
+  // 再加 10 个 kc 低（SPEC-6.55 后 ka/kr 不开单，改用仍占名额的 kc）
+  for (let i = 0; i < 10; i++) { mkEnt('c' + i); mkScore('c' + i, { kq: 0.9, ka: 0.1, kd: 0.5, kc: 0.1 + i * 0.001, kr: 1, overall: 0.6 }); }
   store._persist();
   const r2 = S.scanTickets(store, { persist: false, maxTickets: 20 });
   const byDim = (r2.tickets || []).reduce((m, t) => (m[t.dim] = (m[t.dim] || 0) + 1, m), {});
   ac('AC-2 各维各占自己额度，互不挤占',
-    byDim.kq === 5 && byDim.ka === 5,
+    byDim.kq === 5 && byDim.kc === 5 && !byDim.ka,
     JSON.stringify(byDim));
 
   const r3 = S.scanTickets(store, { persist: false, quota: { kq: 2 } });

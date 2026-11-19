@@ -66,7 +66,7 @@ const LONG = '催化闭环测试正文，长度足够触发质量评分且不带
   // ── AC-5 非 raw「被引用却不催化」→ 提案单，不再派注定落空的 rebond
   const tCited = one(db, "SELECT * FROM opt_tickets WHERE entity_id='c-cited' AND dim='kd'");
   ac('AC-5 非 raw 的不催化改走提案单',
-    !!tCited && tCited.action === 'memo-card' && tCited.kind === 'kd-cited',
+    !!tCited && tCited.action === 'slot' && tCited.kind === 'kd-cited',
     JSON.stringify(tCited && { kind: tCited.kind, action: tCited.action }));
 
   // ── AC-6 派单护栏：非 raw 的 rebond 单直接拒绝，不产生场域动作
@@ -94,11 +94,11 @@ const LONG = '催化闭环测试正文，长度足够触发质量评分且不带
   store._persist();
   await K.kespiStep(store, {});
   const kdWiki = Number((one(db, "SELECT kd FROM kespi_scores WHERE entity_id='c-cited'") || {}).kd);
-  ac('AC-8 回归（kq/ka/kc 规则不变 + 候选边不计 kd）',
-    S.DIM_RULES.kq.action === 'memo-card' && S.DIM_RULES.ka.action === 'memo-card' &&
+  ac('AC-8 回归（kq 走 slot / ka 不开单 / kc 规则不变 + 候选边不计 kd）',
+    S.DIM_RULES.kq.action === 'slot' && !S.DIM_RULES.ka &&
     S.DIM_RULES.kc.action === 'reconcile' && S.DIM_RULES.kc.below === 0.40 &&
     kdWiki === 0,
-    JSON.stringify({ kq: S.DIM_RULES.kq.action, ka: S.DIM_RULES.ka.action, kc: S.DIM_RULES.kc.action, kdWiki }));
+    JSON.stringify({ kq: S.DIM_RULES.kq.action, ka: S.DIM_RULES.ka, kc: S.DIM_RULES.kc.action, kdWiki }));
 
   // ── AC-9 未来档母件：不建边、不记账、不谎报（库层闸会 ABORT）
   db.run("INSERT INTO entities (id,name,type,content,tags,status,confidence,tolaria_strength,strand,created_at,updated_at) VALUES ('raw-fut','F','Concept',?, '[]','active',0,5,'future',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)", [LONG]);
