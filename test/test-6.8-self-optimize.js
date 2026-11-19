@@ -42,7 +42,8 @@ const one = (db, sql, b = []) => rows(db, sql, b)[0] || null;
   const tbl = rows(db, "SELECT name FROM sqlite_master WHERE type='table' AND name='opt_tickets'").length === 1;
   const idx = rows(db, "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_opt_tickets_open'").length === 1;
   ac('AC-1 工单表与索引 + 五维规则导出', tbl && idx && k0 && Number(k0.kd) < 0.4 && Number(k0.kc) === 0.5 &&
-    ['kq','ka','kd','kc','kr'].every(d => S.DIM_RULES[d]) && !S.DIM_RULES.kg && !S.DIM_RULES.km && !S.DIM_RULES.kb,
+    ['kq','kc','kd'].every(d => S.DIM_RULES[d]) && !S.DIM_RULES.ka && !S.DIM_RULES.kr && !S.DIM_RULES.overall &&
+    !S.DIM_RULES.kg && !S.DIM_RULES.km && !S.DIM_RULES.kb,
     JSON.stringify({ tbl, idx, kd: k0 && k0.kd, kc: k0 && k0.kc, rules: Object.keys(S.DIM_RULES) }));
 
   // AC-2 扫描开单 + 幂等
@@ -56,8 +57,8 @@ const one = (db, sql, b = []) => rows(db, sql, b)[0] || null;
   const tkq = one(db, "SELECT * FROM opt_tickets WHERE kind='kq-low'");
   const tkd = one(db, "SELECT * FROM opt_tickets WHERE kind='kd-low'");
   ac('AC-3 维度→动作路由',
-    tkq && tkd && tkq.action === 'memo-card' && tkd.action === 'rebond' &&
-    S.DIM_RULES.kq.action === 'memo-card' && S.DIM_RULES.kr.action === 'memo-card' &&
+    tkq && tkd && tkq.action === 'slot' && tkd.action === 'rebond' &&
+    S.DIM_RULES.kq.action === 'slot' && S.DIM_RULES.kd.action === 'rebond' &&
     S.ACTION_ORDER.reconcile < S.ACTION_ORDER.rebond,
     JSON.stringify({ kq: tkq && tkq.action, kd: tkd && tkd.action }));
 

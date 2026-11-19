@@ -11,23 +11,24 @@ const crypto = require('crypto');
 // SPEC-1.12 修订 A：五维绝对值整体下移（真库五维实测 p25 0.46 / p50 0.51 / p90 0.71），分区随之下调
 const ZONES = { red: 0.45, green: 0.60 };
 const MAX_TICKETS = 20;
-// SPEC-6.25：按维配额——一维不能挤占全部名额（kd/ka 分数天然偏低，会饿死 kq）
-const DIM_QUOTA = { kq: 5, ka: 5, kr: 5, kc: 5, kd: 8, overall: 3 };
+// SPEC-6.25：按维配额——一维不能挤占全部名额（kd 分数天然偏低，会饿死 kq）
+// SPEC-6.55：票面只留「有人能动手」的维；ka/kr/overall 降为读数，不再占名额
+const DIM_QUOTA = { kq: 5, kc: 5, kd: 8 };
 const VERIFY_ATTEMPTS = 2;
 const { heartbeatOf, CHASE_REASON, ESCALATE_REASON } = require('./ticket-followup.js');
 
-// 每维一条工单规则：below = 触发线；action = 场域动作或 memo-card（提案，不写场域）
+// 每维一条工单规则：below = 触发线；action = 场域动作 / memo-card(提案) / slot(寄生槽可领)
 // SPEC-1.12 修订 A：KG/KM/KB 退役（不再有列值）；KD 改为催化率——零催化是常态，
 // 只有「被引用却不向外催化」（入向强边 ≥2）才值得回炉，其余不开单。
+// SPEC-6.55：ka（只能靠真实访问抬）、kr（代谢轮自决）、overall（说不清哪维坏）不开单；
+// kq 正文只能外部写 → slot（P2 半寄生），kd 被引用不催化 → slot（P3）。
 const DIM_RULES = {
-  kq: { below: 0.50, kind: 'kq-low', action: 'memo-card' },
-  ka: { below: 0.30, kind: 'ka-low', action: 'memo-card' },
+  kq: { below: 0.50, kind: 'kq-low', action: 'slot' },
   kc: { below: 0.40, kind: 'kc-low', action: 'reconcile' },
-  kr: { below: 0.30, kind: 'kr-low', action: 'memo-card' },
   kd: { below: 0.30, kind: 'kd-low', action: 'rebond', requireInStrong: 2 }
 };
 const DIM_NAMES = Object.keys(DIM_RULES);
-const ACTION_ORDER = { reconcile: 0, rebond: 1, demote: 2, 'memo-card': 3 };
+const ACTION_ORDER = { reconcile: 0, rebond: 1, demote: 2, slot: 3, 'memo-card': 4 };
 const FIELD_ACTIONS = ['reconcile', 'rebond', 'demote'];
 
 // 训练六阶段：本地映射，唔引入外部运行器
@@ -120,7 +121,8 @@ function scanTickets(store, opts = {}) {
           continue;
         }
         if ((inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
-        cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'memo-card', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
+        // SPEC-6.55：被引用却不催化 = 只能外部生成派生 → slot（P3 full），不再占 memo-card
+        cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'slot', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
         continue;
       }
       if (rule.requireInStrong != null && (inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
@@ -131,13 +133,7 @@ function scanTickets(store, opts = {}) {
         zone: v < ZONES.red ? 'red' : 'yellow'
       });
     }
-    const ov = s.overall == null ? null : Number(s.overall);
-    if (ov != null && Number.isFinite(ov) && ov < ZONES.red && !open.has(entityId + '\u0000overall')) {
-      cands.push({
-        entity_id: entityId, dim: 'overall', kind: 'overall-red', action: 'memo-card',
-        score: Math.round(ov * 10000) / 10000, zone: 'red'
-      });
-    }
+    // SPEC-6.55：overall 红档不开单——复合红说不清哪维坏，只进 memo 读数
   }
 
   cands.sort((a, b) => a.score - b.score || a.entity_id.localeCompare(b.entity_id) || a.dim.localeCompare(b.dim));
@@ -221,9 +217,10 @@ async function dispatchTickets(store, opts = {}) {
 
   for (const t of tickets) {
     const cycleId = opts.cycleId || t.cycle_id || null;
-    if (t.action === 'memo-card') {
+    // SPEC-6.55：slot 与 memo-card 同为提案——标 proposed、单上带 demand，等寄生槽领走
+    if (t.action === 'memo-card' || t.action === 'slot') {
       _mark(db, t.id, 'proposed', { reason: 'proposal-only', source: 'self-optimize' }, cycleId);
-      out.proposed.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, kind: t.kind });
+      out.proposed.push({ id: t.id, entity_id: t.entity_id, dim: t.dim, kind: t.kind, action: t.action });
       continue;
     }
     if (!FIELD_ACTIONS.includes(t.action)) {
