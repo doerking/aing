@@ -75,10 +75,16 @@ function inferType(relPath, metadata) {
   return null;
 }
 
-function toContentRow(metadata, body, relPath) {
+function toContentRow(metadata, body, relPath, sink = null) {
   const confRaw = metadata.confidence;
   const confidence = confRaw == null || confRaw === '' ? null : (Number.isFinite(Number(confRaw)) ? Number(confRaw) : null);
-  const tags = metadata.tags == null ? null : JSON.stringify(metadata.tags);
+  // SPEC-6.42：写入前按标签形状净化（只丢弃不发明），丢弃数计入 stats.tagsDropped
+  let tags = null;
+  if (metadata.tags != null) {
+    const norm = require('./tag-hygiene.js').normalizeTags(metadata.tags);
+    tags = JSON.stringify(norm.tags);
+    if (sink && norm.dropped.length) sink.tagsDropped = (sink.tagsDropped || 0) + norm.dropped.length;
+  }
   return {
     name: metadata.name == null || metadata.name === '' ? null : metadata.name,
     type: inferType(relPath, metadata),
@@ -118,7 +124,7 @@ function walkMarkdown(dir, out) {
 
 async function compile(rawDir, store) {
   if (!store || typeof store._getDb !== 'function') throw new Error('compile 需要 store 注入（SPEC-1.14 契约）');
-  const stats = { scanned: 0, created: 0, updated: 0, skipped: 0 };
+  const stats = { scanned: 0, created: 0, updated: 0, skipped: 0, tagsDropped: 0 };
   if (!fs.existsSync(rawDir)) return stats;
 
   const files = walkMarkdown(rawDir, []);
@@ -139,7 +145,7 @@ async function compile(rawDir, store) {
     const text = fs.readFileSync(filePath, 'utf8');
     const { metadata, content } = parseFrontmatter(text);
     const id = (metadata.id != null && String(metadata.id).trim() !== '') ? String(metadata.id).trim() : deriveEntityId(rawDir, filePath);
-    const row = toContentRow(metadata, content, path.relative(rawDir, filePath));
+    const row = toContentRow(metadata, content, path.relative(rawDir, filePath), stats);
     const existing = store.getEntity(id);
     // 推断不出时不清空既有类型（迁移/旧编译已定的 type 不能被降级）
     if (row.type == null && existing && existing.type != null) row.type = existing.type;
