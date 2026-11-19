@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 153 档 / 1007 条断言全绿 |
+| 测试 | `npm test` → 154 档 / 1015 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **87/88 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 25；M2 2.7/2.8 占位另计）
-- **153 档 / 1007 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **88/89 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 26；M2 2.7/2.8 占位另计）
+- **154 档 / 1015 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -194,6 +194,7 @@ status: active
 | **6.46** | **错误码行动表** | ✅ | `spec/SPEC-6.46-错误码行动表.md` | test-6.46-error-codes 7/7 + `tools/errors.js`；`src/error-handler.js` 把 src 里所有带码 `throw` 收成一张表（30 个码 + 4 个中文/符号前缀模式），分四类处置：`wiring`（未注入依赖）/ `fix-input`（补输入）/ `retryable`（持锁、外部改写、落盘失败）/ `operator`（身份闸、迁移指纹、容量、批间闸）。`classify(errOrString)` 接受字符串或 Error，未知码返回 `unknown` 不抛；wiring 家族（「X 需要 store 注入」）按模式识别，不逐条登记。**结构守卫**：测试扫 `src/*.js` 的 `throw new Error('<code>`，新增码不登记即红。只做分类，不改 throw、不改消息文本。CLI `--json` / `--explain "<消息>"`。 |
 | **6.47** | **冷启动初始化** | ✅ | `spec/SPEC-6.47-冷启动初始化.md` | test-6.47-init-workspace 7/7 + `tools/init-kb.js`；新机器部署原先没有建目录工具（`compile` 找不到 `raw/` 就静默扫 0 档）。`initWorkspace({root,dbPath,store})` 建 `raw/` `raw/inbox/` `data/` `archive/` 与库父目录，返回 `{created, existing, db:{path,tables}}`。铁律：只增不删（既有文件逐字不动）、幂等（二跑 created 空）、root 必须已存在（`root-missing`/`root-not-dir` 拒建，防误造目录树）、**CLI 无缺省 root**（不显式给就 exit 2）。store 由调用方注入，符合 C5 分层。两个新错误码已登记进 6.46 行动表。 |
 | **6.48** | **开机自检** | ✅ | `spec/SPEC-6.48-开机自检.md` | test-6.48-boot-check 7/7 + `tools/boot-check.js`；七项体检（root / 四目录 / 库文件 / 必需表 / 可写 / 实体边计数 / 待编译 md），三档结论 `ok→degraded→broken`，`ok = verdict!=='broken'`。**纯读**：不建目录、不写库、不落探针文件（可写性走 `accessSync`），跑前后库 mtime/size 不变。CLI 退出码 ok 0 / degraded 1 / broken 4 / 参数缺 2，可当部署闸。缺目录只报不补——补归 6.47。 |
+| **6.49** | **演示语料播种与拆除** | ✅ | `spec/SPEC-6.49-演示语料播种与拆除.md` | test-6.49-seed-demo 8/8 + `tools/seed-demo.js` / `tools/unseed-demo.js`；播种写 4 份原稿（概念/会话/边两端）→ `compile` 入库 → 建一条演示边 → 记账 `data/demo-seed.json`（id + 内容摘要）。拆除只拆账上 id，逐条比对摘要：**改过的档记 `modified` 不拆**；拆走「墓碑→关联表→实体」同一套级联（与 `archive.js` 同源），`archive_ref='demo-seed'`；幂等，二跑 `no-marker` ok。只认账本不按标签扫——手插的 `demo` 标签外人不受影响。CLI 均需 `--root`、`--dry` 只看不拆。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
