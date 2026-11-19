@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 160 档 / 1053 条断言全绿 |
+| 测试 | `npm test` → 161 档 / 1060 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **94/95 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 32；M2 2.7/2.8 占位另计）
-- **160 档 / 1053 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
+- **161 档 / 1060 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -201,6 +201,7 @@ status: active
 | **6.53** | **提案单进 memo 视野** | ✅ | `spec/SPEC-6.53-提案单进memo视野.md` | test-6.53-memo-proposals 6/6；病因：memo 只把在途工单数成 `backlog` 一个数字，20 张提案单指向谁、要什么，主驾看不到。修法：`buildMemo` 增 `user.proposals`——只列 `proposed`，按 `score` 升序（最差读数先）取前 N（默认 5，`proposalsLimit` 可调），字段 `{id, dim, target, title, want, score, createdAt}`，`want` 取 `evidence_json.demand.want`、缺了给 null；纯读、不改状态、空就是 `[]`。 |
 | **6.54** | **蒸馏镜像状态收口** | ✅ | `spec/SPEC-6.54-蒸馏镜像状态收口.md` | test-6.54-distill-mirror-status 5/5；病因：`distill` 只把原料（`raw-*`）翻 `active`，镜像（`wiki-*`）留在 `pending-distillation`，而选择集排除 `wiki-%`——镜像从此无人处理，**蒸馏债永久虚高**（真库副本复现：1 条虚债）。修法：distill 处理完一条原料后，把该镜像行按条件翻 `active`（只翻 `pending-distillation`，`done` 等一律不动，条件本身即幂等）；其余字段零改动。 |
 | **6.55** | **票面收缩** | ✅ | `spec/SPEC-6.55-票面收缩.md` | test-6.55-ticket-face 7/7；病因：每维护轮开满 20 张票（kq5/ka5/kd8/overall2），全部 `proposed`、TTL 3 轮作废、下轮重开——**转一圈落地 0 张**，把读数当成了任务。修法：只留「有人能动手」的维——kq 走 `slot`（P2 半寄生）、kd 可自愈 `rebond` / 被引用不催化走 `slot`（P3）、kc `reconcile`；ka（只能靠真实访问抬）/ kr（代谢轮自决）/ overall（说不清哪维坏）**降为读数**，仍在 `kespi_scores` 与 `memo.user.proposals` 可见但不占名额。`dispatchTickets` 对 `slot` 与 `memo-card` 同处理（标 `proposed`），不再判 `unknown-action`。历史 ka/kr/overall 单不删，TTL 自然收尾。 |
+| **6.56** | **回单落地** | ✅ | `spec/SPEC-6.56-回单落地.md` | test-6.56-proposal-result 7/7 + `tools/apply-result.js`；病因：P6 位点声明 `writeBack = entities(按需求改动) + evidence_json.result`，实现只有后半截——外部件交了回单，正文补在纸上，实体一字未动，判据永不通过。修法：`applyProposalResult(store, ticketId, {result})` 先过同一把内容闸（膜→粒度→发布门），再按需求白名单写回（kq/kq-narrative：content ≥400 字且非原文、tags ≥3；其余只记账 `record-only`）；**绝不碰** `last_access`/`status`/`confidence`/`invalid_at`/`strand`——写回不是访问事件，不能抬 ka；留账 `{field, beforeLen, afterLen, digest}`，票留在 `proposed` 交给 `verifyTickets` 按 acceptance 判。空转（逐字相同）拒 `no-change`、票不动。CLI 需 `--db` 副本、真库拒跑、默认干跑。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
