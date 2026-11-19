@@ -57,6 +57,33 @@ function applyReturn(store, claim, ret) {
 }
 
 /** SPEC-6.34 外部件（P1 全寄生）：六段从实体事实抽出——骨架恒定，内容随实体滑动 */
+// SPEC-6.41：摘录起点对齐句读——偏移后落在句子中腰的，就近吸附到句读之后
+const SNAP_RADIUS = 12;
+const SNAP_PUNCT = /[。！？；，、：\n]/;
+function snapStart(text, start, radius = SNAP_RADIUS) {
+  const s = String(text == null ? '' : text);
+  const from = Math.min(Math.max(0, Number(start) || 0), s.length);
+  const hi = Math.min(s.length, from + radius);
+  const lo = Math.max(0, from - radius);
+  for (let d = 0; d < radius; d++) {
+    const fwd = from + d;
+    if (fwd < hi && SNAP_PUNCT.test(s[fwd])) return fwd + 1;      // 向后（平手优先）
+    const back = from - 1 - d;
+    if (back >= lo && SNAP_PUNCT.test(s[back])) return back + 1;  // 向前
+  }
+  return from;
+}
+function excerptWindow(text, start, width) {
+  const t = String(text == null ? '' : text).trim();
+  const w = Math.max(0, Number(width) || 0);
+  const maxStart = Math.max(0, t.length - w);
+  const start0 = Math.min(Math.max(Number(start) || 0, 0), maxStart);
+  // 段首起不吸附；吸附后窗口可短于 width——宽度是上限，宁可短也不从中腰起
+  const st = start0 > 0 ? snapStart(t, start0) : 0;
+  const out = t.slice(st, st + w);
+  return { text: st + w < t.length ? out + '…' : out, start: st, width: w };
+}
+
 function externalPartNarrative(db, claim, opts = {}) {
   const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
   s.bind([claim.entity_id]); const e = s.step() ? s.getAsObject() : null; s.free();
@@ -67,14 +94,10 @@ function externalPartNarrative(db, claim, opts = {}) {
   if (!doc || doc.format !== N.FORMAT) return null;
 
   // SPEC-6.38：摘录起点按阈值游标的偏移前后滑动（±1..±5 字）
+  // SPEC-6.41：滑动后的起点再就近吸附到句读之后，避免从句子中腰起
   const round = Number.isFinite(Number(opts && opts.round)) ? Number(opts.round) : 0;
   const delta = Number(require('../src/kespi.js').sectionThreshold(claim.entity_id, { round })) - 20;
-  const excerpt = (text, width) => {
-    const t = String(text == null ? '' : text).trim();
-    const start = Math.min(Math.max(delta, 0), Math.max(0, t.length - width));
-    const s = t.slice(start, start + width);
-    return start + width < t.length ? s + '…' : s;
-  };
+  const excerpt = (text, width) => excerptWindow(String(text == null ? '' : text).trim(), delta, width).text;
 
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   const cals = Array.isArray(doc.calibrations) ? doc.calibrations : [];
@@ -224,4 +247,4 @@ if (require.main === module) {
   main(process.argv).catch((e) => { console.error('parasite-round 失败: ' + e.message); process.exit(1); });
 }
 
-module.exports = { REG, NARRATIVE_REG, externalPart, applyReturn, externalPartNarrative, applyReturnNarrative };
+module.exports = { REG, NARRATIVE_REG, externalPart, applyReturn, externalPartNarrative, applyReturnNarrative, snapStart, excerptWindow, SNAP_RADIUS };
