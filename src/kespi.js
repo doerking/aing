@@ -175,15 +175,52 @@ function _scalar(db, sql, binds = []) {
 
 const CANDIDATE_RELATIONS = ['sprout-candidate', 'pollinate-candidate'];
 
+// SPEC-6.40：游标推进兜底——轮次源三级优先
+//   1. 显式 opts.round（重放/审计，不读不写库）
+//   2. meko_cycles 行数（有代谢轮就用轮数，原口径不变）
+//   3. 按日推进的评分轮次（config 键 kespi.scoreDay = {day, round}；同日内幂等，跨日 +1）
+const SCORE_DAY_KEY = 'kespi.scoreDay';
+function _getConfigJson(db, key) {
+  try {
+    const s = db.prepare('SELECT value_json FROM config WHERE key = ?'); s.bind([key]);
+    const r = s.step() ? s.getAsObject() : null; s.free();
+    return r ? JSON.parse(r.value_json) : null;
+  } catch (_) { return null; }
+}
+function _setConfigJson(db, key, value) {
+  db.run('INSERT INTO config (key, value_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ' +
+    'ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP',
+    [key, JSON.stringify(value)]);
+}
+function resolveRound(store, opts = {}) {
+  const db = store._getDb();
+  if (Number.isFinite(Number(opts.round))) return { round: Math.max(0, Math.floor(Number(opts.round))), source: 'explicit' };
+  const cycles = Number((_scalar(db, 'SELECT COUNT(*) AS n FROM meko_cycles') || {}).n || 0);
+  if (cycles > 0) return { round: cycles, source: 'meko_cycles' };
+  const now = Number.isInteger(opts.now) ? opts.now : Date.now();
+  const day = new Date(now).toISOString().slice(0, 10);
+  const prev = _getConfigJson(db, SCORE_DAY_KEY);
+  const prevRound = prev && typeof prev === 'object' && Number.isFinite(Number(prev.round)) ? Math.max(0, Number(prev.round)) : 0;
+  if (!prev || typeof prev !== 'object' || typeof prev.day !== 'string') {
+    _setConfigJson(db, SCORE_DAY_KEY, { day, round: 0 });
+    if (typeof store._persist === 'function') store._persist();
+    return { round: 0, source: 'daily' };
+  }
+  if (prev.day === day) return { round: prevRound, source: 'daily' };
+  if (day < prev.day) return { round: prevRound, source: 'daily' };   // 时钟回拨：不倒退、不重写
+  const next = prevRound + 1;
+  _setConfigJson(db, SCORE_DAY_KEY, { day, round: next });
+  if (typeof store._persist === 'function') store._persist();
+  return { round: next, source: 'daily' };
+}
+
 async function kespiStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('kespi 需要 store 注入（SPEC-1.15 契约）');
   const stats = { scanned: 0, scored: 0 };
   const now = Number.isInteger(opts.now) ? opts.now : Date.now();
   const db = store._getDb();
-  // SPEC-6.36：阈值游标的轮次——显式 opts.round 优先，否则取代谢轮计数
-  const round = Number.isFinite(Number(opts.round))
-    ? Number(opts.round)
-    : Number((_scalar(db, 'SELECT COUNT(*) AS n FROM meko_cycles') || {}).n || 0);
+  // SPEC-6.36 / SPEC-6.40：阈值游标的轮次——显式传入 > 代谢轮计数 > 按日推进的评分轮次
+  const round = resolveRound(store, opts).round;
 
   const ents = [];
   const es = db.prepare('SELECT * FROM entities WHERE invalid_at IS NULL');
@@ -310,4 +347,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, narrativeCapability, requiredSections, sectionThreshold, NARRATIVE_SECTIONS, BASE_REQUIRED_SECTIONS, CONDITIONAL_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, SIGN_CHART, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, narrativeCapability, requiredSections, resolveRound, sectionThreshold, NARRATIVE_SECTIONS, BASE_REQUIRED_SECTIONS, CONDITIONAL_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, SIGN_CHART, ROUND_WINDOW, CANDIDATE_RELATIONS };
