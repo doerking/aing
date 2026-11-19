@@ -227,6 +227,16 @@ const DDL = [
     target TEXT,
     payload_json TEXT,
     created_at DATETIME
+  )`,
+  `CREATE TABLE IF NOT EXISTS compile_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scanned INTEGER DEFAULT 0,
+    created INTEGER DEFAULT 0,
+    updated INTEGER DEFAULT 0,
+    skipped INTEGER DEFAULT 0,
+    rejected INTEGER DEFAULT 0,
+    rejected_json TEXT,
+    created_at DATETIME
   )`
 ];
 
