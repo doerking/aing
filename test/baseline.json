@@ -127,6 +127,7 @@
   "test-6.4d-trajectory-route.js": 4,
   "test-6.5-growth-observe.js": 9,
   "test-6.50-meko-bridge.js": 8,
+  "test-6.51-kc-mirror-edge.js": 6,
   "test-6.6-maintenance-wiring.js": 8,
   "test-6.6b-insight-names.js": 4,
   "test-6.7-access-events.js": 8,
