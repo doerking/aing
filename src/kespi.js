@@ -239,8 +239,15 @@ async function kespiStep(store, opts = {}) {
   ls.free();
 
   // 派生件（时序相干用）
+  // SPEC-6.51：links 主键是 (source,target)，import 先占下 raw→wiki 的 hydrogen-bond，
+  // distill 的 derived 便永不落地 → kc 全库恒 0.5。镜像边按身份认定即加工边（D21）。
   const derived = new Map();
-  const ds = db.prepare("SELECT source_id, target_id FROM links WHERE relation = 'derived' AND invalid_at IS NULL");
+  const ds = db.prepare(
+    `SELECT source_id, target_id FROM links WHERE invalid_at IS NULL AND (
+       relation = 'derived'
+       OR (relation = 'hydrogen-bond' AND source_id LIKE 'raw-%'
+           AND target_id = 'wiki-' || substr(source_id, 5))
+     )`);
   while (ds.step()) {
     const d = ds.getAsObject();
     const k = String(d.source_id);
