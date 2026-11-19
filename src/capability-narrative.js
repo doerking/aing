@@ -190,6 +190,25 @@ function buildCapabilityNarrative(messages, cfg = {}, calibrations = []) {
   return { markdown: parts.join('\n\n---\n\n'), stats, turns };
 }
 
+// ── SPEC-6.39：能力面观测——必填段分母的证据源 ─────────────
+// 内部构建取 buildCapabilityNarrative 的 stats；外部 full 叙事取 payload.messages 实扫，
+// 不信 narrative.sections 的自述——否则写作者只要声明「本单元无工具」就能缩分母。
+function scanCapability(messages, cfg = {}) {
+  const subNames = ((cfg && cfg.subagentToolNames) || DEFAULTS.subagentToolNames).map((s) => String(s).toLowerCase());
+  let toolCalls = 0; let subagentCalls = 0;
+  for (const m of Array.isArray(messages) ? messages : []) {
+    if (!m || m.role !== 'assistant') continue;
+    for (const b of normalizeBlocks(m.content)) {
+      if (!b) continue;
+      if (b.type === 'tool_use' || b.type === 'toolCall') {
+        toolCalls++;
+        if (subNames.includes(String(b.name || b.toolName || '').toLowerCase())) subagentCalls++;
+      }
+    }
+  }
+  return { toolCalls, subagentCalls };
+}
+
 // ── 入库：一条 Conversation 实体（六段 markdown + 结构化 turns）──────
 async function ingestNarrative(store, payload = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('narrative 需要 store 注入（SPEC-6.1 契约）');
@@ -218,6 +237,17 @@ async function ingestNarrative(store, payload = {}) {
     const built = buildCapabilityNarrative(messages, payload.cfg || {}, calibrations);
     markdown = built.markdown; stats = built.stats; turns = built.turns;
   }
+
+  // SPEC-6.39：能力面（必填段分母的证据）随实体存下——内部取构建 stats，外部实扫 messages
+  const observed = external ? scanCapability(messages, payload.cfg || {}) : { toolCalls: stats.toolCalls, subagentCalls: stats.subagentCalls };
+  stats = Object.assign({}, stats, {
+    capability: {
+      toolCalls: observed.toolCalls,
+      subagentCalls: observed.subagentCalls,
+      calibrations: calibrations.length,
+      source: external ? 'messages' : 'session'
+    }
+  });
 
   const content = JSON.stringify({
     format: FORMAT,
@@ -258,6 +288,6 @@ async function ingestNarrative(store, payload = {}) {
 module.exports = {
   DEFAULTS, SECTIONS, SUBAGENT_TOOL_NAMES, FORMAT, NARRATIVE_MODES, validateNarrative, renderSections,
   buildCapabilityNarrative, renderTurn, renderSessionCalibration, partitionCalibrations,
-  normalizeBlocks, appendBlockText, pickThinking, extractToolResult, safeJson, trunc,
+  normalizeBlocks, appendBlockText, pickThinking, extractToolResult, safeJson, trunc, scanCapability,
   ingestNarrative
 };

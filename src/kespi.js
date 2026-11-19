@@ -92,22 +92,54 @@ function _sectionBodies(md) {
   }
   return out;
 }
+
+// SPEC-6.39：必填段随能力面浮动——分母不再恒为六段。
+// 证据只认系统观测的会话事实（stats.capability），写作者改不了分母；无证据 → 六段全必填。
+const BASE_REQUIRED_SECTIONS = ['场景（触发）', '思维（能力内核）', '产出'];
+const CONDITIONAL_SECTIONS = [
+  ['手段（工具执行）', 'toolCalls'],
+  ['编排（子agent）', 'subagentCalls'],
+  ['会话级校准', 'calibrations'],
+];
+/** 从 content JSON 读系统观测到的能力面；不是叙事或没有 capability 字段 → null（不知情） */
+function narrativeCapability(content) {
+  const s = String(content == null ? '' : content);
+  const t = s.trim();
+  if (t.charCodeAt(0) !== 123) return null;
+  let j = null;
+  try { j = JSON.parse(t); } catch (_) { return null; }
+  if (!j || j.format !== NARRATIVE_FORMAT) return null;
+  const c = j.stats && j.stats.capability;
+  if (!c || typeof c !== 'object' || Array.isArray(c)) return null;
+  const n = (v) => (Number.isFinite(Number(v)) ? Math.max(0, Math.floor(Number(v))) : 0);
+  return { toolCalls: n(c.toolCalls), subagentCalls: n(c.subagentCalls), calibrations: n(c.calibrations), source: c.source || 'unknown' };
+}
+/** 必填段：恒三段 + 按能力面各加一段；无证据 → 六段全必填（从严，防缩分母） */
+function requiredSections(content) {
+  const c = narrativeCapability(content);
+  if (!c) return NARRATIVE_SECTIONS.slice();
+  const met = {};
+  for (const [key, field] of CONDITIONAL_SECTIONS) met[key] = c[field] > 0;
+  return NARRATIVE_SECTIONS.filter(k => BASE_REQUIRED_SECTIONS.includes(k) || met[k] === true);
+}
 function narrativeCoverage(markdown, opts = {}) {
   const md = String(markdown == null ? '' : markdown);
   const min = sectionThreshold(opts && opts.entityId, opts);
+  const required = (Array.isArray(opts && opts.required) && opts.required.length) ? opts.required : NARRATIVE_SECTIONS;
   const bodies = _sectionBodies(md);
   let n = 0;
-  for (const key of NARRATIVE_SECTIONS) {
+  for (const key of required) {
     const hit = bodies.find(b => b.title === key);
     if (hit && hit.body.replace(/\s+/g, '').length >= min) n++;
   }
-  return n / NARRATIVE_SECTIONS.length;
+  return n / required.length;
 }
 function narrativeFactor(content, opts = {}) {
   const raw = String(content == null ? '' : content);
   const body = narrativeBody(raw);
   if (body === raw) return 1;   // 不是叙事 → 不参与覆盖率
-  return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body, opts);
+  const required = (Array.isArray(opts && opts.required) && opts.required.length) ? opts.required : requiredSections(content);
+  return COVERAGE_FLOOR + (1 - COVERAGE_FLOOR) * narrativeCoverage(body, { ...opts, required });
 }
 
 // SPEC-6.32：叙事长度只量六段正文——段外填充（别处几写字）不进 kq 长度分
@@ -278,4 +310,4 @@ async function kespiStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, sectionThreshold, NARRATIVE_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, SIGN_CHART, ROUND_WINDOW, CANDIDATE_RELATIONS };
+module.exports = { kespiStep, cleanBody, narrativeBody, narrativeCoverage, narrativeFactor, narrativeSectionText, narrativeCapability, requiredSections, sectionThreshold, NARRATIVE_SECTIONS, BASE_REQUIRED_SECTIONS, CONDITIONAL_SECTIONS, COVERAGE_FLOOR, MIN_SECTION_CHARS, SECTION_CHARS_JITTER, SIGN_CHART, ROUND_WINDOW, CANDIDATE_RELATIONS };

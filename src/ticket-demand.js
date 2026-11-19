@@ -19,8 +19,9 @@ const DEMANDS = {
     mode: 'semi', slot: 'P2', ttlRounds: DEFAULT_TTL
   },
   // SPEC-6.32：叙事实体走入口成形位，需求与六段口径同源
+  // SPEC-6.39：必填段随能力面浮动——场景/思维/产出恒必填，有工具调用加手段、有子agent 加编排、有校准素材加校准
   'kq-low-narrative': {
-    want: '把六段叙事写齐：场景/思维/手段/编排/产出/会话级校准，每段正文不少于 20 字，总正文 ≥ 400 字，并给 ≥3 个标签',
+    want: '把六段叙事中必填段写齐：场景/思维/产出恒必填，有工具调用加手段、有子agent 加编排、有校准素材加会话级校准；每段正文不少于 20 字，总正文 ≥ 400 字，并给 ≥3 个标签',
     acceptance: [{ dim: 'kq', op: 'gte', value: 0.50 }],
     evidence: EVIDENCE_KEYS.slice(),
     mode: 'full', slot: 'P1', ttlRounds: DEFAULT_TTL

@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 143 档 / 931 条断言全绿 |
+| 测试 | `npm test` → 144 档 / 940 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **77/77 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 15；M2 2.7/2.8 占位另计）
-- **143 档 / 931 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **78/79 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 16；M2 2.7/2.8 占位另计）
+- **144 档 / 940 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -184,6 +184,7 @@ status: active
 | **6.36** | **阈值游标（20 → ±1..±5 → 20，方向交替）** | ✅ | `spec/SPEC-6.36-阈值游标.md` | test-6.36-threshold-cursor 6/6；阈值走游标：每周期首轮 20，随后把幅度 1..5 **各用一次**（shuffle 顺序），回 20；下一周期方向取反。shuffle 种子＝实体 id＋周期号，同实体同轮可复算，审计能重放。轮次取 `meko_cycles` 行数（显式 `opts.round` 优先）。示例：`20,23,25,21,22,24, 20,18,15,19,17,16, 20,…`。6.35 的「15/25 两档」由本条取代，测试同步改为守「恒在 15~25、同轮可复算」。 |
 | **6.37** | **阈值符号串 ++-+----+-++** | ✅ | `spec/SPEC-6.37-阈值符号串.md` | test-6.37-sign-chart 6/6；方向不再整周期取反，改用固定符号串 `++-+----+-++`（12 轮一循环，前 6 与后 6 互为反相），幅度仍每周期 1..5 各一次。示例：`20,23,22,25,21,24, 20,18,16,17,19,15, 20,…`。正负混排避免同向长跑把读数一路推高/压低；同 (实体,轮) 仍可复算。6.36 的「整周期取反」由本条细化。 |
 | **6.38** | **摘录窗口滑动（起点按游标前后挪）** | ✅ | `spec/SPEC-6.38-摘录窗口滑动.md` | test-6.38-window-slide 6/6；`externalPartNarrative(db, claim, {round})` 的六段摘录不再永远从第 0 字截——起点 = `delta = sectionThreshold(id,{round}) - 20`（0 或 ±1..±5），夹在 `[0, len-width]`；同一篇原文，不同轮摘到不同片段，窗口宽度不变、同轮可复算。工具主流程增 `--slot P1`（领单→回单→写回按 P1 走）。 |
+| **6.39** | **必填段随能力面浮动（分母不再恒六段）** | ✅ | `spec/SPEC-6.39-必填段随能力面浮动.md` | test-6.39-required-sections 9/9；覆盖率分母按会话能力面浮动——场景/思维/产出恒必填（保底 3 段），手段看 `toolCalls>0`、编排看 `subagentCalls>0`、校准看 `calibrations>0`。证据只认系统观测：`ingestNarrative` 把 `stats.capability` 写进实体（内部取构建 stats，外部 full 叙事**实扫 messages**、不信自述）；无 capability 字段的旧档/手工 fixture → 六段全必填（从严，防缩分母）。非必填段写了不加分不扣分；`narrativeCoverage(md)` 不传 required 时老口径不变。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
