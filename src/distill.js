@@ -30,6 +30,11 @@ async function distillStep(store, opts = {}) {
   const rawActiveStmt = db.prepare(
     `UPDATE entities SET status = '${ACTIVE}', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
   );
+  // SPEC-6.54：镜像状态收口——只翻 pending-distillation，避免蒸馏债虚高、镜像永久挂账
+  const wikiActiveStmt = db.prepare(
+    `UPDATE entities SET status = '${ACTIVE}', updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND status = '${PENDING}'`
+  );
   // AC-19：past → future 加工边（这条产物出自哪条原文）
   const edgeExists = db.prepare('SELECT 1 AS one FROM links WHERE source_id = ? AND target_id = ? LIMIT 1');
   const edgeInsert = db.prepare(
@@ -84,12 +89,15 @@ async function distillStep(store, opts = {}) {
       dirty = true;
     }
 
+    // SPEC-6.54：镜像（新建或既有）收口到 active
+    wikiActiveStmt.run([wikiId]);
     rawActiveStmt.run([row.id]);
     stats.distilled++;
     dirty = true;
   }
 
   insertStmt.free();
+  wikiActiveStmt.free();
   rawActiveStmt.free();
   edgeExists.free();
   edgeInsert.free();

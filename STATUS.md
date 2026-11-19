@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 158 档 / 1041 条断言全绿 |
+| 测试 | `npm test` → 159 档 / 1046 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **92/93 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 30；M2 2.7/2.8 占位另计）
-- **158 档 / 1041 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **93/94 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 31；M2 2.7/2.8 占位另计）
+- **159 档 / 1046 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -199,6 +199,7 @@ status: active
 | **6.51** | **kc 读法对齐（镜像边即加工边）** | ✅ | `spec/SPEC-6.51-kc镜像边读法.md` | test-6.51-kc-mirror-edge 6/6；病因：`links` 主键是 `(source_id,target_id)`，`import` 先占下 `raw→wiki` 的 `hydrogen-bond`，`distill` 的 `derived` 因此永不落地——真库 0 条 derived → `kc` 322/322 恒 0.5，`kc<0.40` 永不触发。修法：**不移数据改读法**，派生子件集合按身份取 `relation='derived'` ∪（`hydrogen-bond` 且 `source` 是 `raw-*`、`target` 恰为其镜像 `wiki-<base>`）；反向/非同源/非 raw 源一律不计；其余四维公式一字不改。真库副本实测：86 实体 kc 0.5→1.0，均值 0.5→0.634，`overall<0.4` 仍 3 条。 |
 | **6.52** | **旧候选边清账** | ✅ | `spec/SPEC-6.52-旧候选边清账.md` | test-6.52-candidate-scrub 6/6 + `tools/candidate-scrub.js`；病因：`promoteEdges` 要「≥2 类证据」，真库 15 条旧候选边 `evidence` 全 NULL（加证据列之前落的行），既升不了级也永不退役。修法：只退役**空证据**候选边（`invalid_at` + `invalid_reason='legacy-no-evidence'`，行不删、证据不改）；有证据的（1 类/2 类）与非候选关系一律不动；默认干跑、`--apply` 幂等、真库路径拒跑。真库副本实测将退役 15 条；新候选边（sprout/pollinate 现写证据）实测可正常毕业 8/8。 |
 | **6.53** | **提案单进 memo 视野** | ✅ | `spec/SPEC-6.53-提案单进memo视野.md` | test-6.53-memo-proposals 6/6；病因：memo 只把在途工单数成 `backlog` 一个数字，20 张提案单指向谁、要什么，主驾看不到。修法：`buildMemo` 增 `user.proposals`——只列 `proposed`，按 `score` 升序（最差读数先）取前 N（默认 5，`proposalsLimit` 可调），字段 `{id, dim, target, title, want, score, createdAt}`，`want` 取 `evidence_json.demand.want`、缺了给 null；纯读、不改状态、空就是 `[]`。 |
+| **6.54** | **蒸馏镜像状态收口** | ✅ | `spec/SPEC-6.54-蒸馏镜像状态收口.md` | test-6.54-distill-mirror-status 5/5；病因：`distill` 只把原料（`raw-*`）翻 `active`，镜像（`wiki-*`）留在 `pending-distillation`，而选择集排除 `wiki-%`——镜像从此无人处理，**蒸馏债永久虚高**（真库副本复现：1 条虚债）。修法：distill 处理完一条原料后，把该镜像行按条件翻 `active`（只翻 `pending-distillation`，`done` 等一律不动，条件本身即幂等）；其余字段零改动。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
