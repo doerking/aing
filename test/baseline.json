@@ -119,6 +119,7 @@
   "test-6.44-red-drill.js": 7,
   "test-6.45-p1-runner.js": 7,
   "test-6.46-error-codes.js": 7,
+  "test-6.47-init-workspace.js": 7,
   "test-6.4b-markdown-conv.js": 5,
   "test-6.4c-trajectory-imports.js": 6,
   "test-6.4d-trajectory-route.js": 4,
