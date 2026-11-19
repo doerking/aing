@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 156 档 / 1029 条断言全绿 |
+| 测试 | `npm test` → 157 档 / 1035 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -124,8 +124,8 @@ status: active
 
 ## 五·补 总验收（2026-11-16 夜）
 
-- **90/91 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 28；M2 2.7/2.8 占位另计）
-- **156 档 / 1029 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **91/92 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 29；M2 2.7/2.8 占位另计）
+- **157 档 / 1035 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -197,6 +197,7 @@ status: active
 | **6.49** | **演示语料播种与拆除** | ✅ | `spec/SPEC-6.49-演示语料播种与拆除.md` | test-6.49-seed-demo 8/8 + `tools/seed-demo.js` / `tools/unseed-demo.js`；播种写 4 份原稿（概念/会话/边两端）→ `compile` 入库 → 建一条演示边 → 记账 `data/demo-seed.json`（id + 内容摘要）。拆除只拆账上 id，逐条比对摘要：**改过的档记 `modified` 不拆**；拆走「墓碑→关联表→实体」同一套级联（与 `archive.js` 同源），`archive_ref='demo-seed'`；幂等，二跑 `no-marker` ok。只认账本不按标签扫——手插的 `demo` 标签外人不受影响。CLI 均需 `--root`、`--dry` 只看不拆。 |
 | **6.50** | **meko-bridge 结合部** | ✅ | `spec/SPEC-6.50-meko-bridge.md` | test-6.50-meko-bridge 8/8 + `tools/bridge.js`；两条表（`bridge_signals` / `bridge_returns`）追加进 schema。**单向**：aing→memo 只发差量信号（指纹 `sha1(face+code+target+round)` + 水位存 `config[bridge.watermark]`，同信号幂等）；meko→memo 只交回单（同指纹重复提交报 `duplicate` 不重复入库）。**核单后入视野**：`summarize` 对 `pending-verify` 只给计数，`verified` 才进摘要（summary 截 60 字）；**失败可见**：超 `staleHours`(24) 计 `stalePending` 并报最长滞留。分层按 `headId` 推（注册表优先/关键词兜底），`own` 只出当前截面明细。`summarize` 纯读（跑前后库 mtime/size 不变）。CLI `status` / `publish <json>` / `verify <fp> [--reject]`。**不实现 meko 派单**（D17：派单归 meko）。 |
 | **6.51** | **kc 读法对齐（镜像边即加工边）** | ✅ | `spec/SPEC-6.51-kc镜像边读法.md` | test-6.51-kc-mirror-edge 6/6；病因：`links` 主键是 `(source_id,target_id)`，`import` 先占下 `raw→wiki` 的 `hydrogen-bond`，`distill` 的 `derived` 因此永不落地——真库 0 条 derived → `kc` 322/322 恒 0.5，`kc<0.40` 永不触发。修法：**不移数据改读法**，派生子件集合按身份取 `relation='derived'` ∪（`hydrogen-bond` 且 `source` 是 `raw-*`、`target` 恰为其镜像 `wiki-<base>`）；反向/非同源/非 raw 源一律不计；其余四维公式一字不改。真库副本实测：86 实体 kc 0.5→1.0，均值 0.5→0.634，`overall<0.4` 仍 3 条。 |
+| **6.52** | **旧候选边清账** | ✅ | `spec/SPEC-6.52-旧候选边清账.md` | test-6.52-candidate-scrub 6/6 + `tools/candidate-scrub.js`；病因：`promoteEdges` 要「≥2 类证据」，真库 15 条旧候选边 `evidence` 全 NULL（加证据列之前落的行），既升不了级也永不退役。修法：只退役**空证据**候选边（`invalid_at` + `invalid_reason='legacy-no-evidence'`，行不删、证据不改）；有证据的（1 类/2 类）与非候选关系一律不动；默认干跑、`--apply` 幂等、真库路径拒跑。真库副本实测将退役 15 条；新候选边（sprout/pollinate 现写证据）实测可正常毕业 8/8。 |
 | 6.4 | 任务轨迹消费（会话 + 代谢轮落表） | ✅ | `spec/SPEC-6.4-任务轨迹消费.md` | test-6.4-trajectory 7/7：13 列表+3 索引、六段会话轨迹、三源会话轨迹、幂等+退役跳过、成功/失败轮轨迹、查询统计、链上可见+铁律 |
 | 6.4b | markdown 会话轨迹回填 | ✅ | `spec/SPEC-6.4b-markdown会话轨迹回填.md` | test-6.4b-markdown-conv 5/5：markdown 落轨迹（小节段序+证据）、空正文/怪 JSON 不落、幂等、六段/三源不回归、实体与 last_access 零变化；真库副本实测 139 扫 → 139 落 |
 | 6.5 | 成长观察四件（缺口/反馈/自我模型/洞察） | ✅ | `spec/SPEC-6.5-成长观察四件.md` | test-6.5-growth-observe 9/9：五维缺口、反馈差分、自我模型、洞察落候选、幂等+不造料、T2 消费、链上可见、铁律 |
