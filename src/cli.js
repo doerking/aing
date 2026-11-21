@@ -55,6 +55,13 @@ async function cmdIngest(dbPath, payload = {}) {
   return autoIngest(s, payload);
 }
 
+// SPEC-3.14 修订 A：batch-ingest——复用 compile（walk 目录 → frontmatter → 实体 upsert，幂等）
+async function cmdCompile(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { compile } = require('./compile.js');
+  return compile(String(opts.dir), s, { quality: opts.quality === true });
+}
+
 async function cmdBoard(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { boardOf } = require('./ticket-board.js');
@@ -143,6 +150,7 @@ function usage() {
     '  node src/cli.js predict --message "..." [--json] [--db <path>]',
     '  node src/cli.js dispatch-card --file <ticket.json> [--snapshot <path>] [--json]',
     '  node src/cli.js ingest --payload <json>',
+    '  node src/cli.js compile --dir <path>   # SPEC-3.14 修订 A：batch-ingest（markdown 知识档 → 实体，幂等）',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
     '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]',
@@ -193,6 +201,13 @@ async function main(argv) {
       console.log(JSON.stringify(out, null, 2));
       return 0;
     }
+    if (cmd === 'compile') {
+      const dir = flags.dir && flags.dir !== true ? String(flags.dir) : '';
+      if (!dir) { usage(); return 2; }
+      const out = await cmdCompile(dbPath, { dir });
+      console.log(flags.json ? JSON.stringify(out, null, 2) : `compile scanned=${out.scanned} created=${out.created} updated=${out.updated} skipped=${out.skipped} rejected=${out.rejected}`);
+      return 0;
+    }
     if (cmd === 'board') {
       const out = await cmdBoard(dbPath, { limit: flags.limit ? Number(flags.limit) : undefined });
       console.log(flags.json ? JSON.stringify(out, null, 2) : (out.lines || []).join(String.fromCharCode(10)));
@@ -231,4 +246,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };

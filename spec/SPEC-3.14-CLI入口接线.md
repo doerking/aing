@@ -66,3 +66,25 @@ upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
 
 - 上游：SPEC-3.11（memo）、SPEC-3.5（ingest）、SPEC-1.14（orchestrator）、SPEC-1.15 §四（arch-lint C5）
 - 影响面：`tools/arch-lint.js` WHITELIST 增 `cli.js`；`AGENT.md` 命令表增 cli 子命令
+
+---
+
+## 修订 A · batch-ingest（2026-11-21）
+
+> 缘起：D14「batch-ingest / search-and-ingest / api-server entity REST / host 杂件」六个未登记小件中，
+> batch-ingest 系最高价值。**发现：`src/compile.js` 嘅 `compile()` 本身就系 batch-ingest**——walk 目录
+> → frontmatter 解析 → 实体 upsert → `compile_audit` 留痕，幂等（按 id 去重、rowEquals 判 skipped）。
+> 按「唔另起平行机制」纪律，**batch-ingest = 暴露 `cli.js compile` 命令**（复用 compile，唔新造）。
+
+### 修订 A 行为
+
+- `node src/cli.js compile --dir <path> [--quality] [--json]`：读 `<path>` 下全部 `.md` 知识档
+  （Tolaria frontmatter：tags/type/name/description/status），逐档转实体，幂等，逐档回执。
+- 复用 `compile(rawDir, store, {quality})`——唔改 compile 本体，只喺 cli.js 加 `cmdCompile` 接线。
+- 满足 D14「batch-ingest」项；`.json` 档、search-and-ingest、api entity REST 另立（见 修订 B 待议）。
+- 幂等：同 id 重跑 → `skipped`（rowEquals）；内容变 → `updated`；唔重插、唔造 duplicate。
+
+### 修订 A 契约
+
+- `cmdCompile(dbPath?, {dir, quality}) -> {scanned, created, updated, skipped, rejected, tagsDropped, auditId}`
+- 文件读取只喺 cli 层（SPEC-3.15）；compile 本体保持纯库。
