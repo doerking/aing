@@ -256,6 +256,8 @@ status: active
 
 | 8.8 | geneMin 推高至 0.62 + 门禁计数 baseline 单源（owner 2026-11-21 拍板） | ✅ 收口 | `docs/Engineering/KESPI-CALIBRATE-2026-11-21.md` | ① `kespi.geneMin` 0.45→0.62（p75 口径）：真库过线 270/322（83.9%）→ **103/322（32.0%）**，基因候选闸由近乎全开改为真筛；改 `config-runtime.js` 一处，test-3.4b 锁默认值。② C19 计数对账改 **baseline.json 单源**（唔再 parse run-all 子进程输出；现实对账归 C1/C2），count-guard 补短档隔离重跑（防瞬时少跑被误读为删除）；test-3.4c-gate-load 3/3 锁；修后连跑两轮 verify-deploy 均 33 项 ALL GREEN |
 
+| 8.9 | sprout 热区剖析 + 逐步时相工具 + 等价性护栏 | ✅ 收口（2026-11-21） | `docs/Engineering/SPOUT-HOTSPOT-2026-11-21.md` | `tools/round-profile.js`（测量工具，非门禁）：一轮代谢 1,660 ms，头四步 sprout/pollinate/field-maintain/hub-trim 占 **~72%**，sprout 独占 **25.5%**。**两个教科书优化实测全部失效并已回退**：倒排索引慢 **2.78x**（776 vs 279 ms，候选数逐位一致 = 正确但输）、数组预成型零增益（288 vs 288 稳态）。真因非算法：`keywords()` 每实体产中位 **186** 个关键词（每个相邻 CJK 二字都算），12,370 个不同词里 **76.8%** 出现于 ≥2 文档，top 词系 `2026×161`/`json×140`/`status×136` 呢啲日期与 JSON 字段名——停用词问题。test-1.10b-sprout-equiv 4/4（档内联 O(n²) 参考实现锁候选对集合逐对一致，含四个负例与已有边唔再发种），做将来改 sprout 嘅护栏。**未擅动 `keywords()` 口径**——`kw` 证据系行为，动佢等于改判据，待 owner 拍板 |
+
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
 首战体检结论（库龄 11 天口径）：守恒比 0 / 回炉单向泄漏 / 存量 hub 垄断（29 实体超 cap，头部 48 度贡献 65% 边）。
