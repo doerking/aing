@@ -48,13 +48,13 @@ owner: hana
 | 旋钮 | 值 | 落点 | 消费组件 |
 |---|---|---|---|
 | `kespi.promoteMin` | 0.55 | 过线 **114/322（35.4%）** | field-promote 提升门槛 |
-| `kespi.geneMin` | 0.45 | 过线 **270/322（83.9%）** | evolution-team 基因候选门槛 |
+| `kespi.geneMin` | ~~0.45~~ → **0.62**（2026-11-21 owner 拍板） | 过线 **270/322（83.9%）**@0.45 → **103/322（32.0%）**@0.62 | evolution-team 基因候选门槛 |
 | `kespi.redZone` | 0.45 | 逐维比对 | self-optimize 红区 |
 | `kespi.greenZone` | 0.60 | 过线 **106/322（32.9%）** | 已声明、**未入逻辑** |
 
 ## 五、读数提示（供拍板，非建议改动）
 
-1. **`geneMin 0.45` 近乎全开**：中位系 0.51，0.45 低于中位 → 83.9% 实体过线。基因候选闸实际几乎唔筛。要真筛选，阈值需推近 p75（0.62）口径。**改唔改系 owner 决定**；阈值已系旋钮，改库内 config 表即可，唔使改代码。
+1. **`geneMin` 已推高至 0.62（owner 2026-11-21 拍板）**：原 0.45 低于真库中位 0.51 → 83.9% 实体过线，基因候选闸实际几乎唔筛。改取 p75 口径 0.62，实测过线由 270/322（83.9%）降至 **103/322（32.0%）**。改动系 config-runtime `DEFAULTS.kespi` 一处，test-3.4b 锁默认值。
 2. **`greenZone 0.60` 声明但未消费**：`self-optimize.js` 逻辑只比 `redZone`，绿区冇入判据。若日后要「绿区自动毕业」，先补逻辑再动数。
 3. **`kg` / `km` / `kb` 三列恒 0**（p90 都系 0），`kc` 恒 0.5、`kr` 恒 1——五维里实际起分辨作用嘅只有 `kq` 与 `ka`。系评分口径问题，唔系阈值问题，记录备查。
 
@@ -66,4 +66,4 @@ node tools/kespi-calibrate.js          # 表格
 node tools/kespi-calibrate.js --json   # 机读
 ```
 
-门禁状态：`npm test` → 167 档 / 1112 断言全绿；`node verify-deploy.js` → 33 项 ALL GREEN。
+门禁状态：`npm test` → 168 档 / 1115 断言全绿；`node verify-deploy.js` → 33 项 ALL GREEN。
