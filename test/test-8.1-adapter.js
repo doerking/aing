@@ -56,7 +56,7 @@ try { A = require('../src/db-adapter.js'); } catch (e) { A = null; }
   let deflt = null;
   try { deflt = A.engineName(); } catch (_) { deflt = null; }
   ac('AC-8.1c 未接引擎显式报错',
-    !!threw && /引擎未接/.test(threw) && deflt === 'sqljs' && Array.isArray(A.SUPPORTED) && A.SUPPORTED.includes('sqljs'),
+    !!threw && /引擎未接/.test(threw) && deflt === 'nodesqlite' && Array.isArray(A.SUPPORTED) && A.SUPPORTED.includes('nodesqlite'),
     JSON.stringify({ threw, deflt, supported: A.SUPPORTED }));
 
   // AC-8.1d 换引擎不改上层：knowledge-store 全走插排，读写/落盘/重开行为不变

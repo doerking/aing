@@ -41,6 +41,7 @@ async function run(opts = {}) {
     const rep = SR.report(store, { keywords: opts.keywords });
     return rep;
   } finally {
+    store._close();   // nodesqlite 文件库持句柄，先关再 rm（Windows EPERM）
     fs.rmSync(yard, { recursive: true, force: true });
   }
 }

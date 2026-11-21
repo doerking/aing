@@ -79,6 +79,7 @@ catch (e) {
   console.log('\n=== TEST-M1.2 数据模型 ===');
   results.forEach(r => console.log((r.pass ? '✅' : '❌') + ' ' + r.name + (r.err ? '  — ' + r.err : '')));
   console.log(`\n${passed}/${results.length} 绿`);
+  store._close();   // nodesqlite 文件库持句柄，先关再 rm（Windows EPERM）
   fs.rmSync(yard, { recursive: true, force: true });
   process.exit(passed === results.length ? 0 : 1);
 })();

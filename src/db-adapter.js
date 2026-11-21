@@ -15,7 +15,7 @@ const SUPPORTED = ['sqljs', 'nodesqlite'];
 let SQL = null;
 
 function engineName(name) {
-  const n = String(name || process.env.AING_DB_ENGINE || 'sqljs').toLowerCase();
+  const n = String(name || process.env.AING_DB_ENGINE || 'nodesqlite').toLowerCase();
   // 别名：环境变量写 node:sqlite 也认（SPEC-8 配置项口径）
   const norm = n === 'node:sqlite' ? 'nodesqlite' : n;
   if (!SUPPORTED.includes(norm)) {

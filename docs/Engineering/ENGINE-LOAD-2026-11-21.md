@@ -43,4 +43,6 @@ owner: hana
 
 ## 四、结论（供拍板）
 
-nodesqlite 在**内存、开库、写放大**三项占优（且随库体量放大更明显），代价是**轮吞吐 -20%**。若目标场景含移动/嵌入式/频繁冷启动/flash 写寿命敏感，nodesqlite 胜；若纯高性能服务器且库常驻内存，sqljs 仍可。**默认引擎切换属 owner 拍板**（交接单 §十三#2：别拍脑袋切）。
+nodesqlite 在**内存、开库、写放大**三项占优（且随库体量放大更明显），代价是**轮吞吐 -20%**。若目标场景含移动/嵌入式/频繁冷启动/flash 写寿命敏感，nodesqlite 胜；若纯高性能服务器且库常驻内存，sqljs 仍可。
+
+**拍板（2026-11-21，owner）**：默认引擎切 `nodesqlite`。已落地：`src/db-adapter.js` 默认 `'sqljs'`→`'nodesqlite'`；SPEC-8 §一配置项默认值同步；全量 166 档/1107 断言 + verify-deploy 33 项 ALL GREEN（sqljs 仍可经 `AING_DB_ENGINE=sqljs` 显式选择，SQLJS 专属语义测试强制 sqljs）。

@@ -1,5 +1,8 @@
 'use strict';
 // M6 任务 6.12 failing test —— 锁 SPEC-6.12 落盘安全 AC-1~6
+// 本件测嘅系 sqljs persist 专属语义（AC-1 原子 tmp→rename、AC-4 外部改写 db-stale）——
+// 文件库（nodesqlite）下呢两个机制「属设计而非缺口」（SPEC-8 修订 A 补充），故强制 sqljs。
+process.env.AING_DB_ENGINE = 'sqljs';
 const fs = require('fs'); const os = require('os'); const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 const yard = fs.mkdtempSync(path.join(os.tmpdir(), 'aingv2-wal-'));
