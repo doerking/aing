@@ -31,14 +31,24 @@ function _rows(db, sql, binds = []) {
 }
 
 function _record(db, { action, target, before, after, cycleId }) {
-  const id = _id('fa');
+  // SPEC-1.14 修订 J：确定性幂等键——同轮同动作同目标只能留一行，重跑不重复记账
+  const id = _actionId(cycleId, action, target);
   const stmt = db.prepare(
-    `INSERT INTO field_actions (id, action, target, before_json, after_json, cycle_id, reversible, created_at)
+    `INSERT OR IGNORE INTO field_actions (id, action, target, before_json, after_json, cycle_id, reversible, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`
   );
   stmt.run([id, action, target, JSON.stringify(before == null ? null : before), JSON.stringify(after == null ? null : after), cycleId || null]);
   stmt.free();
   return id;
+}
+
+/** 动作账确定性键：`fa-<cycleId>-<action>-<target 摘要>`；缺 cycleId 时退化为时间键（无法幂等，但不与新键撞）。 */
+function _actionId(cycleId, action, target) {
+  if (!cycleId) return _id('fa');
+  const h = require('crypto').createHash('sha1')
+    .update(String(cycleId) + '\u0000' + String(action) + '\u0000' + String(target == null ? '' : target), 'utf8')
+    .digest('hex').slice(0, 12);
+  return `fa-${cycleId}-${action}-${h}`;
 }
 
 /** 独立证据四类：degree / mirror / access / kespi */

@@ -31,14 +31,23 @@ function _activeLinks(db) {
 }
 
 function _record(db, { action, target, before, after, cycleId }) {
-  const id = _id('fa');
+  // SPEC-1.14 修订 J：确定性幂等键（同轮同动作同目标只留一行）
+  const id = _actionId(cycleId, action, target);
   const stmt = db.prepare(
-    `INSERT INTO field_actions (id, action, target, before_json, after_json, cycle_id, reversible, created_at)
+    `INSERT OR IGNORE INTO field_actions (id, action, target, before_json, after_json, cycle_id, reversible, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`
   );
   stmt.run([id, action, target, JSON.stringify(before == null ? null : before), JSON.stringify(after == null ? null : after), cycleId || null]);
   stmt.free();
   return id;
+}
+
+function _actionId(cycleId, action, target) {
+  if (!cycleId) return _id('fa');
+  const h = require('crypto').createHash('sha1')
+    .update(String(cycleId) + '\u0000' + String(action) + '\u0000' + String(target == null ? '' : target), 'utf8')
+    .digest('hex').slice(0, 12);
+  return `fa-${cycleId}-${action}-${h}`;
 }
 
 function _inBand(e) { return !!e && IN_FIELD_BAND.includes(Number(e.tolaria_strength)); }

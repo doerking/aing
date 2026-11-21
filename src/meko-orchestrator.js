@@ -67,23 +67,63 @@ class MekoOrchestrator {
     return marked;
   }
 
-  _writeCycle(cycleType, round, status, kespi, kespiSource) {
+  // ── SPEC-1.14 修订 I：轮状态机（running → executed/failed/up_for_retry）──
+  // 按 STRANDS 顺序拼出本轮会跑的步 id 序列（续跑守卫用：确认 last_step 仍是已知步）
+  _stepIdsInOrder() {
+    const ids = [];
+    for (const strand of STRANDS) for (const s of this.steps.filter(x => x.strand === strand)) ids.push(s.id);
+    return ids;
+  }
+
+  _reclaimExpired() {
+    const db = this.store._getDb();
+    const now = new Date().toISOString();
+    const rows = [];
+    try {
+      const sel = db.prepare("SELECT id, last_step, attempt FROM meko_cycles WHERE status='running' AND deadline_at IS NOT NULL AND deadline_at < ? ORDER BY deadline_at DESC");
+      sel.bind([now]);
+      while (sel.step()) rows.push(sel.getAsObject());
+      sel.free();
+      if (rows.length) {
+        const upd = db.prepare("UPDATE meko_cycles SET status='up_for_retry' WHERE id = ?");
+        for (const r of rows) upd.run([r.id]);
+        upd.free();
+        this.store._persist();
+      }
+    } catch (_) { /* 回收失败不阻断开轮 */ }
+    return rows.map(r => ({ cycleId: r.id, lastStep: r.last_step || null, attempt: Number(r.attempt || 0) }));
+  }
+
+  _beginRound(cycleType, round, deadlineAt, leaseToken, attempt) {
     const db = this.store._getDb();
     const id = `cyc-${Date.now()}-${round}-${Math.floor(Math.random() * 1e6)}`;
+    db.run(`INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot, kespi_source, deadline_at, lease_token, last_step, attempt)
+            VALUES (?, ?, 'both', ?, NULL, 'running', NULL, NULL, ?, ?, NULL, ?)`,
+      [id, `${cycleType}:round${round}`, new Date().toISOString(),
+        new Date(deadlineAt).toISOString(), leaseToken == null ? null : Number(leaseToken), attempt]);
+    this.store._persist();
+    return id;
+  }
+
+  _markStep(cycleId, stepId) {
+    try {
+      this.store._getDb().run('UPDATE meko_cycles SET last_step = ? WHERE id = ?', [stepId || null, cycleId]);
+    } catch (_) { /* 定位更新失败不阻断本轮 */ }
+  }
+
+  _finishRound(cycleId, cycleType, round, status, kespi, kespiSource) {
+    const db = this.store._getDb();
     // 守恒闸（SPEC-2.10 §2.3 / I9）：每轮必带 growth/pruned/ratio 三列快照
     let cons = { growth: 0, pruned: 0, ratio: 1, inBand: true, verdict: 'balanced', idle: true };
     try { cons = require('./conservation.js').measureConservation(this.store, {}); } catch (_) { /* 读数失败不阻断本轮 */ }
-    // 轮账三列取边层（SPEC-2.10 修订 D）：growth/pruned 同量纲；实体退场不冒充 pruned
     const edge = cons && cons.edge ? cons.edge : cons;
-    const stmt = db.prepare(
-      `INSERT INTO meko_cycles (id, cycle_type, helix_strand, scheduled_at, executed_at, status, kespi_snapshot, kespi_source, growth, pruned, conservation_ratio)
-       VALUES (?, ?, 'both', ?, ?, ?, ?, ?, ?, ?, ?)`
-    );
-    const now = new Date().toISOString();
-    stmt.run([id, `${cycleType}:round${round}`, now, now, status, kespi, kespiSource || null, edge.growth, edge.pruned, edge.ratio]);
-    stmt.free();
-    // SPEC-1.16：本轮记账（实体快照 + 新边归属 + 上限裁剪）；失败不阻断本轮
-    try { require('./round-ledger.js').recordRound(this.store, id); } catch (_) { /* 记账失败不阻断编排 */ }
+    try {
+      db.run(`UPDATE meko_cycles SET status = ?, executed_at = ?, kespi_snapshot = ?, kespi_source = ?, growth = ?, pruned = ?, conservation_ratio = ? WHERE id = ?`,
+        [status, new Date().toISOString(), kespi, kespiSource || null,
+          edge.growth, edge.pruned, edge.ratio, cycleId]);
+    } catch (_) { /* 收口失败不阻断返回 */ }
+    // SPEC-1.16：本轮记账（实体快照 + 新边归属 + 上限裁剪）
+    try { require('./round-ledger.js').recordRound(this.store, cycleId); } catch (_) { /* 记账失败不阻断编排 */ }
     this.store._persist();
     return cons;
   }
@@ -102,22 +142,60 @@ class MekoOrchestrator {
     const bus = {};
     const results = [];
 
+    // SPEC-1.14 修订 I：开轮先回收超期轮，并取续跑候选
+    const reclaimed = opts.resume === false ? [] : this._reclaimExpired();
+    const resumeFrom = reclaimed.length ? reclaimed[0] : null;
+    // SPEC-1.14 修订 I §4.3：领写令牌（单调）
+    const leaseToken = typeof this.store.claimWriter === 'function'
+      ? this.store.claimWriter(opts.epoch || 0)
+      : null;
+
     for (let round = 1; round <= rounds; round++) {
       let failed = null;
+      // SPEC-1.14 修订 I（AC-9）：轮首即落账（running），中途被杀也看得出跑到哪
+      const attempt = (round === 1 && resumeFrom) ? Number(resumeFrom.attempt || 0) + 1 : 1;
+      const roundRowId = this._beginRound(cycleType, round, endsAt, leaseToken, attempt);
+      let skipping = false;
+      // 续跑：只跳过第 1 轮里已完成的段（连 last_step 本身一起跳过）
+      if (round === 1 && resumeFrom && resumeFrom.lastStep) {
+        if (this._stepIdsInOrder().includes(resumeFrom.lastStep)) skipping = true;
+        // last_step 指到已不存在/未注册的步（改名或下线）：不跳。跳了会整轮静默空转还报 ok:true
+        else results.push({ round, id: '*', ok: true, resumeIgnored: `last_step=${resumeFrom.lastStep} 未注册` });
+      }
       // SPEC-7.1 §0.2：产物只被代谢一次——本轮开局已在库的 future 产物，读完即打标
       const roundStartProducts = this._openProducts();
       for (const strand of STRANDS) {
         const steps = this.steps.filter(s => s.strand === strand);
         for (const step of steps) {
+          if (skipping) {
+            if (step.id === resumeFrom.lastStep) skipping = false;
+            results.push({ round, id: step.id, ok: true, skippedByResume: true });
+            continue;
+          }
           const stepStart = _nowMs();
           const quotaMs = (Number(step.budgetTick) || 1) * loadFactor * 1000;
           let entry;
+          // SPEC-1.14 修订 H（AC-7）：进下一步前先查预算——剩余已耗尽就不启动新步，
+          // 免得把一个注定被外部 SIGKILL 的步开在半途。
+          if (_nowMs() >= endsAt) {
+            failed = `deadline:before:${step.id}`;
+            results.push({ round, id: step.id, ok: false, reason: 'deadline-before-step', elapsedMs: 0 });
+            break;
+          }
           try {
             const r = await step.onCycle({
               store: this.store, round, strand, bus, cycleId,
-              cycleType, opts, selfOptimize: opts.selfOptimize
+              cycleType, opts, selfOptimize: opts.selfOptimize,
+              deadlineAt: endsAt, remaining: () => endsAt - _nowMs()
             });
-            entry = { round, id: step.id, ok: r ? r.ok !== false : true, actions: r && r.actions };
+            const okFlag = r ? r.ok !== false : true;
+            entry = { round, id: step.id, ok: okFlag, actions: r && r.actions };
+            // SPEC-1.14 修订 H（AC-8）：步主动收口 != 步抛错，两者都要可见、都不静默吞
+            if (!okFlag) {
+              entry.reason = r && r.reason ? String(r.reason) : 'step-failed';
+              if (r && (r.done != null || r.total != null)) entry.partial = { done: r.done, total: r.total };
+              failed = failed || step.id;
+            }
           } catch (e) {
             entry = { round, id: step.id, ok: false, error: e.message };
             failed = failed || step.id;
@@ -127,6 +205,8 @@ class MekoOrchestrator {
           entry.elapsedMs = _nowMs() - stepStart;
           entry.overBudget = entry.elapsedMs > quotaMs;
           results.push(entry);
+          // SPEC-1.14 修订 I：只把「已完成的步」记为 last_step（失败的步不算完成，续跑时要重跑）
+          if (entry.ok) this._markStep(roundRowId, step.id);
           if (!failed && _nowMs() > endsAt) failed = `timeout:${step.id}`;
           if (failed) break;
         }
@@ -148,7 +228,7 @@ class MekoOrchestrator {
         kespi = this.starlink.fallbackKespi();
         kespiSource = 'placeholder';
       }
-      this._writeCycle(cycleType, round, failed ? 'failed' : 'executed', kespi, kespiSource);
+      this._finishRound(roundRowId, cycleType, round, failed ? 'failed' : 'executed', kespi, kespiSource);
 
       if (failed) {
         try {
@@ -158,7 +238,8 @@ class MekoOrchestrator {
         } catch (_) { /* 轨迹写失败不阻断编排 */ }
         return {
           ok: false, cycleId, rounds: round, failedRound: round, failedStep: failed,
-          results, deadline: new Date(endsAt).toISOString(), elapsedMs: _nowMs() - startedAt
+          results, deadline: new Date(endsAt).toISOString(), deadlineAt: endsAt, elapsedMs: _nowMs() - startedAt,
+          resumedFrom: resumeFrom, reclaimedRounds: reclaimed, leaseToken
         };
       }
     }
@@ -170,7 +251,8 @@ class MekoOrchestrator {
     } catch (_) { /* 轨迹写失败不阻断编排 */ }
     return {
       ok: true, cycleId, rounds, results,
-      deadline: new Date(endsAt).toISOString(), elapsedMs: _nowMs() - startedAt
+      deadline: new Date(endsAt).toISOString(), deadlineAt: endsAt, elapsedMs: _nowMs() - startedAt,
+      resumedFrom: resumeFrom, reclaimedRounds: reclaimed, leaseToken
     };
   }
 }

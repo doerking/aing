@@ -45,6 +45,7 @@ upstream: [SPEC-0.1 修订 C, SPEC-1.4, SPEC-1.7, SPEC-1.11]
 | AC-5 | KC 双链一致 | 一致=1；不一致=0.4；无镜像=0.3 |
 | AC-6 | 幂等（同日） | 两趟 overall 相同，行数不变 |
 | AC-7 | 铁律 | last_access 不变；源码无 `DELETE FROM` |
+| AC-8 | 增量评分（修订 K，2026-11-20） | `opts.incremental=true` 只选「脏实体」：无评分行 / `updated_at > computed_at` / `last_access > computed_at`；干净实体不重评；不带 incremental 仍是全量 |
 
 ## 四、Non-Goals
 

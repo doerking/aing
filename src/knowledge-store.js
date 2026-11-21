@@ -265,6 +265,20 @@ const DDL = [
 let db = null;       // 当前连接（句柄由插排开，store 只持引用）
 let dbPath = null;   // 当前库文件
 let lastStat = null; // 上次落盘后的 {mtimeMs, size}（SPEC-6.12 外部改写检测）
+let fileBacked = false; // SPEC-8 修订 A：nodesqlite 文件库分支标记
+let api = null;      // 插排接口（文件库退出时需关句柄，否则 Windows 上文件被锁）
+const _fileApis = new Set(); // 所有开过的文件库句柄（同进程内多次 init 也要全关）
+let _closeHooked = false;
+// 同进程多次 init 会把旧句柄留在集合里（测试常多库并存）；只关最新那个会留下「已关的旧库」被后续读取
+// → node:sqlite 报 `database is not open`。
+let _closedAll = false;
+function _closeAll() {
+  if (_closedAll) return;
+  _closedAll = true;
+  for (const a of _fileApis) { try { a.close(); } catch (_) { /* 已关 */ } }
+  _fileApis.clear();
+  api = null;
+}
 
 // SPEC-6.12 落盘安全：原子写 / 单写者锁 / 容量上限。proot 杀进程是常态，半写即坏库。
 const CAP_DEFAULT = 10 * 1024 * 1024;
@@ -371,10 +385,49 @@ function _acquireLock(lockPath) {
 
 function persist(opts = {}) {
   if (!db || !dbPath) return;
+  // SPEC-8 修订 A：文件库分支（nodesqlite + WAL）——写入已直达库文件，
+  // 不再每次写整库 export；保留写者围栏 / 单写者锁 / 容量闸（按文件体积判）。
+  if (fileBacked) {
+    if (opts.epoch != null) {
+      const cur = _readWriterEpoch();
+      if (Number.isFinite(cur) && cur > Number(opts.epoch)) {
+        throw new Error(`stale-writer: 库内 writer_epoch=${cur} > 本次令牌 ${opts.epoch}（旧写者不得覆盖）`);
+      }
+      _writeWriterEpoch(Number(opts.epoch));
+    }
+    const lockPath = dbPath + '.lock';
+    if (!_acquireLock(lockPath)) {
+      throw new Error('db-locked: 另一写者持有锁（AING_DB_LOCK_STALE_MS 后可接管）');
+    }
+    try {
+      if (!opts.skipCap) {
+        let size = 0;
+        try { size = fs.statSync(dbPath).size; } catch (_) { /* 文件未见则不计 */ }
+        const cap = _capBytes();
+        if (size > cap && process.env.AING_DB_CAP_ALLOW !== '1') {
+          throw new Error(`db-over-cap: 库 ${size}B 超上限 ${cap}B（AING_DB_CAP_BYTES 可调，AING_DB_CAP_ALLOW=1 放行）`);
+        }
+      }
+      let st = null;
+      try { st = fs.statSync(dbPath); } catch (_) { /* 未建文件则不更 lastStat */ }
+      if (st) lastStat = { mtimeMs: st.mtimeMs, size: st.size };
+    } finally {
+      try { if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath); } catch (_) { /* 放锁失败不遮主错 */ }
+    }
+    return;
+  }
   const bytes = Buffer.from(db.export());
   const cap = _capBytes();
   if (!opts.skipCap && bytes.length > cap && process.env.AING_DB_CAP_ALLOW !== '1') {
     throw new Error(`db-over-cap: 库 ${bytes.length}B 超上限 ${cap}B（AING_DB_CAP_BYTES 可调，AING_DB_CAP_ALLOW=1 放行）`);
+  }
+  // SPEC-1.14 修订 I §4.3：写者围栏——库内 epoch 已超过本次令牌 → 拒写 stale-writer
+  if (opts.epoch != null) {
+    const cur = _readWriterEpoch();
+    if (Number.isFinite(cur) && cur > Number(opts.epoch)) {
+      throw new Error(`stale-writer: 库内 writer_epoch=${cur} > 本次令牌 ${opts.epoch}（旧写者不得覆盖）`);
+    }
+    _writeWriterEpoch(Number(opts.epoch));
   }
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const lockPath = dbPath + '.lock';
@@ -414,18 +467,49 @@ async function init(dbFilePath) {
   dbPath = dbFilePath;
   _cleanStaleTmp(dbFilePath);
   _cleanDeadLock(dbFilePath + '.lock');
-  if (fs.existsSync(dbFilePath)) {
-    db = (await adapter.openFile(dbFilePath)).raw;
+  // SPEC-8 修订 A：AING_DB_ENGINE=nodesqlite → 文件库（WAL），插排直接开文件不进内存
+  const engine = String(process.env.AING_DB_ENGINE || 'sqljs');
+  fileBacked = /nodesqlite|node:sqlite/i.test(engine) && !!dbFilePath;
+  // SPEC-8 修订 B：另一引擎（node:sqlite）的 WAL 未收拢 → 不静默读残缺
+  // （sql.js 拿主库字节整库覆写会把丢的行固化，所以这里必须吵）
+  if (!fileBacked && dbFilePath) {
+    let walSize = 0;
+    try { walSize = fs.statSync(`${dbFilePath}-wal`).size; } catch (_) { /* 无 -wal，正常 */ }
+    if (walSize > 0) {
+      throw new Error(`db-wal-orphan: ${dbFilePath}-wal 有 ${walSize}B 未合并。先以 AING_DB_ENGINE=nodesqlite 开库收拢 WAL（关库会自动 checkpoint），或确认无需该数据后再删掉此文件`);
+    }
+  }
+  if (fileBacked) {
+    api = await adapter.openFile(dbFilePath, { engine });
+    db = api.raw;
+    lastStat = null;
+    _fileApis.add(api);
+    // node:sqlite 真持有文件句柄；不关就会锁住库文件（Windows 上进程退出时 rm 同目录报 EPERM）
+    // 只挂一个钩子（同进程反复 init 会堆 listener，触发 MaxListenersExceededWarning）
+    if (!_closeHooked) {
+      _closeHooked = true;
+      process.on('exit', _closeAll);
+    }
+  } else if (fs.existsSync(dbFilePath)) {
+    db = (await adapter.openFile(dbFilePath, { engine })).raw;
     const st = fs.statSync(dbFilePath);
     lastStat = { mtimeMs: st.mtimeMs, size: st.size };
   } else {
-    db = (await adapter.openEmpty()).raw;
+    db = (await adapter.openEmpty({ engine })).raw;
     lastStat = null;
   }
   // 幂等：IF NOT EXISTS，连跑不炸（AC-2）
+  const _objCount = () => {
+    try {
+      const s = db.prepare('SELECT COUNT(*) AS n FROM sqlite_master');
+      const r = s.step() ? s.getAsObject() : { n: 0 };
+      s.free();
+      return Number(r.n || 0);
+    } catch (_) { return -1; }
+  };
   const migrationBefore = {
-    missingFile: lastStat == null,
-    objects: Number((db.exec('SELECT COUNT(*) FROM sqlite_master')[0] || { values: [[0]] }).values[0][0] || 0)
+    missingFile: lastStat == null && !fileBacked,
+    objects: _objCount()
   };
   for (const stmt of DDL) db.run(stmt);
   // 列迁移（SPEC-6.9b）：老库 meko_cycles 无 kespi_source，先查后补
@@ -468,10 +552,27 @@ async function init(dbFilePath) {
     up.free();
     migrated = true;
   }
+  // 列迁移（SPEC-1.14 修订 I）：轮状态机四列——轮首落账 / 超期回收 / 续跑定位
+  if (!columns('meko_cycles').includes('deadline_at')) {
+    db.run('ALTER TABLE meko_cycles ADD COLUMN deadline_at DATETIME');
+    migrated = true;
+  }
+  if (!columns('meko_cycles').includes('lease_token')) {
+    db.run('ALTER TABLE meko_cycles ADD COLUMN lease_token INTEGER');
+    migrated = true;
+  }
+  if (!columns('meko_cycles').includes('last_step')) {
+    db.run('ALTER TABLE meko_cycles ADD COLUMN last_step TEXT');
+    migrated = true;
+  }
+  if (!columns('meko_cycles').includes('attempt')) {
+    db.run('ALTER TABLE meko_cycles ADD COLUMN attempt INTEGER DEFAULT 0');
+    migrated = true;
+  }
   // FK 完整性（AC-6）：sql.js 每连接设 ON
   db.run('PRAGMA foreign_keys = ON');
   // 只在真有变化时落盘：纯读命令开库不改文件 mtime（否则会干扰 db-stale 检测、白耗 f2fs 写入）
-  const objectsNow = Number((db.exec('SELECT COUNT(*) FROM sqlite_master')[0] || { values: [[0]] }).values[0][0] || 0);
+  const objectsNow = _objCount();
   if (migrationBefore.missingFile || migrated || objectsNow !== migrationBefore.objects) persist({ skipCap: true });
 }
 
@@ -489,6 +590,36 @@ function columns(table) {
   while (stmt.step()) out.push(stmt.getAsObject().name);
   stmt.free();
   return out;
+}
+
+// ── SPEC-1.14 修订 I §4.3：写者围栏（单调递增 epoch，存 config 表）──
+function _readWriterEpoch() {
+  try {
+    const s = db.prepare("SELECT value_json FROM config WHERE key = 'writer_epoch'");
+    const r = s.step() ? s.getAsObject() : null;
+    s.free();
+    if (!r) return 0;
+    const v = Number(JSON.parse(r.value_json));
+    return Number.isFinite(v) ? v : 0;
+  } catch (_) { return 0; }
+}
+
+function _writeWriterEpoch(epoch) {
+  db.run("INSERT INTO config (key, value_json, updated_at) VALUES ('writer_epoch', ?, CURRENT_TIMESTAMP) " +
+    'ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP',
+    [JSON.stringify(Number(epoch))]);
+}
+
+/** 领写：单语句原子自增，返库内新值。读-改-写非原子会让两个写者拿到同一个令牌（TOCTOU），所以不用「读一下再 +1」。 */
+function claimWriter(requested = 0) {
+  const want = Number(requested) || 0;
+  try {
+    db.run("INSERT INTO config (key, value_json, updated_at) VALUES ('writer_epoch', ?, CURRENT_TIMESTAMP)", [JSON.stringify(want)]);
+  } catch (_) { /* 行已在，走下面的自增 */ }
+  // +1 后转 INTEGER（不是 TEXT）：CAST(... AS TEXT) 在 sqlite 会把实数写成 "10.0"，两个引擎存出不同形态
+  db.run("UPDATE config SET value_json = CAST(MAX(CAST(value_json AS INTEGER), ?) + 1 AS INTEGER), updated_at = CURRENT_TIMESTAMP WHERE key = 'writer_epoch'", [want]);
+  const t = _readWriterEpoch();
+  return t > 0 ? t : want + 1;
 }
 
 function insertEntity(e) {
@@ -558,4 +689,4 @@ function foreignKeysOn() {
   return on;
 }
 
-module.exports = { init, listTables, columns, insertEntity, getEntity, insertLink, markMetabolized, foreignKeysOn, _getDb: () => db, _persist: persist };
+module.exports = { init, listTables, columns, insertEntity, getEntity, insertLink, markMetabolized, foreignKeysOn, claimWriter, writerEpoch: _readWriterEpoch, _getDb: () => db, _persist: persist, _close: _closeAll };
