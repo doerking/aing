@@ -9,6 +9,7 @@ process.on('exit', () => { try { fs.rmSync(yard, { recursive: true, force: true 
 let pass = 0, fail = 0;
 function ac(n, c, d = '') { if (c) { console.log('✅ ' + n); pass++; } else { console.log('❌ ' + n + (d ? ' — ' + d : '')); fail++; } }
 
+const C = require('../src/config-runtime.js');
 const store = require('../src/knowledge-store.js');
 const sprout = require('../src/sprout.js');
 
@@ -16,8 +17,10 @@ const strip = (t) => String(t).replace(/:\d+$/, '');
 function parseTags(tags) { try { const a = JSON.parse(tags || '[]'); return Array.isArray(a) ? a.map(strip) : []; } catch (_) { return []; } }
 const keywords = (t) => sprout.keywords(t);
 
-// 参考实现：逐对扫描（优化前嘅口径），返候选对集合与各自证据种类
-function referenceCandidates(db) {
+// 参考实现：逐对扫描（优化前嘅口径），返候选对集合与各自证据种类。
+// dfMax 与 sprout 同源（同读 sprout.docFreqPctMax），但配对逻辑系独立逐对重算——
+// 本档锁「配对语义」，阈值行为本身由 test-1.10c 锁。
+function referenceCandidates(db, store) {
   const rows = [];
   const st = db.prepare('SELECT id, content, tags FROM entities WHERE invalid_at IS NULL ORDER BY updated_at DESC, id LIMIT 200');
   while (st.step()) rows.push(st.getAsObject());
@@ -35,6 +38,14 @@ function referenceCandidates(db) {
   }
   const meta = new Map();
   for (const e of rows) meta.set(e.id, { tags: new Set(parseTags(e.tags)), kw: keywords(e.content) });
+
+  const dfMax = C.getKnob(store, 'sprout.docFreqPctMax');
+  if (dfMax > 0) {
+    const df = new Map();
+    for (const m of meta.values()) for (const w of m.kw) df.set(w, (df.get(w) || 0) + 1);
+    const cutoff = Math.max(3, rows.length * dfMax / 100);
+    for (const m of meta.values()) m.kw = new Set([...m.kw].filter(w => (df.get(w) || 0) < cutoff));
+  }
 
   const out = new Set(); let pairs = 0;
   for (let i = 0; i < rows.length; i++) {
@@ -79,6 +90,9 @@ function actualPairs(db) {
   E('q', ['T3:7'], 'upsilon phi');
   E('r', [], 'chi psi');
   E('s', [], 'omega nu');
+  // 44 个填充实体（各带唯一关键词）：令扫描集够大，使参考实现与实现喺任何旋钮值下都同口径。
+  // 填充词唯一 → docFreq=1、与目标实体唔共享，唔会多出候选。
+  for (let i = 1; i <= 44; i++) E('fl' + String(i).padStart(2, '0'), [], 'fill' + String(i).padStart(3, '0'));
   store._persist();
   const db = store._getDb();
   const ins = db.prepare('INSERT INTO links (source_id, target_id, relation, confidence, strength, created_at) VALUES (?, ?, ?, 0.5, 5, CURRENT_TIMESTAMP)');
@@ -88,7 +102,7 @@ function actualPairs(db) {
   ins.free();
   store._persist();
 
-  const ref = referenceCandidates(db);
+  const ref = referenceCandidates(db, store);
   const stats = await sprout.sproutStep(store, { persist: true });
   const got = actualPairs(db);
 

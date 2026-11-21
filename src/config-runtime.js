@@ -6,7 +6,7 @@
 
 const DEFAULTS = {
   compress: { inactiveDays: 30, minLength: 50 },
-  sprout: { floor: 2, cap: 4 },
+  sprout: { floor: 2, cap: 4, docFreqPctMax: 0 },
   conservation: { band: [0.8, 1.5] },
   hubTrim: { degreeCap: 8, weakBelow: 5 },
   kernel: { stagnantAfter: 3, inhibitHours: 1 },
@@ -21,7 +21,7 @@ const DEFAULTS = {
 
 const KNOB_PATHS = [
   'compress.inactiveDays', 'compress.minLength',
-  'sprout.floor', 'sprout.cap',
+  'sprout.floor', 'sprout.cap', 'sprout.docFreqPctMax',
   'conservation.band',
   'hubTrim.degreeCap', 'hubTrim.weakBelow',
   'kernel.stagnantAfter', 'kernel.inhibitHours',
@@ -29,7 +29,7 @@ const KNOB_PATHS = [
 ];
 
 const COMPONENT_MAP = {
-  sprout: ['sprout.floor', 'sprout.cap'],
+  sprout: ['sprout.floor', 'sprout.cap', 'sprout.docFreqPctMax'],
   compress: ['compress.inactiveDays', 'compress.minLength'],
   'hub-trim': ['hubTrim.degreeCap', 'hubTrim.weakBelow'],
   conservation: ['conservation.band'],
