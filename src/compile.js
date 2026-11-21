@@ -131,7 +131,9 @@ async function compile(rawDir, store, opts = {}) {
   const minKq = Number.isFinite(Number(opts.minKq)) ? Number(opts.minKq) : 0.40;
   if (!fs.existsSync(rawDir)) return stats;
 
-  const files = walkMarkdown(rawDir, []);
+  const files = Array.isArray(opts.files)
+    ? opts.files.filter(f => String(f).toLowerCase().endsWith('.md') && fs.existsSync(f))
+    : walkMarkdown(rawDir, []);
   const db = store._getDb();
   let dirty = false;
 
@@ -208,4 +210,4 @@ async function compile(rawDir, store, opts = {}) {
   return stats;
 }
 
-module.exports = { compile, parseFrontmatter, deriveEntityId, inferType, TYPE_BY_DIR };
+module.exports = { compile, parseFrontmatter, deriveEntityId, inferType, TYPE_BY_DIR, walkMarkdown };
