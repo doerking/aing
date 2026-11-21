@@ -9,7 +9,13 @@ const DEFAULTS = {
   sprout: { floor: 2, cap: 4 },
   conservation: { band: [0.8, 1.5] },
   hubTrim: { degreeCap: 8, weakBelow: 5 },
-  kernel: { stagnantAfter: 3, inhibitHours: 1 }
+  kernel: { stagnantAfter: 3, inhibitHours: 1 },
+  // KESPI 消费者阈值（2026-11-21 集中；SPEC-3.4 扩展）——原散落三处硬编码：
+  //   promoteMin  field-promote 提升门槛 0.55
+  //   geneMin     evolution-team 基因候选门槛 0.45（SPEC-1.12 修订 A，真库均值≈0.46）
+  //   redZone     self-optimize 红区 0.45
+  //   greenZone   self-optimize 绿区 0.60
+  kespi: { promoteMin: 0.55, geneMin: 0.45, redZone: 0.45, greenZone: 0.60 }
 };
 
 const KNOB_PATHS = [
@@ -17,7 +23,8 @@ const KNOB_PATHS = [
   'sprout.floor', 'sprout.cap',
   'conservation.band',
   'hubTrim.degreeCap', 'hubTrim.weakBelow',
-  'kernel.stagnantAfter', 'kernel.inhibitHours'
+  'kernel.stagnantAfter', 'kernel.inhibitHours',
+  'kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone'
 ];
 
 const COMPONENT_MAP = {
@@ -25,7 +32,8 @@ const COMPONENT_MAP = {
   compress: ['compress.inactiveDays', 'compress.minLength'],
   'hub-trim': ['hubTrim.degreeCap', 'hubTrim.weakBelow'],
   conservation: ['conservation.band'],
-  kernel: ['kernel.stagnantAfter', 'kernel.inhibitHours']
+  kernel: ['kernel.stagnantAfter', 'kernel.inhibitHours'],
+  kespi: ['kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone']
 };
 
 function _defaultOf(p) {

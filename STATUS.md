@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 166 档 / 1107 条断言全绿 |
+| 测试 | `npm test` → 167 档 / 1112 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
-- **166 档 / 1107 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **167 档 / 1112 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -241,6 +241,15 @@ status: active
 | # | 任务 | 状态 | spec | 证据 |
 |---|---|---|---|---|
 | 7.1 | 序列号身份 × 派生词发芽面 | ✅ 收口（2026-11-18） | `spec/SPEC-7.1-序列号身份与派生词发芽面.md` | test-7.1-identity-derive 12/12（繁简双形/查询归一/粤语拆解/strand+metabolized_at/future→past 拒边/一次加标签/单圈 21 步）+ test-7.1b-assemble 7/7（四件齐、源头只取 past 带原始时间、链按 links.created_at 升序、纯读）+ test-7.1c-index-face 7/7（表头不入键/正文入键/繁简互打/粤普互打/序列号路只认 id/弱 related 不进慢回忆）+ test-7.1d-identity 5/5（序列号 e-YYYYMMDD-NNNN + 号段账本不回收/标题派生/指纹去重/同号拒写）+ test-7.1e-yue 11/11（九条真实粤语问句可转普通话、非粤语不乱猜）+ test-7.1f-sprout-degree 5/5（sprout 只数强候选边/variants/死胡同分布/提升后仍进发芽面/对象形证据）+ test-7.1g-expansion 3/3（扩展 ≤3、权重递减、原词优先）+ test-7.1h-rounds 8/8（单轮全绿/上轮产物过一轮即标记/新产物落 future/已标记产物不再进蒸馏/两轮产物数不增/重跑标记不变/稳态轮实体零增长/边按配额有界增长）+ test-7.1i-distill-stock 4/4（旧行不动/产物落 future/past→future 加工边/重跑不重写产物）+ test-8.1-adapter 4/4（只有插排碰 sql.js/接口独立读写/未接引擎显式报错/换引擎不改上层）+ test-8.2-hard-gates 7/7（入库保原始时间/迁移拒无时间行并复核/库层触发器拒 future→past 的 INSERT 与 UPDATE/past→future 放行）+ test-7.1j-migration-idempotent 3/3（schema 迁移两趟快照一致/别名映射不变/旧库第二趟拒且目标不动，护栏）+ test-7.1k-synonym-expansion 5/5（同义词可查/别名上限≤4/无关词不乱扩/写盘→落盘端到端/找东西→检索）+ test-7.1l-field-weight 4/4（正文命中权重高于标签命中/标签仍可召回不归零/正文命中排前/TAG_WEIGHT<1 可解释）+ test-7.1m-dedupe-twins 3/3（同基名镜像只占一个名次/让出槽位给不同内容/被折叠 id 记 mergedIds）；`src/{derive,assemble,identity,retrieval,sprout-report}.js`、`data/lexicon/{zh-variant,yue-morph}.json`；修 field-promote 三处（闸读边层口径 / 证据对象形 / 提升落 hydrogen-bond@7）并接进 field-maintain；实测：冻结评测集 R@10 77.5%→85.6%（paraphrase 63.8→74.5%、粤语 74.0→86.0%）；真库副本跑一轮后关键词死胡同 92/92→30/92、中位 0→2、p90 0→8；AC-17 已收口（orchestrator 每轮开局收产物清单、本轮全绿即 markMetabolized；insight-extract 落 future；distill 只处理 past 源、产物落 future；reconcile 不为 future 建镜像）；AC-19 已落地（distill 旧行只翻状态、镜像落 future、建 past→future derived 边、产物行只读）；插排 AC-8.1 已收口（src/db-adapter.js 唯一碰 sql.js，arch-lint C6 守）；AC-18 落成库层触发器（INSERT/UPDATE 都拦 future→past）；AC-20 落地（insertEntity 保留原始时间；迁移拒收无时间行并逐行复核）；AC-8 迁移幂等已锁；同义/别名扩展层落地（data/lexicon/zh-synonym.json，查询侧、仍受 ≤3 扩展上限）：冻结集 R@10 85.6→86.9%、nDCG@10 73.5→74.1%、正负名次差 85.0→86.3%、粤语 86.0→90.0%、改述 75.5→77.7%（负例命中率 32.5→33.8% 是 top10 变宽，名次差同涨 1.3 说明排序变好）；评测指标加 nDCG@10 + 正负名次差。字段权重落地（正文命中满分、仅标签命中 ×TAG_WEIGHT=0.6，排序永远正文在前）：冻结集不动（评测标签只有 eval，无泛标签可压），真库副本上只靠标签抢位的条目 top10 59/240→55/240；镜像孪生按 id 基名折叠（raw-x / x / wiki-x 只留名次最高一份，mergedIds 可解释；不按正文指纹折，避免吞掉独立条目）：真库副本 top10 标签抢位 59→55（22.9%），冻结集 R@10 86.9% 不变。AC-1/2 主体补落地（2026-11-18）：title 独立成列（正文派生、永不入键；老库回填 name→title）、name 降为序列号副本、reviseEntity 修订走新序列号 + 旧档 invalid_at/invalid_reason 指新号（同内容不新开号）、会话卡 title 取话题/正文首句不裸露 sessionId 与时间戳；显示层 memo/predict/retention/trajectory/recycle/maintenance-report 一律 title 优先、回落 name；test-7.1n-identity-title 6/6；判读集与冻结集不变（词面面不含 name/title）。AC-7 补落地（2026-11-18）：发芽度报告工具 tools/sprout-report.js（默认真库副本、--keywords/--json/--top，纯读源库不动）+ hub 警戒线（单关键词 sprout ≥ max(5, 实体数×20%) 只报不扩）+ 实体级 hub（被 ≥3 个关键词触达的实体单列）；真库读数：93 词 / 死胡同 68 / 中位 0 / p90 2 / 最大 4（发芽面近乎为空，强候选边太少），无词级 hub，实体级 hub 直指 skill-registry 卡（被 9 个词触达）；test-7.1o-sprout-hub 8/8。AC-12 收口（2026-11-18）：扩展改为整句共用名额池（≤3 条，按词轮转分配：单词吃到 3、三词各 1），且只有短/模糊查询才触发（CJK ≤8 字且词数 ≤3）；繁简/粤普归一不算扩展、不占名额；组内去重、原词恒首位、权重递减不变；test-7.1p-expansion-cap 5/5；判读集 17/19/.778 与冻结集 P@10 11.6%/R@10 98.5% 逐位不变。 AC-9/13 补护栏（2026-11-18）：data/lexicon/README.md 逐个登记三份词典的用途/出处/许可（含引入外部词典的规矩与候选来源许可），test-7.1q-lexicon-provenance 5/5（每份 _meta 齐 / README 列名 / 抽词器确定性 / 生成器与发芽链无网络·子进程·GPU 调用 / 词典只从仓内读）。SPEC-7.1 全部 AC 收口。**M7 收口复核（2026-11-18，hana）**：AC-1~AC-17 逐条对到绿断言（7.1/7.1b~7.1r、8.1、8.2 共 19 档），三条裁定见 §七 D16——① 存量旧档不重写 name（只追加），题头一律落 title；② 余下四条旧导入路径（compile/api-gate/capability-narrative/recycle）仍写 name=题头，登记偏离、不属本轮（distill/meko-field/import 三处产物 title 已补，见 §七 D16）；③ §七.1 的 alias 列不实施，旧 id 原地充当序列号（等价形态）。本轮补的真缺口：`migrateFrom` 之前只搬 name 不搬 title，旧库迁入后 title 全空——已修（旧 title 优先、缺了回落旧 name），护栏 test-7.1r-identity-closeout 5/5。 |
+
+## 五·补五 M8 引擎面收口 + 阈值单源（2026-11-21）
+
+> **2026-11-21 owner 拍板**：默认引擎切 `nodesqlite`。同日吸收技能校样台三套思路（Matt Pocock / Addy Osmani / Pstack），取「路由器 + 带数字的约束 + 盘问留痕」三件，其中「带数字的约束」落成本节阈值单源。
+
+| # | 任务 | 状态 | spec | 证据 |
+|---|---|---|---|---|
+| 8.5 | 引擎负载对比工具 + 默认引擎切 nodesqlite | ✅ 收口（2026-11-21） | `spec/SPEC-8-存储插排与分仓搭线.md` §一 | `tools/engine-load.js`（测量工具，非门禁）+ `docs/Engineering/ENGINE-LOAD-2026-11-21.md`；真库副本同负载 2 轮代谢 + 检索查询：峰值 RSS 221.8 vs 295.4 MB（-25%）、开库 7 vs 70 ms（10x）、查询 p50 33 vs 30 ms（持平）、轮耗时 2406/1884 vs 1973/1565 ms（sqljs -20%）、写放大 WAL ~4.1 MB vs 24 次整库覆写 ≈138 MB（~30x）；`src/db-adapter.js` 默认 `'sqljs'`→`'nodesqlite'`；test-6.12 强制 sqljs（测 sqljs 专属持久化语义）、test-3.12b AC-5 改引擎感知、test-1.1 与 tools/sprout-report.js cleanup 补 `store._close()` |
+| 8.6 | KESPI 消费者阈值单源（SPEC-3.4 扩展） | ✅ 收口（2026-11-21） | `spec/SPEC-3.4-离散旋钮单源.md` | **收前**：四个阈值散落三处硬编码——`field-promote.js` `KESPI_MIN=0.55`、`evolution-team.js` `overall >= 0.45`、`self-optimize.js` `ZONES={red:0.45,green:0.60}`；**收后**：集中进 `src/config-runtime.js` `DEFAULTS.kespi`，四组件经 `getKnob` 取值，库内 config 表可覆盖；旋钮 9→13（C10d 动态计数）；test-3.4b-kespi-knobs 5/5（默认值单源 / 改旋钮真变行为：promoteMin 0.55→0.40 使 overall 0.50 嘅实体 `kinds` 多入 `kespi`、调返默认即返原行为 / 三组件唔硬编码 / `resolveOptions('kespi')` 四件齐） |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 

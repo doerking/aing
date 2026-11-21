@@ -6,8 +6,10 @@
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
 const crypto = require('crypto');
+const { getKnob, DEFAULTS } = require('./config-runtime.js');
 const ACCESS_DAYS = 30;
-const KESPI_MIN = 0.55;
+// KESPI 提升门槛单源喺 config-runtime（SPEC-3.4 扩展）；呢度只留静态缺省供导出与文档引用
+const KESPI_MIN = DEFAULTS.kespi.promoteMin;
 
 function _id(prefix) { return prefix + '-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex'); }
 function _base(id) { return id.startsWith('raw-') ? id.slice(4) : id; }
@@ -84,7 +86,8 @@ async function evidenceFor(store, entityId) {
   }
 
   const k = _scalar(db, 'SELECT overall FROM kespi_scores WHERE entity_id = ?', [entityId]);
-  if (k && k.overall != null && Number(k.overall) >= KESPI_MIN) kinds.push('kespi');
+  const min = getKnob(store, 'kespi.promoteMin');
+  if (k && k.overall != null && Number(k.overall) >= min) kinds.push('kespi');
 
   return { kinds, count: kinds.length };
 }
