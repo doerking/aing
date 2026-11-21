@@ -22,12 +22,14 @@ const PATHS = ['kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.gree
   const dbPath = path.join(yard, 'knowledge.db');
   await store.init(dbPath);
 
-  // AC-1 四阈值进单源，默认值 0.55 / 0.45 / 0.45 / 0.60
+  // AC-1 四阈值进单源，默认值 0.55 / 0.62 / 0.45 / 0.60
+  // geneMin 0.45→0.62（owner 2026-11-21 拍板，p75 口径）：原 0.45 低于真库中位 0.51，
+  // 让 83.9% 实体过线、基因候选闸近乎全开（docs/Engineering/KESPI-CALIBRATE-2026-11-21.md）
   const vals = PATHS.map(p => {
     try { return C.getKnob(store, p); } catch (_) { return null; }
   });
   ac('AC-1 KESPI 阈值默认值单源',
-    JSON.stringify(vals) === JSON.stringify([0.55, 0.45, 0.45, 0.60]),
+    JSON.stringify(vals) === JSON.stringify([0.55, 0.62, 0.45, 0.60]),
     JSON.stringify(vals));
 
   // AC-2 改真变行为：promoteMin 调低 → 原本进唔到 kespi 证据嘅实体进得来
@@ -60,7 +62,7 @@ const PATHS = ['kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.gree
   // AC-4 resolveOptions('kespi') 三面同构
   const opts = C.resolveOptions(store, 'kespi');
   ac('AC-4 组件映射齐四件',
-    opts.promoteMin === 0.55 && opts.geneMin === 0.45 && opts.redZone === 0.45 && opts.greenZone === 0.60,
+    opts.promoteMin === 0.55 && opts.geneMin === 0.62 && opts.redZone === 0.45 && opts.greenZone === 0.60,
     JSON.stringify(opts));
 
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;

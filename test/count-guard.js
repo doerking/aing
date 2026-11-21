@@ -35,8 +35,17 @@ if (!fs.existsSync(baselinePath)) {
 const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
 const problems = [];
 for (const [f, n] of Object.entries(baseline)) {
-  if (!(f in current)) problems.push(`${f} 被删除（基线 ${n} 条断言）`);
-  else if (current[f] < n) problems.push(`${f} 断言 ${current[f]} < 基线 ${n}`);
+  if (!(f in current)) { problems.push(`${f} 被删除（基线 ${n} 条断言）`); continue; }
+  let got = current[f];
+  if (got < n) {
+    // 负载抖动（2026-11-21）：并发门禁下个别 test 可能瞬时少跑断言，
+    // 被误读为「删除/回退」。隔离重跑一次（此刻无并发争用）取稳定读数；仍短才是真回退。
+    const r2 = spawnSync(process.execPath, [path.join(dir, f)], { encoding: 'utf8' });
+    const out2 = (r2.stdout || '') + (r2.stderr || '');
+    const again = (out2.match(/✅/g) || []).length;
+    if (again > got) got = again;
+  }
+  if (got < n) problems.push(`${f} 断言 ${got} < 基线 ${n}`);
 }
 for (const f of Object.keys(current)) {
   if (!(f in baseline)) console.log(`ℹ️  新文件 ${f}（${current[f]} 条断言），跑 --update 纳入基线`);

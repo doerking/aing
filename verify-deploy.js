@@ -289,11 +289,13 @@ gate('C18', '随包依赖不虚报（编组齐 + 依赖声明一致）', () => {
 });
 
 // C19 门禁计数单源
-gate('C19', '门禁计数单源（文档数字 = 验收器真值）', () => {
-  const run = runNode('test/run-all.js');
-  const fm = run.out.match(/----- (\d+) 档 \/ 断言 (\d+) 绿/);
-  if (!fm) return { ok: false, detail: 'run-all 无计数行' };
-  const files = Number(fm[1]); const asserts = Number(fm[2]);
+// 2026-11-21 修订（owner 拍板）：计数真值改为 baseline.json，唔再 parse run-all 子进程输出。
+// 原写法在全量并发（33 项）下会抖：CPU 争用令个别 test 断言数瞬减 → C1/C2/C19 同红。
+// 现实对账（run-all 真跑出几多）系 C1 与 C2 嘅职责；C19 只管文档 ↔ 基线一致。
+gate('C19', '门禁计数单源（文档数字 = 基线真值）', () => {
+  const base = JSON.parse(fs.readFileSync(path.join(root, 'test', 'baseline.json'), 'utf8'));
+  const files = Object.keys(base).length;
+  const asserts = Object.values(base).reduce((a, b) => a + b, 0);
   const docs = ['STATUS.md', 'AGENT.md'].map(f => ({ f, text: fs.readFileSync(path.join(root, f), 'utf8') }));
   const bad = [];
   for (const d of docs) {
@@ -301,9 +303,6 @@ gate('C19', '门禁计数单源（文档数字 = 验收器真值）', () => {
       if (Number(m[1]) !== files || Number(m[2]) !== asserts) bad.push(`${d.f}: ${m[1]}/${m[2]}`);
     }
   }
-  const base = JSON.parse(fs.readFileSync(path.join(root, 'test', 'baseline.json'), 'utf8'));
-  const sum = Object.values(base).reduce((a, b) => a + b, 0);
-  if (sum !== asserts) bad.push(`baseline 合计 ${sum} ≠ ${asserts}`);
   return { ok: bad.length === 0, detail: bad.length ? bad.join('; ') : `${files} 档 / ${asserts} 条，文档与基线三处一致` };
 });
 

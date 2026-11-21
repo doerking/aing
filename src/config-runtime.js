@@ -12,10 +12,11 @@ const DEFAULTS = {
   kernel: { stagnantAfter: 3, inhibitHours: 1 },
   // KESPI 消费者阈值（2026-11-21 集中；SPEC-3.4 扩展）——原散落三处硬编码：
   //   promoteMin  field-promote 提升门槛 0.55
-  //   geneMin     evolution-team 基因候选门槛 0.45（SPEC-1.12 修订 A，真库均值≈0.46）
+  //   geneMin     evolution-team 基因候选门槛 0.62（owner 2026-11-21 推高；原 0.45 低于真库中位 0.51、
+  //               让 83.9% 实体过线，闸近乎全开；现取 p75 口径 0.62，只留约 25% 头部）
   //   redZone     self-optimize 红区 0.45
   //   greenZone   self-optimize 绿区 0.60
-  kespi: { promoteMin: 0.55, geneMin: 0.45, redZone: 0.45, greenZone: 0.60 }
+  kespi: { promoteMin: 0.55, geneMin: 0.62, redZone: 0.45, greenZone: 0.60 }
 };
 
 const KNOB_PATHS = [
