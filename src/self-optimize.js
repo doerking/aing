@@ -89,6 +89,11 @@ function scanTickets(store, opts = {}) {
   const persist = opts.persist !== false;
   const max = Number.isInteger(opts.maxTickets) && opts.maxTickets > 0 ? opts.maxTickets : MAX_TICKETS;
   const redZone = getKnob(store, 'kespi.redZone');
+  // SPEC-6.8 修订 A：greenZone「绿区自动毕业」闸（opt-in）。实体 overall ≥ greenZone → 毕业，
+  // 唔开任何维度工单。真库量过：101 个 overall≥0.60 实体，但 13 个 ticket 候选全部 overall<0.60
+  // （kq-low/kd-cited 本身拖低 overall）——闸对真库 0 影响，但系正确语义，由 owner 按需开。
+  const greenZoneGate = Number(getKnob(store, 'kespi.greenZoneGate')) || 0;
+  const greenZone = Number(getKnob(store, 'kespi.greenZone')) || 0;
   const scores = _latestScores(db);
   const scoreById = new Map(scores.map(r => [String(r.entity_id), r]));
   const open = _openKeys(db);
@@ -111,6 +116,7 @@ function scanTickets(store, opts = {}) {
 
   for (const s of scores) {
     const entityId = String(s.entity_id);
+    if (greenZoneGate > 0 && greenZone > 0 && Number(s.overall) >= greenZone) continue;
     for (const dim of DIM_NAMES) {
       const rule = DIM_RULES[dim];
       const v = s[dim] == null ? null : Number(s[dim]);

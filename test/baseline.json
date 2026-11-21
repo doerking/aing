@@ -145,6 +145,7 @@
   "test-6.6b-insight-names.js": 4,
   "test-6.7-access-events.js": 8,
   "test-6.8-self-optimize.js": 8,
+  "test-6.8b-greenzone.js": 4,
   "test-6.9-scaffold-port.js": 8,
   "test-6.9b-starlink-wiring.js": 8,
   "test-6.9c-kespi-readers.js": 4,

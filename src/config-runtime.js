@@ -18,7 +18,7 @@ const DEFAULTS = {
   //               让 83.9% 实体过线，闸近乎全开；现取 p75 口径 0.62，只留约 25% 头部）
   //   redZone     self-optimize 红区 0.45
   //   greenZone   self-optimize 绿区 0.60
-  kespi: { promoteMin: 0.55, geneMin: 0.62, redZone: 0.45, greenZone: 0.60 }
+  kespi: { promoteMin: 0.55, geneMin: 0.62, redZone: 0.45, greenZone: 0.60, greenZoneGate: 0 }
 };
 
 const KNOB_PATHS = [
@@ -28,7 +28,7 @@ const KNOB_PATHS = [
   'conservation.band',
   'hubTrim.degreeCap', 'hubTrim.weakBelow',
   'kernel.stagnantAfter', 'kernel.inhibitHours',
-  'kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone'
+  'kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone', 'kespi.greenZoneGate'
 ];
 
 const COMPONENT_MAP = {
@@ -38,7 +38,7 @@ const COMPONENT_MAP = {
   'hub-trim': ['hubTrim.degreeCap', 'hubTrim.weakBelow'],
   conservation: ['conservation.band'],
   kernel: ['kernel.stagnantAfter', 'kernel.inhibitHours'],
-  kespi: ['kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone']
+  kespi: ['kespi.promoteMin', 'kespi.geneMin', 'kespi.redZone', 'kespi.greenZone', 'kespi.greenZoneGate']
 };
 
 function _defaultOf(p) {
