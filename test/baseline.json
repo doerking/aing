@@ -55,7 +55,7 @@
   "test-3.2-control-plane.js": 8,
   "test-3.4-config-runtime.js": 5,
   "test-3.4b-kespi-knobs.js": 5,
-  "test-3.4c-gate-load.js": 3,
+  "test-3.4c-gate-load.js": 4,
   "test-3.5-auto-ingest.js": 6,
   "test-3.6-api-gate.js": 5,
   "test-3.7-gates-c0-c9.js": 3,

@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 168 档 / 1115 条断言全绿 |
+| 测试 | `npm test` → 168 档 / 1116 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
-- **168 档 / 1115 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **168 档 / 1116 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -251,7 +251,7 @@ status: active
 | 8.5 | 引擎负载对比工具 + 默认引擎切 nodesqlite | ✅ 收口（2026-11-21） | `spec/SPEC-8-存储插排与分仓搭线.md` §一 | `tools/engine-load.js`（测量工具，非门禁）+ `docs/Engineering/ENGINE-LOAD-2026-11-21.md`；真库副本同负载 2 轮代谢 + 检索查询：峰值 RSS 221.8 vs 295.4 MB（-25%）、开库 7 vs 70 ms（10x）、查询 p50 33 vs 30 ms（持平）、轮耗时 2406/1884 vs 1973/1565 ms（sqljs -20%）、写放大 WAL ~4.1 MB vs 24 次整库覆写 ≈138 MB（~30x）；`src/db-adapter.js` 默认 `'sqljs'`→`'nodesqlite'`；test-6.12 强制 sqljs（测 sqljs 专属持久化语义）、test-3.12b AC-5 改引擎感知、test-1.1 与 tools/sprout-report.js cleanup 补 `store._close()` |
 | 8.6 | KESPI 消费者阈值单源（SPEC-3.4 扩展） | ✅ 收口（2026-11-21） | `spec/SPEC-3.4-离散旋钮单源.md` | **收前**：四个阈值散落三处硬编码——`field-promote.js` `KESPI_MIN=0.55`、`evolution-team.js` `overall >= 0.45`、`self-optimize.js` `ZONES={red:0.45,green:0.60}`；**收后**：集中进 `src/config-runtime.js` `DEFAULTS.kespi`，四组件经 `getKnob` 取值，库内 config 表可覆盖；旋钮 9→13（C10d 动态计数）；test-3.4b-kespi-knobs 5/5（默认值单源 / 改旋钮真变行为：promoteMin 0.55→0.40 使 overall 0.50 嘅实体 `kinds` 多入 `kespi`、调返默认即返原行为 / 三组件唔硬编码 / `resolveOptions('kespi')` 四件齐） |
 
-| 8.7 | KESPI 阈值校准测量工具 + 真库读数 | ✅ 收口（2026-11-21） | `docs/Engineering/KESPI-CALIBRATE-2026-11-21.md` | `tools/kespi-calibrate.js`（测量工具，非门禁）；真库 322 行：注释声明 overall p25 0.46 / p50 0.51 / p90 0.71 **逐位吻合（差 0）**，阈值为数据校准非拍脑袋；四个阈值落点：promoteMin 0.55 过线 114/322（35.4%）、geneMin 0.45 过线 270/322（**83.9%，低于中位 0.51、闸近乎全开**）、redZone 0.45 逐维比对、greenZone 0.60 过线 106/322（32.9%，**声明但未入逻辑**）；另记 kg/km/kb 三列恒 0、kc 恒 0.5、kr 恒 1（五维里实际起分辨作用的只有 kq 与 ka）——**改数系 owner 拍板，阈值已系旋钮，改库内 config 表即可** |
+| 8.7 | KESPI 阈值校准测量工具 + 真库读数 | ✅ 收口（2026-11-21） | `docs/Engineering/KESPI-CALIBRATE-2026-11-21.md` | `tools/kespi-calibrate.js`（测量工具，非门禁）；真库 322 行：注释声明 overall p25 0.46 / p50 0.51 / p90 0.71 **逐位吻合（差 0）**，阈值为数据校准非拍脑袋；四个阈值落点：promoteMin 0.55 过线 114/322（35.4%）、geneMin 0.45 过线 270/322（**83.9%，低于中位 0.51、闸近乎全开**）、redZone 0.45 逐维比对、greenZone 0.60 过线 106/322（32.9%，**声明但未入逻辑**）；另记 kg/km/kb 三列**系刻意 NULL 占位**（kespi upsert 直写 NULL，五维实际 = `[kq,ka,kd,kc,kr]`，test-1.12/test-6.8 已锁）、真起分辨作用的只有 kq 与 ka、kd 大部分为 0、kc 恒 0.5、kr 恒 1——本工具早期版用 `Number(null)→0` 把 NULL 误读成「恒 0、评分口径问题」，已修（NULL 单独计数）＋ test-3.4c AC-4 锁**——**改数系 owner 拍板，阈值已系旋钮，改库内 config 表即可** |
 | — | 门禁自身负载抖动 → **已修（2026-11-21）** | ✅ 收口 | `test/test-3.4c-gate-load.js` | 同一份工作树，`node test/run-all.js` 直接跑稳定（输出 `----- 167 档 / 断言 1112 绿 / 0 红 -----`）；同一份 verify-deploy 全量跑（33 项并发）时 **C1/C2/C19 一度同红**，run-all 子进程报 1107（少 5，恰系新增 test-3.4b 嘅断言数），单独 `VD_ONLY=C19` 隔离跑即绿。系 C19 启 run-all 子进程时 CPU 争用导致个别 test 断言数减少，非代码回归。**owner 拍板已落地**：C19 计数对账改 **baseline.json 单源**（唔再 parse 子进程输出；现实对账系 C1/C2 职责）+ count-guard 补短档隔离重跑（避免瞬时少跑被误读为删除）；test-3.4c-gate-load 3/3 锁 |
 
 | 8.8 | geneMin 推高至 0.62 + 门禁计数 baseline 单源（owner 2026-11-21 拍板） | ✅ 收口 | `docs/Engineering/KESPI-CALIBRATE-2026-11-21.md` | ① `kespi.geneMin` 0.45→0.62（p75 口径）：真库过线 270/322（83.9%）→ **103/322（32.0%）**，基因候选闸由近乎全开改为真筛；改 `config-runtime.js` 一处，test-3.4b 锁默认值。② C19 计数对账改 **baseline.json 单源**（唔再 parse run-all 子进程输出；现实对账归 C1/C2），count-guard 补短档隔离重跑（防瞬时少跑被误读为删除）；test-3.4c-gate-load 3/3 锁；修后连跑两轮 verify-deploy 均 33 项 ALL GREEN |
