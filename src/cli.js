@@ -62,6 +62,13 @@ async function cmdCompile(dbPath, opts = {}) {
   return compile(String(opts.dir), s, { quality: opts.quality === true });
 }
 
+// SPEC-3.14 修订 B：search-and-ingest——query 拆词评分源档，选 top-N ≥ threshold，经 compile(files) 入库
+async function cmdSearchIngest(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { searchIngest } = require('./search-ingest.js');
+  return searchIngest(s, opts);
+}
+
 async function cmdBoard(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { boardOf } = require('./ticket-board.js');
@@ -151,6 +158,7 @@ function usage() {
     '  node src/cli.js dispatch-card --file <ticket.json> [--snapshot <path>] [--json]',
     '  node src/cli.js ingest --payload <json>',
     '  node src/cli.js compile --dir <path>   # SPEC-3.14 修订 A：batch-ingest（markdown 知识档 → 实体，幂等）',
+    '  node src/cli.js ingest-search --query "..." --source <dir> [--top N] [--threshold x]   # SPEC-3.14 修订 B：search-and-ingest',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
     '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]',
@@ -208,6 +216,14 @@ async function main(argv) {
       console.log(flags.json ? JSON.stringify(out, null, 2) : `compile scanned=${out.scanned} created=${out.created} updated=${out.updated} skipped=${out.skipped} rejected=${out.rejected}`);
       return 0;
     }
+    if (cmd === 'ingest-search') {
+      const query = flags.query && flags.query !== true ? String(flags.query) : '';
+      const source = flags.source && flags.source !== true ? String(flags.source) : '';
+      if (!query || !source) { usage(); return 2; }
+      const out = await cmdSearchIngest(dbPath, { query, source, top: flags.top, threshold: flags.threshold });
+      console.log(flags.json ? JSON.stringify(out, null, 2) : `ingest-search scanned=${out.scanned} matched=${out.matched} ingested=${out.ingested} skipped=${out.skipped} rejected=${out.rejected}`);
+      return 0;
+    }
     if (cmd === 'board') {
       const out = await cmdBoard(dbPath, { limit: flags.limit ? Number(flags.limit) : undefined });
       console.log(flags.json ? JSON.stringify(out, null, 2) : (out.lines || []).join(String.fromCharCode(10)));
@@ -246,4 +262,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdSearchIngest, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };

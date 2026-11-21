@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 173 档 / 1138 条断言全绿 |
+| 测试 | `npm test` → 174 档 / 1142 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
-- **173 档 / 1138 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **174 档 / 1142 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -263,6 +263,7 @@ status: active
 
 | 8.12 | greenZone「绿区自动毕业」闸（opt-in）+ 自优化闭环诊断 | ✅ 收口 | `spec/SPEC-6.8-自优化闭环-误差工单到场域动作.md` 修订 A | 新增旋钮 `kespi.greenZoneGate`（默认 0 关，旋钮 14→15）：实体 overall ≥ `kespi.greenZone`（0.60）→ 毕业，唔开任何维度工单。**量过（先量后改）**：真库 101 个 overall≥0.60 实体，但 13 个 ticket 候选（kq-low/kd-cited）**全部 overall<0.60**——闸对真库 0 影响，但系正确语义，opt-in 由 owner 按需开。**同轮诊断**：自优化闭环结构性「空转」而非「坏」——① kc 恒 0.5/1.0（新鲜重算 0.5:236/1:86，**kc<0.40 恒 0**）→ reconcile 永不触发；② kd<0.30 有 272 实体，但 264 个 inStrong<2（无人强引用，跳过系正确——唔系被引用唔使催化），8 个 → slot（被引用唔催化，P3 提案），**0 个 rebond 资格**；③ 全部 ticket 去 `proposed`（slot），等外部寄生槽领走。即「0 verified」系**设计内空转**（field-action 侧退化、提案侧等外接），唔系 bug；真库 kespi_scores 曾陈旧（D21 后未重算，重算后 86 实体 kc=1.0）。test-6.8b-greenzone 4/4（旋钮默认 0 / 闸关两个都开票 / 闸开 green 毕业唔开票 / greenZone=0 闸无效）；test-6.8 8/8 保（默认关）；172 档/1134 断言全绿 + 33 项 ALL GREEN |
 | 8.13 | batch-ingest 落地（D14 第 1 项）：cli.js compile | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 A | **发现**：`src/compile.js` 嘅 `compile()` 本身就系 batch-ingest（walk 目录 → frontmatter → 实体 upsert → compile_audit，幂等按 id 去重）——按「唔另起平行机制」纪律，batch-ingest = 暴露 `cli.js compile --dir`（唔新造）。新增 `cmdCompile` 接线 + usage + main 分发；复用 `compile(rawDir, store, {quality})`，唔改 compile 本体。test-3.14b-cli-compile 4/4（cmdCompile 已暴露 / 建实体 + frontmatter 解析（type/tags/name）/ 幂等重跑 skipped / compile_audit 留痕）；173 档/1138 断言全绿 + 33 项 ALL GREEN |
+| 8.14 | search-and-ingest 落地（D14 第 2 项）：cli.js ingest-search | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 B | query 拆词（len>=2）评分源档（name+type+tags+content 命中占比），选 top-N ≥ threshold（默认 0.5/5），经 `compile(source, store, {files})` 入库——**复用 compile 管线**（gate/upsert/compile_audit/幂等），唔另起平行入库机制。compile 扩展 `opts.files`（绝对路径数组，`Array.isArray` 判——空数组=处理零档，否则 walk 全目录）。新增 `src/search-ingest.js`（searchIngest/searchableText/scoreText）+ `cmdSearchIngest` 接线。test-3.14c-search-ingest 4/4（cmdSearchIngest 已暴露 / 评分选档入库（rel-a 入、rel-b/unrelated 唔入）/ 幂等重跑 skipped / 高阈值零入库）；174 档/1142 断言全绿 + 33 项 ALL GREEN |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 

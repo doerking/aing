@@ -88,3 +88,26 @@ upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
 
 - `cmdCompile(dbPath?, {dir, quality}) -> {scanned, created, updated, skipped, rejected, tagsDropped, auditId}`
 - 文件读取只喺 cli 层（SPEC-3.15）；compile 本体保持纯库。
+
+---
+
+## 修订 B · search-and-ingest（2026-11-21）
+
+> 缘起：D14 第 2 项。语义：query 拆词（len>=2）评分源档（name+type+tags+content 命中占比），
+> 选 top-N ≥ threshold，经 `compile(source, store, {files})` 入库——**复用 compile 管线**
+> （gate/upsert/compile_audit/幂等），唔另起平行入库机制。
+
+### 修订 B 行为
+
+- `node src/cli.js ingest-search --query "..." --source <dir> [--top N] [--threshold x] [--json]`
+- 评分：`score = 命中词数 / 总词数`（全小写；可检索文本 = name + type + tags + content）。
+- 选档：`score >= threshold`（默认 0.5）→ 按 score 降序（同分按档名）→ top-N（默认 5）。
+- 入库：`compile(source, store, {files: 选中档绝对路径})`——幂等、逐档 gate、audit 留痕。
+- 返回：`{query, terms, threshold, top, scanned, scored, matched, ingested, updated, skipped, rejected, selected[], compile}`。
+
+### 修订 B 契约
+
+- `cmdSearchIngest(dbPath?, {query, source, top, threshold}) -> 上述回执`
+- **compile 扩展**：`opts.files`（绝对路径数组）提供时只处理呢啲档（filter .md + 存在）；
+  **空数组 = 处理零档**（`Array.isArray` 判，唔用 `.length`——否则空数组误判为「无选项」而 walk 全目录）；
+  未提供时 `walkMarkdown` 照旧。`walkMarkdown` 由 compile.js 导出（复用）。
