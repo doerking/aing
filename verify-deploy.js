@@ -275,7 +275,9 @@ gate('C18', '随包依赖不虚报（编组齐 + 依赖声明一致）', () => {
   for (const f of fs.readdirSync(path.join(root, 'src')).filter(x => x.endsWith('.js'))) {
     const text = fs.readFileSync(path.join(root, 'src', f), 'utf8');
     for (const m of text.matchAll(/require\(\s*['"]([^'".][^'"]*)['"]\s*\)/g)) {
-      const id = m[1].startsWith('node:') ? m[1].slice(5) : m[1].split('/')[0];
+      // node: 前缀一律内建（sqlite 等实验内建不在 builtinModules 全列里）；npm 依赖才进声明面
+      if (m[1].startsWith('node:')) continue;
+      const id = m[1].split('/')[0];
       if (!require('module').builtinModules.includes(id)) used.add(id);
     }
   }

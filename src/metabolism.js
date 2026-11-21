@@ -103,9 +103,10 @@ function buildDefaultSteps(ids = DEFAULT_STEPS) {
         // compile 的历史签名为 (rawDir, store)，其余步骤为 (store, opts)
         if (spec.argStyle === 'dir-store') {
           const rawDir = ctx.rawDir || process.env.AING_RAW || require('path').join(__dirname, '..', 'raw');
-          return fn(rawDir, ctx.store, { round: ctx.round });
+          return fn(rawDir, ctx.store, { round: ctx.round, deadlineAt: ctx.deadlineAt });
         }
-        return fn(ctx.store, { ...(ctx.opts || {}), round: ctx.round, cycleId: ctx.cycleId });
+        // SPEC-1.14 修订 H：deadline 下传——让长步能自己按块自检、主动收口
+        return fn(ctx.store, { ...(ctx.opts || {}), round: ctx.round, cycleId: ctx.cycleId, deadlineAt: ctx.deadlineAt });
       }
     };
   });

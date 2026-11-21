@@ -223,7 +223,16 @@ async function kespiStep(store, opts = {}) {
   const round = resolveRound(store, opts).round;
 
   const ents = [];
-  const es = db.prepare('SELECT * FROM entities WHERE invalid_at IS NULL');
+  const es = db.prepare(
+    opts && opts.incremental
+      // SPEC-1.12 修订 K（增量评分）：只评「脏实体」——无评分行、或实体在评分后被改过 / 被访问过。
+      // updated_at 只在真正的写点维护（compile/distill/field 等）；直接改库不留痕迹面不属于增量口径。
+      ? `SELECT e.* FROM entities e LEFT JOIN kespi_scores k ON k.entity_id = e.id
+         WHERE e.invalid_at IS NULL AND (k.entity_id IS NULL
+           OR (e.updated_at IS NOT NULL AND e.updated_at > COALESCE(k.computed_at, ''))
+           OR (e.last_access IS NOT NULL AND e.last_access > COALESCE(k.computed_at, '')))`
+      : 'SELECT * FROM entities WHERE invalid_at IS NULL'
+  );
   while (es.step()) ents.push(es.getAsObject());
   es.free();
 
@@ -290,7 +299,18 @@ async function kespiStep(store, opts = {}) {
   );
 
   let dirty = false;
-  for (const e of ents) {
+  // SPEC-1.14 修订 H（AC-8）：长步按块自检 deadline——超预算就主动收口，
+  // 已算的照旧落盘（不丢工作），但绝不声称本轮完成。
+  const dl = require('./deadline.js');
+  const deadlineAt = opts && opts.deadlineAt;
+  const ABORT_EVERY = 200;
+  let aborted = false;
+  for (let idx = 0; idx < ents.length; idx++) {
+    const e = ents[idx];
+    if (deadlineAt && idx > 0 && idx % ABORT_EVERY === 0 && dl.expired(deadlineAt)) {
+      aborted = true;
+      break;
+    }
     stats.scanned++;
     const content = String(e.content == null ? '' : e.content);
     const eid = String(e.id);
@@ -351,6 +371,7 @@ async function kespiStep(store, opts = {}) {
 
   upsert.free();
   if (dirty) store._persist();
+  if (aborted) return dl.stepAbort(deadlineAt, { done: stats.scored, total: ents.length, skippedByDeadline: ents.length - stats.scored });
   return stats;
 }
 

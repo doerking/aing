@@ -31,6 +31,27 @@ close()
 ```
 
 - 配置项 `AING_DB_ENGINE=sqljs|node:sqlite|better-sqlite3`（默认 `sqljs`，与当前定量一致）。
+- **修订 A（2026-11-20，node:sqlite 落地）**：`AING_DB_ENGINE=nodesqlite` 实测可用，文件库 + **WAL**：
+  - `db-adapter` 内建 sql.js 句柄兼容层（`prepare/bind/step/getAsObject/reset/free` 面不变），上层 `_getDb()` 的 160 处调用不改动即跑。
+  - `journal_mode=WAL`：提交 = 追加 WAL，不再每次写整库；容量闸改按文件体积判。
+  - `knowledge-store.persist()` 对文件库分支：跳过 export 整库重写（写入已直达库文件），保留写者围栏 / 单写者锁 / 容量闸。
+  - 判据：开库 → 写入 → 杀进程重开 → 数据在；写一次的成本与库体积无关（O(事务) 而非 O(库)）。
+- **修订 A 补充（2026-11-20，自查回填）**：
+  - `exportBytes()` 用 `VACUUM INTO` 临时库读回字节（备份/移植用，不入热路径）；不再报错。
+  - `raw.exec()` 对 SELECT / PRAGMA 返 sql.js 形状 `[{columns, values}]`（部分组件与测试按呢个形状读 `PRAGMA table_info`）；写语句返 `[]`。
+  - 文件库**退出时自动关句柄**（`knowledge-store` 注册唯一 exit 钩子 + 换库重开时先关上一个）：node:sqlite 真持有文件句柄，不关则库文件被锁，Windows 上清临时目录报 EPERM。需中途清目录的代码先 `store._close()`。
+  - **`db-stale`（外部改写检测）在文件库下不适用，属设计而非缺口**：sql.js 整库覆写才会抹掉外部写者；文件库写入是事务追加，不存在整库覆盖，外部写入直接可见。防双写靠 `.lock` 单写者锁 + 库内 `writer_epoch` 围栏（见 SPEC-1.14 §4.3）。
+  - 文件库要求父目录存在；`openFile` 会先 `mkdir -p`（sql.js 是内存库、不碰文件系统，呢个差异只影响 nodesqlite）。
+
+### 1.1 引擎互换安全（修订 B，2026-11-20）
+
+> **触发原因（实测）**：探针跑到一个情形——nodesqlite 关库后 `-wal` 残留（`from-sqljs.db-wal` / `-shm` 仍在），换回 sql.js 读只看到 `-wal` 合并前的行，**追加的那一行丢了**；而 sql.js 落盘时会拿这份残缺读**整库覆写**，丢数据就变成不可逆。触发条件不稳定（重放时关库会自动 checkpoint），所以不定性为「罕见」，按会重现对待。
+
+| # | 铁律 | 落点 |
+|---|---|---|
+| 1 | **关库即收拢**：nodesqlite 关句柄前先 `PRAGMA wal_checkpoint(TRUNCATE)`，数据必进主库文件 | `db-adapter` nodesqlite `close()` |
+| 2 | **不静默丢**：sql.js 开库前若发现非空 `<db>-wal` → 抛 `db-wal-orphan`（另一引擎的 WAL 未合并） | `knowledge-store.init` |
+| 3 | 判据：nodesqlite 写 → 关库 → `-wal` 不存在或 0 字节 → 换回 sql.js 能读到全部行 | `test-8.4-engine-swap-safety` |
 - 已落地（2026-11-17）：`src/db-adapter.js` 是全仓唯一 `require('sql.js')` 的模块；`knowledge-store` 与 `migrate` 都经插排开库。
 - **剩余缝**：`store._getDb()` 仍被约 60 个组件当作 SQL 入口使用（160 处）。它现在只暴露「已由插排开出的句柄」，换引擎仍能跑（句柄内部实现可换）；但要真正做到「上层不认仓」，后续需逐步把它们改走 `all/get/run`，属分仓时再做。
 - 换仓触发点沿用定量文档：库 > 10MB 或 RSS > 150MB 且 search P95 仍达标 → 换 node:sqlite（省堆 6×，查询慢约 11×）。

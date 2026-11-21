@@ -49,9 +49,10 @@ try { A = require('../src/db-adapter.js'); } catch (e) { A = null; }
     bytes && bytes.length > 0 && got2 && got2.v === '甲',
     JSON.stringify({ shapes, missing, got, n: all.length, size: bytes && bytes.length, got2 }));
 
-  // AC-8.1c 未接引擎显式报错（不静默回退 sqljs）
+  // AC-8.1c 未接引擎显式报错（不静默回退 sqljs）。样本用 better-sqlite3（SPEC-8 配置表里仍未接）；
+  // node:sqlite 已于 SPEC-8 修订 A 接入（nodesqlite 别名），不再当样本。
   let threw = null;
-  try { await A.openEmpty({ engine: 'node:sqlite' }); } catch (e) { threw = e.message; }
+  try { await A.openEmpty({ engine: 'better-sqlite3' }); } catch (e) { threw = e.message; }
   let deflt = null;
   try { deflt = A.engineName(); } catch (_) { deflt = null; }
   ac('AC-8.1c 未接引擎显式报错',

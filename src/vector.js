@@ -220,7 +220,14 @@ async function vectorStep(store, opts = {}) {
   selectStmt.free();
 
   let dirty = false;
-  for (const row of rows) {
+  // SPEC-1.14 修订 H（AC-8）：向量重建是最长的一步之一，按块自检 deadline
+  const dl = require('./deadline.js');
+  const deadlineAt = opts && opts.deadlineAt;
+  const ABORT_EVERY = 100;
+  let aborted = false;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (deadlineAt && i > 0 && i % ABORT_EVERY === 0 && dl.expired(deadlineAt)) { aborted = true; break; }
     stats.scanned++;
     const sum = checksum(row);
     getVecStmt.bind([row.id]);
@@ -241,6 +248,7 @@ async function vectorStep(store, opts = {}) {
   getVecStmt.free();
   putStmt.free();
   if (dirty) store._persist();
+  if (aborted) return dl.stepAbort(deadlineAt, { done: stats.indexed + stats.rebuilt, total: rows.length, skippedByDeadline: rows.length - stats.scanned });
   return stats;
 }
 
