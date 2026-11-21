@@ -120,15 +120,16 @@ owner: hana
 
 **拍板**：加文档频次阈值（剔除出现在 ≥某百分比扫描实体嘅词），先写 failing test 锁行为再改。
 
-**落地（commit `cb9489a`）**：新增旋钮 `sprout.docFreqPctMax`（`config-runtime` 单源，旋钮 13→14），`sproutStep` 剔除出现在 ≥该百分比扫描实体嘅关键词。
+**落地（commit `cb9489a` + 后续 `kw.` 统一）**：新增旋钮 `kw.docFreqPctMax`（`config-runtime` 单源，旋钮 13→14），共享 helper `filterKwByDocFreq` 剔除出现在 ≥该百分比扫描实体嘅关键词。**sprout + pollinate 共用同一旋钮**（阈值系 keywords() 证据层嘅共享概念，唔另起平行表）。
 
 **关键发现：默认必须 0（关）**。
 
 1. **同构语料会剔到归零**：test-2.10 AC-4 嘅 fixture 系 `'守恒样本内容'+id`——所有 bigram 都系高频，阈值一开，sprout 产出种子 `seededEach: [0,0,0,0,0]`（完全归零）→ 守恒带断链。**阈值系按语料开嘅优化，唔系默认行为。**
 2. **绝对下限 3**：kw 证据需 ≥2 个共享词，而共享词本身 docFreq ≥2——cutoff ≤2 会剔晒所有共享词，等于杀死 kw 证据。`cutoff = max(3, N×阈值%)`。真库（N=200）5% = 10，唔触下限。
 3. **真库实测 1.32x**（5 次交替，367→277 ms），唔系预估嘅 4x——5% 阈值对 200 实体只剔 docFreq ≥10 嘅词（3.4%），每实体关键词 186→120（-35%）。
+4. **pollinate 同根因、同旋钮**：pollinate 复用 `keywords()`，配对循环 198ms、跨域对 14,001，有相同噪声。接同一切阈值后实测 **1.20x**（263→219 ms）。
 
-**test**：`test-1.10c-sprout-docfreq.js` 6/6；`test-1.10b` 参考实现同步阈值（fixture 加厚至 52 实体，令参考与实现喺任何旋钮值下同口径）仍 4/4。
+**test**：`test-1.10c-sprout-docfreq.js` 6/6；`test-1.10d-pollinate-docfreq.js` 4/4；`test-1.10b` 参考实现同步阈值（fixture 加厚至 52 实体，令参考与实现喺任何旋钮值下同口径）仍 4/4。
 
 ## 九 · 复现
 

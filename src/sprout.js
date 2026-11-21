@@ -32,6 +32,23 @@ function keywords(text) {
   return out;
 }
 
+// SPEC-1.9 修订 B：keywords() 证据层文档频次阈值（sprout + pollinate 共用，单旋钮 kw.docFreqPctMax）。
+// keywords() 每实体产中位 186 词，其中 76.8% 唔具选择性（top 词系 2026/json/status 呢啲日期与
+// JSON 字段名，docs/Engineering/SPOUT-HOTSPOT-*）。剔除出现在 ≥ pctMax % 扫描实体嘅词，保留
+// docFreq 低于该线嘅低频共享词（kw 证据需 ≥2 共享）。pctMax = 0 → 关闭（恢复全量）。
+// 绝对下限 3：kw 证据需 ≥2 个共享词，共享词本身 docFreq ≥2——cutoff ≤2 会剔晒所有共享词、
+// 等于杀死 kw 证据。3 系唔会杀死 kw 证据嘅最小 cutoff（真库 N=200 时 5% = 10，唔触下限）。
+function filterKwByDocFreq(store, meta, total, pctMax) {
+  const dfMax = Number.isFinite(pctMax) ? Number(pctMax)
+    : getKnob(store, 'kw.docFreqPctMax');
+  if (dfMax <= 0) return false;
+  const df = new Map();
+  for (const m of meta.values()) for (const w of m.kw) df.set(w, (df.get(w) || 0) + 1);
+  const cutoff = Math.max(3, total * dfMax / 100);
+  for (const m of meta.values()) m.kw = new Set([...m.kw].filter(w => (df.get(w) || 0) < cutoff));
+  return true;
+}
+
 async function sproutStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('sprout 需要 store 注入（SPEC-1.15 契约）');
   const cap = Number.isInteger(opts.cap) ? opts.cap : DEFAULTS.sprout.cap;
@@ -63,21 +80,8 @@ async function sproutStep(store, opts = {}) {
   const meta = new Map();
   for (const e of ents) meta.set(e.id, { tags: new Set(parseTags(e.tags)), kw: keywords(e.content) });
 
-  // SPEC-1.9 修订 B：关键词文档频次阈值。keywords() 每实体产中位 186 词，其中 76.8% 唔具
-  // 选择性，top 词系 2026/json/status 呢啲日期与 JSON 字段名（docs/Engineering/SPOUT-HOTSPOT-*）。
-  // 剔除出现在 ≥ dfMax % 扫描实体嘅词，保留 docFreq 低于该线嘅低频共享词（kw 证据需 ≥2 共享）。
-  // dfMax = 0 → 关闭（恢复全量）。
-  // 绝对下限 3：kw 证据需 ≥2 个共享词，共享词本身 docFreq ≥2——cutoff ≤2 会剔晒所有共享词、
-  // 等于杀死 kw 证据。3 系唔会杀死 kw 证据嘅最小 cutoff（真库 N=200 时 5% = 10，唔触下限）。
-  const dfMax = Number.isFinite(opts.docFreqPctMax) ? Number(opts.docFreqPctMax)
-    : getKnob(store, 'sprout.docFreqPctMax');
-  if (dfMax > 0) {
-    const df = new Map();
-    for (const m of meta.values()) for (const w of m.kw) df.set(w, (df.get(w) || 0) + 1);
-    const cutoff = Math.max(3, ents.length * dfMax / 100);
-    for (const m of meta.values()) m.kw = new Set([...m.kw].filter(w => (df.get(w) || 0) < cutoff));
-    stats.droppedKw = true;
-  }
+  // SPEC-1.9 修订 B：keywords() 证据层文档频次阈值（共享 helper，单旋钮 kw.docFreqPctMax）。
+  if (filterKwByDocFreq(store, meta, ents.length, opts.docFreqPctMax)) stats.droppedKw = true;
 
   const candidates = [];
   for (let i = 0; i < ents.length; i++) {
@@ -116,4 +120,4 @@ async function sproutStep(store, opts = {}) {
   return stats;
 }
 
-module.exports = { sproutStep, keywords, parseTags };
+module.exports = { sproutStep, keywords, parseTags, filterKwByDocFreq };

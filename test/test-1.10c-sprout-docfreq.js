@@ -13,7 +13,7 @@ const C = require('../src/config-runtime.js');
 const store = require('../src/knowledge-store.js');
 const sprout = require('../src/sprout.js');
 
-const PATH = 'sprout.docFreqPctMax';
+const PATH = 'kw.docFreqPctMax';
 
 (async () => {
   await store.init(path.join(yard, 'knowledge.db'));

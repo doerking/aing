@@ -6,7 +6,9 @@
 
 const DEFAULTS = {
   compress: { inactiveDays: 30, minLength: 50 },
-  sprout: { floor: 2, cap: 4, docFreqPctMax: 0 },
+  sprout: { floor: 2, cap: 4 },
+  // SPEC-1.9 修订 B：keywords() 证据层共享旋钮——sprout + pollinate 都读。0 = 关。
+  kw: { docFreqPctMax: 0 },
   conservation: { band: [0.8, 1.5] },
   hubTrim: { degreeCap: 8, weakBelow: 5 },
   kernel: { stagnantAfter: 3, inhibitHours: 1 },
@@ -21,7 +23,8 @@ const DEFAULTS = {
 
 const KNOB_PATHS = [
   'compress.inactiveDays', 'compress.minLength',
-  'sprout.floor', 'sprout.cap', 'sprout.docFreqPctMax',
+  'sprout.floor', 'sprout.cap',
+  'kw.docFreqPctMax',
   'conservation.band',
   'hubTrim.degreeCap', 'hubTrim.weakBelow',
   'kernel.stagnantAfter', 'kernel.inhibitHours',
@@ -29,7 +32,8 @@ const KNOB_PATHS = [
 ];
 
 const COMPONENT_MAP = {
-  sprout: ['sprout.floor', 'sprout.cap', 'sprout.docFreqPctMax'],
+  sprout: ['sprout.floor', 'sprout.cap'],
+  kw: ['kw.docFreqPctMax'],
   compress: ['compress.inactiveDays', 'compress.minLength'],
   'hub-trim': ['hubTrim.degreeCap', 'hubTrim.weakBelow'],
   conservation: ['conservation.band'],

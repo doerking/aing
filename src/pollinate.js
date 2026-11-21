@@ -6,7 +6,7 @@
 // 铁律：同类型不授粉、空类型不参与、已有边跳过、幂等、不碰 last_access/invalid_at、无物理删。
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
-const { keywords, parseTags } = require('./sprout.js');
+const { keywords, parseTags, filterKwByDocFreq } = require('./sprout.js');
 
 const REL = 'pollinate-candidate';
 const MAX_ENTITIES = 200;
@@ -39,6 +39,9 @@ async function pollinateStep(store, opts = {}) {
 
   const meta = new Map();
   for (const e of ents) meta.set(e.id, { type: e.type, tags: new Set(parseTags(e.tags)), kw: keywords(e.content) });
+
+  // SPEC-1.10 修订 A：keywords() 证据层文档频次阈值（与 sprout 共用单旋钮 kw.docFreqPctMax）。
+  if (filterKwByDocFreq(store, meta, ents.length, opts.docFreqPctMax)) stats.droppedKw = true;
 
   const candidates = [];
   for (let i = 0; i < ents.length; i++) {
