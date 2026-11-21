@@ -34,7 +34,6 @@ function keywords(text) {
 
 async function sproutStep(store, opts = {}) {
   if (!store || typeof store._getDb !== 'function') throw new Error('sprout 需要 store 注入（SPEC-1.15 契约）');
-  const floor = Number.isInteger(opts.floor) ? opts.floor : DEFAULTS.sprout.floor;
   const cap = Number.isInteger(opts.cap) ? opts.cap : DEFAULTS.sprout.cap;
   const stats = { scanned: 0, pairs: 0, seeded: 0, skipped: 0 };
   const db = store._getDb();
