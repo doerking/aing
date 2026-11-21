@@ -7,6 +7,7 @@
 
 // 技能导入（SPEC-0.8 修订 B）：每位成员继承原院角色文件的能力，唔止继承名。
 // 训练师技能并入 gene-keeper；六阶段本地化，不依赖外部 SkillOpt / 外部编排平台。
+const { getKnob } = require('./config-runtime.js');
 const TRAINER_STAGES = ['rollout', 'reflect', 'aggregate', 'select', 'update', 'gate'];
 
 const MEMBERS = [
@@ -80,8 +81,8 @@ const HANDLERS = {
       proposal: {
         type: 'score',
         dims: { D3: { kespiOverall: overall, conservationRatio: c.ratio, inBand: c.inBand } },
-        // SPEC-1.12 修订 A：五维均值整体下移（真库约 0.46），阈值从 0.6 调到 0.45（≈中位）
-        geneCandidates: overall != null && overall >= 0.45 ? ['kespi-high'] : [],
+        // SPEC-1.12 修订 A：五维均值整体下移（真库约 0.46），阈值从 0.6 调到 0.45（≈中位）；单源喺 config-runtime
+        geneCandidates: overall != null && overall >= getKnob(store, 'kespi.geneMin') ? ['kespi-high'] : [],
         tickets,
         trainerStages: TRAINER_STAGES
       }

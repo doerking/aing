@@ -7,9 +7,11 @@
 // 组件唔直连 knowledge-store：store 由编排器注入（arch-lint C5 守）。
 
 const crypto = require('crypto');
+const { getKnob, DEFAULTS } = require('./config-runtime.js');
 
-// SPEC-1.12 修订 A：五维绝对值整体下移（真库五维实测 p25 0.46 / p50 0.51 / p90 0.71），分区随之下调
-const ZONES = { red: 0.45, green: 0.60 };
+// SPEC-1.12 修订 A：五维绝对值整体下移（真库五维实测 p25 0.46 / p50 0.51 / p90 0.71），分区随之下调。
+// 单源喺 config-runtime（SPEC-3.4 扩展）；呢度只留静态缺省供导出与文档引用。
+const ZONES = { red: DEFAULTS.kespi.redZone, green: DEFAULTS.kespi.greenZone };
 const MAX_TICKETS = 20;
 // SPEC-6.25：按维配额——一维不能挤占全部名额（kd 分数天然偏低，会饿死 kq）
 // SPEC-6.55：票面只留「有人能动手」的维；ka/kr/overall 降为读数，不再占名额
@@ -86,6 +88,7 @@ function scanTickets(store, opts = {}) {
   const db = store._getDb();
   const persist = opts.persist !== false;
   const max = Number.isInteger(opts.maxTickets) && opts.maxTickets > 0 ? opts.maxTickets : MAX_TICKETS;
+  const redZone = getKnob(store, 'kespi.redZone');
   const scores = _latestScores(db);
   const scoreById = new Map(scores.map(r => [String(r.entity_id), r]));
   const open = _openKeys(db);
@@ -117,12 +120,12 @@ function scanTickets(store, opts = {}) {
         if (open.has(entityId + '\u0000' + dim)) continue;
         const twinId = 'wiki-' + entityId.replace(/^raw-/, '');
         if (entityId.startsWith('raw-') && !futureIds.has(entityId) && wikiActive.has(twinId) && !anyPair.has(entityId + '\u0000' + twinId)) {
-          cands.push({ entity_id: entityId, dim, kind: rule.kind, action: 'rebond', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
+          cands.push({ entity_id: entityId, dim, kind: rule.kind, action: 'rebond', score: Math.round(v * 10000) / 10000, zone: v < redZone ? 'red' : 'yellow' });
           continue;
         }
         if ((inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
         // SPEC-6.55：被引用却不催化 = 只能外部生成派生 → slot（P3 full），不再占 memo-card
-        cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'slot', score: Math.round(v * 10000) / 10000, zone: v < ZONES.red ? 'red' : 'yellow' });
+        cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'slot', score: Math.round(v * 10000) / 10000, zone: v < redZone ? 'red' : 'yellow' });
         continue;
       }
       if (rule.requireInStrong != null && (inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
@@ -130,7 +133,7 @@ function scanTickets(store, opts = {}) {
       cands.push({
         entity_id: entityId, dim, kind: rule.kind, action: rule.action,
         score: Math.round(v * 10000) / 10000,
-        zone: v < ZONES.red ? 'red' : 'yellow'
+        zone: v < redZone ? 'red' : 'yellow'
       });
     }
     // SPEC-6.55：overall 红档不开单——复合红说不清哪维坏，只进 memo 读数
