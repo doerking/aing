@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 169 档 / 1120 条断言全绿 |
+| 测试 | `npm test` → 170 档 / 1126 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
-- **169 档 / 1120 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **170 档 / 1126 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -257,6 +257,8 @@ status: active
 | 8.8 | geneMin 推高至 0.62 + 门禁计数 baseline 单源（owner 2026-11-21 拍板） | ✅ 收口 | `docs/Engineering/KESPI-CALIBRATE-2026-11-21.md` | ① `kespi.geneMin` 0.45→0.62（p75 口径）：真库过线 270/322（83.9%）→ **103/322（32.0%）**，基因候选闸由近乎全开改为真筛；改 `config-runtime.js` 一处，test-3.4b 锁默认值。② C19 计数对账改 **baseline.json 单源**（唔再 parse run-all 子进程输出；现实对账归 C1/C2），count-guard 补短档隔离重跑（防瞬时少跑被误读为删除）；test-3.4c-gate-load 3/3 锁；修后连跑两轮 verify-deploy 均 33 项 ALL GREEN |
 
 | 8.9 | sprout 热区剖析 + 逐步时相工具 + 等价性护栏 | ✅ 收口（2026-11-21） | `docs/Engineering/SPOUT-HOTSPOT-2026-11-21.md` | `tools/round-profile.js`（测量工具，非门禁）：一轮代谢 1,660 ms，头四步 sprout/pollinate/field-maintain/hub-trim 占 **~72%**，sprout 独占 **25.5%**。**两个教科书优化实测全部失效并已回退**：倒排索引慢 **2.78x**（776 vs 279 ms，候选数逐位一致 = 正确但输）、数组预成型零增益（288 vs 288 稳态）。真因非算法：`keywords()` 每实体产中位 **186** 个关键词（每个相邻 CJK 二字都算），12,370 个不同词里 **76.8%** 出现于 ≥2 文档，top 词系 `2026×161`/`json×140`/`status×136` 呢啲日期与 JSON 字段名——停用词问题。test-1.10b-sprout-equiv 4/4（档内联 O(n²) 参考实现锁候选对集合逐对一致，含四个负例与已有边唔再发种），做将来改 sprout 嘅护栏。**未擅动 `keywords()` 口径**——`kw` 证据系行为，动佢等于改判据，待 owner 拍板 |
+
+| 8.10 | sprout 关键词文档频次阈值（**工具已建、默认关**） | ✅ 收口 | `spec/SPEC-1.9-sprout发芽.md` 修订 B | 新增旋钮 `sprout.docFreqPctMax` 入 `config-runtime` 单源（旋钮 13→14）+ `sproutStep` 剔除出现在 ≥该百分比扫描实体嘅关键词；**绝对下限 3**（kw 证据需 ≥2 共享词，共享词本身 df≥2，cutoff≤2 会剔晒所有共享词 = 杀死 kw 证据）。**关键发现：默认必须系 0（关）**——test-2.10 AC-4 嘅 fixture 系同构语料（`'守恒样本内容'+id`），所有 bigram 都系高频，阈值开晒会把 sprout 产出的种子**全部剔零**（`seededEach: [0,0,0,0,0]`）→ 守恒带断链。真库副本交替跑 5 次实测 **1.32x 加速**（367→277 ms），系可开——但系按语料开，唔敢默认开。test-1.10c-sprout-docfreq 6/6（默认 0 关 / 默认关保持原行为 / 阈值开则高频共享词剔后唔成候选 / 低频共享词保留成候选 / 旋钮 0 恢复全量 / 小语料绝对下限保 df=2 共享词）；test-1.10b 参考实现同步阈值仍 4/4；test-2.10 6/6 守恒带保 |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
