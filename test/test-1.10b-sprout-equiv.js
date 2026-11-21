@@ -18,7 +18,7 @@ function parseTags(tags) { try { const a = JSON.parse(tags || '[]'); return Arra
 const keywords = (t) => sprout.keywords(t);
 
 // 参考实现：逐对扫描（优化前嘅口径），返候选对集合与各自证据种类。
-// dfMax 与 sprout 同源（同读 sprout.docFreqPctMax），但配对逻辑系独立逐对重算——
+// dfMax 与 sprout 同源（同读 kw.docFreqPctMax），但配对逻辑系独立逐对重算——
 // 本档锁「配对语义」，阈值行为本身由 test-1.10c 锁。
 function referenceCandidates(db, store) {
   const rows = [];
@@ -39,7 +39,7 @@ function referenceCandidates(db, store) {
   const meta = new Map();
   for (const e of rows) meta.set(e.id, { tags: new Set(parseTags(e.tags)), kw: keywords(e.content) });
 
-  const dfMax = C.getKnob(store, 'sprout.docFreqPctMax');
+  const dfMax = C.getKnob(store, 'kw.docFreqPctMax');
   if (dfMax > 0) {
     const df = new Map();
     for (const m of meta.values()) for (const w of m.kw) df.set(w, (df.get(w) || 0) + 1);
