@@ -73,12 +73,17 @@ function main() {
     };
 
     // ① 九列分布
+    // 注意：NULL 与 0 唔同——kg/km/kb 系刻意未定义嘅 NULL 占位列（test-1.12 / test-6.8 已锁），
+    //       唔准 Number(null)→0 混入分位数，否则会误读成「该列恒 0」（已踩过，2026-11-21）。
     const perKey = {};
     for (const k of KEYS) {
-      const v = rows.map(r => Number(r[k])).filter(x => Number.isFinite(x)).sort((a, b) => a - b);
+      const raw = rows.map(r => r[k]);
+      const nulls = raw.filter(x => x == null).length;
+      const v = raw.filter(x => x != null).map(Number)
+        .filter(x => Number.isFinite(x)).sort((a, b) => a - b);
       perKey[k] = v;
       out.distribution[k] = {
-        name: NAMES[k], n: v.length,
+        name: NAMES[k], n: v.length, nulls,
         p25: pctile(v, .25), p50: pctile(v, .5), p75: pctile(v, .75), p90: pctile(v, .9)
       };
     }
@@ -120,10 +125,11 @@ function main() {
       console.log('KESPI 阈值校准 — 源 ' + src);
       console.log('副本 ' + (out.copyBytes / 1048576).toFixed(2) + ' MB / 评分行数 ' + rows.length + '\n');
       console.log('【九列分布】');
-      console.log(pad('列', 8) + pad('n', 7) + pad('p25', 8) + pad('p50', 8) + pad('p75', 8) + pad('p90', 8));
+      console.log(pad('列', 8) + pad('n', 7) + pad('NULL', 7) + pad('p25', 8) + pad('p50', 8) + pad('p75', 8) + pad('p90', 8));
       for (const k of KEYS) {
         const d = out.distribution[k];
-        console.log(pad(NAMES[k], 8) + pad(String(d.n), 7) + pad(String(d.p25), 8) + pad(String(d.p50), 8) + pad(String(d.p75), 8) + pad(String(d.p90), 8));
+        console.log(pad(NAMES[k], 8) + pad(String(d.n), 7) + pad(String(d.nulls), 7) +
+          pad(String(d.p25), 8) + pad(String(d.p50), 8) + pad(String(d.p75), 8) + pad(String(d.p90), 8));
       }
       console.log('\n【四个阈值落点】（单源 src/config-runtime.js DEFAULTS.kespi）');
       for (const t of out.thresholds) {

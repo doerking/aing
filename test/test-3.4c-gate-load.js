@@ -38,5 +38,11 @@ function ac(n, c, d = '') { if (c) { console.log('✅ ' + n); pass++; } else { c
   }
   ac('AC-3 文档计数 = baseline 单源', bad.length === 0, bad.length ? bad.join('; ') : `${files} 档 / ${sum} 条，文档与基线一致`);
 
+  // AC-4 KESPI 校准工具区分 NULL 与 0（kg/km/kb 系刻意 NULL 占位，唔准 Number(null)→0 混入分位数）
+  const cal = fs.readFileSync(path.join(root, 'tools', 'kespi-calibrate.js'), 'utf8');
+  ac('AC-4 校准工具区分 NULL 与 0',
+    /nulls/.test(cal) && /x == null/.test(cal) && !/Number\(r\[k\]\)/.test(cal),
+    'kespi-calibrate 仍会将 NULL  coerce 为 0');
+
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
