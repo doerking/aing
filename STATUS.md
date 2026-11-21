@@ -259,9 +259,6 @@ status: active
 | 8.9 | sprout 热区剖析 + 逐步时相工具 + 等价性护栏 | ✅ 收口（2026-11-21） | `docs/Engineering/SPOUT-HOTSPOT-2026-11-21.md` | `tools/round-profile.js`（测量工具，非门禁）：一轮代谢 1,660 ms，头四步 sprout/pollinate/field-maintain/hub-trim 占 **~72%**，sprout 独占 **25.5%**。**两个教科书优化实测全部失效并已回退**：倒排索引慢 **2.78x**（776 vs 279 ms，候选数逐位一致 = 正确但输）、数组预成型零增益（288 vs 288 稳态）。真因非算法：`keywords()` 每实体产中位 **186** 个关键词（每个相邻 CJK 二字都算），12,370 个不同词里 **76.8%** 出现于 ≥2 文档，top 词系 `2026×161`/`json×140`/`status×136` 呢啲日期与 JSON 字段名——停用词问题。test-1.10b-sprout-equiv 4/4（档内联 O(n²) 参考实现锁候选对集合逐对一致，含四个负例与已有边唔再发种），做将来改 sprout 嘅护栏。**未擅动 `keywords()` 口径**——`kw` 证据系行为，动佢等于改判据，待 owner 拍板 |
 
 | 8.10 | keywords() 证据层文档频次阈值（**默认关**，sprout + pollinate 共用） | ✅ 收口 | `spec/SPEC-1.9-sprout发芽.md` 修订 B | 新增旋钮 `kw.docFreqPctMax` 入 `config-runtime` 单源（旋钮 13→14）+ 共享 helper `filterKwByDocFreq`（sprout + pollinate 都读，唔另起平行表）；**绝对下限 3**（kw 证据需 ≥2 共享词，共享词本身 df≥2，cutoff≤2 会剔晒所有共享词 = 杀死 kw 证据）。**关键发现：默认必须系 0（关）**——test-2.10 AC-4 嘅 fixture 系同构语料（`'守恒样本内容'+id`），所有 bigram 都系高频，阈值开晒会把 sprout 产出的种子**全部剔零**（`seededEach: [0,0,0,0,0]`）→ 守恒带断链。真库副本交替跑 5 次实测 **1.32x 加速**（367→277 ms），系可开——但系按语料开，唔敢默认开。test-1.10c-sprout-docfreq 6/6（默认 0 关 / 默认关保持原行为 / 阈值开则高频共享词剔后唔成候选 / 低频共享词保留成候选 / 旋钮 0 恢复全量 / 小语料绝对下限保 df=2 共享词）；test-1.10b 参考实现同步阈值仍 4/4；test-2.10 6/6 守恒带保 |
-
-## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
-
 | 8.11 | pollinate 接 keywords() 证据层文档频次阈值（**同根因、单旋钮**） | ✅ 收口 | `spec/SPEC-1.10-pollinate授粉.md` 修订 A | pollinate 复用 `keywords()` 做跨域 kw 证据，有与 sprout 相同嘅噪声（配对循环 198ms，kw 过滤主体；跨域对 14,001、同域对 5,899）。阈值系 keywords 证据层嘅共享概念，**唔另起第二个旋钮**——单旋钮 `kw.docFreqPctMax`，sprout + pollinate 共用同一 helper `filterKwByDocFreq`。真库副本交替跑 5 次实测 **1.20x 加速**（263→219 ms）。test-1.10d-pollinate-docfreq 4/4（旋钮默认 0 关 / 高频共享词剔后唔成候选（剩 cross 一类）/ 低频共享词保留成候选（cross + kw）/ 旋钮 0 恢复全量） |
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
