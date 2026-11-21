@@ -1,0 +1,69 @@
+---
+tags: [aing-v2, engineering, kespi, thresholds, calibration, spec:9, evidence:9]
+description: KESPI 消费者阈值校准实测（2026-11-21）——真库 322 行：注释声明 overall p25 0.46 / p50 0.51 / p90 0.71 逐位吻合（差 0），阈值为数据校准非拍脑袋；四阈值落点：promoteMin 过线 35.4%、geneMin 过线 83.9%（低于中位 0.51、闸近乎全开）、greenZone 声明但未入逻辑；工具 tools/kespi-calibrate.js
+date: 2026-11-21
+status: active
+owner: hana
+---
+
+# KESPI 消费者阈值校准（2026-11-21）
+
+> **性质**：测量记录，非门禁。配套工具 `tools/kespi-calibrate.js`。
+> **缘起**：STATUS §五·补五 8.6 把四个 KESPI 消费者阈值（`promoteMin 0.55` / `geneMin 0.45` / `redZone 0.45` / `greenZone 0.60`）从三处硬编码集中进 `src/config-runtime.js` `DEFAULTS.kespi`。集中之后，「呢啲数定得准不准」系唯一能回答「阈值该唔该动」嘅问题——本档系答案。
+
+## 一、测量口径
+
+- **源**：`data/knowledge.db`（真库，5.50 MB），拷副本后纯读，**绝不碰源**
+- **样本**：`kespi_scores` 322 行
+- **工具**：`node tools/kespi-calibrate.js [--db <源库>] [--json]`
+
+## 二、九列分布（真库实测）
+
+| 列 | n | p25 | p50 | p75 | p90 |
+|---|---|---|---|---|---|
+| 质量 kq | 322 | 0.577 | 0.62 | 0.85 | 0.85 |
+| 广度 kg | 322 | 0 | 0 | 0 | 0 |
+| 活性 ka | 322 | 0.2 | 0.2 | 1 | 1 |
+| 关联 km | 322 | 0 | 0 | 0 | 0 |
+| 催化 kd | 322 | 0 | 0 | 0 | 1 |
+| 置信 kc | 322 | 0.5 | 0.5 | 0.5 | 0.5 |
+| 重复 kr | 322 | 1 | 1 | 1 | 1 |
+| 基础 kb | 322 | 0 | 0 | 0 | 0 |
+| **总体 overall** | 322 | **0.46** | **0.51** | **0.62** | **0.71** |
+
+## 三、注释声明对账
+
+`self-optimize.js` 注释声明「真库五维实测 p25 0.46 / p50 0.51 / p90 0.71」——逐位吻合，差 0：
+
+| 分位 | 声明 | 实测 | 差 | 判 |
+|---|---|---|---|---|
+| p25 | 0.46 | 0.46 | 0 | ✅ 吻合 |
+| p50 | 0.51 | 0.51 | 0 | ✅ 吻合 |
+| p90 | 0.71 | 0.71 | 0 | ✅ 吻合 |
+
+**结论**：阈值为数据校准，非拍脑袋。`overall` 分布喺 8.6 落地前后未漂移。
+
+## 四、四个阈值落点
+
+| 旋钮 | 值 | 落点 | 消费组件 |
+|---|---|---|---|
+| `kespi.promoteMin` | 0.55 | 过线 **114/322（35.4%）** | field-promote 提升门槛 |
+| `kespi.geneMin` | 0.45 | 过线 **270/322（83.9%）** | evolution-team 基因候选门槛 |
+| `kespi.redZone` | 0.45 | 逐维比对 | self-optimize 红区 |
+| `kespi.greenZone` | 0.60 | 过线 **106/322（32.9%）** | 已声明、**未入逻辑** |
+
+## 五、读数提示（供拍板，非建议改动）
+
+1. **`geneMin 0.45` 近乎全开**：中位系 0.51，0.45 低于中位 → 83.9% 实体过线。基因候选闸实际几乎唔筛。要真筛选，阈值需推近 p75（0.62）口径。**改唔改系 owner 决定**；阈值已系旋钮，改库内 config 表即可，唔使改代码。
+2. **`greenZone 0.60` 声明但未消费**：`self-optimize.js` 逻辑只比 `redZone`，绿区冇入判据。若日后要「绿区自动毕业」，先补逻辑再动数。
+3. **`kg` / `km` / `kb` 三列恒 0**（p90 都系 0），`kc` 恒 0.5、`kr` 恒 1——五维里实际起分辨作用嘅只有 `kq` 与 `ka`。系评分口径问题，唔系阈值问题，记录备查。
+
+## 六、复现
+
+```bash
+cd G:\DPD\aing-v2
+node tools/kespi-calibrate.js          # 表格
+node tools/kespi-calibrate.js --json   # 机读
+```
+
+门禁状态：`npm test` → 167 档 / 1112 断言全绿；`node verify-deploy.js` → 33 项 ALL GREEN。
