@@ -30,7 +30,7 @@ export() → bytes     // 原子写用
 close()
 ```
 
-- 配置项 `AING_DB_ENGINE=sqljs|node:sqlite|better-sqlite3`（默认 `sqljs`，与当前定量一致）。
+- 配置项 `AING_DB_ENGINE=sqljs|node:sqlite|better-sqlite3`（默认 `nodesqlite`，2026-11-21 由 owner 拍板切换；引擎负载对比见 `docs/Engineering/ENGINE-LOAD-2026-11-21.md`）。
 - **修订 A（2026-11-20，node:sqlite 落地）**：`AING_DB_ENGINE=nodesqlite` 实测可用，文件库 + **WAL**：
   - `db-adapter` 内建 sql.js 句柄兼容层（`prepare/bind/step/getAsObject/reset/free` 面不变），上层 `_getDb()` 的 160 处调用不改动即跑。
   - `journal_mode=WAL`：提交 = 追加 WAL，不再每次写整库；容量闸改按文件体积判。

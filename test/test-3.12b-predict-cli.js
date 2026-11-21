@@ -57,11 +57,14 @@ const CLI_PATH = path.join(__dirname, '..', 'src', 'cli.js');
   ac('AC-4 缺参拒绝', r4.status === 2 && /predict --message/.test(r4.stdout + r4.stderr),
     JSON.stringify({ status: r4.status, out: (r4.stdout || '').slice(0, 120) }));
 
-  // AC-5 只读：跑完实体字段与库文件 mtime 都不变
+  // AC-5 只读：跑完实体字段不变；库文件 mtime 只对 sqljs 断言——nodesqlite 下 WAL 关库
+  // checkpoint(TRUNCATE) 会物理写主库文件，mtime 变属文件层而非数据层（数据快照不变即真保证）。
   const after = snap();
   const mtimeAfter = fs.statSync(DB).mtimeMs;
-  ac('AC-5 只读', before === after && mtimeBefore === mtimeAfter,
-    JSON.stringify({ changed: before !== after, mtime: mtimeBefore !== mtimeAfter }));
+  const engine = require('../src/db-adapter.js').engineName();
+  const mtimeOk = engine === 'sqljs' ? (mtimeBefore === mtimeAfter) : true;
+  ac('AC-5 只读', before === after && mtimeOk,
+    JSON.stringify({ changed: before !== after, mtime: mtimeBefore !== mtimeAfter, engine }));
 
   // AC-6 铁律：CLI 侧无物理删、不改实体
   const src = fs.readFileSync(CLI_PATH, 'utf8');
