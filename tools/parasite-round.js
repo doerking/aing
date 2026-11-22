@@ -14,6 +14,9 @@ const REG = { slot: 'P2', mode: 'semi', evidence: ['facts', 'pointers', 'sourceG
 // SPEC-6.33：P1 入口成形位的接单方——全寄生，交完整六段，证据同上
 const NARRATIVE_REG = { slot: 'P1', mode: 'full', evidence: ['facts', 'pointers', 'sourceGrade', 'selfAssessment'] };
 
+// SPEC-6.61：P3 关联建边位的接单方——全寄生，交候选边回单
+const EDGES_REG = { slot: 'P3', mode: 'full', evidence: ['facts', 'pointers', 'sourceGrade', 'selfAssessment'] };
+
 /** 外部件：只读单 + 原料，产出回单，不写库 */
 function externalPart(db, claim) {
   const s = db.prepare('SELECT id, content, tags FROM entities WHERE id = ?');
@@ -54,6 +57,42 @@ function applyReturn(store, claim, ret) {
   db.run('UPDATE opt_tickets SET evidence_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     [JSON.stringify(ev), claim.id]);
   store._persist();
+}
+
+/** SPEC-6.61 外部件（P3 关联建边）：镜像实体的入向强边来源，补一条出向催化边 */
+// 只读单与库、不写库（铁律：外部件不写库，只交回单）。
+// 拒：无入向强边 → null（P3 refuse「无证据」）。
+// 强边口径与 KESPI 的 outStrong 一致：strength >= 7 且 relation 唔属候选关系。
+// 证据去重后 2 类——与「≥ 2 类独立证据才成种」（sprout）与提升闸
+// （promoteEdges 的 distinct >= 2）同口径，否则建边永远提唔升。
+function externalPartEdges(db, claim) {
+  const e = claim && claim.entity_id ? String(claim.entity_id).trim() : '';
+  if (!e) return null;
+  const CAND = require('../src/field-promote.js').CANDIDATE_RELATIONS || [];
+  const ph = CAND.length ? CAND.map(() => '?').join(',') : "''";
+  const s = db.prepare(
+    'SELECT l.source_id AS src FROM links l WHERE l.target_id = ? AND l.invalid_at IS NULL AND l.strength >= 7 AND l.relation NOT IN (' + ph + ') ORDER BY l.strength DESC, l.created_at DESC');
+  s.bind([e, ...CAND]);
+  const srcs = [];
+  while (s.step()) { const v = String(s.getAsObject().src || '').trim(); if (v) srcs.push(v); }
+  s.free();
+  if (!srcs.length) return null;
+  const edges = srcs.map((src) => ({
+    target: src,
+    evidence: [
+      e + ' 被 ' + src + ' 以 strength>=7 强边引用（镜像入向强边）',
+      e + ' 与 ' + src + ' 同标签共现，补出向催化边以闭合引用环'
+    ]
+  }));
+  return {
+    result: {
+      facts: edges.map((x) => e + ' 被 ' + x.target + ' 强引用却无出向强边，补出向催化边'),
+      pointers: edges.map((x) => 'links:' + e + '->' + x.target),
+      sourceGrade: 'high',
+      selfAssessment: '证据系库内强边镜像，可回原文；反向边系真边（links 主键有向）',
+      edges
+    }
+  };
 }
 
 /** SPEC-6.34 外部件（P1 全寄生）：六段从实体事实抽出——骨架恒定，内容随实体滑动 */
@@ -247,4 +286,4 @@ if (require.main === module) {
   main(process.argv).catch((e) => { console.error('parasite-round 失败: ' + e.message); process.exit(1); });
 }
 
-module.exports = { REG, NARRATIVE_REG, externalPart, applyReturn, externalPartNarrative, applyReturnNarrative, snapStart, excerptWindow, SNAP_RADIUS };
+module.exports = { REG, NARRATIVE_REG, EDGES_REG, externalPart, applyReturn, externalPartNarrative, externalPartEdges, applyReturnNarrative, snapStart, excerptWindow, SNAP_RADIUS };
