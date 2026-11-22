@@ -2,7 +2,7 @@
 tags: [aing-v2, spec, 工单, 寄生槽, 建边, 回单, engineering:7, capability:6, delivery:7, must-read:6]
 description: SPEC-6.60 kd-cited 提案建边落地——6.56 声明「kd 靠 P3 候选边过闸」但实现只记账，kd-cited 单结构上不可能通过 acceptance；补 edges 写回口
 date: 2026-11-22
-status: 待落地
+status: 已落地（test-6.60-kd-cited-edges 见下文 AC）
 owner: hana
 upstream: [spec/SPEC-6.56-回单落地.md, spec/SPEC-6.19-寄生位注册表与取单口.md, spec/SPEC-6.55-票面收缩.md, src/parasite-slot.js, src/pollinate.js, src/field-promote.js, src/proposal-result.js]
 ---
@@ -63,6 +63,29 @@ upstream: [spec/SPEC-6.56-回单落地.md, spec/SPEC-6.19-寄生位注册表与�
 - **AC-8**：回单自报 `relation` 与 `strength`（如 `relation: 'derives'`、`strength: 9`）被忽略——落库仍系 `pollinate-candidate` 与按证据数定的 strength（唔开刷分路径）。
 - **AC-9**：`kq-low` 路径唔受影响——正文写回照旧生效（回归）。
 - **AC-10**：`target` 唔存在 → `ok: false`、`reason: 'target-not-found'`、零建边。
+- **AC-11**（修订 A）：证据去重后 < 2 类 → 拒 `no-evidence`、零建边（与成种/提升闸同口径）。
+- **AC-12**（修订 A）：`strength` 按 `distinct` 算——3 条**同文**证据唔系 6，系 4（唔许重复堆强）。
+- **AC-13**（修订 A，端到端）：≥2 类证据的回单 → 建候选边 → `promoteEdges` 提升成 `hydrogen-bond`@`strength 7` → `kespiStep` 重算后该实体 `kd > 0`（闭环真跑通）。
+
+## 修订 A（2026-11-22 量过）
+
+**缘起**：建边后跟到尾，发现闭环断喺**提升闸的证据门槛**：`promoteEdges` 要求 `distinct.length >= 2`（≥2 类独立证据）才提升成 `hydrogen-bond`@7；而本件原只要求「证据非空」，回单给 1 条证据就建边。结果：边永久系候选 → `kd` 永唔变 → acceptance 依旧过唔到——**6.60 补的喺佢自己**。真库量过（真库副本，322 实体 / 1209 边）：`kd-cited` 提案候选 **8 张**、候选边 15 条（全近 30 天新建）、强边 294 条；`gateVerdict = prune-only`（edgeGrowth 15 / edgePruned 1115），**唔系 `growth-only`** → 真库唔系死锁，断点就系证据门槛。
+
+**修（与本仓两道既有闸同口径）**：
+
+| 闸 | 门槛 | 出处 |
+|---|---|---|
+| 成种（`sprout.js`）| `evidence.length >= 2` | 「≥2 类独立证据才成种」|
+| 提升（`promoteEdges`）| `distinct.length >= 2` | 证据去重后 ≥2 类 |
+| **本件（修订 A）**| **`distinct.length >= 2`** | 同上，唔让建的边永远提唔升 |
+
+- 证据**去重**后才数（`_applyEdges` 内 `distinct`）；`no-evidence` 既拦空数组，亦拦去重后 < 2。
+- `strength` 亦按 `distinct` 算：`distinct >= 3 ? 6 : 4`（原用总条数，重复堆 3 条会假强）。
+- **新增 AC-13（端到端闭环）**：≥2 类证据的回单 → 建候选边 → `promoteEdges` 真提升成 `hydrogen-bond`@7 → `kespiStep` 重算后 `kd > 0`。
+
+**边界（真库量过，唔修）**：`promoteEdges` 受 conservation 闸约束——`gateVerdict === 'growth-only'`（近 30 天边产 > 边退，超带上限）时**全部候选边被拒** `conservation-band`。新建的候选边本身系「在制品」却被计作 `edgeGrowth`，故**只有边产唔退边的库**（新库 / 迁移库）会自锁。真库近 30 天边退 1115 条，比值稳定在带外侧，唔系此问题；本件**唔改 `conservation.js` 口径**（改动面大，需另立任务）。夹具验闭环时须造一条已退役的候选边（`invalid_at`）把 verdict 拉回带内。
+
+---
 
 ## 三、边界与唔做的事
 
