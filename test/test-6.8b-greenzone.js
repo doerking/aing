@@ -26,7 +26,7 @@ const GATE = 'kespi.greenZoneGate';
   // e-green：overall 0.70（绿）但 kq 0.45（低于 kq 触发 0.50）→ 闸开应唔开票
   // e-yellow：overall 0.55（黄）但 kq 0.45 → 应开票
   store.insertEntity({ id: 'e-green', name: 'e-green', type: 'Concept', content: '正文足够长以通过质量评分。'.repeat(8), tags: '[]', status: 'active', confidence: 0.8 });
-  store.insertEntity({ id: 'e-yellow', name: 'e-yellow', type: 'Concept', content: '正文足够长以通过质量评分。'.repeat(8), tags: '[]', status: 'active', confidence: 0.8 });
+  store.insertEntity({ id: 'e-yellow', name: 'e-yellow', type: 'Concept', content: '另一正文足以通过质量评分。'.repeat(8), tags: '[]', status: 'active', confidence: 0.8 });
   put('e-green', 0.45, 0.70);
   put('e-yellow', 0.45, 0.55);
   store._persist();

@@ -97,6 +97,29 @@ function scanTickets(store, opts = {}) {
   const scores = _latestScores(db);
   const scoreById = new Map(scores.map(r => [String(r.entity_id), r]));
   const open = _openKeys(db);
+  // SPEC-6.62：同一 fingerprint 组每维只开 1 张——真库 322 实体 = 118 内容 × 2–3 抄
+  // （bare/wiki-/raw-），不合并则每张拷贝各背一份单（kq-low 5 张实为 3 真内容、kd-cited 8 张实为 4）。
+  // 组内取分数最低者作代表（cands 按 score 升序，首个入组者即代表）；
+  // 同维在途单系组级幂等（组内任一成员在途 → 整组唔重开）；空 fingerprint 回落自身 id。
+  const fpByKey = new Map(_rows(db, "SELECT id, fingerprint FROM entities WHERE invalid_at IS NULL")
+    .map(r => [String(r.id), r.fingerprint]));
+  const fpOpen = new Set();
+  for (const key of open) {
+    const sp = String(key).indexOf('\u0000');
+    const eid = sp >= 0 ? String(key).slice(0, sp) : String(key);
+    const dim = sp >= 0 ? String(key).slice(sp + 1) : '';
+    const fpk = fpByKey.get(eid);
+    const fk = (fpk == null || fpk === '' ? eid : String(fpk)) + '\u0000' + dim;
+    fpOpen.add(fk);
+  }
+  const seenFp = new Set();
+  const fpSeen = (eid, dim) => {
+    const fpk = fpByKey.get(eid);
+    const fk = (fpk == null || fpk === '' ? eid : String(fpk)) + '\u0000' + dim;
+    if (seenFp.has(fk) || fpOpen.has(fk)) return true;
+    seenFp.add(fk);
+    return false;
+  };
   const cands = [];
   // SPEC-1.12 修订 A：KD 催化率的 rebond 单只给「入向强边 ≥2」的实体
   const inStrong = new Map();
@@ -126,16 +149,19 @@ function scanTickets(store, opts = {}) {
         if (open.has(entityId + '\u0000' + dim)) continue;
         const twinId = 'wiki-' + entityId.replace(/^raw-/, '');
         if (entityId.startsWith('raw-') && !futureIds.has(entityId) && wikiActive.has(twinId) && !anyPair.has(entityId + '\u0000' + twinId)) {
+          if (fpSeen(entityId, dim)) continue;
           cands.push({ entity_id: entityId, dim, kind: rule.kind, action: 'rebond', score: Math.round(v * 10000) / 10000, zone: v < redZone ? 'red' : 'yellow' });
           continue;
         }
         if ((inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
         // SPEC-6.55：被引用却不催化 = 只能外部生成派生 → slot（P3 full），不再占 memo-card
+        if (fpSeen(entityId, dim)) continue;
         cands.push({ entity_id: entityId, dim, kind: 'kd-cited', action: 'slot', score: Math.round(v * 10000) / 10000, zone: v < redZone ? 'red' : 'yellow' });
         continue;
       }
       if (rule.requireInStrong != null && (inStrong.get(entityId) || 0) < rule.requireInStrong) continue;
       if (open.has(entityId + '\u0000' + dim)) continue;
+      if (fpSeen(entityId, dim)) continue;
       cands.push({
         entity_id: entityId, dim, kind: rule.kind, action: rule.action,
         score: Math.round(v * 10000) / 10000,
