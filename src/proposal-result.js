@@ -13,8 +13,17 @@ const MIN_TAGS = 3;
 // 按需求白名单：只有「写一段正文就能修」的维在这里落地；其余走场域动作或候选边过闸
 const WRITE_BACK = {
   'kq-low': ['content', 'tags'],
-  'kq-low-narrative': ['content', 'tags']
+  'kq-low-narrative': ['content', 'tags'],
+  // SPEC-6.60：kd-cited（被引用唔催化）——修法是建出向边，走 P3 候选边过闸
+  'kd-cited': ['edges']
 };
+// 候选边统一口径（与 src/pollinate.js 同源）：relation 候选型、confidence 0.5、
+// strength 由证据数定（≥3 种证据给 6，否则 4）——超过 3 的候选边唔该自带强边强度，提升系 promoteEdges 的职权。
+const CANDIDATE_REL = 'pollinate-candidate';
+const CANDIDATE_CONF = 0.5;
+const EDGE_MIN_KINDS = 3;
+const EDGE_STRENGTH_WEAK = 4;
+const EDGE_STRENGTH_STRONG = 6;
 const PROPOSAL_ACTIONS = ['slot', 'memo-card'];
 const OPEN_STATUS = ['proposed', 'dispatched'];
 
@@ -60,6 +69,49 @@ function _tagsOf(tags) {
 }
 
 /**
+ * SPEC-6.60：kd-cited 回单 → 落候选边（P3 写回点：links 候选关系 → 过闸提升）。
+ * 校验系 P3 的 refuse 三件 + 幂等；唔接受自报 relation / strength（自报会把候选边变强边刷 kd）。
+ * 返回 { ok, reason, applied, soft }：soft 真系幂等 skip，票唔标 rejected。
+ */
+function _applyEdges(db, t, result) {
+  const edges = Array.isArray(result.edges) ? result.edges : null;
+  if (!edges || edges.length === 0) return { ok: false, reason: 'no-edges', applied: [] };
+  const src = _one(db, 'SELECT id, strand FROM entities WHERE id = ?', [t.entity_id]);
+  if (!src) return { ok: false, reason: 'entity-not-found', applied: [] };
+  const applied = [];
+  for (const raw of edges) {
+    const edge = raw && typeof raw === 'object' ? raw : {};
+    const ev = Array.isArray(edge.evidence)
+      ? edge.evidence.filter(x => x != null && String(x).trim() !== '')
+      : [];
+    if (ev.length === 0) return { ok: false, reason: 'no-evidence', applied: [] };
+    const target = String(edge.target == null ? '' : edge.target).trim();
+    if (!target) return { ok: false, reason: 'no-evidence', applied: [] };
+    const dst = _one(db, 'SELECT id, strand FROM entities WHERE id = ?', [target]);
+    if (!dst) return { ok: false, reason: 'target-not-found', applied: [] };
+    if (target === String(src.id)) return { ok: false, reason: 'self-edge', applied: [] };
+    const srcStrand = String(src.strand == null ? 'past' : src.strand);
+    const dstStrand = String(dst.strand == null ? 'past' : dst.strand);
+    if (srcStrand === 'future' && dstStrand === 'past') return { ok: false, reason: 'future-to-past', applied: [] };
+    const dup = _one(db,
+      'SELECT 1 AS x FROM links WHERE (source_id = ? AND target_id = ?) OR (source_id = ? AND target_id = ?)',
+      [src.id, target, target, src.id]);
+    if (dup) return { ok: false, reason: 'edge-exists', applied: [], soft: true };
+    const strength = ev.length >= EDGE_MIN_KINDS ? EDGE_STRENGTH_STRONG : EDGE_STRENGTH_WEAK;
+    const ins = db.prepare(
+      `INSERT INTO links (source_id, target_id, relation, confidence, strength, evidence, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`);
+    ins.run([src.id, target, CANDIDATE_REL, CANDIDATE_CONF, strength, JSON.stringify(ev)]);
+    ins.free();
+    applied.push({
+      field: 'links', target, relation: CANDIDATE_REL, strength, evidenceCount: ev.length,
+      digest: _digest(src.id + '\u0000' + target + '\u0000' + CANDIDATE_REL)
+    });
+  }
+  return { ok: true, reason: 'applied-edges', applied };
+}
+
+/**
  * 外部件交回单 → 过闸 → 按需求白名单写回实体。
  * @param {object} store
  * @param {string} ticketId
@@ -102,6 +154,20 @@ function applyProposalResult(store, ticketId, opts = {}) {
     return { ok: true, reason: 'record-only', applied: [] };
   }
 
+  // 2a、SPEC-6.60：kd-cited → 落候选边（不写正文；kd 靠 links，正文修唔到）
+  if (String(fields[0]) === 'edges') {
+    const r = _applyEdges(db, t, result);
+    if (!r.ok) {
+      // soft（edge-exists）系幂等 skip：票保持 proposed 唔标 rejected，留待下轮真有新边可建
+      _patch(db, id, { result, reason: r.reason }, r.soft ? null : 'rejected');
+      store._persist();
+      return { ok: false, reason: r.reason, applied: [] };
+    }
+    _patch(db, id, { result, applied: r.applied, appliedAt: new Date().toISOString() });
+    store._persist();
+    return { ok: true, reason: r.reason, applied: r.applied };
+  }
+
   const ent = _one(db, 'SELECT id, content, tags FROM entities WHERE id = ?', [t.entity_id]);
   if (!ent) return { ok: false, reason: 'entity-not-found', applied: [] };
 
@@ -142,4 +208,4 @@ function applyProposalResult(store, ticketId, opts = {}) {
   return { ok: true, reason: 'applied', applied };
 }
 
-module.exports = { MIN_CONTENT_CHARS, MIN_TAGS, WRITE_BACK, applyProposalResult };
+module.exports = { MIN_CONTENT_CHARS, MIN_TAGS, WRITE_BACK, CANDIDATE_REL, CANDIDATE_CONF, EDGE_MIN_KINDS, applyProposalResult };

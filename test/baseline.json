@@ -144,6 +144,7 @@
   "test-6.54-distill-mirror-status.js": 5,
   "test-6.55-ticket-face.js": 7,
   "test-6.56-proposal-result.js": 7,
+   "test-6.60-kd-cited-edges.js": 10,
   "test-6.6-maintenance-wiring.js": 8,
   "test-6.6b-insight-names.js": 4,
   "test-6.7-access-events.js": 8,
