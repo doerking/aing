@@ -11,6 +11,8 @@ function ac(n, c, d = '') { if (c) { console.log('✅ ' + n); pass++; } else { c
 const store = require('../src/knowledge-store.js');
 const R = require('../src/proposal-result.js');
 const D = require('../src/ticket-demand.js');
+const FP = require('../src/field-promote.js');
+const K = require('../src/kespi.js');
 
 const rows = (sql, binds = []) => { const s = store._getDb().prepare(sql); if (binds.length) s.bind(binds); const a = []; while (s.step()) a.push(s.getAsObject()); s.free(); return a; };
 const one = (sql, binds = []) => rows(sql, binds)[0];
@@ -41,10 +43,17 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
   await store.init(path.join(yard, 'k.db'));
 
   for (const [id, st] of [['e-kd', 'past'], ['e-tgt', 'past'], ['e-fut', 'future'], ['e-pst', 'past'],
-    ['e-dup', 'past'], ['e-dup2', 'past'], ['e-rep', 'past'], ['e-rep2', 'past'], ['e-kq', 'past']]) mkEnt(id, st);
+    ['e-dup', 'past'], ['e-dup2', 'past'], ['e-rep', 'past'], ['e-rep2', 'past'], ['e-kq', 'past'],
+    ['e-str', 'past'], ['e-str2', 'past'], ['e-str3', 'past'], ['e-src', 'past'], ['e-dst', 'past']]) mkEnt(id, st);
   // AC-5 用：已存在一条边
   store._getDb().run(
     "INSERT INTO links (source_id,target_id,relation,confidence,strength,evidence,created_at) VALUES ('e-dup','e-dup2','pollinate-candidate',0.5,4,'[]',CURRENT_TIMESTAMP)");
+
+  // AC-13 用：4 条「早建、近期退役」的候选边——只计入边退、唔计入边产，把 conservation 的
+  // verdict 拉回带内（唔造的话新库恒判 growth-only，提升闸全拒）
+  const _ret = ["'e-tgt','e-pst'", "'e-str3','e-tgt'", "'e-dst','e-tgt'", "'e-dup2','e-tgt'"];
+  for (const pair of _ret) store._getDb().run(
+    `INSERT INTO links (source_id,target_id,relation,confidence,strength,evidence,created_at,invalid_at) VALUES (${pair},'pollinate-candidate',0.5,4,'[]',datetime('now','-35 days'),CURRENT_TIMESTAMP)`);
 
   const demandKd = D.demandFor('kd-cited');
   const demandKq = D.demandFor('kq-low');
@@ -54,8 +63,12 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
   mkTicket('t-dup', 'e-dup', 'kd-cited', demandKd);
   mkTicket('t-nf', 'e-kd', 'kd-cited', demandKd);
   mkTicket('t-rep', 'e-rep', 'kd-cited', demandKd);
+  mkTicket('t-one', 'e-str', 'kd-cited', demandKd);
+  mkTicket('t-str', 'e-str', 'kd-cited', demandKd);
+  mkTicket('t-e2e', 'e-src', 'kd-cited', demandKd);
   mkTicket('t-kq', 'e-kq', 'kq-low', demandKq, 0.2);
   store._persist();
+  await K.kespiStep(store, {});   // 先算一轮评分当基线
 
   const before = one("SELECT last_access, status, confidence, invalid_at, strand FROM entities WHERE id = 'e-kd'");
   const n0 = countLinks();
@@ -68,11 +81,11 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
     JSON.stringify(R.WRITE_BACK));
 
   // AC-2 合格回单 → 建一条候选边
-  const r1 = await R.applyProposalResult(store, 't-kd', { result: { ...BASE, edges: [{ target: 'e-tgt', evidence: ['被正文强引用'] }] } });
+  const r1 = await R.applyProposalResult(store, 't-kd', { result: { ...BASE, edges: [{ target: 'e-tgt', evidence: ['正文强引用', '同标签共现'] }] } });
   const e1 = one("SELECT source_id, target_id, relation, confidence, strength, evidence FROM links WHERE source_id = 'e-kd' AND target_id = 'e-tgt'");
   ac('AC-2 kd-cited 回单建一条 pollinate-candidate 候选边（confidence 0.5 / strength 4 / evidence 为 JSON 数组）',
     !!r1.ok && !!e1 && e1.relation === 'pollinate-candidate' && e1.confidence === 0.5 && e1.strength === 4 &&
-    e1.target_id === 'e-tgt' && JSON.stringify(JSON.parse(e1.evidence)) === JSON.stringify(['被正文强引用']) &&
+    e1.target_id === 'e-tgt' && JSON.stringify(JSON.parse(e1.evidence)) === JSON.stringify(['正文强引用', '同标签共现']) &&
     countLinks() === n0 + 1,
     JSON.stringify({ r1, e1, n0, n: countLinks() }));
 
@@ -100,21 +113,21 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
 
   // AC-4 future→past 拒（应用层预检，唔靠 DB 触发器抛错）
   const n4 = countLinks();
-  const r4 = await R.applyProposalResult(store, 't-f2p', { result: { ...BASE, edges: [{ target: 'e-pst', evidence: ['加工产物引原料'] }] } });
+  const r4 = await R.applyProposalResult(store, 't-f2p', { result: { ...BASE, edges: [{ target: 'e-pst', evidence: ['加工产物引原料', '同标签共现'] }] } });
   ac('AC-4 future 源 → past 目标：拒 future-to-past，零建边',
     !r4.ok && r4.reason === 'future-to-past' && countLinks() === n4,
     JSON.stringify({ r4, n: countLinks() }));
 
   // AC-5 已有边幂等 skip
   const n5 = countLinks();
-  const r5 = await R.applyProposalResult(store, 't-dup', { result: { ...BASE, edges: [{ target: 'e-dup2', evidence: ['重复建边'] }] } });
+  const r5 = await R.applyProposalResult(store, 't-dup', { result: { ...BASE, edges: [{ target: 'e-dup2', evidence: ['重复建边', '第二类证据'] }] } });
   ac('AC-5 已存在同向/反向边 → edge-exists 幂等 skip，links 数唔变',
     !r5.ok && r5.reason === 'edge-exists' && countLinks() === n5,
     JSON.stringify({ r5, n5, n: countLinks() }));
 
   // AC-10 目标唔存在拒
   const n10 = countLinks();
-  const r10 = await R.applyProposalResult(store, 't-nf', { result: { ...BASE, edges: [{ target: 'nope', evidence: ['目标唔存在'] }] } });
+  const r10 = await R.applyProposalResult(store, 't-nf', { result: { ...BASE, edges: [{ target: 'nope', evidence: ['目标唔存在', '第二类'] }] } });
   ac('AC-10 target 唔存在 → 拒 target-not-found，零建边',
     !r10.ok && r10.reason === 'target-not-found' && countLinks() === n10,
     JSON.stringify({ r10, n: countLinks() }));
@@ -135,6 +148,30 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
     !!r9.ok && one("SELECT content FROM entities WHERE id = 'e-kq'").content === LONG &&
     JSON.parse(one("SELECT tags FROM entities WHERE id = 'e-kq'").tags).length === 3,
     JSON.stringify({ r9 }));
+
+  // AC-11（修订 A）：证据去重后 < 2 类 → 拒，唔建（否则建的边永远提唔升）
+  const n11 = countLinks();
+  const r11 = await R.applyProposalResult(store, 't-one', { result: { ...BASE, edges: [{ target: 'e-str2', evidence: ['只有一条证据'] }] } });
+  ac('AC-11 证据去重后 < 2 类 → 拒 no-evidence、零建边（与成种/提升闸同口径）',
+    !r11.ok && r11.reason === 'no-evidence' && countLinks() === n11,
+    JSON.stringify({ r11, n11, n: countLinks() }));
+
+  // AC-12（修订 A）：strength 按 distinct 算——重复堆条数唔得假强
+  const r12 = await R.applyProposalResult(store, 't-str', { result: { ...BASE, edges: [{ target: 'e-str3', evidence: ['a', 'b', 'b'] }] } });
+  const e12 = one("SELECT relation, strength FROM links WHERE source_id = 'e-str' AND target_id = 'e-str3'");
+  ac('AC-12 strength 按 distinct 算：3 条含重复的证据（distinct 2）→ 系 4 唔系 6',
+    !!r12.ok && !!e12 && e12.strength === 4,
+    JSON.stringify({ r12, e12 }));
+
+  // AC-13（修订 A，端到端）：建候选边 → promoteEdges 提升 → kd 真变动
+  const r13 = await R.applyProposalResult(store, 't-e2e', { result: { ...BASE, edges: [{ target: 'e-dst', evidence: ['正文强引用', '同标签共现'] }] } });
+  const p13 = await FP.promoteEdges(store, {});
+  const e13 = one("SELECT relation, strength FROM links WHERE source_id = 'e-src' AND target_id = 'e-dst'");
+  await K.kespiStep(store, {});
+  const kd13 = Number(one("SELECT kd FROM kespi_scores WHERE entity_id = 'e-src'").kd);
+  ac('AC-13 端到端闭环：候选边 → promoteEdges 提升成 hydrogen-bond@7 → 重算后 kd > 0',
+    !!r13.ok && !!e13 && e13.relation === 'hydrogen-bond' && e13.strength === 7 && kd13 > 0,
+    JSON.stringify({ r13, e13, kd13, promoted: p13.promoted.length, refused: p13.refused }));
 
   store._persist();
   console.log(pass + '/' + (pass + fail) + ' 绿');

@@ -21,7 +21,8 @@ const WRITE_BACK = {
 // strength 由证据数定（≥3 种证据给 6，否则 4）——超过 3 的候选边唔该自带强边强度，提升系 promoteEdges 的职权。
 const CANDIDATE_REL = 'pollinate-candidate';
 const CANDIDATE_CONF = 0.5;
-const EDGE_MIN_KINDS = 3;
+const EDGE_MIN_KINDS = 2;          // 修订 A：与 sprout 成种 / promoteEdges 提升闸同口径
+const EDGE_MIN_KINDS_STRONG = 3;   // ≥3 类 → strength 6；否则 4
 const EDGE_STRENGTH_WEAK = 4;
 const EDGE_STRENGTH_STRONG = 6;
 const PROPOSAL_ACTIONS = ['slot', 'memo-card'];
@@ -81,10 +82,12 @@ function _applyEdges(db, t, result) {
   const applied = [];
   for (const raw of edges) {
     const edge = raw && typeof raw === 'object' ? raw : {};
-    const ev = Array.isArray(edge.evidence)
-      ? edge.evidence.filter(x => x != null && String(x).trim() !== '')
-      : [];
-    if (ev.length === 0) return { ok: false, reason: 'no-evidence', applied: [] };
+    // 修订 A：证据去重后才数——与「≥2 类独立证据才成种」（sprout）与提升闸
+    // （promoteEdges 的 distinct.length >= 2）同口径。唔然 1 条证据就建边，
+    // 建的边永远提唔升，闭环喺呢度断。
+    const evid = Array.isArray(edge.evidence) ? edge.evidence : [];
+    const ev = [...new Set(evid.map((x) => String(x == null ? '' : x).trim()).filter(Boolean))];
+    if (ev.length < EDGE_MIN_KINDS) return { ok: false, reason: 'no-evidence', applied: [] };
     const target = String(edge.target == null ? '' : edge.target).trim();
     if (!target) return { ok: false, reason: 'no-evidence', applied: [] };
     const dst = _one(db, 'SELECT id, strand FROM entities WHERE id = ?', [target]);
@@ -97,7 +100,8 @@ function _applyEdges(db, t, result) {
       'SELECT 1 AS x FROM links WHERE (source_id = ? AND target_id = ?) OR (source_id = ? AND target_id = ?)',
       [src.id, target, target, src.id]);
     if (dup) return { ok: false, reason: 'edge-exists', applied: [], soft: true };
-    const strength = ev.length >= EDGE_MIN_KINDS ? EDGE_STRENGTH_STRONG : EDGE_STRENGTH_WEAK;
+    // strength 按 distinct 类数定（重复堆条数唔得假强）
+    const strength = ev.length >= EDGE_MIN_KINDS_STRONG ? EDGE_STRENGTH_STRONG : EDGE_STRENGTH_WEAK;
     const ins = db.prepare(
       `INSERT INTO links (source_id, target_id, relation, confidence, strength, evidence, created_at)
        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`);
