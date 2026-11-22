@@ -18,7 +18,7 @@ status: active
 | 代码库 | `G:\DPD\aing-v2`（git 已初始化，基线 commit `361ee98`）|
 | 旧库 | `G:\DPD\aing` 冻结只读，**唔碰** |
 | 门禁 | `node verify-deploy.js` → C0–C5 ALL GREEN（2026-11-16）|
-| 测试 | `npm test` → 175 档 / 1151 条断言全绿 |
+| 测试 | `npm test` → 175 档 / 1154 条断言全绿 |
 | test 计数守 | `npm run test:guard`（基线 `test/baseline.json`，只加唔减）|
 | 任务总数口径 | **78 任务**（M0=5(+3 附) / M1=15 / M2=18 / M3=15 / M4=6 / M5=3 / M6=15 / M7=1）|
 
@@ -125,7 +125,7 @@ status: active
 ## 五·补 总验收（2026-11-16 夜）
 
 - **95/96 任务落地**（M0 5 / M1 15 / M2 18 / M3 15 / M4 6 / M5 3 / M6 33；M2 2.7/2.8 占位另计）
-- **175 档 / 1151 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
+- **175 档 / 1154 条断言全绿**；`node verify-deploy.js` → **C0–C21 共 33 项 ALL GREEN**
 - **真库**：`data/knowledge.db`（117 实体 / 1009 边，迁移双指纹复核一致）
 - **旧库**：只读未动，SHA-256 与 mtime 前后一致；报告 `data/migration-report.json`
 - 交接与取舍：`docs/HANDOFF-2026-11-16.md`
@@ -265,11 +265,15 @@ status: active
 | 8.13 | batch-ingest 落地（D14 第 1 项）：cli.js compile | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 A | **发现**：`src/compile.js` 嘅 `compile()` 本身就系 batch-ingest（walk 目录 → frontmatter → 实体 upsert → compile_audit，幂等按 id 去重）——按「唔另起平行机制」纪律，batch-ingest = 暴露 `cli.js compile --dir`（唔新造）。新增 `cmdCompile` 接线 + usage + main 分发；复用 `compile(rawDir, store, {quality})`，唔改 compile 本体。test-3.14b-cli-compile 4/4（cmdCompile 已暴露 / 建实体 + frontmatter 解析（type/tags/name）/ 幂等重跑 skipped / compile_audit 留痕）；173 档/1138 断言全绿 + 33 项 ALL GREEN |
 | 8.14 | search-and-ingest 落地（D14 第 2 项）：cli.js ingest-search | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 B | query 拆词（len>=2）评分源档（name+type+tags+content 命中占比），选 top-N ≥ threshold（默认 0.5/5），经 `compile(source, store, {files})` 入库——**复用 compile 管线**（gate/upsert/compile_audit/幂等），唔另起平行入库机制。compile 扩展 `opts.files`（绝对路径数组，`Array.isArray` 判——空数组=处理零档，否则 walk 全目录）。新增 `src/search-ingest.js`（searchIngest/searchableText/scoreText）+ `cmdSearchIngest` 接线。test-3.14c-search-ingest 4/4（cmdSearchIngest 已暴露 / 评分选档入库（rel-a 入、rel-b/unrelated 唔入）/ 幂等重跑 skipped / 高阈值零入库）；174 档/1142 断言全绿 + 33 项 ALL GREEN |
 
-| 8.15 | api entity REST 落地（D14 第 3 项）：cli.js api | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 C | 四条路由：`GET /health`（200 ok/entities/backend）、`GET /entities`（`q` name 模糊 + `limit` 缺省 50 上限 200 + `offset`，**列表唔返 content**）、`GET /entities/:id`（200 / 404 `found:false`）、`POST /entities`。**写面单源**：POST 只走 `api-gate.gateWrite`（身份闸 + 标签闸：自报 status/confidence/tags 一律忽略、提案段留痕），唔另起平行写路径——与前两项「暴露既有能力」同一纪律；读面纯 SELECT，唔碰 `last_access`（无旁路访问面）。新增 `src/entity-api.js`（listEntities/readEntity/handleRequest/createServer；`node:http` 零外部依赖；store 注入，C5 守）+ `cmdApi` 接线；`--json` = 起服自检（绑端口即关，exit0），`--port 0` 取随机端口。状态码：201 接受 / 409 已存在 / 403 身份唔认 / 400 缺 id 或坏 JSON / 413 超 1 MiB / 404 未命中或未知路由。test-3.14d-api-rest 9/9（含 spawn `cli.js api --port 0 --json` 真跑 + 假 req/res 纯路由解析）；175 档 / 1151 条断言全绿 + 33 项 ALL GREEN。**D14 入库线三项全清**（batch / search / api）。|
+| 8.15 | api entity REST 落地（D14 第 3 项）：cli.js api | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 C | 四条路由：`GET /health`（200 ok/entities/backend）、`GET /entities`（`q` name 模糊 + `limit` 缺省 50 上限 200 + `offset`，**列表唔返 content**）、`GET /entities/:id`（200 / 404 `found:false`）、`POST /entities`。**写面单源**：POST 只走 `api-gate.gateWrite`（身份闸 + 标签闸：自报 status/confidence/tags 一律忽略、提案段留痕），唔另起平行写路径——与前两项「暴露既有能力」同一纪律；读面纯 SELECT，唔碰 `last_access`（无旁路访问面）。新增 `src/entity-api.js`（listEntities/readEntity/handleRequest/createServer；`node:http` 零外部依赖；store 注入，C5 守）+ `cmdApi` 接线；`--json` = 起服自检（绑端口即关，exit0），`--port 0` 取随机端口。状态码：201 接受 / 409 已存在 / 403 身份唔认 / 400 缺 id 或坏 JSON / 413 超 1 MiB / 404 未命中或未知路由。test-3.14d-api-rest 12/12（含 spawn `cli.js api --port 0 --json` 真跑 + 假 req/res 纯路由解析 + 修订 D ready 契约 AC-9/AC-10 + 8.19 q 模糊 AC-11）；175 档 / 1154 条断言全绿 + 33 项 ALL GREEN。**D14 入库线三项全清**（batch / search / api）。|
 
 | 8.16 | greenZoneGate 拍板依据复量（D12 关闸安全阀） | ✅ 收口 | `docs/Engineering/GREENZONE-REPROBE-2026-11-22.md` | 2026-11-21 拍板「关」的理由系「真库 13 候选全 overall<0.60 → 开闸 0 影响」，今日复量**该理由已失效**：真库 322 实体中 overall≥0.60 有 106 张，13 单里 **4 张已漂过绿线**（0.6367/0.6533/0.67/0.67）→ 开闸剔 4/13。**根因唔系库变脏，系 `ka` 时效维漂移**（七天内 =1，之后 `exp(-days/30)` 衰减）——实体近期被访问 → `ka=1` → overall 由 <0.60 漂上 0.60+。所以「开闸剔几张」唔系固定数，**会随库活跃度漂**。4 张全系 `kd` 结构性误报：`kd` = 出向强边 / 3，呢啲系「被引用」型实体（出向强边 0、入向边 3–12），`kd=0` 唔系质量病，系维定义唔适用。**口径裁定**：① 维持默认 0（关）——`test-6.8b-greenzone` AC-1 已锁，唔靠人记；② 「开闸 0 影响」呢句作废，替换成「剔张数随 `ka` 漂移，当前 4/13」；③ 根治系给 `kd` 加双向催化口径或索引型实体豁免——另立任务，唔喺闸上打补丁。新增只读探针 `tools/greenzone-probe.js`（缺省先复制真库到临时 yard，唔动真库；`--db <副本>` 直量；闸扫 `persist:false`）。| 
 
 | 8.17 | kd 双向催化口径四方案量化（D12/D18 关联） | 🟡 待拍板 | `docs/Engineering/KD-BIDIR-REPROBE-2026-11-22.md` | 接 GREENZONE-REPROBE 往下挖：`kd = clamp01(出向强边/3)` 系单向口径，「被引用型」实体（出向强边 0、入向强边 3–12）结构性背 `kd=0` 的债。四方案真库副本量化（322 实体）：现状 `kd=0` 272 张 / `overall≥0.60` 106 张；A 双向（(出+入)/3）114 张但提幅 +0.18～0.20 系把「被引用」当「催化」，语义混淆；**B 无差别豁免会误压 28 张真催化型实体**（`agent-skills-registry` 出向强边 15，`kd` 1→0.5、`overall` 0.87→0.77，假差）；**B′ 条件豁免**（出向>0 照旧；否则入向≥2 给中性 0.5）零误伤、提幅 +0.10、`overall≥0.60` 仅 108 张。**B′ 的真代价**：豁免条件与 `kd-cited/slot` 开票条件（`kd<0.30` 且入向强边≥2）**完全重合** → B′ 唔系修 bug，系**取消一类工单**（真库 8 个 slot 候选全部唔再开单），直接推翻 D18 已裁定「被引用唔催化 → slot（P3 提案）」。另量出：`kd=0` 占 84.5% 系**库拓扑事实**（多数实体既唔催化又唔被引用），B′ 后仍 264 张——唔系口径 bug，唔该硬调。**三选项**：① 维持现状（最低风险）② B′ opt-in 旋钮（需明确推翻 D18）③ 闸口径分离（评分唔动，只改开票范围，可比性零破坏）。量化完成，落地待 owner 拍板。| 
+
+| 8.18 | api REST 起服契约补 `ready`（D14 第 3 项补漏） | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 D | **缘起系真库实跑脚本踩到**：`createServer` 同步返回但 `server.listen` 系异步，同步返回后立刻取 `address()` 得 `null` → `http.request` 落到默认 80 端口 → **`ECONNREFUSED 127.0.0.1:80`**；调用方被迫自己挂 `server.once('listening')`（契约泄漏 Node 事件细节）。**修**：`createServer` 返回值增 **`ready`**（`Promise<void>`：`listening` resolve / `error` reject；resolve 后移除 error listener 唔残留）；`cli.js cmdApi` 改 `await svc.ready`（唔再自挂 listening，唔该打印 `port: null`）。spec 修订 D 明写 `ready` **唔得用 `setTimeout` 轮询**（轮询系猜时序）。test-3.14d 增 AC-9（ready 契约）/ AC-10（ready 真连）——先验红（9 绿 2 红）后转绿，11/11。| 
+
+| 8.19 | api REST 列表 `q` 模糊口径修正（实现偏离 spec） | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 C（契约本已写「q name 模糊」） | **系真库实跑踩到**：用 `q=白名单` 查 name「真库实跑白名单探针」→ `total: 0`。**根因**：`binds = [escape(q) + '%']` **只有右通配** → 退化到**前缀匹配**（`q=api` 前缀命中 1、中缀命中 0），与契约的「模糊」不符。**修**：`['%' + _likeEscape(q) + '%']` 双向通配；转义（`%`/`_`/`\`）保留。test-3.14d 增 AC-11（中缀命中 + 前缀仍命中），先验红（mid total 0 / pre total 1）后转绿，12/12。| 
 
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
