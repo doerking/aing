@@ -43,7 +43,9 @@ function listEntities(store, opts = {}) {
   const offset = Number.isFinite(Number(opts.offset)) && Number(opts.offset) > 0
     ? Math.floor(Number(opts.offset)) : 0;
   const where = q ? "WHERE name LIKE ? ESCAPE '\\'" : '';
-  const binds = q ? [_likeEscape(q) + '%'] : [];
+  // 模糊 = 双向通配（`%q%`）：中缀亦命中。只写右通配会退化到前缀匹配，
+  // 与 SPEC-3.14 修订 C「q name 模糊」不符（真库实跑踩过：name「真库实跑白名单探针」，q=白名单 → 0 命中）。
+  const binds = q ? ['%' + _likeEscape(q) + '%'] : [];
   const total = Number(_scalar(db, `SELECT COUNT(*) AS n FROM entities ${where}`, binds).n);
   const stmt = db.prepare(
     `SELECT ${LIST_COLUMNS} FROM entities ${where} ORDER BY updated_at DESC, id LIMIT ? OFFSET ?`
@@ -142,7 +144,9 @@ async function handleRequest(req, res, store) {
   _send(res, 404, { error: 'not-found', route });
 }
 
-// SPEC-3.14 修订 C 契约：createServer({port, host, store}) -> {server, address(), close()}
+// SPEC-3.14 修订 D 契约：createServer({port, host, store}) -> {server, address(), ready, close()}
+// 修订 D：listen 系异步，同步返回后 address() 为 null。返回 ready（Promise<void>），
+// 调用方只需 await ready 即可安全取端口——唔该泄漏 Node 事件细节，唔该 setTimeout 轮询。
 function createServer(opts = {}) {
   const port = opts.port == null ? 3000 : Number(opts.port);
   const host = opts.host || '127.0.0.1';
@@ -151,8 +155,15 @@ function createServer(opts = {}) {
     handleRequest(req, res, store).catch(() => { try { _send(res, 500, { error: 'internal' }); } catch (_) {} });
   });
   server.listen(port, host);
+  const ready = new Promise((resolve, reject) => {
+    const onListen = () => { server.removeListener('error', onError); resolve(); };
+    const onError = (e) => { server.removeListener('listening', onListen); reject(e); };
+    server.once('listening', onListen);
+    server.once('error', onError);
+  });
   return {
     server,
+    ready,
     address: () => (server.address() ? server.address().port : null),
     close: () => new Promise((resolve) => server.close(() => resolve()))
   };

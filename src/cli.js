@@ -78,7 +78,8 @@ async function cmdApi(dbPath, opts = {}) {
     host: opts.host || '127.0.0.1',
     store: s
   });
-  await new Promise(res => svc.server.once('listening', res));
+  // 修订 D：起服回执必须喺 listen 完成后打，唔该打印 port: null；唔自挂 listening 事件
+  await svc.ready;
   const bound = {
     port: svc.address(),
     host: svc.server.address().address,

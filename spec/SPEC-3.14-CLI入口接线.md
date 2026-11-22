@@ -142,6 +142,9 @@ upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
 ### 修订 C 契约
 
 - `createServer({port, host, store}) -> {server, address(), close()}`（`port` 可传 `0` 取随机端口，供测试）
+- **修订 D**：`createServer` 返回值增 **`ready`**（`Promise<void>`，`listening` 事件到达即 resolve）。`server.listen` 系异步——同步返回后立刻取 `address()` 会得 `null`，调用方被迫自己挂 `server.once('listening')`。**契约要求：调用方只需 `await svc.ready` 即可安全取端口**，唔该泄漏 Node 事件细节。
+  - `ready` 唔该 `setTimeout` 轮询实现（轮询系猜时序，唔系契约）；`error` 事件须使 `ready` reject，唔该永挂。
+  - `cli.js api` 命令行亦须 `await ready` 后再打印起服回执（唔该打印 `port: null`）。
 - `handleRequest(req, res, store)`：路由解析 + 分发，纯处理唔监听（测试直接喂假 req/res，唔靠 spawn）
 - `listEntities(store, {q, limit, offset}) -> {total, limit, offset, entities}`
 - `readEntity(store, id) -> {found, entity}`
@@ -158,6 +161,8 @@ upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
 | AC-5 | 幂等与未命中 | 同 id 重发 → 409；未命中 id → 404 `found:false` |
 | AC-6 | 错误面 | 坏 JSON → 400；未知路由 → 404 |
 | AC-7 | CLI 真跑 | spawn `cli.js api --port 0 --json` → exit0、回执含实际端口 |
+| AC-8 | **ready 契约（修订 D）** | `createServer` 返回 `ready`；`await ready` 后 `address()` 为非空整数——**调用方唔需自己挂 `server.once('listening')`**；`ready` 唔得用 `setTimeout` 轮询 |
+| AC-9 | **ready 真连（修订 D）** | `await svc.ready` 后 `GET /health` 真跑 200；端口被占 / listen 失败时 `ready` 须 reject，唔该永挂 |
 
 ### 修订 C Non-Goals
 

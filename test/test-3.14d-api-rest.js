@@ -127,6 +127,53 @@ function fakeRes() {
     out.code === 0 && !!cliJson && Number.isInteger(cliJson.port),
     JSON.stringify({ code: out.code, out: out.out.slice(0, 120), err: out.err.slice(0, 120) }));
 
+  // AC-9（spec AC-8）ready 契约：createServer 返回 ready；await 后 address() 为正整数。
+  // 修订 D 前的真实缺陷：listen 系异步，同步返回后 address() 为 null，
+  // 调用方被迫自己挂 server.once('listening')（本文件上方仍在噚此写法）。
+  let ac9ok = false, ac9why = '';
+  try {
+    const s2 = entityApi.createServer({ port: 0, host: '127.0.0.1', store: s });
+    ac9ok = s2.ready != null && typeof s2.ready.then === 'function';
+    if (!ac9ok) ac9why = 'ready 未导出: ' + JSON.stringify(Object.keys(s2));
+    else {
+      await s2.ready;
+      const p2 = s2.address();
+      ac9ok = Number.isInteger(p2) && p2 > 0;
+      if (!ac9ok) ac9why = 'ready 后 address() 非正整数: ' + String(p2);
+    }
+    try { await s2.close(); } catch (_) {}
+  } catch (e) { ac9ok = false; ac9why = e.message; }
+  ac('AC-9 ready 契约：await ready 后 address() 为正整数（唔需自挂 listening）', ac9ok, ac9why);
+
+  // AC-10（spec AC-9）ready 真连：唔自挂 listening，只靠 await ready，然后真请求 /health
+  const savedPort = port;
+  let ac10ok = false, ac10why = '';
+  try {
+    const s3 = entityApi.createServer({ port: 0, host: '127.0.0.1', store: s });
+    await s3.ready;
+    port = s3.address();
+    const h3 = await call('GET', '/health');
+    ac10ok = h3.status === 200 && h3.json != null && h3.json.ok === true;
+    if (!ac10ok) ac10why = JSON.stringify({ port: port, status: h3.status, body: h3.raw || h3.json });
+    try { await s3.close(); } catch (_) {}
+  } catch (e) { ac10ok = false; ac10why = e.message; }
+  finally { port = savedPort; }
+  ac('AC-10 ready 真连：await ready 后 GET /health 真跑 200', ac10ok, ac10why);
+
+  // AC-11（真库实跑踩到）：q 须系**模糊**（中缀命中），唔该系前缀匹配。
+  // 缺陷形态：binds = [escape(q) + '%'] 只有右通配 → 只匹配「以 q 开头」的 name，
+  // 与 spec「q name 模糊」不符（真库实跑：name=「真库实跑白名单探针」，q=白名单 → 0 命中）。
+  let ac11ok = false, ac11why = '';
+  try {
+    const mid = await call('GET', '/entities?q=' + encodeURIComponent('探针'));
+    const pre = await call('GET', '/entities?q=' + encodeURIComponent('api'));
+    ac11ok = mid.status === 200 && mid.json && Number(mid.json.total) >= 1
+      && Array.isArray(mid.json.entities) && mid.json.entities.some(e => e.id === 'wiki-api-probe')
+      && pre.status === 200 && pre.json && Number(pre.json.total) >= 1;
+    if (!ac11ok) ac11why = JSON.stringify({ mid: { status: mid.status, total: mid.json && mid.json.total }, pre: { status: pre.status, total: pre.json && pre.json.total } });
+  } catch (e) { ac11why = e.message; }
+  ac('AC-11 q 系模糊匹配（中缀命中 + 前缀仍命中）', ac11ok, ac11why);
+
   if (srv) await new Promise(res => srv.server.close(() => res()));
   storeMod._close();
   console.log(`${pass}/${pass + fail} 绿`);
