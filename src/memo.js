@@ -254,22 +254,3 @@ async function buildMemo(store, opts = {}) {
 }
 
 module.exports = { buildMemo, SYSTEM_LINE_MAX, PULSE_STATES, PULSE_MARKERS, STALL_THRESHOLD, pulseOf, vectorStatus: (x) => _vectorDiagnostics(x && typeof x._getDb === 'function' ? x._getDb() : x) };
-
-// ── CLI 面（顶替旧版 aing 嘅出场接线兼容）：node src/memo.js --summary ──
-// 旧仓 aing 出场接线（AGENTS.md 常驻）用呢个接口读仪表台三块；v2 顶替后保持同接口。
-if (require.main === module) {
-  const args = process.argv.slice(2);
-  if (args.includes('--summary')) {
-    (async () => {
-      const store = require('./knowledge-store.js');
-      const path = require('path');
-      const dbPath = process.env.AING_DB || 'data/knowledge.db';
-      await store.init(path.resolve(process.cwd(), dbPath));
-      const m = await buildMemo(store, {});
-      console.log(JSON.stringify({
-        user: m.user, swarm: m.swarm, pulse: m.pulse,
-        systemLine: m.systemLine, agentTodos: m.agentTodos
-      }, null, 2));
-    })().catch((e) => { console.error(e.message); process.exit(1); });
-  }
-}

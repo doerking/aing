@@ -7,7 +7,7 @@ process.on('exit', () => { try { fs.rmSync(yard, { recursive: true, force: true 
 let pass = 0, fail = 0;
 function ac(n, c, d = '') { if (c) { console.log('✅ ' + n); pass++; } else { console.log('❌ ' + n + (d ? ' — ' + d : '')); fail++; } }
 
-const OLD_DB = process.env.AING_OLD_DB || path.resolve(__dirname, '..', '..', 'aing', 'knowledge.db');
+const OLD_DB = process.env.AING_OLD_DB || path.resolve(__dirname, '..', '..', 'aing-retired-2026-11-22', 'knowledge.db');
 
 let M, store;
 try {
