@@ -15,12 +15,14 @@ status: draft（改写版）
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `npm test` / `node test/run-all.js` | ✅ 可用 | 174 档 / 1142 条断言 |
+| `npm test` / `node test/run-all.js` | ✅ 可用 | 175 档 / 1151 条断言 |
 | `npm run test:guard` | ✅ 可用 | test 计数只加唔减（R4）|
 | `node verify-deploy.js` | ✅ 可用 | C0–C21 共 33 项门禁 |
 | `node src/memo.js` | ⬜ CLI 未接 | 读端模块已实现（3.11），命令行入口待接 |
 | `node src/neural.js` | ✅ 可用 | 控制面四动作 event/inhibit/status/verify（3.2）|
 | `node src/cli.js memo` | ✅ 可用 | CLI 开库入口（SPEC-3.14）：memo / predict / ingest / access / self-optimize / orchestrate / reindex |
+| `node src/cli.js compile` / `ingest-search` | ✅ 可用 | 入库两线（SPEC-3.14 修订 A/B）：batch-ingest、search-and-ingest，皆复用 `compile()` | 
+| `node src/cli.js api --port 3000` | ✅ 可用 | api entity REST（SPEC-3.14 修订 C）：`GET /health`、`GET /entities`、`GET /entities/:id`、`POST /entities`（写面走 `api-gate` 身份闸/标签闸）|
 | `node tools/link-sample.js --db <副本>` | ✅ 可用 | 链接质量取样单（SPEC-2.19）：edges / twohop |
 | `node tools/judge-score.js --in <已填单>` | ✅ 可用 | 只认人手判定的计分（未判拒收，分母 0 说样本不足）|
 | `node tools/semantic-bench.js` | ✅ 可用（需 devDep + 模型）| 语义后端旁路评测（SPEC-5.4）：本地 ONNX 在冻结集上出 P@10 / R@10 / 顶1，只量不接；首跑联网取模型（约 118MB），`AING_HF_HOST` 可换镜像 |

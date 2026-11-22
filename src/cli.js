@@ -69,6 +69,28 @@ async function cmdSearchIngest(dbPath, opts = {}) {
   return searchIngest(s, opts);
 }
 
+// SPEC-3.14 修订 C：api entity REST——起 HTTP 面，路由在 src/entity-api.js（写面复用 api-gate）
+async function cmdApi(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { createServer } = require('./entity-api.js');
+  const svc = createServer({
+    port: opts.port == null ? 3000 : Number(opts.port),
+    host: opts.host || '127.0.0.1',
+    store: s
+  });
+  await new Promise(res => svc.server.once('listening', res));
+  const bound = {
+    port: svc.address(),
+    host: svc.server.address().address,
+    db: resolveDbPath(dbPath),
+    routes: ['GET /health', 'GET /entities', 'GET /entities/:id', 'POST /entities'],
+    started: true
+  };
+  if (opts.selftest) { await svc.close(); return bound; }
+  console.log(`api 监听 http://${bound.host === '0.0.0.0' ? '0.0.0.0' : bound.host}:${bound.port}`);
+  return { ...bound, server: svc };
+}
+
 async function cmdBoard(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { boardOf } = require('./ticket-board.js');
@@ -159,6 +181,7 @@ function usage() {
     '  node src/cli.js ingest --payload <json>',
     '  node src/cli.js compile --dir <path>   # SPEC-3.14 修订 A：batch-ingest（markdown 知识档 → 实体，幂等）',
     '  node src/cli.js ingest-search --query "..." --source <dir> [--top N] [--threshold x]   # SPEC-3.14 修订 B：search-and-ingest',
+    '  node src/cli.js api --port 3000 [--host 127.0.0.1] [--json]   # SPEC-3.14 修订 C：api entity REST（GET /entities、/entities/:id、POST /entities、/health）',
     '  node src/cli.js orchestrate [--rounds N] [--json] [--self-optimize]',
     '  node src/cli.js access --ids a,b [--source cli]',
     '  node src/cli.js self-optimize [--cycle <id>] [--no-rescore]',
@@ -224,6 +247,16 @@ async function main(argv) {
       console.log(flags.json ? JSON.stringify(out, null, 2) : `ingest-search scanned=${out.scanned} matched=${out.matched} ingested=${out.ingested} skipped=${out.skipped} rejected=${out.rejected}`);
       return 0;
     }
+    if (cmd === 'api') {
+      const selftest = flags.json === true;
+      const out = await cmdApi(dbPath, {
+        port: flags.port != null && flags.port !== true ? Number(flags.port) : undefined,
+        host: flags.host && flags.host !== true ? String(flags.host) : undefined,
+        selftest
+      });
+      if (selftest) { console.log(JSON.stringify({ port: out.port, host: out.host, routes: out.routes }, null, 2)); return 0; }
+      return 0;
+    }
     if (cmd === 'board') {
       const out = await cmdBoard(dbPath, { limit: flags.limit ? Number(flags.limit) : undefined });
       console.log(flags.json ? JSON.stringify(out, null, 2) : (out.lines || []).join(String.fromCharCode(10)));
@@ -262,4 +295,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdSearchIngest, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdSearchIngest, cmdApi, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };

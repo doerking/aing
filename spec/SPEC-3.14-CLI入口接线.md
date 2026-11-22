@@ -111,3 +111,56 @@ upstream: [SPEC-3.11, SPEC-3.5, SPEC-1.14, SPEC-1.15 §四]
 - **compile 扩展**：`opts.files`（绝对路径数组）提供时只处理呢啲档（filter .md + 存在）；
   **空数组 = 处理零档**（`Array.isArray` 判，唔用 `.length`——否则空数组误判为「无选项」而 walk 全目录）；
   未提供时 `walkMarkdown` 照旧。`walkMarkdown` 由 compile.js 导出（复用）。
+
+---
+
+## 修订 C · api entity REST（2026-11-22）
+
+> 缘起：D14 六个未登记小件嘅第 3 项（`api-server entity REST`）。前两项目（batch-ingest、search-and-ingest）
+> 已收口，呢系 D14 唯一剩余活跃项。写面**复用 `src/api-gate.js` 嘅 `gateWrite`**（身份闸 + 标签闸，SPEC-3.6），
+> 唔另起平行写面——与修订 A/B「暴露既有能力」同一纪律。HTTP 面用 `node:http`，零外部依赖。
+> 本修订推翻 §四 Non-Goals「唔做 HTTP 面」——该项当时系因入库 CLI 未定；入库 CLI 已落，HTTP 面单独立项。
+
+### 修订 C 行为
+
+- `node src/cli.js api --port 3000 [--host 127.0.0.1] [--db <path>]`：起 HTTP 服务，绑定 store。
+- 路由四条：
+  - `GET /health` → `200 {ok:true, entities, backend}`（存活 + 实体计数 + 向量后端名）
+  - `GET /entities` → `200 {total, limit, offset, entities[]}`；查询串 `q`（name 模糊）、`limit`（缺省 50，上限 200）、`offset`（缺省 0）；列表**唔返 content**（列表面唔送正文）
+  - `GET /entities/:id` → `200 {found:true, entity}`（含 content）；未命中 `404 {found:false, id}`
+  - `POST /entities` → 读 JSON body → `gateWrite`：接受 `201`；已存在 `409`；身份唔认 `403`；缺 id `400`；坏 JSON `400`；body 超 1 MiB `413`
+- 未知路由 / 方法 → `404 {error:'not-found', route}`。
+- 全部响应 `Content-Type: application/json; charset=utf-8`。
+
+### 修订 C 铁律
+
+- **写面单源**：POST 只走 `api-gate.gateWrite`（身份闸、自报 status/confidence/tags 忽略、提案段留痕），唔新增第二条写路径。
+- **读面唔碰写端**：list/get/health 全 SELECT；唔更新 `last_access`（无旁路访问面）。
+- **组件唔直连 store**：`src/entity-api.js` 唔 `require('./knowledge-store.js')`，store 由调用方注入（C5 守）；SQL 走 `store._getDb()`，与 `api-gate.js` 同模式。
+- **唔装守护、唔起后台**：`--port` 缺省 3000；端口被占 → 非零退出（唔换端口、唔 fork，SPEC-6.48 单进程口径）。
+
+### 修订 C 契约
+
+- `createServer({port, host, store}) -> {server, address(), close()}`（`port` 可传 `0` 取随机端口，供测试）
+- `handleRequest(req, res, store)`：路由解析 + 分发，纯处理唔监听（测试直接喂假 req/res，唔靠 spawn）
+- `listEntities(store, {q, limit, offset}) -> {total, limit, offset, entities}`
+- `readEntity(store, id) -> {found, entity}`
+- `cmdApi(dbPath?, {port, host}) -> {port, host, routes, started}`（cli 接线，起服务并阻塞；`--json` 时打印起服回执后退出）
+
+### 修订 C Acceptance Criteria
+
+| # | 判据 | 检验方式 |
+|---|---|---|
+| AC-1 | 导出在位 | `cmdApi` / `createServer` / `handleRequest` / `listEntities` / `readEntity` 皆暴露 |
+| AC-2 | health 真跑 | 起服务 → `GET /health` 200、`ok=true`、`entities` 为非负整数 |
+| AC-3 | 写后读闭环 | `POST /entities`（`actor=ohana`）→ 201；`GET /entities` 含该实体；`GET /entities/:id` 返同一实体 |
+| AC-4 | 身份闸生效 | `actor` 唔系 `hana` → 403；回执 `ignored` 含 status/confidence/tags |
+| AC-5 | 幂等与未命中 | 同 id 重发 → 409；未命中 id → 404 `found:false` |
+| AC-6 | 错误面 | 坏 JSON → 400；未知路由 → 404 |
+| AC-7 | CLI 真跑 | spawn `cli.js api --port 0 --json` → exit0、回执含实际端口 |
+
+### 修订 C Non-Goals
+
+- 唔做鉴权 token / 唔做 CORS / 唔做 TLS——局域网工具面，身份语义仍系 `actor=ohana`（hana）单闸。
+- 唔做 `PATCH` / `DELETE`——铁律无物理删除（两段式退役走 SPEC-6.11 独立路径）。
+- 唔做分页游标（limit/offset 已够当前规模）；唔做流式响应。
