@@ -76,7 +76,7 @@ kespiStep → scanTickets(persist) → dispatchTickets → runP3Once
 ## 四、回退条件
 
 > **若后续任一轮真库实跑 `kd-cited` 达成率 < 50%，选项②（B′ 条件豁免）需重新拍板。**
-> 本轮 100%。
+> 本轮 100%（SPEC-6.62 归并后基数 4 张）。
 
 ## 五、关键引用
 
