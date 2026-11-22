@@ -37,8 +37,8 @@ async function importStep(store, opts = {}) {
      FROM entities WHERE id NOT LIKE 'wiki-%'`
   );
   const insertStmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, title, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, tolaria_strength, fingerprint, title, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   const linkExistsStmt = db.prepare('SELECT 1 AS one FROM links WHERE source_id = ? AND target_id = ? LIMIT 1');
   const insertLinkStmt = db.prepare(
@@ -74,7 +74,8 @@ async function importStep(store, opts = {}) {
       insertStmt.run([wikiId, row.name == null ? null : row.name, row.type == null ? null : row.type,
         row.content == null ? null : row.content, row.tags == null ? null : row.tags,
         row.status == null ? null : row.status,
-        row.confidence == null ? null : Number(row.confidence), strength, skeletonTitle]);
+        row.confidence == null ? null : Number(row.confidence), strength,
+        require('./identity.js').fingerprint(row.content), skeletonTitle]);
       stats.mirrored++;
       dirty = true;
     } else {

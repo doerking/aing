@@ -138,8 +138,8 @@ async function compile(rawDir, store, opts = {}) {
   let dirty = false;
 
   const insertStmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, fingerprint, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   const updateStmt = db.prepare(
     `UPDATE entities SET name = ?, type = ?, content = ?, tags = ?, status = ?, confidence = ?, updated_at = CURRENT_TIMESTAMP
@@ -183,7 +183,7 @@ async function compile(rawDir, store, opts = {}) {
     }
 
     if (!existing) {
-      insertStmt.run([id, row.name, row.type, row.content, row.tags, row.status, row.confidence]);
+      insertStmt.run([id, row.name, row.type, row.content, row.tags, row.status, row.confidence, require('./identity.js').fingerprint(row.content)]);
       stats.created++;
       dirty = true;
     } else if (!rowEquals(existing, row)) {

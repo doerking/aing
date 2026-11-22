@@ -1,6 +1,6 @@
 ---
 tags: [aing-v2, spec, 开单口径, fingerprint, 归并, 去重, 自优化, spec:9, engineering:8]
-description: SPEC-6.62 开单口径按 fingerprint 归并——同一内容每维只开 1 张工单，真库候选 13→7，零铁律冲突
+description: SPEC-6.62 开单口径按 fingerprint 归并——同一内容每维只开 1 张工单，真库候选 13→9，零铁律冲突
 date: 2026-11-22
 status: 已落地
 owner: hana
