@@ -24,8 +24,8 @@ async function distillStep(store, opts = {}) {
   );
   // AC-19：镜像（加工产物）落 future 档；旧行只翻工作状态，不重写产物
   const insertStmt = db.prepare(
-    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, title, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, '${ACTIVE}', ?, 'future', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+    `INSERT INTO entities (id, name, type, content, tags, status, confidence, strand, fingerprint, title, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, '${ACTIVE}', ?, 'future', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
   );
   const rawActiveStmt = db.prepare(
     `UPDATE entities SET status = '${ACTIVE}', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
@@ -66,7 +66,7 @@ async function distillStep(store, opts = {}) {
       // SPEC-7.1 AC-1：产物带 title——源有题头就继承，没有才由正文派生
       const srcTitle = (row.title != null && String(row.title).trim() !== '')
         ? String(row.title) : require('./identity.js').titleOf(content, name == null ? '未命名' : String(name));
-      insertStmt.run([wikiId, name, type, content, tags, confidence, srcTitle]);
+      insertStmt.run([wikiId, name, type, content, tags, confidence, require('./identity.js').fingerprint(content), srcTitle]);
       stats.created++;
       dirty = true;
       // 保真校验：写后读回，逐字相等（含空白/换行）
