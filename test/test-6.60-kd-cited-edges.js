@@ -44,7 +44,8 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
 
   for (const [id, st] of [['e-kd', 'past'], ['e-tgt', 'past'], ['e-fut', 'future'], ['e-pst', 'past'],
     ['e-dup', 'past'], ['e-dup2', 'past'], ['e-rep', 'past'], ['e-rep2', 'past'], ['e-kq', 'past'],
-    ['e-str', 'past'], ['e-str2', 'past'], ['e-str3', 'past'], ['e-src', 'past'], ['e-dst', 'past']]) mkEnt(id, st);
+    ['e-str', 'past'], ['e-str2', 'past'], ['e-str3', 'past'], ['e-src', 'past'], ['e-dst', 'past'],
+    ['e-rv', 'past'], ['e-rv2', 'past']]) mkEnt(id, st);
   // AC-5 用：已存在一条边
   store._getDb().run(
     "INSERT INTO links (source_id,target_id,relation,confidence,strength,evidence,created_at) VALUES ('e-dup','e-dup2','pollinate-candidate',0.5,4,'[]',CURRENT_TIMESTAMP)");
@@ -54,6 +55,10 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
   const _ret = ["'e-tgt','e-pst'", "'e-str3','e-tgt'", "'e-dst','e-tgt'", "'e-dup2','e-tgt'"];
   for (const pair of _ret) store._getDb().run(
     `INSERT INTO links (source_id,target_id,relation,confidence,strength,evidence,created_at,invalid_at) VALUES (${pair},'pollinate-candidate',0.5,4,'[]',datetime('now','-35 days'),CURRENT_TIMESTAMP)`);
+
+  // AC-14 用：e-rv2 强引用 e-rv（正向边），e-rv 系「被引用唔催化」
+  store._getDb().run(
+    "INSERT INTO links (source_id,target_id,relation,confidence,strength,evidence,created_at) VALUES ('e-rv2','e-rv','hydrogen-bond',0.8,7,'[]',CURRENT_TIMESTAMP)");
 
   const demandKd = D.demandFor('kd-cited');
   const demandKq = D.demandFor('kq-low');
@@ -66,6 +71,7 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
   mkTicket('t-one', 'e-str', 'kd-cited', demandKd);
   mkTicket('t-str', 'e-str', 'kd-cited', demandKd);
   mkTicket('t-e2e', 'e-src', 'kd-cited', demandKd);
+  mkTicket('t-rv', 'e-rv', 'kd-cited', demandKd);
   mkTicket('t-kq', 'e-kq', 'kq-low', demandKq, 0.2);
   store._persist();
   await K.kespiStep(store, {});   // 先算一轮评分当基线
@@ -172,6 +178,14 @@ const mkTicket = (id, ent, kind, demand, score = 0.1) => store._getDb().run(
   ac('AC-13 端到端闭环：候选边 → promoteEdges 提升成 hydrogen-bond@7 → 重算后 kd > 0',
     !!r13.ok && !!e13 && e13.relation === 'hydrogen-bond' && e13.strength === 7 && kd13 > 0,
     JSON.stringify({ r13, e13, kd13, promoted: p13.promoted.length, refused: p13.refused }));
+
+  // AC-14（修订 B）：反向边唔系重复——幂等须有向，与 links 主键同口径
+  const n14 = countLinks();
+  const r14 = await R.applyProposalResult(store, 't-rv', { result: { ...BASE, edges: [{ target: 'e-rv2', evidence: ['被 e-rv2 强引用', '同标签共现'] }] } });
+  const e14 = one("SELECT relation, strength FROM links WHERE source_id = 'e-rv' AND target_id = 'e-rv2'");
+  ac('AC-14 反向边唔系重复：已有 e-rv2→e-rv 时，e-rv 对 e-rv2 交回单 → 建反向边成功（唔系 edge-exists）',
+    !!r14.ok && !!e14 && e14.relation === 'pollinate-candidate' && countLinks() === n14 + 1,
+    JSON.stringify({ r14, e14, n14, n: countLinks() }));
 
   store._persist();
   console.log(pass + '/' + (pass + fail) + ' 绿');
