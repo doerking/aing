@@ -267,6 +267,8 @@ status: active
 
 | 8.15 | api entity REST 落地（D14 第 3 项）：cli.js api | ✅ 收口 | `spec/SPEC-3.14-CLI入口接线.md` 修订 C | 四条路由：`GET /health`（200 ok/entities/backend）、`GET /entities`（`q` name 模糊 + `limit` 缺省 50 上限 200 + `offset`，**列表唔返 content**）、`GET /entities/:id`（200 / 404 `found:false`）、`POST /entities`。**写面单源**：POST 只走 `api-gate.gateWrite`（身份闸 + 标签闸：自报 status/confidence/tags 一律忽略、提案段留痕），唔另起平行写路径——与前两项「暴露既有能力」同一纪律；读面纯 SELECT，唔碰 `last_access`（无旁路访问面）。新增 `src/entity-api.js`（listEntities/readEntity/handleRequest/createServer；`node:http` 零外部依赖；store 注入，C5 守）+ `cmdApi` 接线；`--json` = 起服自检（绑端口即关，exit0），`--port 0` 取随机端口。状态码：201 接受 / 409 已存在 / 403 身份唔认 / 400 缺 id 或坏 JSON / 413 超 1 MiB / 404 未命中或未知路由。test-3.14d-api-rest 9/9（含 spawn `cli.js api --port 0 --json` 真跑 + 假 req/res 纯路由解析）；175 档 / 1151 条断言全绿 + 33 项 ALL GREEN。**D14 入库线三项全清**（batch / search / api）。|
 
+| 8.16 | greenZoneGate 拍板依据复量（D12 关闸安全阀） | ✅ 收口 | `docs/Engineering/GREENZONE-REPROBE-2026-11-22.md` | 2026-11-21 拍板「关」的理由系「真库 13 候选全 overall<0.60 → 开闸 0 影响」，今日复量**该理由已失效**：真库 322 实体中 overall≥0.60 有 106 张，13 单里 **4 张已漂过绿线**（0.6367/0.6533/0.67/0.67）→ 开闸剔 4/13。**根因唔系库变脏，系 `ka` 时效维漂移**（七天内 =1，之后 `exp(-days/30)` 衰减）——实体近期被访问 → `ka=1` → overall 由 <0.60 漂上 0.60+。所以「开闸剔几张」唔系固定数，**会随库活跃度漂**。4 张全系 `kd` 结构性误报：`kd` = 出向强边 / 3，呢啲系「被引用」型实体（出向强边 0、入向边 3–12），`kd=0` 唔系质量病，系维定义唔适用。**口径裁定**：① 维持默认 0（关）——`test-6.8b-greenzone` AC-1 已锁，唔靠人记；② 「开闸 0 影响」呢句作废，替换成「剔张数随 `ka` 漂移，当前 4/13」；③ 根治系给 `kd` 加双向催化口径或索引型实体豁免——另立任务，唔喺闸上打补丁。新增只读探针 `tools/greenzone-probe.js`（缺省先复制真库到临时 yard，唔动真库；`--db <副本>` 直量；闸扫 `persist:false`）。| 
+
 ## 六、代谢健康第二口径（工程绿 ≠ 健康绿）
 
 首战体检结论（库龄 11 天口径）：守恒比 0 / 回炉单向泄漏 / 存量 hub 垄断（29 实体超 cap，头部 48 度贡献 65% 边）。
