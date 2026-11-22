@@ -66,6 +66,7 @@ upstream: [spec/SPEC-6.56-回单落地.md, spec/SPEC-6.19-寄生位注册表与�
 - **AC-11**（修订 A）：证据去重后 < 2 类 → 拒 `no-evidence`、零建边（与成种/提升闸同口径）。
 - **AC-12**（修订 A）：`strength` 按 `distinct` 算——3 条**同文**证据唔系 6，系 4（唔许重复堆强）。
 - **AC-13**（修订 A，端到端）：≥2 类证据的回单 → 建候选边 → `promoteEdges` 提升成 `hydrogen-bond`@`strength 7` → `kespiStep` 重算后该实体 `kd > 0`（闭环真跑通）。
+- **AC-14**（修订 B）：`e-x`→`e-y` 已有正向边时，`e-y` 的 `kd-cited` 单对 `e-x` 交回单 → **建反向边成功**、唔系 `edge-exists`（幂等须有向，与 `links` 主键同口径）。
 
 ## 修订 A（2026-11-22 量过）
 
@@ -84,6 +85,28 @@ upstream: [spec/SPEC-6.56-回单落地.md, spec/SPEC-6.19-寄生位注册表与�
 - **新增 AC-13（端到端闭环）**：≥2 类证据的回单 → 建候选边 → `promoteEdges` 真提升成 `hydrogen-bond`@7 → `kespiStep` 重算后 `kd > 0`。
 
 **边界（真库量过，唔修）**：`promoteEdges` 受 conservation 闸约束——`gateVerdict === 'growth-only'`（近 30 天边产 > 边退，超带上限）时**全部候选边被拒** `conservation-band`。新建的候选边本身系「在制品」却被计作 `edgeGrowth`，故**只有边产唔退边的库**（新库 / 迁移库）会自锁。真库近 30 天边退 1115 条，比值稳定在带外侧，唔系此问题；本件**唔改 `conservation.js` 口径**（改动面大，需另立任务）。夹具验闭环时须造一条已退役的候选边（`invalid_at`）把 verdict 拉回带内。
+
+---
+
+## 修订 B（2026-11-22 探针量出）
+
+**缘起**：落咗修订 A 后，用只读探针（`tools/kd-cited-reachability-probe.js`）喺真库副本上模拟「理想回单」（target = 入向强边来源），8 张 `kd-cited` 单**全部** `edge-exists` → **回单达成率 0/8**。即修订 A 只解咗「证据门槛」，未解「真库这 8 单」。
+
+**根因**：`_applyEdges` 的幂等检查系**无向**的——
+
+```sql
+WHERE (source_id = ? AND target_id = ?) OR (source_id = ? AND target_id = ?)
+```
+
+而 `links` 主键系**有向** `(source_id, target_id)`，KESPI 的 `outStrong` 亦只数 `source_id`。`kd-cited` 实体系「被引用唔催化」——佢的修法恰恰系建**反向边**（被引用者 → 引用者），而呢条反向边系**另一条真边**，唔系重复。
+
+**无向检查把两条不同的边当同一条**，直接挡死 `kd-cited` 的唯一修路。
+
+**修**：幂等检查改**有向**（只查 `(source_id, target_id)`），与 `links` 主键同口径。反向边正常落库——佢唔会撞主键，唔会重复记账。
+
+**唔系改立场**：唔改评分、唔改开票条件、唔推翻 D18。只系让幂等语义与数据模型（有向边）一致。无向检查系**过度防御**——佢保护的「反向系重复」喺本仓模型里唔成立。
+
+**新增 AC-14**：`e-x` → `e-y` 已有正向边时，`e-y` 的 `kd-cited` 单对 `e-x` 交回单 → **建反向边成功**（唔系 `edge-exists`）。
 
 ---
 

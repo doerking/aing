@@ -96,9 +96,12 @@ function _applyEdges(db, t, result) {
     const srcStrand = String(src.strand == null ? 'past' : src.strand);
     const dstStrand = String(dst.strand == null ? 'past' : dst.strand);
     if (srcStrand === 'future' && dstStrand === 'past') return { ok: false, reason: 'future-to-past', applied: [] };
+    // 修订 B：幂等须**有向**（只查本方向）——links 主键系 (source_id, target_id)，反向边系另一条真边。
+    // 原先无向检查 `(s→t) OR (t→s)` 把「被引用唔催化」的唯一修路（建反向边）当重复挡死，
+    // 真库 8 张 kd-cited 单的回单达成率因此系 0/8（见 tools/kd-cited-reachability-probe.js）。
     const dup = _one(db,
-      'SELECT 1 AS x FROM links WHERE (source_id = ? AND target_id = ?) OR (source_id = ? AND target_id = ?)',
-      [src.id, target, target, src.id]);
+      'SELECT 1 AS x FROM links WHERE source_id = ? AND target_id = ?',
+      [src.id, target]);
     if (dup) return { ok: false, reason: 'edge-exists', applied: [], soft: true };
     // strength 按 distinct 类数定（重复堆条数唔得假强）
     const strength = ev.length >= EDGE_MIN_KINDS_STRONG ? EDGE_STRENGTH_STRONG : EDGE_STRENGTH_WEAK;
