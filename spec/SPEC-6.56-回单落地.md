@@ -24,7 +24,8 @@ upstream: [spec/SPEC-6.18-提案单需求定义与寄生位.md, spec/SPEC-6.20-�
 | 单类型 | 允许写回 | 校验 |
 |---|---|---|
 | `kq-low` / `kq-low-narrative` | `entities.content`、`entities.tags` | 正文去空白后 ≥ 400 字、且与现文不同；标签若给，须是 ≥3 个非空字符串（存 JSON）|
-| 其余（kd / kc 等）| 无 | 只记账，`applied: []`、`reason: 'record-only'` |
+| `kd-cited`（被引用唔催化）| `links`（候选边）| **SPEC-6.60 接管**——本件唔落边；回单无 `edges` 时拒 `no-edges`，实体正文零变化 |
+| 其余（kc 等）| 无 | 只记账，`applied: []`、`reason: 'record-only'` |
 
 - **绝不碰**：`last_access` / `status` / `confidence` / `invalid_at` / `strand`。写回不是访问事件，不能靠它抬 ka。
 - **记账**：`evidence_json` 增 `result`（原回单）与 `applied`（每项 `{field, beforeLen, afterLen, digest}`）。票状态保持 `proposed`，交给 `verifyTickets` 按 demand.acceptance 判。
@@ -33,7 +34,7 @@ upstream: [spec/SPEC-6.18-提案单需求定义与寄生位.md, spec/SPEC-6.20-�
 
 ### 1.2 为什么不越界做事
 
-- kd/kc 的修法要靠场域动作（rebond / reconcile）或 P3 候选边过闸，不是「写一段正文」，故只记账。
+- **kd-cited 的修法是建出向边**（系 `slot` 提案、`action = slot`），走 P3 候选边过闸（**SPEC-6.60**）；kc 的修法系 `reconcile` 场域动作。两者都唔系「写一段正文」，故本件唔写正文。
 - 不在这里跑 KESPI、不在这里判接受——判定权在 `verifyTickets`（主权动作，P7 不外派）。
 
 ## 二、Acceptance Criteria

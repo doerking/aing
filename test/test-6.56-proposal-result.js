@@ -80,14 +80,13 @@ const mkTicket = (id, entityId, dim, kind, action, score, evidence) => store._ge
     !r4.ok && r4.reason === 'no-change' && t4.status === 'proposed',
     JSON.stringify({ r4, t4 }));
 
-  // AC-6 kd-cited 只记账
+  // AC-6 kd-cited 唔走正文写回（正文路径只对 kq-* 开放；建边系 SPEC-6.60 的 edges 路径）
   const e6b = one("SELECT content FROM entities WHERE id = 'e-kd'");
   const r6 = await R.applyProposalResult(store, 't-kd', { result: { ...GOOD, content: '任意' } });
   const e6a = one("SELECT content FROM entities WHERE id = 'e-kd'");
   const t6 = one("SELECT * FROM opt_tickets WHERE id = 't-kd'");
-  ac('AC-6 kd-cited → record-only，实体零变化',
-    r6.ok && r6.reason === 'record-only' && Array.isArray(r6.applied) && r6.applied.length === 0 &&
-    e6b.content === e6a.content && !!evOf(t6).result,
+  ac('AC-6 kd-cited 唔走正文写回：无 edges 的回单 → 实体正文零变化（建边路径见 SPEC-6.60）',
+    e6b.content === e6a.content && !!evOf(t6).result && (!r6.ok || (Array.isArray(r6.applied) && r6.applied.length === 0)),
     JSON.stringify({ r6, before: e6b, after: e6a }));
 
   // AC-7 不存在 / 已终态 → 拒且零写入
