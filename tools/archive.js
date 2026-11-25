@@ -139,10 +139,12 @@ if (require.main === module) {
     const store = require('../src/knowledge-store.js');
     const { planRetention } = require('../src/retention.js');
     await store.init(dbPath);
+    const nowOpt = get('now') ? new Date(get('now')) : undefined;
     const plan = planRetention(store, {
       windowDays: get('window-days') ? Number(get('window-days')) : undefined,
       maxHot: get('max-hot') ? Number(get('max-hot')) : undefined,
-      mode: get('mode') || 'desktop'
+      mode: get('mode') || 'desktop',
+      now: nowOpt
     });
     console.log(`分层：总 ${plan.counts.total}（原稿 ${plan.counts.origin} / 短料 ${plan.counts.short} / 知识 ${plan.counts.knowledge}）；超限 ${plan.overCap}；候选 ${plan.candidates.length}`);
     if (plan.mode === 'mobile-retire') {
@@ -150,7 +152,8 @@ if (require.main === module) {
       const { buildRetireRequest } = require('../src/mobile-retire.js');
       const req = buildRetireRequest(store, {
         windowDays: get('window-days') ? Number(get('window-days')) : undefined,
-        maxHot: get('max-hot') ? Number(get('max-hot')) : undefined
+        maxHot: get('max-hot') ? Number(get('max-hot')) : undefined,
+        now: nowOpt
       });
       fs.mkdirSync(outDir, { recursive: true });
       const reqPath = path.join(outDir, 'retire-request.json');

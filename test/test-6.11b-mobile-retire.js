@@ -78,7 +78,7 @@ const NOW = new Date('2026-11-17T12:00:00Z');
   // AC-6 CLI：手机模式 --apply 被拒（退出码 5），请求落盘，实体一条没少
   const outDir = path.join(yard, 'req');
   const cli = path.join(__dirname, '..', 'tools', 'archive.js');
-  const r = spawnSync(process.execPath, [cli, '--db', DB, '--out', outDir, '--mode', 'mobile-retire', '--apply'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, '--db', DB, '--out', outDir, '--mode', 'mobile-retire', '--apply', '--now', NOW.toISOString()], { encoding: 'utf8' });
   const reqPath = path.join(outDir, 'retire-request.json');
   const written = fs.existsSync(reqPath) ? JSON.parse(fs.readFileSync(reqPath, 'utf8')) : null;
   await store.init(DB);
