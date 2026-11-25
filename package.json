@@ -1,6 +1,6 @@
 {
   "name": "aing-v2",
-  "version": "0.1.0",
+  "version": "0.9.9",
   "private": true,
   "description": "aing-v2 知识代谢引擎（DNA 双铰链版）",
   "main": "src/knowledge-store.js",
