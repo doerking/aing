@@ -72,7 +72,7 @@ status: active
 | 2.1 | ① HydrogenBond 弱键可逆 | ✅ | 0.2 | test-2.8-meko-four AC-2 |
 | 2.2 | ② HistoneLayer 分层 | ✅ | 0.2 | test-2.8-meko-four AC-3 |
 | 2.3 | failing test：时界时延上界 | ✅ | 0.3 | test-2.4-timebound AC-2 |
-| 2.4 | ③ TimeboundOrchestrator | ✅ | 0.3 | test-2.4-timebound 5/5 |
+| 2.4 | ③ 时界编排器 | ✅ | 0.3 | test-2.4-timebound 5/5 |
 | 2.5 | ③ SLB/SLE 双模分流 | ✅ | 0.3 | test-2.4 AC-3 |
 | 2.6 | ③ Polar 抗干扰 | ✅ | 0.3 | test-2.4 AC-4 |
 | 2.7 | ③ 通感一体（KESPI 内嵌）| ✅ | 0.3 | test-2.4-timebound AC-5（每轮写非空 `kespi_snapshot`）；6.9b 起改读 `kespi_scores.overall` 活跃实体均值、仅零读数才落占位并标 `placeholder`，`kespi_source` 入 `meko_cycles`；八维明细未单独消费（探健康只需标量，非缺口）|

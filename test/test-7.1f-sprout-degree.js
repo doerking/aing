@@ -17,8 +17,8 @@ try { SR = require('../src/sprout-report.js'); } catch (_) { SR = null; }
   const put = (id, tags, content, type = 'Concept') =>
     store.insertEntity({ id, name: id, type, content, tags: JSON.stringify(tags), status: 'active' });
 
-  put('e1', ['三分编组:9'], '三分编组攻防学说草案');
-  put('e2', [], '三分编组派工节奏');
+  put('e1', ['编队分工:9'], '编队分工攻防学说草案');
+  put('e2', [], '编队分工派工节奏');
   put('n1', [], '单元编队');
   put('n2', [], '班长分工');
   put('n3', [], '无关噪声甲');
@@ -42,19 +42,19 @@ try { SR = require('../src/sprout-report.js'); } catch (_) { SR = null; }
     process.exit(1);
   }
 
-  const rep = SR.report(store, { keywords: ['三分编组', '孤词', '意識神經'] });
+  const rep = SR.report(store, { keywords: ['编队分工', '孤词', '意識神經'] });
   const by = Object.fromEntries((rep.keywords || []).map((k) => [k.kw, k]));
 
   ac('AC-7a sprout 只数强候选边',
-    by['三分编组'] && by['三分编组'].sprout === 2 &&
-    (by['三分编组'].reached || []).sort().join(',') === 'n1,n2',
-    JSON.stringify(by['三分编组']));
+    by['编队分工'] && by['编队分工'].sprout === 2 &&
+    (by['编队分工'].reached || []).sort().join(',') === 'n1,n2',
+    JSON.stringify(by['编队分工']));
 
   ac('AC-7b variants 数派生写法',
     by['意識神經'] && by['意識神經'].variants >= 1 &&
     (by['意識神經'].forms || []).some((f) => f.includes('意识神经')) &&
-    by['三分编组'].variants === 0,
-    JSON.stringify({ tw: by['意識神經'] && by['意識神經'].forms, s: by['三分编组'].variants }));
+    by['编队分工'].variants === 0,
+    JSON.stringify({ tw: by['意識神經'] && by['意識神經'].forms, s: by['编队分工'].variants }));
 
   ac('AC-7c 死胡同与分布',
     rep.distribution && rep.distribution.dead === 2 && rep.distribution.n === 3 &&
@@ -77,8 +77,8 @@ try { SR = require('../src/sprout-report.js'); } catch (_) { SR = null; }
     await P.promoteEdges(store, { cycleId: 'c-7d' });
     const row = db.prepare("SELECT relation, strength FROM links WHERE source_id='e2' AND target_id='n4'");
     row.step(); const ce = row.getAsObject(); row.free();
-    const rep2 = SR.report(store, { keywords: ['三分编组'] });
-    const k = (rep2.keywords || []).find((x) => x.kw === '三分编组');
+    const rep2 = SR.report(store, { keywords: ['编队分工'] });
+    const k = (rep2.keywords || []).find((x) => x.kw === '编队分工');
     ac('AC-7d 提升后仍进发芽面',
       ce.relation === 'hydrogen-bond' && Number(ce.strength) >= 7 && !!k && k.reached.includes('n4'),
       JSON.stringify({ ce, reached: k && k.reached }));
