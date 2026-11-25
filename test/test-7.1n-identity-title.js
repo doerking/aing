@@ -21,7 +21,7 @@ const ID = require('../src/identity.js');
   ac('AC-1 title 独立成列', cols.includes('title'), JSON.stringify(cols.slice(0, 20)));
 
   // AC-2 新入库：name = 序列号副本（等于 id），title = 正文派生
-  const body = '三三制攻防学说草案 v0 落档：三面合拢，三轴判定不变。';
+  const body = '三分编组攻防学说草案 v0 落档：三面合拢，三轴判定不变。';
   const r1 = ID.ingestEntity(store, { content: body, type: 'Concept' });
   const e1 = store.getEntity(r1.id);
   ac('AC-2 新入库 name=序列号、title 由正文派生',
@@ -39,7 +39,7 @@ const ID = require('../src/identity.js');
     JSON.stringify({ r2, title: after.title }));
 
   // AC-4 修订：新序列号 + 旧档 invalid_at 与 invalid_reason 指新号；新行 title 随内容变
-  const newBody = '三三制攻防学说草案 v1 落档：合并三面，轴判定改两态。';
+  const newBody = '三分编组攻防学说草案 v1 落档：合并三面，轴判定改两态。';
   let rev = null;
   try { rev = ID.reviseEntity(store, { id: r1.id, content: newBody, reason: 'v1 定稿' }); } catch (e) { rev = { error: e.message }; }
   const oldRow = store.getEntity(r1.id);
@@ -72,3 +72,4 @@ const ID = require('../src/identity.js');
   console.log(`\n----- 7.1n pass=${pass} fail=${fail} -----`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('❌ 红（环境）—— ' + e.message); process.exit(1); });
+

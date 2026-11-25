@@ -40,15 +40,15 @@ try { ID = require('../src/identity.js'); } catch (_) { ID = null; }
   // ── AC-1b 标题派生：从正文取，不取时间戳、不泄漏 JSON 外壳 ──
   const conv = JSON.stringify({ topic: '意识神经缺口工单', at: '2026-11-05T20:57:03Z', reply: '12 单就绪，W1-W12。', searchShown: [], rationale: '', outcome: 'open' });
   const t1 = ID.titleOf(conv);
-  const t2 = ID.titleOf('# 三三制学说草案\n\n正文第一段');
+  const t2 = ID.titleOf('# 三分编组学说草案\n\n正文第一段');
   const t3 = ID.titleOf('');
   ac('AC-1b 标题由正文派生',
-    t1 === '意识神经缺口工单' && t2 === '三三制学说草案' && t3.length > 0 &&
+    t1 === '意识神经缺口工单' && t2 === '三分编组学说草案' && t3.length > 0 &&
     !/^\d{4}-\d{2}-\d{2}T/.test(t1) && !t1.includes('{') && t1.length <= 40,
     JSON.stringify({ t1, t2, t3 }));
 
   // ── AC-2a 指纹去重：同内容再进返回原号，不落新行 ──
-  const body = '三三制攻防学说草案 v0 落档：三面合拢。';
+  const body = '三分编组攻防学说草案 v0 落档：三面合拢。';
   const r1 = ID.ingestEntity(store, { content: body, type: 'Concept', title: '甲标题' });
   const n1 = count();
   const r2 = ID.ingestEntity(store, { content: body, type: 'Concept', title: '乙标题' });
@@ -75,3 +75,4 @@ try { ID = require('../src/identity.js'); } catch (_) { ID = null; }
   console.log(`\n----- 7.1d pass=${pass} fail=${fail} -----`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('❌ 红（环境）—— ' + e.message); process.exit(1); });
+

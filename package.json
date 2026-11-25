@@ -2,7 +2,7 @@
   "name": "aing-v2",
   "version": "0.9.9",
   "private": true,
-  "description": "aing-v2 知识代谢引擎（DNA 双铰链版）",
+  "description": "Aing-v2 Knowledge Metabolism Engine (Top-tier Orient-Act Cycle)",
   "main": "src/knowledge-store.js",
   "scripts": {
     "test": "node test/run-all.js",
@@ -14,5 +14,15 @@
   },
   "devDependencies": {
     "@xenova/transformers": "^2.17.2"
-  }
+  },
+  "bin": {
+    "aing": "src/cli.js"
+  },
+  "license": "UNLICENSED",
+  "files": [
+    "src",
+    "tools",
+    "README.md",
+    "AGENT.md"
+  ]
 }

@@ -32,10 +32,10 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
     if (strength) db.run(`UPDATE entities SET tolaria_strength=${strength} WHERE id='${id}'`);
   };
   // 繁体正文（真实工作区形状）
-  ins('trad', '轮阵', '輪陣係判斷与行動交替嘅架構。輪陣強調冷判斷再落手。', 5);
+  ins('trad', '双相循环', '双相循环係判斷与行動交替嘅架構。双相循环強調冷判斷再落手。', 5);
   ins('noise', '杂谈', '热带农业与水果种植要点。', 5);
   // 双字证据 vs 单字散落
-  ins('bigram', '双字', '轮阵轮阵，冷判断先行。', 5);
+  ins('bigram', '双字', '双相循环双相循环，冷判断先行。', 5);
   ins('scatter', '散字', '轮与阵，冷与判断先行。', 5);
   // 双链：raw + wiki 镜像同内容
   ins('doc-a', '文档甲', '沙盒隔离验证不上真库，跑完即撤。', 5);
@@ -51,11 +51,11 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
   ac('AC-1b 建向量记新模型', r.indexed === 8 && rows.every(x => x.model === 'hash-64w2' && x.dim === 64), JSON.stringify({ r, n: rows.length }));
 
   // AC-3 简繁归一：简体查询命中繁体正文
-  const trad = await m.search(store, '轮阵是什么', { k: 3 });
+  const trad = await m.search(store, '双相循环是什么', { k: 3 });
   ac('AC-3 简繁归一（简查询命繁正文）', trad.length > 0 && trad[0].base === 'trad', JSON.stringify(trad.map(h => [h.base, +h.score.toFixed(3)])));
 
   // AC-4 双字权重
-  const bg = await m.search(store, '轮阵', { k: 4 });
+  const bg = await m.search(store, '双相循环', { k: 4 });
   const bgBase = bg.map(h => h.base);
   ac('AC-4 双字权重（双字证据排散字前）', bgBase.indexOf('bigram') >= 0 && (bgBase.indexOf('scatter') === -1 || bgBase.indexOf('bigram') < bgBase.indexOf('scatter')), JSON.stringify(bg.map(h => [h.base, +h.score.toFixed(3)])));
 
@@ -89,3 +89,4 @@ function throws(fn) { try { fn(); return false; } catch (_) { return true; } }
 
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
+

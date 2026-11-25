@@ -1,4 +1,4 @@
-'use strict';
+#!/usr/bin/env node\n'use strict';
 // aing-v2 cli.js —— M3 任务 3.14 CLI 入口（SPEC-3.14）
 // 统一开库入口（与 neural.js 同角色，arch-lint C5 白名单）：memo / ingest / orchestrate。
 // 组件本体保持纯库，store 由本层注入；库路径取 --db > AING_DB > 缺省 data/knowledge.db。

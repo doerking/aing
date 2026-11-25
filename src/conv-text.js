@@ -35,7 +35,7 @@ function firstClause(text, n = 24) {
   for (const raw of String(text || '').split(NL)) {
     const heading = /^\s*#{1,6}\s*/.test(raw);
     let t = raw.replace(/^[\s#>\-*•\d.、)（(]+/, '').trim();
-    // 提炼标签可能叠几层：【沙漏理解摘要 w1】①本质 → 循环剥净
+    // 提炼标签可能叠几层：【决策闸理解摘要 w1】①本质 → 循环剥净
     while (/^(【[^】]{0,24}】|[①-⑩])\s*/.test(t)) t = t.replace(/^(【[^】]{0,24}】|[①-⑩])\s*/, '').trim();
     if (!t || TS_NAME.test(t)) continue;
     // 退化值（上游 stringify 事故）与上一句的尾巴片段，都不当内容
@@ -91,3 +91,4 @@ function readableTopic(name, body) {
 }
 
 module.exports = { parseBody, firstClause, mdSummary, readableTopic, clip, compactTs, TS_NAME };
+

@@ -13,7 +13,7 @@ upstream: [spec/SPEC-6.62-开单口径fingerprint归并.md, src/identity.js, src
 > 上游：无（本件系 fingerprint 链路上游）
 > 状态：✅ 已落地（commit 见 STATUS 8.23）
 > 日期：2026-11-22
-> 立旗：hana
+> 定判据：hana
 
 ## 一、缘起
 
@@ -69,3 +69,4 @@ SPEC-6.62 落地时量出：真库 322 实体 = 118 真内容 × 2–3 抄（`ba
 - 线 1（查重复用）另立 spec，唔在本件。
 - **经验教训**：开库路径**唔该写盘**（每次 `init` 逐行 UPDATE 会触发 `migrated` → 尾部 persist →
   纯读子进程改 mtime → 破坏 `db-stale` 检测）。数据修复一律走一次性 migrate，唔塞开库。
+

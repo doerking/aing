@@ -122,7 +122,7 @@ upstream: [SPEC-5.1]
 
 ## 八、试验记录 · 2026-11-16（18 份真实工作区文档，非正式评测集）
 
-隔离库：`.temp/trial-20261116-194414/`（gitignored，未进真库）。文档：AGENTS / 轮阵 / 轮阵编程框架 / hana 两份 / 术语对照 / 判断成文模板 / 编程工程规范 / CODE-REVIEW-CHECKLIST / aing-v2 README·AGENT·STATUS / 4 份 SPEC / HANDOFF / 本文件。
+隔离库：`.temp/trial-20261116-194414/`（gitignored，未进真库）。文档：AGENTS / 双相循环 / 双相循环编程框架 / hana 两份 / 术语对照 / 判断成文模板 / 编程工程规范 / CODE-REVIEW-CHECKLIST / aing-v2 README·AGENT·STATUS / 4 份 SPEC / HANDOFF / 本文件。
 
 **管道**：18 份 → compile 18 实体 → import 18 镜像 + 18 氢键 → vector 36 条，memo 覆盖 100%。
 
@@ -153,3 +153,4 @@ upstream: [SPEC-5.1]
 **同一试验暴露的其它问题（未修）**：
 - 文档 frontmatter 无 `type` → 36 实体 `type` 全空，三轴判定无法启用（待补 compile 侧类型推断）。
 - `tolaria_strength` 全落默认 5（文档无 confidence）→ 9 段没有实际分级。
+

@@ -32,7 +32,7 @@ const call = async (fn, ...args) => { try { return await fn(...args); } catch (e
   const realShape = ['# 会话-2026-11-05T18:43:59.201Z', '', '## 来源', '',
     '- 原始资料：dispatch-20261106T0240-hourglass-opt-w1-2026-11-05T18-43-59-201Z', '',
     '## 内容', '', '# 会话-2026-11-05T18:43:59.201Z', '', '## 蒸馏摘要', '',
-    '- 【沙漏理解摘要 w1】①本质：可交付可自检可复用的决策纪律引擎。'].join(String.fromCharCode(10));
+    '- 【决策闸理解摘要 w1】①本质：可交付可自检可复用的决策纪律引擎。'].join(String.fromCharCode(10));
   put('conv-c', 'dispatch-20261106T0240-hourglass-opt-w1', realShape);
   await require('../src/vector.js').vectorStep(store, {});
   await store._persist?.();
@@ -53,7 +53,7 @@ const call = async (fn, ...args) => { try { return await fn(...args); } catch (e
   const r2 = await call(P.predict, store, { message: '决策纪律 可交付 可自检', k: 8 });
   const hay2 = JSON.stringify((r2 && r2.plans) || []);
   ac('AC-2 时间名回退', !/T01:23:41/.test(hay) && !/# /.test(hay) && /回炉闭环/.test(hay) &&
-    /可交付/.test(hay2) && !/蒸馏摘要|原始资料|沙漏理解摘要|session-/.test(hay + hay2),
+    /可交付/.test(hay2) && !/蒸馏摘要|原始资料|决策闸理解摘要|session-/.test(hay + hay2),
     JSON.stringify({ plans: plans.map((p) => p.hypothesis), plans2: ((r2 && r2.plans) || []).map((p) => p.hypothesis) }));
 
   // AC-3 双链同源去重：同一条正文只出一张卡
@@ -76,3 +76,4 @@ const call = async (fn, ...args) => { try { return await fn(...args); } catch (e
   console.log(`${pass}/${pass + fail} 绿`);
   process.exitCode = fail ? 1 : 0;
 })().catch((e) => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
+

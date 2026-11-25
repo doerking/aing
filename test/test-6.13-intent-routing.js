@@ -16,7 +16,7 @@ const R = require('../src/retrieval.js');
   let I = null;
   try { I = require('../src/intent.js'); } catch (_) {}
   const cases = [
-    ['三三制学说嗰份草案放咗喺边度', 'lookup'],
+    ['三分编组学说嗰份草案放咗喺边度', 'lookup'],
     ['e-20260101-0001 是哪条', 'lookup'],
     ['外派第一单搞掂未', 'recall'],
     ['上次讲过嘅复盘记录', 'recall'],
@@ -87,3 +87,4 @@ const R = require('../src/retrieval.js');
   console.log(`\n----- 6.13 pass=${pass} fail=${fail} -----`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('❌ 红（环境）—— ' + e.message); process.exit(1); });
+

@@ -2,7 +2,7 @@
 // M6 任务 6.3i failing test —— 名称路要认部分命中（SPEC-6.3 修订 H）
 // 病根（2026-11-18 真库实测）：nameScore 只认「整句 query 出现在 id 里」，自然语言问句几乎永真不中，
 // 0.3 的名称权重在真库 24 题上全为空转；而 6 道未进候选的答案卡，关键词恰恰都在 id 里
-// （首单外派 / 意识神经模块缺口 / 红蓝技能拉入 / 战役单 / 三三制攻防学说草案）。
+// （首单外派 / 意识神经模块缺口 / 红蓝技能拉入 / 战役单 / 三分编组攻防学说草案）。
 // 契约：id 整句包含仍是最高档（0.8）；部分命中按查询词在 id 上的二字覆盖比给分，上限压在其下；
 //       opts.namePartial = 0 可关回旧口径；派生标题（name 字段）永不入键（SPEC-7.1 §二）。
 const fs = require('fs'); const os = require('os'); const path = require('path');
@@ -68,3 +68,4 @@ const R = require('../src/retrieval.js');
   console.log(`\n----- 6.3i pass=${pass} fail=${fail} -----`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('❌ 红（环境）—— ' + e.message); process.exit(1); });
+

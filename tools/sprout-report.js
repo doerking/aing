@@ -2,7 +2,7 @@
 // tools/sprout-report.js —— SPEC-7.1 §十 第 7 步：发芽度报告工具（AC-7）
 // 用法：
 //   node tools/sprout-report.js                        # 真库副本，关键词取标签词面
-//   node tools/sprout-report.js --keywords 三三制,意识神经
+//   node tools/sprout-report.js --keywords 三分编组,意识神经
 //   node tools/sprout-report.js --db <path> --json
 // 口径：sprout(kw)=经 strength≥7 的三类候选边可触达实体数；variants(kw)=派生的其它写法数；
 //       hub 警戒线只报不扩（超线不因此补边）。纯读：默认在副本上跑，源库文件不动。
@@ -76,3 +76,4 @@ if (require.main === module) {
     else printTable(rep, opts.top);
   })().catch((e) => { console.error('sprout-report 失败: ' + e.message); process.exitCode = 1; });
 }
+

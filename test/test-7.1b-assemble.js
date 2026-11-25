@@ -21,12 +21,12 @@ try { ({ assemble } = require('../src/assemble.js')); } catch (e) { assemble = n
   });
 
   // 源头（past）：三条会话，原始时间故意乱序
-  ins('c-old', { type: 'Conversation', content: '三三制攻防学说草案 v0 落档，搞掂', strand: 'past' });
-  ins('c-new', { type: 'Conversation', content: '三三制草案 v1 修订，边个跟？', strand: 'past' });
-  ins('doc-1', { content: '三三制学说综述', strand: 'past' });
+  ins('c-old', { type: 'Conversation', content: '三分编组攻防学说草案 v0 落档，搞掂', strand: 'past' });
+  ins('c-new', { type: 'Conversation', content: '三分编组草案 v1 修订，边个跟？', strand: 'past' });
+  ins('doc-1', { content: '三分编组学说综述', strand: 'past' });
   // 产物（future）
-  ins('f-sum', { type: 'MetaKnowledge', content: '三三制草案摘要：三面合拢', strand: 'future' });
-  ins('f-ins', { type: 'MetaKnowledge', content: '三三制洞察：派单节奏', strand: 'future' });
+  ins('f-sum', { type: 'MetaKnowledge', content: '三分编组草案摘要：三面合拢', strand: 'future' });
+  ins('f-ins', { type: 'MetaKnowledge', content: '三分编组洞察：派单节奏', strand: 'future' });
   const db = store._getDb();
   // 原始时间定死，便于断言时间序
   db.run("UPDATE entities SET created_at='2026-11-01 09:00:00' WHERE id='c-old'");
@@ -58,8 +58,8 @@ try { ({ assemble } = require('../src/assemble.js')); } catch (e) { assemble = n
     ac('AC-11c 抽库纯读（库文件不变）', false, 'src/assemble.js 未实现');
   } else {
     const before = fs.readFileSync(dbFile);
-    const r1 = await assemble(store, '三三制草案 搞掂之后点样跟进');
-    const r2 = await assemble(store, '三三制草案 搞掂之后点样跟进');
+    const r1 = await assemble(store, '三分编组草案 搞掂之后点样跟进');
+    const r2 = await assemble(store, '三分编组草案 搞掂之后点样跟进');
 
     ac('AC-10a 抽库四件齐', r1 && ['source', 'derived', 'links', 'chain'].every(k => k in r1),
       JSON.stringify(r1 && Object.keys(r1)));
@@ -70,7 +70,7 @@ try { ({ assemble } = require('../src/assemble.js')); } catch (e) { assemble = n
       JSON.stringify({ srcIds, strands: (r1.source || []).map(x => x.strand) }));
     const dstr = JSON.stringify(r1.derived || {});
     ac('AC-10c 派生含繁简与粤普对照',
-      dstr.includes('三三制') && /誰|谁/.test(dstr) && /怎|点样|怎样/.test(dstr),
+      dstr.includes('三分编组') && /誰|谁/.test(dstr) && /怎|点样|怎样/.test(dstr),
       dstr.slice(0, 160));
     const rels = (r1.links || []).map(x => x.relation + ':' + x.strength);
     ac('AC-10d 关联只收强边/候选关系',
@@ -87,3 +87,4 @@ try { ({ assemble } = require('../src/assemble.js')); } catch (e) { assemble = n
   console.log(`\n----- 7.1b pass=${pass} fail=${fail} -----`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('❌ 红（环境）—— ' + e.message); process.exit(1); });
+
