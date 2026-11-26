@@ -7,4 +7,5 @@ data/*
 !data/eval/
 !data/lexicon/
 raw/
+view/
 

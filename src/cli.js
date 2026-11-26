@@ -127,9 +127,29 @@ async function cmdOrchestrate(dbPath, opts = {}) {
   const orch = new MekoOrchestrator({ store: s });
   const steps = Array.isArray(opts.steps) ? opts.steps : buildDefaultSteps();
   for (const step of steps) orch.registerStep(step);
-  return orch.runCycle(opts.cycleType || '代谢', {
+  const out = await orch.runCycle(opts.cycleType || '代谢', {
     rounds: opts.rounds || 2, budgetMs: opts.budgetMs, selfOptimize: opts.selfOptimize
   });
+  // 自查投影面（export-view）：代谢后重生成 view/，服务 agent 下一次判断。
+  // fail-open：代谢系命、投影系眼——导出失败只 WARN，唔改 out.ok、唔中断。
+  try {
+    const { exportView } = require('./export-view.js');
+    const v = await exportView(s, { outDir: opts.viewDir, all: opts.viewAll === true });
+    if (!v.ok) out.exportWarn = 'view 导出失败（不阻断）：' + String(v.error || '');
+    else out.exported = { files: v.files.length, dir: v.outDir };
+  } catch (e) {
+    out.exportWarn = 'view 导出异常（不阻断）：' + String(e.message || e);
+  }
+  return out;
+}
+
+// 自查投影面子命令：node src/cli.js export [--all] [--out <dir>] [--db <path>]
+async function cmdExport(dbPath, opts = {}) {
+  const s = await openStore(dbPath);
+  const { exportView } = require('./export-view.js');
+  const out = await exportView(s, { outDir: opts.out, all: opts.all === true });
+  if (!out.ok) throw new Error('export 失败：' + String(out.error || ''));
+  return out;
 }
 
 // SPEC-3.15：文件读取只在 CLI 层做，卡本体保持纯函数
@@ -280,10 +300,22 @@ async function main(argv) {
     if (cmd === 'orchestrate') {
       const out = await cmdOrchestrate(dbPath, {
         rounds: flags.rounds ? Number(flags.rounds) : undefined,
-        selfOptimize: flags['self-optimize'] === true
+        selfOptimize: flags['self-optimize'] === true,
+        viewDir: flags.out && flags.out !== true ? String(flags.out) : undefined,
+        viewAll: flags.all === true
       });
-      console.log(flags.json ? JSON.stringify(out, null, 2) : `orchestrate ok=${out.ok} rounds=${out.rounds} ${out.elapsedMs}ms`);
+      console.log(flags.json ? JSON.stringify(out, null, 2) : `orchestrate ok=${out.ok} rounds=${out.rounds} ${out.elapsedMs}ms${out.exportWarn ? '\nWARN ' + out.exportWarn : ''}${out.exported ? `\nview ${out.exported.files} 檔 → ${out.exported.dir}` : ''}`);
       return 0;
+    }
+    if (cmd === 'export') {
+      try {
+        const out = await cmdExport(dbPath, { out: flags.out && flags.out !== true ? String(flags.out) : undefined, all: flags.all === true });
+        console.log(flags.json ? JSON.stringify(out, null, 2) : `export ok=${out.ok} 檔=${out.files.length} 自指=${out.selfEdges} type空=${out.typeNull} → ${out.outDir}`);
+        return 0;
+      } catch (e) {
+        console.error('WARN export: ' + e.message);
+        return 4;
+      }
     }
     if (cmd === 'self-optimize') {
       const out = await cmdSelfOptimize(dbPath, {

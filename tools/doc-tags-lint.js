@@ -18,7 +18,7 @@ const root = dirIdx >= 0 ? path.resolve(args[dirIdx + 1]) : path.resolve(__dirna
 const profile = profIdx >= 0 && args[profIdx + 1] === 'entity' ? 'entity' : 'doc';
 const asJson = args.includes('--json');
 
-const SKIP = new Set(['node_modules', '.temp', '.git']);
+const SKIP = new Set(['node_modules', '.temp', '.git', 'view']);
 
 function walk(d, out = []) {
   for (const name of fs.readdirSync(d)) {

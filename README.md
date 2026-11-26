@@ -152,7 +152,7 @@ node src/cli.js memo                             # 加 --json 出机器可读
 
 # 7. 验收门禁（无 ALL GREEN 不宣布完成）/ Deploy gate (no ALL GREEN, not done)
 node verify-deploy.js                            # 33 项
-npm test                                         # 180 档全量测试
+npm test                                         # 181 档全量测试
 ```
 
 > **写面身份闸 / Write identity gate**：写入口（`ingest` / `POST /entities` / 控制面写端）默认**拒所有 actor**（deny-by-default）。
