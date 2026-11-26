@@ -1,6 +1,6 @@
 {
   "name": "aing-v2",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "private": true,
   "description": "Aing-v2 Knowledge Metabolism Engine (Top-tier Orient-Act Cycle)",
   "main": "src/knowledge-store.js",

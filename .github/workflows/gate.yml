@@ -7,7 +7,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # 库活读用内建 node:sqlite，需 Node ≥ 22.5（README 前置同源）。
+          # Node 20 无 node:sqlite ⇒ test-8.1/8.3/8.4 在 Ubuntu 红（ERR_UNKNOWN_BUILTIN_MODULE）。
+          node-version: '24'
       - run: npm ci
       - run: node test/run-all.js
       - run: node verify-deploy.js

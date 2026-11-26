@@ -20,6 +20,12 @@ function arg(name, fallback) {
   const target = path.resolve(arg('target', path.join(root, 'data', 'knowledge.db')));
   const reportPath = path.resolve(arg('report', path.join(root, 'data', 'migration-report.json')));
 
+  // D1 前半：显式 --allow-cap 放行容量闸（默认 10 MB）。env AING_DB_CAP_ALLOW=1 保留作后门。
+  // 用途：真旧库常 > 10 MB，迁移属一次性受控动作；用完即撤，唔该长开。
+  const allowCap = process.argv.includes('--allow-cap') || process.env.AING_DB_CAP_ALLOW === '1';
+  if (allowCap) process.env.AING_DB_CAP_ALLOW = '1';
+  const capRelaxed = allowCap === true;
+
   if (!fs.existsSync(source)) { console.error('❌ 源库不存在: ' + source); process.exit(1); }
   if (fs.existsSync(target)) { console.error('❌ 目标库已存在，拒绝覆盖: ' + target); process.exit(2); }
 
@@ -28,6 +34,7 @@ function arg(name, fallback) {
   console.log('   → ' + backup);
 
   console.log('② 迁移到 ' + target);
+  if (capRelaxed) console.log('   ⚠ 本次放行了容量闸（--allow-cap / AING_DB_CAP_ALLOW=1）：源库超默认 10 MB 上限，迁移属一次性受控动作，用完即撤');
   await store.init(target);
   const rep = await M.migrateFrom(store, { sourcePath: backup });
   console.log(`   实体 ${rep.entities} / 边 ${rep.links} / 丢弃边 ${rep.droppedLinks} / 复核 ${JSON.stringify(rep.verified)}`);
@@ -43,6 +50,7 @@ function arg(name, fallback) {
     ...rep,
     backup,
     target,
+    capRelaxed,
     firstRun: { ok: cyc.ok, steps: cyc.results.length, failed },
     archived: true,
     at: new Date().toISOString()

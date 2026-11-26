@@ -275,6 +275,7 @@ npm test                                         # 181 档全量测试
 - **WAL**：写放大与并发读经过实测（无丢行、busy_timeout 必修、写者饿死已治）。/ WAL concurrency实测-verified (no lost rows, busy_timeout required, writer starvation addressed).
 - **备份 / Backup**：库文件在 `.gitignore` 排除区（`*.db`/`data/*`），克隆后自建；`tools/db-integrity.js` 核完整性。/ DB files are gitignored — build your own after clone; check integrity with `tools/db-integrity.js`.
 - **开库不写盘 / Open-without-persist**：探针/只读路径一律 `openReadOnly` 或隔离 yard，绝不污染真库。/ Read-only paths open without persist or in an isolated yard — never pollute the real DB.
+- **旧库迁移 / Legacy migration**：`node tools/migrate-run.js`，默认源 = 本仓上一级嘅 `aing/knowledge.db`（可用 `--source` 改）。开库容量闸默认 **10 MB**，真旧库常超；一次性受控迁移加 `--allow-cap` 放行（或 env `AING_DB_CAP_ALLOW=1` 作后门），报告 JSON 会写 `capRelaxed: true` 并在输出打「本次放行了容量闸」。**用完即撤，唔该长开**。/ Legacy migration via `tools/migrate-run.js` (default source: sibling `aing/knowledge.db`, override with `--source`). Open-cap gate defaults to **10 MB**; pass `--allow-cap` for one-off migrations of larger legacy DBs (report records `capRelaxed: true`). Disable after use.
 
 ---
 

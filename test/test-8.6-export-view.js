@@ -96,5 +96,32 @@ const dirHash = (dir) => {
   catch (e) { roErr = 'threw:' + e.message; }
   ac('判据5 fail-open：view 不可写时 exportView ok:false（不抛穿）', roOk === false, 'ok=' + roOk + ' err=' + roErr);
 
+  // ── C2 文件名碰撞：两个 id 只差一个 Windows 非法字符 → 撞名唔得静默覆盖 ──
+  // a:b 与 a/b 经 _safeName 都变 a_b，若无碰撞检测会丢一个实体。
+  const yard2 = fs.mkdtempSync(path.join(os.tmpdir(), 'aingv2-coll-'));
+  const store2 = require('../src/knowledge-store.js');
+  await store2.init(path.join(yard2, 'k.db'));
+  const db2 = store2._getDb();
+  db2.run(`INSERT INTO entities (id,name,type,content,tags,status,tolaria_strength,created_at,updated_at)
+    VALUES ('a:b','colon','Concept','冒号版',NULL,'active',5,'2026-01-01 00:00:00','2026-01-01 00:00:00')`);
+  db2.run(`INSERT INTO entities (id,name,type,content,tags,status,tolaria_strength,created_at,updated_at)
+    VALUES ('a/b','slash','Concept','斜杠版',NULL,'active',5,'2026-01-01 00:00:00','2026-01-01 00:00:00')`);
+  store2._persist();
+  const viewDir2 = path.join(yard2, 'view');
+  const rc = await EV.exportView(store2, { outDir: viewDir2, all: true });
+  const entDir2 = path.join(viewDir2, 'entities');
+  const mdFiles = fs.existsSync(entDir2) ? fs.readdirSync(entDir2).filter(f => f.endsWith('.md')).sort() : [];
+  // 两档都在（a_b.md + 碰撞后缀档），唔系只剩一个
+  ac('C2-a 撞名两实体都落盘（不覆盖）', mdFiles.length === 2,
+    'files=' + JSON.stringify(mdFiles));
+  // 回执记了 1 条碰撞 + 双方 id
+  const nc = rc.nameCollisions || [];
+  const ncIds = nc.length ? nc[0].ids.map(String) : [];
+  // 只判「双方都在」，唔依赖 ids 顺序（碰撞记账系插入序）
+  ac('C2-b 回执 nameCollisions=1 且记双方 id',
+    nc.length === 1 && ncIds.includes('a:b') && ncIds.includes('a/b'),
+    'collisions=' + JSON.stringify(nc));
+  store2._close();
+
   console.log(`${pass}/${pass + fail} 绿`); process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.error('❌ 运行异常: ' + e.message); process.exit(1); });
