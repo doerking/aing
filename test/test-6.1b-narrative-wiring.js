@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // M6 任务 6.1b failing test —— 锁 SPEC-6.1 修订 A（六段叙事接线）
 // 口径：autoIngest 按载荷形状分流——有 messages 走六段，否则走三源；
 //       同号 conv-<sessionId> 先到先得；name=id、title 由话题/首句派生且不含时间戳；

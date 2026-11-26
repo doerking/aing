@@ -177,5 +177,6 @@
   "test-8.2-hard-gates.js": 7,
   "test-8.3-nodesqlite-engine.js": 10,
   "test-8.4-engine-swap-safety.js": 4,
+  "test-8.5-oss-hardening.js": 6,
   "test-6.63-upstream-dedup.js": 4
 }

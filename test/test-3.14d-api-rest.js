@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // SPEC-3.14 修订 C failing test —— api entity REST（cli.js api）
 // 四条路由：GET /health、GET /entities、GET /entities/:id、POST /entities。
 // 写面复用 src/api-gate.js 嘅 gateWrite（身份闸 + 标签闸），唔另起平行写路径。

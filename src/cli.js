@@ -10,6 +10,16 @@ function resolveDbPath(dbPath) {
   return dbPath || process.env.AING_DB || path.join(__dirname, '..', 'data', 'knowledge.db');
 }
 
+// Windows PowerShell 5.1 Set-Content -Encoding UTF8 会写 BOM（\uFEFF），JSON.parse 会拋
+// Unexpected token。CLI 面统一过这里去 BOM 再解析（--payload / dispatch-card --file / snapshot / swarm-card）。
+function parseJsonInput(text) {
+  return JSON.parse(String(text).replace(/^\uFEFF/, ''));
+}
+function readJsonFile(p) {
+  const fs = require('fs');
+  return parseJsonInput(fs.readFileSync(path.resolve(String(p)), 'utf8'));
+}
+
 async function openStore(dbPath) {
   await ensureRequestedBackend();
   await store.init(resolveDbPath(dbPath));
@@ -124,10 +134,9 @@ async function cmdOrchestrate(dbPath, opts = {}) {
 
 // SPEC-3.15：文件读取只在 CLI 层做，卡本体保持纯函数
 function cmdDispatchCard(opts = {}) {
-  const fs = require('fs');
   const { buildDispatchCard } = require('./dispatch-card.js');
-  const ticket = opts.file ? JSON.parse(fs.readFileSync(path.resolve(String(opts.file)), 'utf8')) : {};
-  const snapshot = opts.snapshot ? JSON.parse(fs.readFileSync(path.resolve(String(opts.snapshot)), 'utf8')) : undefined;
+  const ticket = opts.file ? readJsonFile(opts.file) : {};
+  const snapshot = opts.snapshot ? readJsonFile(opts.snapshot) : undefined;
   return buildDispatchCard(ticket, { snapshot });
 }
 
@@ -200,10 +209,9 @@ async function main(argv) {
     if (cmd === 'memo') {
       const opts = { limit: flags.limit ? Number(flags.limit) : undefined };
       if (flags['swarm-card']) {
-        const fs = require('fs');
         const { buildDispatchCard } = require('./dispatch-card.js');
-        const ticket = JSON.parse(fs.readFileSync(path.resolve(String(flags['swarm-card'])), 'utf8'));
-        const snapshot = flags.snapshot ? JSON.parse(fs.readFileSync(path.resolve(String(flags.snapshot)), 'utf8')) : undefined;
+        const ticket = readJsonFile(flags['swarm-card']);
+        const snapshot = flags.snapshot ? readJsonFile(flags.snapshot) : undefined;
         opts.swarmCard = buildDispatchCard(ticket, { snapshot });
       }
       const out = await cmdMemo(dbPath, opts);
@@ -228,7 +236,7 @@ async function main(argv) {
       return out.ok ? 0 : 3;
     }
     if (cmd === 'ingest') {
-      const payload = flags.payload ? JSON.parse(flags.payload) : {};
+      const payload = flags.payload ? parseJsonInput(flags.payload) : {};
       const out = await cmdIngest(dbPath, payload);
       console.log(JSON.stringify(out, null, 2));
       return 0;

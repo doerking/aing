@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // M6 任务 6.44 failing test —— 红队沙盘演练（SPEC-6.44）
 // 要修的病：覆盖判定说 v2 缺红队演练——门禁不等于进攻演练，防线退化没人知道。
 const fs = require('fs'); const os = require('os'); const path = require('path');

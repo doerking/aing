@@ -152,8 +152,12 @@ node src/cli.js memo                             # 加 --json 出机器可读
 
 # 7. 验收门禁（无 ALL GREEN 不宣布完成）/ Deploy gate (no ALL GREEN, not done)
 node verify-deploy.js                            # 33 项
-npm test                                         # 179 档全量测试
+npm test                                         # 180 档全量测试
 ```
+
+> **写面身份闸 / Write identity gate**：写入口（`ingest` / `POST /entities` / 控制面写端）默认**拒所有 actor**（deny-by-default）。
+> 要写入先配 `AING_ALLOWED_ACTORS`（逗号分隔），例：`AING_ALLOWED_ACTORS=hana,hakimi`。不配则拒写；不烧死任何个人代号。
+> *The write surface (ingest / POST / control-plane writes) denies every actor by default. Set `AING_ALLOWED_ACTORS` (comma-separated) to allow specific actors; nothing is hardcoded.*
 
 > **全局 CLI / Global CLI**：`npm install -g .` 后可用 `aing <cmd>`（`bin` 已登记 `aing → src/cli.js`）。
 > *After `npm install -g .` the `aing <cmd>` binary is available (`bin` maps `aing → src/cli.js`).*
@@ -202,7 +206,8 @@ npm test                                         # 179 档全量测试
 | `POST` | `/entities` | 创建实体 → 一律 `pending-distillation` / confidence 0（身份闸兜底；`active` 只由 `distill.js` 兑付）/ create entity (always pending; only distill promotes to active) |
 
 > **身份闸 / Identity gate**：客户端自报 `status`/`confidence` 一律忽略——`active` 是蒸馏的特权，不是写入的默认。
-> *Client-supplied `status`/`confidence` are ignored — `active` is distill's privilege, never a write default.*
+> `POST`（及一切写面）默认拒所有 actor；先设 `AING_ALLOWED_ACTORS`（逗号分隔）才放行指定身份。
+> *Client-supplied `status`/`confidence` are ignored — `active` is distill's privilege, never a write default. `POST` (and every write path) denies all actors by default; set `AING_ALLOWED_ACTORS` to allow specific ones.*
 
 ---
 

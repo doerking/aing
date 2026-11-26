@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // M3 任务 3.6 failing test —— 锁 SPEC-3.6 身份闸 + 标签闸五条 AC
 const fs = require('fs'); const os = require('os'); const path = require('path');
 const yard = fs.mkdtempSync(path.join(os.tmpdir(), 'aingv2-apigate-'));

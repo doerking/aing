@@ -60,8 +60,16 @@ async function migrateFrom(store, opts = {}) {
     .filter((e) => e.created_at == null || String(e.created_at).trim() === '')
     .map((e) => ({ id: String(e.id), reason: 'no-created-at' }));
   const entities = allEntities.filter((e) => e.created_at != null && String(e.created_at).trim() !== '');
-  const allLinks = _rows(old, `SELECT source_id, target_id, relation, confidence, created_at, strength, invalid_at
-    FROM links ORDER BY source_id, target_id`);
+  // links 列探测：旧库 schema 未必有 strength / invalid_at（真旧库 links 只有 5 栏）。
+  // 缺列时补 NULL 占位，入新库时按缺省（strength=5 / invalid_at=NULL），唔再硬查抛 no such column。
+  const linkCols = new Set(_rows(old, 'PRAGMA table_info(links)').map(c => c.name));
+  const linkSel = ['source_id', 'target_id', 'relation', 'confidence', 'created_at', 'strength', 'invalid_at']
+    .map(c => {
+      if (linkCols.has(c)) return c;
+      // 缺列补新库缺省值（strength=5 / invalid_at=NULL），令新旧两侧指纹一致，唔再硬查抛 no such column
+      return c === 'strength' ? '5 AS strength' : 'NULL AS ' + c;
+    }).join(', ');
+  const allLinks = _rows(old, `SELECT ${linkSel} FROM links ORDER BY source_id, target_id`);
 
   const ids = new Set(entities.map(e => e.id));
   const links = allLinks.filter(l => ids.has(l.source_id) && ids.has(l.target_id));

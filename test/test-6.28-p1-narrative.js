@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // M6 任务 6.28 failing test —— P1 入口成形位接入六段叙事
 // 要修的病：六段叙事已有渲染器，但 P1 位只在注册表里躺着——
 // 外部件给的高质量叙事（或只给标题/标签）没有入口，质量提不上去。

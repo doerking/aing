@@ -1,4 +1,5 @@
 'use strict';
+process.env.AING_ALLOWED_ACTORS = 'hana'; // 写面默认拒所有写，测试档显式配 hana 过闸
 // M3 任务 3.9 —— 门禁 C11–C19 适配（意识层/控制面/读端/旋钮/计数）
 // C19 会反向跑全库（含本档）→ 由外层 verify 全量覆盖，此处不重入。
 const { spawnSync } = require('child_process');
