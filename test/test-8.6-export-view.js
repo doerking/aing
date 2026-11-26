@@ -83,7 +83,7 @@ const dirHash = (dir) => {
     rawFile.split('\n').filter(l => /^type:|type-null/.test(l)).join(' | '));
   // 孤儿进 _anomalies
   const anom = fs.readFileSync(path.join(viewDir, '_anomalies.md'), 'utf8');
-  ac('孤儿（无任何边）进 _anomalies 且可 grep', /## 无边（孤儿）\s*1/.test(anom) && /orphan-Y/.test(anom),
+  ac('孤儿（无任何边）进 _anomalies 且可 grep', /## 无边\uFF08孤儿\uFF09\uFF08共 1\uFF09/.test(anom) && /orphan-Y/.test(anom),
     anom.split('\n').filter(l => /孤儿|orphan-Y/.test(l)).join(' | '));
 
   // ── 判据5 fail-open：view 不可写时 exportView 返回 ok:false（orchestrate 侧另测）──

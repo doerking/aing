@@ -13,6 +13,8 @@ status: draft（改写版）
 
 进度真源：`STATUS.md`。以下命令表按当前实现标注，未实现嘅跑咗会 `MODULE_NOT_FOUND`——**唔系你环境问题**。
 
+> **写面前置 / Write prerequisite**：任何写入口（`ingest` / `POST /entities` / 控制面写端）都要先设 `AING_ALLOWED_ACTORS`（逗号分隔，例 `AING_ALLOWED_ACTORS=hana`）；**唔设则拒所有写**（deny-by-default）。详见 README「写面身份闸」一段。
+
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `npm test` / `node test/run-all.js` | ✅ 可用 | 181 档 / 1208 条断言 |

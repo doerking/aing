@@ -130,6 +130,9 @@ aing-v2/
 > **前置 / Prerequisites**：Node.js ≥ 18（库活读走内建 `node:sqlite`，需 ≥ 22.5；老版 Node 自动降级为静态默认值）。核心依赖只有 `sql.js`；语义检索另需 `@xenova/transformers`（devDependency，缺失自动回退 64 维哈希）。
 > *Node ≥ 18 (live reads use built-in `node:sqlite`, needs ≥ 22.5, older Node silently falls back to static defaults). Core dep is `sql.js`; semantic retrieval adds `@xenova/transformers` (falls back to 64-dim hash if absent).*
 
+> **升级须知 / Upgrade note（v0.10.0 破坏性变更）**：写面改为默认拒所有 actor（deny-by-default）。从 v0.9.x 升级后，若未设 `AING_ALLOWED_ACTORS`，`ingest` / `POST /entities` 会返回 `identity-rejected`。设一次即可：`AING_ALLOWED_ACTORS=<你的身份>`。
+> *Breaking change in v0.10.0: the write surface denies every actor by default. After upgrading from v0.9.x, set `AING_ALLOWED_ACTORS` or writes return `identity-rejected`.*
+
 ```bash
 # 1. 克隆仓库 / Clone
 git clone https://github.com/doerking/aing.git

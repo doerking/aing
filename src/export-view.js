@@ -4,7 +4,9 @@
 // 三产物：view/entities/<id>.md · view/_health.md · view/_anomalies.md
 // 铁律：
 //   1. 单向只读——全程 SELECT，不写任何表、不回读入库（防 v0.9.1 wiki 与库漂移血证）
-//   2. 幂等——先清空 view/ 再全写，零增量合并；同库连导两次全文件 hash 一致
+//   2. 幂等——只清自己产物（entities/_health/_anomalies）再全写，零增量合并；同目录连导两次全文件 hash 一致。
+//      加 .view-root 哨兵：--out 指向非空且非 view 产物目录时拒跑（out-not-owned），要 --force 才过（A1 防误清）。
+//      注：view/ 已 gitignore（生成物唔进 git）；如需跨轮审计，开发者自行把 _health.md/_anomalies.md 从 ignore 排除。
 //   3. fail-open——view 不可写时返回 {ok:false}，唔抛穿（代谢系命，投影系眼）
 //   4. 数字同源——健康读数复用 memo 同一套函数（vector/conservation/pulse/maintenance），承接门禁 C10b
 // 组件唔直连 knowledge-store：store 由调用方注入（arch-lint C5 守）。
@@ -117,8 +119,10 @@ async function exportView(store, opts = {}) {
   const V = require('./vector.js');
   const backend = V.resolveBackend();
   const active = entities.length;
-  const indexed = [...vecByEnt.keys()].filter(id => entities.some(e => String(e.id) === id)).length;
-  const vecPct = active === 0 ? 100 : Math.round((indexed / active) * 100);
+  const entIdSet = new Set(entities.map(e => String(e.id))); // C3：避免 entities.some O(n²)，大库明显慢
+  const indexed = [...vecByEnt.keys()].filter(id => entIdSet.has(id)).length;
+  // C4：空库 0 分母唔该当成「满」——写字面 n/a，留空/写 100% 都会误导
+  const vecPct = active === 0 ? 'n/a' : Math.round((indexed / active) * 100);
   let cons = { ratio: 1, inBand: true, verdict: 'balanced', edge: { growth: 0, pruned: 0 }, entity: { backlog: 0 } };
   try { cons = require('./conservation.js').measureConservation(store, {}); } catch (_) { /* 默认 */ }
   const pendingDistill = Number(_scalar(db, `SELECT COUNT(*) AS n FROM entities WHERE status = 'pending-distillation' AND invalid_at IS NULL`).n || 0);
@@ -151,6 +155,21 @@ async function exportView(store, opts = {}) {
     return !isNaN(t) && t >= weekAgo;
   }).map(e => String(e.id)));
   const scope = entities.filter(e => all || anomIds.has(String(e.id)) || recentIds.has(String(e.id)));
+
+  // C2：文件名碰撞检测 —— 两个 id 经 _safeName 后撞名会静默覆盖（丢实体）。
+  // 首次用原 id 记账；碰撞则加短后缀，并在 nameCollisions 记账供回执/测试可见。
+  // 注意：呢两个 Map 要喺 scope 循环**之前**初始化（_uniqueName 闭包引用，const 唔提升）。
+  const usedNames = new Map();
+  const nameCollisions = [];
+  function _uniqueName(id) {
+    const base = _safeName(id);
+    if (!usedNames.has(base)) { usedNames.set(base, id); return base; }
+    let i = 2, candidate = base + '__' + i;
+    while (usedNames.has(candidate)) { i++; candidate = base + '__' + i; }
+    usedNames.set(candidate, id);
+    nameCollisions.push({ file: base + '.md', ids: [usedNames.get(base), id] });
+    return candidate;
+  }
 
   for (const e of scope) {
     const id = String(e.id);
@@ -188,7 +207,7 @@ async function exportView(store, opts = {}) {
         lines.push(`- → ${l.target_id} · ${l.relation} · ${l.strength == null ? 'null' : Number(l.strength)}${isSelf ? ' · SELF' : ''}`);
       }
     }
-    mk(`entities/${_safeName(id)}.md`, lines.join('\n') + '\n');
+    mk(`entities/${_uniqueName(id)}.md`, lines.join('\n') + '\n');
   }
 
   // ② _health.md（数字与 cli memo 同源）
@@ -204,32 +223,34 @@ async function exportView(store, opts = {}) {
   mk('_health.md', h.join('\n') + '\n');
 
   // ③ _anomalies.md（按类分组、可 grep、带计数）
+  // C1：标题写「（共 N）」且列表全列（唔 slice）——保证「标题数 = 列表条数」，可 grep 计数唔断。
   const a = [];
-  a.push(`## 自指边 ${selfEdges.length}`);
-  for (const l of selfEdges.slice(0, 200)) {
+  a.push(`## 自指边（共 ${selfEdges.length}）`);
+  for (const l of selfEdges) {
     a.push(`- ${l.source_id} ↔ ${l.target_id}（${l.relation} · strength ${l.strength == null ? 'null' : Number(l.strength)}）`);
   }
   a.push('');
-  a.push(`## type 空 ${typeNullIds.length}`);
-  for (const id of typeNullIds.slice(0, 200)) a.push(`- ${id}`);
+  a.push(`## type 空（共 ${typeNullIds.length}）`);
+  for (const id of typeNullIds) a.push(`- ${id}`);
   a.push('');
-  a.push(`## 无边（孤儿）${orphanIds.length}`);
-  for (const id of orphanIds.slice(0, 200)) a.push(`- ${id}`);
+  a.push(`## 无边（孤儿）（共 ${orphanIds.length}）`);
+  for (const id of orphanIds) a.push(`- ${id}`);
   a.push('');
-  a.push(`## 有边但无向量 ${noVecIds.length}`);
-  for (const id of noVecIds.slice(0, 200)) a.push(`- ${id}`);
+  a.push(`## 有边但无向量（共 ${noVecIds.length}）`);
+  for (const id of noVecIds) a.push(`- ${id}`);
   mk('_anomalies.md', a.join('\n') + '\n');
 
-  // ── 4. 落盘：先清空 view/ 再全写（幂等）─────────────────
+  // ── 4. 落盘：只清自己产物 + 哨兵防误清（幂等）───────────
   try {
-    _resetDir(outDir);
+    const own = _ensureOwned(outDir, opts.force === true);
+    if (!own.ok) return { ok: false, outDir, error: own.reason, files: [] };
     for (const f of files) {
       const p = path.join(outDir, f.path);
       fs.mkdirSync(path.dirname(p), { recursive: true });
       // 无 BOM 写入（Windows PowerShell 5.1 会带 BOM，这里显式用 UTF-8 无 BOM）
       fs.writeFileSync(p, f.content, { encoding: 'utf8' });
     }
-    return { ok: true, outDir, generatedAt: now, files: files.map(f => f.path), entities: scope.length, selfEdges: selfEdges.length, typeNull: typeNullIds.length };
+    return { ok: true, outDir, generatedAt: now, files: files.map(f => f.path), entities: scope.length, selfEdges: selfEdges.length, typeNull: typeNullIds.length, nameCollisions };
   } catch (e) {
     return { ok: false, outDir, error: String(e.message || e), files: [] };
   }
@@ -240,17 +261,37 @@ function _safeName(id) {
   return String(id).replace(/[\\/:*?"<>|]/g, '_');
 }
 
-// 清空目录（保留目录本身），唔存在则建
-function _resetDir(dir) {
-  if (fs.existsSync(dir)) {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = path.join(dir, e.name);
-      if (e.isDirectory()) fs.rmSync(p, { recursive: true, force: true });
-      else fs.rmSync(p, { force: true });
-    }
-  } else {
-    fs.mkdirSync(dir, { recursive: true });
+// 哨兵文件名：标记「本目录由 view 导出拥有」，防 --out 误指向用户目录后清光别人文件（A1）
+const VIEW_SENTINEL = '.view-root';
+// 本工具认得的产物（只清这些，其他文件一律不动）
+function _ownedPaths(dir) {
+  return [path.join(dir, 'entities'), path.join(dir, '_health.md'), path.join(dir, '_anomalies.md'), path.join(dir, VIEW_SENTINEL)];
+}
+function _rmOwned(dir) {
+  for (const p of _ownedPaths(dir)) {
+    if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
   }
 }
+/**
+ * 确保 outDir 可安全写入。
+ * - 唔存在 / 空目录：建 + 写哨兵 → 放行
+ * - 有哨兵：只清自己产物（entities/_health/_anomalies/.view-root）→ 放行
+ * - 非空且无哨兵：别人嘅目录 ⇒ 拒（out-not-owned），要 force 才过；force 也只清自己产物、唔掂其他文件
+ */
+function _ensureOwned(dir, force) {
+  const sentinel = path.join(dir, VIEW_SENTINEL);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const entries = fs.readdirSync(dir);
+  const hasSentinel = fs.existsSync(sentinel);
+  if (entries.length > 0 && !hasSentinel && !force) {
+    return { ok: false, reason: 'out-not-owned: ' + dir + ' 非空且非 view 产物目录（无 ' + VIEW_SENTINEL + '）；要覆盖请加 --force' };
+  }
+  // 清自己上一轮产物（幂等：唔做增量合并）；force 且无哨兵时也只清自己产物，唔清目录里其他文件
+  if (hasSentinel) _rmOwned(dir);
+  fs.writeFileSync(sentinel, 'aing-v2 view\n', 'utf8');
+  return { ok: true };
+}
 
-module.exports = { exportView, CONTENT_MAX_BYTES, _strip, _prefixOf, _parseTags };
+module.exports = { exportView, CONTENT_MAX_BYTES, VIEW_SENTINEL, _strip, _prefixOf, _parseTags };

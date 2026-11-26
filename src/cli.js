@@ -147,7 +147,7 @@ async function cmdOrchestrate(dbPath, opts = {}) {
 async function cmdExport(dbPath, opts = {}) {
   const s = await openStore(dbPath);
   const { exportView } = require('./export-view.js');
-  const out = await exportView(s, { outDir: opts.out, all: opts.all === true });
+  const out = await exportView(s, { outDir: opts.out, all: opts.all === true, force: opts.force === true });
   if (!out.ok) throw new Error('export 失败：' + String(out.error || ''));
   return out;
 }
@@ -309,7 +309,7 @@ async function main(argv) {
     }
     if (cmd === 'export') {
       try {
-        const out = await cmdExport(dbPath, { out: flags.out && flags.out !== true ? String(flags.out) : undefined, all: flags.all === true });
+        const out = await cmdExport(dbPath, { out: flags.out && flags.out !== true ? String(flags.out) : undefined, all: flags.all === true, force: flags.force === true });
         console.log(flags.json ? JSON.stringify(out, null, 2) : `export ok=${out.ok} 檔=${out.files.length} 自指=${out.selfEdges} type空=${out.typeNull} → ${out.outDir}`);
         return 0;
       } catch (e) {
@@ -336,4 +336,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; });
 }
 
-module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdSearchIngest, cmdApi, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdDispatchCard, humanMemo, humanPredict, usage, main };
+module.exports = { openStore, cmdReindex, cmdMemo, cmdPredict, cmdIngest, cmdCompile, cmdSearchIngest, cmdApi, cmdAccess, cmdBoard, cmdSelfOptimize, cmdOrchestrate, cmdExport, cmdDispatchCard, humanMemo, humanPredict, usage, main };
